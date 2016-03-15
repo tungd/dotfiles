@@ -105,14 +105,20 @@
 
 (load custom-file :no-error)
 
-(use-package solarized-theme
+(use-package color-theme-approximate
   :ensure t
-  :init (load-theme 'solarized-light))
+  :init (color-theme-approximate-on))
+;; (use-package solarized-theme
+;;   :ensure t
+;;   :init (load-theme 'solarized-light))
+(add-hook 'window-setup-hook (lambda () (load-theme 'adwaita t)))
 
 (scroll-bar-mode -1)
 (blink-cursor-mode -1)
 (electric-pair-mode t)
 (column-number-mode t)
+(unless (display-graphic-p)
+  (menu-bar-mode -1))
 
 (pending-delete-mode t)
 
@@ -771,17 +777,6 @@ current buffer is not visiting a file."
   :defer t
   :config
   (setq compilation-scroll-output t))
-
-;; (use-package perspective
-;;   :ensure t
-;;   :defer t
-;;   :init
-;;   (progn
-;;     (persp-mode)
-
-;;     (use-package persp-projectile
-;;       :ensure t
-;;       :bind (([remap projectile-switch-project] . projectile-persp-switch-project)))))
 
 (use-package ivy
   :defer t

@@ -1,1 +1,11 @@
 .DS_Store
+emacs/elpa/
+emacs/ido.last
+emacs/projectile-bookmarks.eld
+emacs/recentf
+emacs/smex-items
+emacs/company-statistics-cache.el
+emacs/custom.el
+emacs/places
+emacs/undos/
+
