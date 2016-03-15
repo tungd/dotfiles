@@ -11,7 +11,7 @@
         amend = commit --amend --reuse-message=HEAD
         undo = reset --soft HEAD^
         df = diff
-        dc = diff --cached
+        dfc = diff --cached
 [url "git://github.com/"]
         insteadOf = gh:
 [url "git@bitbucket.org:"]
