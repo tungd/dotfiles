@@ -111,7 +111,7 @@
 ;; (use-package solarized-theme
 ;;   :ensure t
 ;;   :init (load-theme 'solarized-light))
-(add-hook 'window-setup-hook (lambda () (load-theme 'adwaita t)))
+(add-hook 'window-setup-hook (lambda () (load-theme 'base16-solarized-dark t)))
 
 (scroll-bar-mode -1)
 (blink-cursor-mode -1)
@@ -142,9 +142,14 @@
     (hlinum-activate)
     (add-hook 'prog-mode-hook #'linum-mode))
   :config
-  (set-face-attribute 'linum-highlight-face nil :inherit 'linum
+  (progn
+    (defun td/setup-hlinum-faces ()
+      (interactive)
+      (set-face-attribute 'linum-highlight-face nil :inherit 'linum
                       :background (or (face-foreground 'linum) "#ccc")
                       :foreground (or (face-background 'linum) "#fff")))
+
+    (add-hook 'window-setup-hook #'td/setup-hlinum-faces)))
 
 (use-package linum
   :defer t
@@ -157,27 +162,6 @@
   :ensure t
   :defer t
   :init (exec-path-from-shell-initialize))
-
-;; (use-package ido
-;;   :defer t
-;;   :init (ido-mode t)
-;;   :config
-;;   (setq resize-mini-window nil
-;;         ido-everywhere t
-;;         ido-enable-flex-matching t
-;;         ido-use-virtual-buffers 'auto))
-
-;; (use-package ido-ubiquitous
-;;   :ensure t
-;;   :defer t
-;;   :init (ido-ubiquitous-mode t))
-
-;; (use-package smex
-;;   :ensure t
-;;   :defer t
-;;   :init (smex-initialize)
-;;   :bind (("M-m" . smex)
-;;          ("M-M" . smex-major-mode-commands)))
 
 (use-package company
   :ensure t
@@ -278,7 +262,9 @@
 (use-package projectile
   :ensure t
   :defer t
-  :init (projectile-global-mode t))
+  :init (projectile-global-mode t)
+  :config
+  (setq projectile-completion-system 'ivy))
 
 (use-package diff-hl
   :ensure t
