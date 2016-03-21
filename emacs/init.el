@@ -30,7 +30,7 @@
         (right-fringe . 4)
         (font . "Source Code Pro 12")
         (left . 256)
-        (width . 100) (height . 60)
+        (width . 120) (height . 60)
         (border-width . 0)
         (internal-border-width . 0)))
 
@@ -111,7 +111,16 @@
 ;; (use-package solarized-theme
 ;;   :ensure t
 ;;   :init (load-theme 'solarized-light))
-(add-hook 'window-setup-hook (lambda () (load-theme 'base16-solarized-dark t)))
+(load-theme 'base16-solarized-dark t)
+(add-hook 'window-setup-hook
+          (lambda ()
+            ;; Reload the current custom-theme to allow approximation
+            (load-theme 'base16-solarized-dark t)
+            (set-face-attribute 'linum-highlight-face nil
+                                :inherit 'linum
+                                :background (or (face-foreground 'linum) "#ccc")
+                                :foreground (or (face-background 'linum) "#fff"))
+            (set-face-attribute 'fringe nil :background nil)))
 
 (scroll-bar-mode -1)
 (blink-cursor-mode -1)
@@ -140,16 +149,7 @@
   :init
   (progn
     (hlinum-activate)
-    (add-hook 'prog-mode-hook #'linum-mode))
-  :config
-  (progn
-    (defun td/setup-hlinum-faces ()
-      (interactive)
-      (set-face-attribute 'linum-highlight-face nil :inherit 'linum
-                      :background (or (face-foreground 'linum) "#ccc")
-                      :foreground (or (face-background 'linum) "#fff")))
-
-    (add-hook 'window-setup-hook #'td/setup-hlinum-faces)))
+    (add-hook 'prog-mode-hook #'linum-mode)))
 
 (use-package linum
   :defer t
@@ -784,3 +784,15 @@ current buffer is not visiting a file."
   :defer t
   :config
   (setq imenu-auto-rescan t))
+
+(use-package haml-mode
+  :ensure t
+  :defer t)
+
+(use-package indent-guide
+  :ensure t
+  :defer t
+  :init
+  (progn
+    (add-hook 'haml-mode-hook #'indent-guide-mode)
+    (add-hook 'python-mode-hook #'indent-guide-mode)))

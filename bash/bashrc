@@ -64,7 +64,8 @@ export PATH=$GOPATH/bin:$LOCAL/opt/go/libexec/bin:$PATH
 export PIP_USER_BASE=$HOME/Library/Python/2.7
 export PATH=$PIP_USER_BASE/bin:$PATH
 
-export GEM_HOME=$LOCAL
+export RBENV_HOME=$HOME/.rbenv
+export PATH=$RBENV_HOME/bin:$PATH
 
 export ANDROID_HOME=/Users/tung/.local/opt/android-sdk
 export PATH=$ANDROID_HOME/bin:$PATH
@@ -74,6 +75,7 @@ export PATH=$AIRPORT_HOME:$PATH
 
 alias g=git
 alias be='bundle exec'
+alias grep='grep --color=auto'
 
 if [ -f $LOCAL/etc/bash_completion ]; then
     . $LOCAL/etc/bash_completion
