@@ -1,16 +1,20 @@
-;;;; init.el -- Emacs initialization file
+;;; init.el -- Emacs initialization file
+;;;
+;;; Commentary:
+;;;
+;;; Code:
 
-;;;; initialize packages
 (require 'package)
 (add-to-list 'package-archives
-             '("melpa" . "https://melpa.org/packages/"))
+             '("melpa" . "http://melpa.org/packages/"))
 (package-initialize)
 
 (require 'use-package)
 
 ;;;;
-;; (defvar td/data-directory (expand-file-name "data/" user-emacs-directory))
 (defvar td/data-directory "/tmp/")
+(add-to-list 'load-path
+             (concat (file-name-directory (or load-file-name (buffer-file-name))) "vendor/"))
 
 ;; I rarely turn off the computer, so it's ok to have these at /tmp.
 ;; You know, auto cleanup as a service ;)
@@ -42,8 +46,12 @@
 (setq-default indent-tabs-mode nil
               tab-width 2)
 (setq require-final-newline t
-      tags-revert-without-query t
       echo-keystrokes 0.1)
+
+(use-package etags
+  :defer t
+  :config
+  (setq tags-revert-without-query t))
 
 (use-package whitespace
   :commands (whitespace-cleanup
@@ -78,17 +86,24 @@
   :config
   (progn
     (setq password-cache-expiry nil
-          tramp-debug-buffer t
           tramp-default-method "ftp")
 
-    (add-to-list 'auth-sources "~/.emacs.d/authinfo.gpg")
-    (setq ange-ftp-netrc-filename "~/.emacs.d/authinfo.gpg")))
+    (add-to-list 'auth-sources "~/.emacs.d/authinfo.gpg")))
+
+(use-package ange-ftp
+  :defer t
+  :config
+  (setq ange-ftp-netrc-filename "~/.emacs.d/authinfo.gpg"))
 
 ;;
 (setq visible-bell nil
       inhibit-startup-screen t
       delete-by-moving-to-trash t
       custom-file (expand-file-name "custom.el" user-emacs-directory))
+
+(use-package exec-path-from-shell
+  :ensure t
+  :defer t)
 
 (when (eq system-type 'darwin)
   (setq trash-directory "~/.Trash/")
@@ -108,21 +123,27 @@
 (use-package color-theme-approximate
   :ensure t
   :init (color-theme-approximate-on))
-;; (use-package solarized-theme
-;;   :ensure t
-;;   :init (load-theme 'solarized-light))
-(load-theme 'base16-solarized-dark t)
-(add-hook 'window-setup-hook
-          (lambda ()
-            ;; Reload the current custom-theme to allow approximation
-            (load-theme 'base16-solarized-dark t)
-            (set-face-attribute 'linum-highlight-face nil
-                                :inherit 'linum
-                                :background (or (face-foreground 'linum) "#ccc")
-                                :foreground (or (face-background 'linum) "#fff"))
-            (set-face-attribute 'fringe nil :background nil)))
+
+(use-package base16-theme
+  :ensure t
+  :init
+  (progn
+    ;; (load-theme 'adwaita)
+
+    (defun td/setup-window ()
+      (interactive)
+      ;; Reload the current custom-theme to allow approximation
+      (load-theme 'solarized t)
+      (set-face-attribute 'linum-highlight-face nil
+                          :inherit 'linum
+                          :background (or (face-foreground 'linum) "#ccc")
+                          :foreground (or (face-background 'linum) "#fff"))
+      (set-face-attribute 'fringe nil :background nil))
+
+    (add-hook 'window-setup-hook #'td/setup-window)))
 
 (scroll-bar-mode -1)
+(tool-bar-mode -1)
 (blink-cursor-mode -1)
 (electric-pair-mode t)
 (column-number-mode t)
@@ -317,10 +338,10 @@
     (use-package rich-minority
       :init
       (progn
-        (add-to-list 'rm-hidden-modes " Undo-Tree")
-        (add-to-list 'rm-hidden-modes " Anzu")
-        (add-to-list 'rm-hidden-modes " yas")
-        (add-to-list 'rm-hidden-modes " company")))))
+        (add-to-list 'rm-blacklist " Undo-Tree")
+        (add-to-list 'rm-blacklist " Anzu")
+        (add-to-list 'rm-blacklist " yas")
+        (add-to-list 'rm-blacklist " company")))))
 
 (use-package expand-region
   :ensure t
@@ -456,6 +477,7 @@
   (setq js-indent-level 2))
 
 (use-package js2-mode
+  :ensure t
   :mode (("\\.js$" . js2-mode)
          ("\\.jsx" . js2-jsx-mode))
   :config (setq js2-basic-offset 2
@@ -472,6 +494,7 @@
 
 
 (defun td/css-imenu-expressions ()
+  "TODO: docs."
   (set (make-local-variable 'imenu-generic-expression)
        '(("Section" "^.*\\* =\\(.+\\)$" 1)
          (nil "^\\(.+\\)\\S*{$" 1))))
@@ -521,10 +544,12 @@
 ;;;;
 
 (defun td/next-ten-visual-line ()
+  "TODO: docs."
   (interactive)
   (next-logical-line 10))
 
 (defun td/previous-ten-visual-line ()
+  "TODO: docs."
   (interactive)
   (next-logical-line -10))
 
@@ -534,12 +559,14 @@
 (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
 
 (defun td/join-next-line ()
+  "TODO: docs."
   (interactive)
   (join-line -1))
 
 (bind-key "M-J" #'td/join-next-line)
 
 (defun td/cleanup-buffer ()
+  "TODO: docs."
   (interactive)
   (save-excursion
     (whitespace-cleanup-region (point-min) (point-max))
@@ -548,9 +575,9 @@
 (bind-key "M-=" #'td/cleanup-buffer)
 
 (defun sudo-edit (&optional arg)
-  "Edit currently visited file as root. With a prefix ARG prompt
-for a file to visit. Will also prompt for a file to visit if
-current buffer is not visiting a file."
+  "Edit currently visited file as root.
+With a prefix ARG prompt for a file to visit. Will also prompt
+for a file to visit if current buffer is not visiting a file."
   (interactive "P")
   (if (or arg (not buffer-file-name))
       (find-file (concat "/sudo:root@localhost:"
@@ -582,9 +609,9 @@ current buffer is not visiting a file."
   :init
   (progn
     (defun td/ansi-colorize-compilation-buffer ()
-      (toggle-read-only)
+      (read-only-mode t)
       (ansi-color-apply-on-region (point-min) (point-max))
-      (toggle-read-only))
+      (read-only-mode -1))
 
     (add-hook 'compilation-filter-hook #'td/ansi-colorize-compilation-buffer)))
 
@@ -608,7 +635,8 @@ current buffer is not visiting a file."
   :config
   (progn
     (setq evil-ex-substitute-global t
-          evil-cross-lines t)
+          evil-cross-lines t
+          evil-move-cursor-back t)
 
     (bind-keys :map evil-insert-state-map
                ([remap newline] . newline-and-indent))
@@ -700,9 +728,12 @@ current buffer is not visiting a file."
                  (t "xdg-open"))
                (format " %s" args))))
 
-    (setq eshell-prompt-function #'td/eshell-prompt
-          eshell-prompt-regexp "^[^#$\\n]*[#$] "
-          eshell-highlight-prompt nil)))
+    (use-package em-prompt
+      :defer t
+      :config
+      (setq eshell-prompt-function #'td/eshell-prompt
+            eshell-prompt-regexp "^[^#$\\n]*[#$] "
+            eshell-highlight-prompt nil))))
 
 (add-hook 'shell-mode-hook #'ansi-color-for-comint-mode-on)
 
@@ -787,7 +818,8 @@ current buffer is not visiting a file."
 
 (use-package haml-mode
   :ensure t
-  :defer t)
+  :defer t
+  :mode ("\\.haml" . haml-mode))
 
 (use-package indent-guide
   :ensure t
@@ -796,3 +828,18 @@ current buffer is not visiting a file."
   (progn
     (add-hook 'haml-mode-hook #'indent-guide-mode)
     (add-hook 'python-mode-hook #'indent-guide-mode)))
+
+(use-package ibuffer
+  :defer t
+  :bind ([remap list-buffers] . ibuffer))
+
+;; (require 'typewriter-mode)
+;; (turn-on-typewriter-mode)
+
+(use-package flycheck
+  :ensure t
+  :defer t
+  :init (global-flycheck-mode t))
+
+(provide 'init)
+;;; init.el ends here
