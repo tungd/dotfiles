@@ -34,9 +34,13 @@
         (right-fringe . 4)
         (font . "Source Code Pro 12")
         (left . 256)
-        (width . 120) (height . 60)
+        (width . 180) (height . 55)
         (border-width . 0)
         (internal-border-width . 0)))
+
+;; This is for emacsforosx.com version
+(setq mac-option-modifier 'super
+      mac-command-modifier 'meta)
 
 (set-default-coding-systems 'utf-8-unix)
 (set-terminal-coding-system 'utf-8-unix)
@@ -124,20 +128,17 @@
   :ensure t
   :init (color-theme-approximate-on))
 
-(use-package base16-theme
-  :ensure t
+(use-package solarized-theme
   :init
   (progn
-    ;; (load-theme 'adwaita)
-
     (defun td/setup-window ()
       (interactive)
       ;; Reload the current custom-theme to allow approximation
       (load-theme 'solarized t)
-      (set-face-attribute 'linum-highlight-face nil
-                          :inherit 'linum
-                          :background (or (face-foreground 'linum) "#ccc")
-                          :foreground (or (face-background 'linum) "#fff"))
+      ;; (set-face-attribute 'linum-highlight-face nil
+      ;;                     :inherit 'linum
+      ;;                     :background (or (face-foreground 'linum) "#ccc")
+      ;;                     :foreground (or (face-background 'linum) "#fff"))
       (set-face-attribute 'fringe nil :background nil))
 
     (add-hook 'window-setup-hook #'td/setup-window)))
@@ -164,19 +165,13 @@
          ([remap isearch-backward] . isearch-backward-regexp))
   :config (setq lazy-highlight-initial-delay 0))
 
-(use-package hlinum
+(use-package nlinum
+  :defer t
   :ensure t
-  :defer t
-  :init
-  (progn
-    (hlinum-activate)
-    (add-hook 'prog-mode-hook #'linum-mode)))
-
-(use-package linum
-  :defer t
+  :init (global-nlinum-mode t)
   :config
   (progn
-    (setq linum-format " %4d ")
+    (setq nlinum-format " %4d ")
     (set-face-attribute 'linum nil :height 100)))
 
 (use-package exec-path-from-shell
@@ -224,10 +219,7 @@
 
 (use-package savehist
   :defer t
-  :init
-  (progn
-    (setq savehist-file (expand-file-name "savehist" td/data-directory))
-    (savehist-mode t)))
+  :init (savehist-mode t))
 
 (use-package saveplace
   :init
@@ -686,6 +678,11 @@ for a file to visit if current buffer is not visiting a file."
   :ensure t
   :defer t
   :init (global-evil-surround-mode t))
+
+(use-package evil-visualstar
+  :ensure t
+  :defer t
+  :init (global-evil-visualstar-mode))
 
 (use-package elixir-mode
   :ensure t
