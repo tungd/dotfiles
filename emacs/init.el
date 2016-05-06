@@ -32,9 +32,9 @@
 (setq default-frame-alist
       '(;;(left-fringe . 0)
         (right-fringe . 4)
-        (font . "Source Code Pro 12")
-        (left . 256)
-        (width . 180) (height . 55)
+        (font . "Source Code Pro 13")
+        (left . 0)
+        (width . 180) (height . 50)
         (border-width . 0)
         (internal-border-width . 0)))
 
@@ -128,20 +128,8 @@
   :ensure t
   :init (color-theme-approximate-on))
 
-(use-package solarized-theme
-  :init
-  (progn
-    (defun td/setup-window ()
-      (interactive)
-      ;; Reload the current custom-theme to allow approximation
-      (load-theme 'solarized t)
-      ;; (set-face-attribute 'linum-highlight-face nil
-      ;;                     :inherit 'linum
-      ;;                     :background (or (face-foreground 'linum) "#ccc")
-      ;;                     :foreground (or (face-background 'linum) "#fff"))
-      (set-face-attribute 'fringe nil :background nil))
-
-    (add-hook 'window-setup-hook #'td/setup-window)))
+(load-theme 'solarized-dark t)
+(set-face-attribute 'fringe nil :background nil)
 
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
@@ -160,19 +148,32 @@
   (setq recentf-max-saved-items 64
         recentf-auto-cleanup 'never))
 
-(use-package isearch
-  :bind (([remap isearch-forward] . isearch-forward-regexp)
-         ([remap isearch-backward] . isearch-backward-regexp))
-  :config (setq lazy-highlight-initial-delay 0))
+;;; Still thinking about this
+;; (use-package isearch
+;;   :bind (([remap isearch-forward] . isearch-forward-regexp)
+;;          ([remap isearch-backward] . isearch-backward-regexp))
+;;   :config
+;;   (progn
+;;     (setq lazy-highlight-initial-delay 0)
+;;     (isearch-character-fold-mode t)))
+
+(setq lazy-highlight-initial-delay 0
+      search-default-mode 'character-fold-to-regexp
+      replace-character-fold t)
 
 (use-package nlinum
   :defer t
   :ensure t
-  :init (global-nlinum-mode t)
+  :init (add-hook 'prog-mode-hook 'nlinum-mode)
   :config
   (progn
-    (setq nlinum-format " %4d ")
-    (set-face-attribute 'linum nil :height 100)))
+    (setq nlinum-format " %4d")
+
+    (defun td/setup-linum-face ()
+      (interactive)
+      (set-face-attribute 'linum nil :height 110))
+
+    (add-hook 'nlinum-mode-hook #'td/setup-linum-face)))
 
 (use-package exec-path-from-shell
   :ensure t
@@ -240,8 +241,9 @@
   :ensure t
   :defer t
   :init (global-anzu-mode t)
-  :bind (([remap query-replace] . anzu-query-replace-regexp)
-         ([remap query-replace-regexp] . td/anzu-smart-query-replace-regexp))
+  :bind (([remap query-replace] . anzu-query-replace)
+         ;; ([remap query-replace-regexp] . td/anzu-smart-query-replace-regexp))
+         )
   :config
   (progn
     (defun td/anzu-smart-query-replace-regexp ()
@@ -367,6 +369,7 @@
   :defer t
   :config
   (setq org-directory "~/OneDrive/Documents/Notes/"
+        org-ellipsis "…"
         org-default-notes-file (expand-file-name "inbox.org" org-directory)
         org-log-done 'time
         org-todo-keywords
@@ -401,6 +404,19 @@
 (use-package calc
   :defer t
   :bind ("C-c b c" . quick-calc))
+
+(use-package ispell
+  :defer t
+  :config
+  (progn
+    (defun td/org-ispell ()
+      "Configure `ispell-skip-region-alist' for `org-mode'."
+      (make-local-variable 'ispell-skip-region-alist)
+      (add-to-list 'ispell-skip-region-alist '(org-property-drawer-re))
+      (add-to-list 'ispell-skip-region-alist '("~" "~"))
+      (add-to-list 'ispell-skip-region-alist '("=" "="))
+      (add-to-list 'ispell-skip-region-alist '("^#\\+BEGIN_SRC" . "^#\\+END_SRC")))
+    (add-hook 'org-mode-hook #'td/org-ispell)))
 
 (use-package flyspell
   :defer t
@@ -601,9 +617,8 @@ for a file to visit if current buffer is not visiting a file."
   :init
   (progn
     (defun td/ansi-colorize-compilation-buffer ()
-      (read-only-mode t)
-      (ansi-color-apply-on-region (point-min) (point-max))
-      (read-only-mode -1))
+      (let ((inhibit-read-only t))
+        (ansi-color-apply-on-region compilation-filter-start (point))))
 
     (add-hook 'compilation-filter-hook #'td/ansi-colorize-compilation-buffer)))
 
@@ -619,70 +634,6 @@ for a file to visit if current buffer is not visiting a file."
         undo-tree-visualizer-timestamps t
         undo-tree-auto-save-history t
         undo-tree-history-directory-alist '((".*" . "~/.emacs.d/undos"))))
-
-(use-package evil
-  :ensure t
-  :defer t
-  :init (evil-mode t)
-  :config
-  (progn
-    (setq evil-ex-substitute-global t
-          evil-cross-lines t
-          evil-move-cursor-back t)
-
-    (bind-keys :map evil-insert-state-map
-               ([remap newline] . newline-and-indent))
-
-    (bind-keys :map evil-normal-state-map
-               ("TAB" . evil-jump-item)
-               ("<tab>" . evil-jump-item)
-               ("j" . evil-next-visual-line)
-               ("k" . evil-previous-visual-line)
-               ("M-j" . td/evil-next-ten-visual-line)
-               ("M-k" . td/evil-previous-ten-visual-line))
-
-    (bind-keys :map evil-motion-state-map
-               ("TAB" . evil-jump-item)
-               ("<tab>" . evil-jump-item))
-
-    (defun td/evil-next-ten-visual-line ()
-      (interactive)
-      (evil-next-visual-line 10))
-
-    (defun td/evil-previous-ten-visual-line ()
-      (interactive)
-      (evil-previous-visual-line 10))
-
-    (defun td/open-line ()
-      (interactive)
-      (end-of-line)
-      (newline-and-indent))
-
-    (defun td/ends-with-colon ()
-      (interactive)
-      (end-of-line)
-      (insert ":"))
-
-    (defun td/ends-with-semicolon ()
-      (interactive)
-      (end-of-line)
-      (insert ";"))
-
-    (bind-keys :map evil-insert-state-map
-               ("C-e" . end-of-line)
-               ((kbd "<C-return>") . td/open-line)
-               ("C-;" . td/ends-with-semicolon)
-               ("C-:" . td/ends-with-colon))))
-
-(use-package evil-surround
-  :ensure t
-  :defer t
-  :init (global-evil-surround-mode t))
-
-(use-package evil-visualstar
-  :ensure t
-  :defer t
-  :init (global-evil-visualstar-mode))
 
 (use-package elixir-mode
   :ensure t
@@ -710,7 +661,7 @@ for a file to visit if current buffer is not visiting a file."
       (format
        "\n%s@%s in %s\n%s "
        (td/with-face user-login-name :foreground "#dc322f")
-       (td/with-face (or (getenv "HOST") system-name) :foreground "#b58900")
+       (td/with-face (or (getenv "HOST") (system-name)) :foreground "#b58900")
        (td/with-face (td/eshell-pwd) :foreground "#859900")
        (if (= (user-uid) 0) (with-face "#" :foreground "red") "$")))
 
@@ -830,13 +781,17 @@ for a file to visit if current buffer is not visiting a file."
   :defer t
   :bind ([remap list-buffers] . ibuffer))
 
-;; (require 'typewriter-mode)
-;; (turn-on-typewriter-mode)
-
 (use-package flycheck
   :ensure t
   :defer t
-  :init (global-flycheck-mode t))
+  :init (global-flycheck-mode t)
+  :config
+  (setq-default flycheck-disabled-checkers
+                '(scss )))
+
+(use-package eldoc
+  :config
+  (setq eldoc-idle-delay 0))
 
 (provide 'init)
 ;;; init.el ends here
