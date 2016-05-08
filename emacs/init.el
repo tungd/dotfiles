@@ -825,5 +825,20 @@ for a file to visit if current buffer is not visiting a file."
   (progn
     (setq inf-ruby-default-implementation "pry")))
 
+(use-package ediff
+  :defer t
+  :init
+  (progn
+    ;; TODO: setup to work with Emacs client
+    (defun td/command-line-diff (switch)
+      (let ((file1 (pop command-line-args-left))
+            (file2 (pop command-line-args-left)))
+        (ediff file1 file2)))
+
+    (add-to-list 'command-switch-alist '("diff" . td/command-line-diff)))
+  :config
+  (setq ediff-window-setup-function 'ediff-setup-windows-plain
+        ediff-split-window-function 'split-window-horizontally))
+
 (provide 'init)
 ;;; init.el ends here
