@@ -130,12 +130,17 @@
 (defun td/adaptive-theme (theme &optional no-confirm no-enable)
   "Adapt some faces according to THEME, NO-CONFIRM and NO-ENABLE."
   (unless no-enable
-    (let ((fg (color-lighten-name (face-foreground 'default) 30))
-          (bg (color-darken-name (face-background 'default) 10)))
+    (let ((fg (color-lighten-name
+               (color-desaturate-name (face-foreground 'default) 64) 40))
+          (bg (color-darken-name
+               (color-desaturate-name (face-background 'default) 64) 4)))
       (set-face-attribute 'fringe nil :background nil)
-      (set-face-attribute 'region nil :background bg)
+      (set-face-attribute 'region nil
+                          :background (color-darken-name (face-background 'default) 8))
       (eval-after-load 'nlinum
-        `(set-face-attribute 'linum nil :height 110 :foreground ,fg :background ,bg))
+        `(set-face-attribute 'linum nil
+                             :height 110
+                             :foreground ,fg :background ,bg))
       (eval-after-load 'hl-line
         `(set-face-attribute 'hl-line nil :foreground nil :background ,bg)))))
 
@@ -179,7 +184,7 @@
 (use-package nlinum
   :defer t
   :ensure t
-  ;; :init (add-hook 'prog-mode-hook 'nlinum-mode)
+  :init (add-hook 'prog-mode-hook 'nlinum-mode)
   :config (setq nlinum-format " %4d "))
 
 (use-package exec-path-from-shell
@@ -637,8 +642,37 @@ for a file to visit if current buffer is not visiting a file."
 
 (use-package hideshow
   :defer t
-  :init (add-hook 'prog-mode-hook #'hs-minor-mode)
-  :bind (("C-c C-n" . hs-toggle-hiding)))
+  :bind (("C-c C-n" . hs-toggle-hiding))
+  :init
+  (progn
+    (use-package hideshowvis
+      :defer t
+      :ensure t)
+
+    (hideshowvis-symbols)
+
+    (set-face-attribute 'hs-face nil
+                        :height 110 :box nil :background nil
+                        :foreground (color-darken-name (face-background 'default) 64))
+
+    (defun td/hs-setup-overlay (ov)
+      (when (eq 'code (overlay-get ov 'hs))
+        (let* ((content (buffer-substring (overlay-start ov) (overlay-end ov)))
+               (display-string "{...}"))
+          (overlay-put ov 'help-echo content)
+          (put-text-property 0 (length display-string)
+                             'face 'hs-face display-string)
+          (overlay-put ov 'display display-string))))
+
+    (advice-add 'display-code-line-counts :after #'td/hs-setup-overlay)
+
+    (defun td/setup-folding ()
+      (interactive)
+      (hs-minor-mode t)
+      (hideshowvis-minor-mode t))
+
+    (add-hook 'prog-mode-hook #'td/setup-folding)))
+
 
 (use-package undo-tree
   :ensure t
