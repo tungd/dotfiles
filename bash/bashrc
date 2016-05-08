@@ -108,5 +108,8 @@ fi
 # rbenv
 eval "$(rbenv init -)"
 
+# docker
+eval $(docker-machine env dev)
+
 # autoenv
 # source $LOCAL/opt/autoenv/activate.sh
