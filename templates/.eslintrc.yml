@@ -1,0 +1,19 @@
+---
+extends:
+  - "eslint:recommended"
+  - "plugin:react/recommended"
+
+env:
+  es6: true
+
+parserOptions:
+  sourceType: module
+  ecmaFeatures:
+    jsx: true
+
+plugins:
+  - react
+
+globals:
+  console: true
+  fetch: true
