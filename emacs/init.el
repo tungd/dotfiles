@@ -793,5 +793,12 @@ for a file to visit if current buffer is not visiting a file."
   :config
   (setq eldoc-idle-delay 0))
 
+(use-package inf-ruby
+  :ensure t
+  :defer t
+  :config
+  (progn
+    (setq inf-ruby-default-implementation "pry")))
+
 (provide 'init)
 ;;; init.el ends here

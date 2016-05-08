@@ -1,0 +1,6 @@
+
+require 'irb/completion'
+
+IRB.conf[:SAVE_HISTORY] = 1000
+IRB.conf[:RETURN_FORMAT] = "=> %.512s\n"
+# conf.return_format = "=> %.512s\n"
