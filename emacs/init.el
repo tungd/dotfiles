@@ -13,8 +13,7 @@
 
 ;;;;
 (defvar td/data-directory "/tmp/")
-(add-to-list 'load-path
-             (concat (file-name-directory (or load-file-name (buffer-file-name))) "vendor/"))
+(add-to-list 'load-path (concat user-emacs-directory "vendor/"))
 
 ;; I rarely turn off the computer, so it's ok to have these at /tmp.
 ;; You know, auto cleanup as a service ;)
@@ -128,8 +127,21 @@
   :ensure t
   :init (color-theme-approximate-on))
 
-(load-theme 'solarized-dark t)
-(set-face-attribute 'fringe nil :background nil)
+(defun td/adaptive-theme (theme &optional no-confirm no-enable)
+  "Adapt some faces according to THEME, NO-CONFIRM and NO-ENABLE."
+  (unless no-enable
+    (let ((fg (color-lighten-name (face-foreground 'default) 30))
+          (bg (color-darken-name (face-background 'default) 10)))
+      (set-face-attribute 'fringe nil :background nil)
+      (set-face-attribute 'region nil :background bg)
+      (eval-after-load 'nlinum
+        `(set-face-attribute 'linum nil :height 110 :foreground ,fg :background ,bg))
+      (eval-after-load 'hl-line
+        `(set-face-attribute 'hl-line nil :foreground nil :background ,bg)))))
+
+(advice-add 'load-theme :after #'td/adaptive-theme)
+(load-theme 'base16-railscasts-light t)
+
 
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
@@ -148,32 +160,27 @@
   (setq recentf-max-saved-items 64
         recentf-auto-cleanup 'never))
 
-;;; Still thinking about this
-;; (use-package isearch
-;;   :bind (([remap isearch-forward] . isearch-forward-regexp)
-;;          ([remap isearch-backward] . isearch-backward-regexp))
-;;   :config
-;;   (progn
-;;     (setq lazy-highlight-initial-delay 0)
-;;     (isearch-character-fold-mode t)))
+(use-package isearch
+  :bind (([remap isearch-forward] . isearch-forward-regexp)
+         ([remap isearch-backward] . isearch-backward-regexp)))
 
-(setq lazy-highlight-initial-delay 0
-      search-default-mode 'character-fold-to-regexp
-      replace-character-fold t)
+(setq-default lazy-highlight-initial-delay 0
+              ;; Apparently this is not working, take a look when Emacs 25 is out
+              ;; search-default-mode 'character-fold-to-regexp
+              )
+
+(autoload 'isearch-character-fold-mode "isearch-character-fold"
+  "Character folding for ISearch.")
+
+;; (use-package isearch-character-fold
+;;   :functions (isearch-character-fold-mode)
+;;   :init (isearch-character-fold-mode t))
 
 (use-package nlinum
   :defer t
   :ensure t
-  :init (add-hook 'prog-mode-hook 'nlinum-mode)
-  :config
-  (progn
-    (setq nlinum-format " %4d")
-
-    (defun td/setup-linum-face ()
-      (interactive)
-      (set-face-attribute 'linum nil :height 110))
-
-    (add-hook 'nlinum-mode-hook #'td/setup-linum-face)))
+  ;; :init (add-hook 'prog-mode-hook 'nlinum-mode)
+  :config (setq nlinum-format " %4d "))
 
 (use-package exec-path-from-shell
   :ensure t
@@ -272,7 +279,8 @@
 (use-package ace-jump-mode
   :ensure t
   :defer t
-  :bind ("C-c C-SPC" . ace-jump-mode))
+  :bind (("C-c SPC" . ace-jump-mode)
+         ("C-c C-SPC" . ace-jump-mode)))
 
 (use-package projectile
   :ensure t
@@ -551,6 +559,13 @@
 
 ;;;;
 
+(autoload 'zap-up-to-char "misc" "Kill up to, but not including ARGth occurrence of CHAR.
+
+  \(fn arg char)"
+  'interactive)
+
+(bind-key "M-z" 'zap-up-to-char)
+
 (defun td/next-ten-visual-line ()
   "TODO: docs."
   (interactive)
@@ -563,8 +578,6 @@
 
 (bind-keys ("M-n" . td/next-ten-visual-line)
            ("M-p" . td/previous-ten-visual-line))
-
-(add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
 
 (defun td/join-next-line ()
   "TODO: docs."
@@ -603,7 +616,7 @@ for a file to visit if current buffer is not visiting a file."
 (use-package highlight-parentheses
   :ensure t
   :defer t
-  :init (add-hook 'lisp-mode-hook #'highlight-parentheses-mode))
+  :init (global-highlight-parentheses-mode t))
 
 (use-package hl-todo
   :ensure t
@@ -624,7 +637,8 @@ for a file to visit if current buffer is not visiting a file."
 
 (use-package hideshow
   :defer t
-  :bind (("C-c SPC" . hs-toggle-hiding)))
+  :init (add-hook 'prog-mode-hook #'hs-minor-mode)
+  :bind (("C-c C-n" . hs-toggle-hiding)))
 
 (use-package undo-tree
   :ensure t
@@ -683,7 +697,12 @@ for a file to visit if current buffer is not visiting a file."
             eshell-prompt-regexp "^[^#$\\n]*[#$] "
             eshell-highlight-prompt nil))))
 
-(add-hook 'shell-mode-hook #'ansi-color-for-comint-mode-on)
+(use-package comint
+  :defer t
+  :init
+  (progn
+    (add-hook 'shell-mode-hook #'ansi-color-for-comint-mode-on)
+    (add-hook 'comint-output-filter-functions #'comint-truncate-buffer)))
 
 (use-package vc-hooks
   :defer t
@@ -786,8 +805,14 @@ for a file to visit if current buffer is not visiting a file."
   :defer t
   :init (global-flycheck-mode t)
   :config
-  (setq-default flycheck-disabled-checkers
-                '(scss )))
+  (progn
+    (setq-default flycheck-disabled-checkers
+                  '(scss))
+
+    ;; Disable `js2-mode' built-in error checker
+    (eval-after-load 'js2-mode
+      '(setq js2-mode-show-parse-errors nil))))
+
 
 (use-package eldoc
   :config
