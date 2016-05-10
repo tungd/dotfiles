@@ -2,21 +2,22 @@
 	name = Tung Dao
 	email = me@tungdao.com
 [alias]
-        cl = clone
-        co = checkout
-        st = status -sb
-        ci = commit
-        ls = log --oneline --stat --decorate
-        conflicts = diff --name-only --diff-filter=U
-        amend = commit --amend --reuse-message=HEAD
-        undo = reset --soft HEAD^
-        df = diff
-        dfc = diff --cached
+  cl = clone
+  co = checkout
+  st = status -sb
+  ci = commit
+  ls = log --graph --decorate --oneline
+  lsh = log --oneline --stat --decorate
+  conflicts = diff --name-only --diff-filter=U
+  amend = commit --amend --reuse-message=HEAD
+  undo = reset --soft HEAD^
+  df = diff
+  dfc = diff --cached
 [url "git://github.com/"]
-        insteadOf = gh:
+  insteadOf = gh:
 [url "git@bitbucket.org:"]
-        insteadOf = bb:
+  insteadOf = bb:
 [url "git@bitbucket.org:/tungd/"]
-        insteadOf = tungd:
+  insteadOf = tungd:
 [push]
 	default = matching
