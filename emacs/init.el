@@ -4,6 +4,13 @@
 ;;;
 ;;; Code:
 
+;; (let ((benchmark-init.el "~/.emacs.d/elpa/benchmark-init-20150905.238/benchmark-init.el"))
+;;   (when (file-exists-p benchmark-init.el)
+;;     (load benchmark-init.el)
+;;     (benchmark-init/activate)))
+
+
+
 (require 'package)
 (add-to-list 'package-archives
              '("melpa" . "http://melpa.org/packages/"))
@@ -218,12 +225,16 @@
 (use-package company-go
   :ensure t
   :defer t
-  :init (add-to-list 'company-backends 'company-go))
+  :init
+  (eval-after-load 'go-mode
+    '(add-to-list 'company-backends 'company-go)))
 
 (use-package company-web
   :ensure t
   :defer t
-  :init (add-to-list 'company-backends 'company-web-html))
+  :init
+  (eval-after-load 'web-mode
+    '(add-to-list 'company-backends 'company-web-html)))
 
 (use-package company-statistics
   :ensure t
@@ -240,6 +251,7 @@
     (setq-default save-place t)))
 
 (use-package thingatpt
+  :defer t
   :init
   (progn
     (defun td/bounds-of-buffer-at-point ()
@@ -251,11 +263,9 @@
 
 (use-package anzu
   :ensure t
-  :defer t
   :init (global-anzu-mode t)
   :bind (([remap query-replace] . anzu-query-replace)
-         ;; ([remap query-replace-regexp] . td/anzu-smart-query-replace-regexp))
-         )
+         ([remap query-replace-regexp] . td/anzu-smart-query-replace-regexp))
   :config
   (progn
     (defun td/anzu-smart-query-replace-regexp ()
@@ -293,6 +303,11 @@
   :init (projectile-global-mode t)
   :config
   (setq projectile-completion-system 'ivy))
+
+(use-package projectile-rails
+  :ensure t
+  :defer t
+  :init (add-hook 'projectile-mode-hook #'projectile-rails-on))
 
 (use-package diff-hl
   :ensure t
@@ -434,6 +449,9 @@
 (use-package flyspell
   :defer t
   :bind (("C-c s" . ispell-word))
+  :config
+  (setq flyspell-prog-text-faces
+        '(font-lock-comment-face font-lock-doc-face font-lock-doc-string-face))
   :init
   (progn
     (add-hook 'text-mode-hook #'flyspell-mode)
@@ -542,7 +560,8 @@
   :ensure t
   :defer t
   :mode (("\\.yaml$" . yaml-mode)
-         ("\\.yml$" . yaml-mode)))
+         ("\\.yml$" . yaml-mode)
+         ("\\.sls$" . yaml-mode)))
 
 (use-package sh-script
   :defer t
@@ -551,7 +570,6 @@
 
 (use-package go-mode
   :ensure t
-  :defer t
   :mode (("\\.go$" . go-mode)))
 
 (use-package php-mode
