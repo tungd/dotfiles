@@ -38,9 +38,9 @@
 (setq default-frame-alist
       '(;;(left-fringe . 0)
         (right-fringe . 4)
-        (font . "Source Code Pro 13")
+        (font . "Consolas 12")
         (left . 0)
-        (width . 180) (height . 50)
+        (width . 100) (height . 50)
         (border-width . 0)
         (internal-border-width . 0)))
 
@@ -113,7 +113,11 @@
 
 (use-package exec-path-from-shell
   :ensure t
-  :defer t)
+  :defer t
+  :init
+  (progn
+    (exec-path-from-shell-copy-envs
+     '("DOCKER_TLS_VERIFY" "DOCKER_HOST" "DOCKER_CERT_PATH" "DOCKER_MACHINE_NAME"))))
 
 (when (eq system-type 'darwin)
   (setq trash-directory "~/.Trash/")
@@ -147,12 +151,13 @@
       (eval-after-load 'nlinum
         `(set-face-attribute 'linum nil
                              :height 110
-                             :foreground ,fg :background ,bg))
+                             :inherit font-lock-comment-face
+                             :background ,bg))
       (eval-after-load 'hl-line
         `(set-face-attribute 'hl-line nil :foreground nil :background ,bg)))))
 
 (advice-add 'load-theme :after #'td/adaptive-theme)
-(load-theme 'base16-railscasts-light t)
+(load-theme 'base16-railscasts-dark t)
 
 
 (scroll-bar-mode -1)
@@ -176,7 +181,8 @@
   :bind (([remap isearch-forward] . isearch-forward-regexp)
          ([remap isearch-backward] . isearch-backward-regexp)))
 
-(setq-default lazy-highlight-initial-delay 0
+(setq-default lazy-highlight-initial-delay 10
+
               ;; Apparently this is not working, take a look when Emacs 25 is out
               ;; search-default-mode 'character-fold-to-regexp
               )
@@ -206,10 +212,8 @@
   :init (global-company-mode t)
   :config
   (progn
-    (setq company-idle-delay 0.1
-          company-minimum-prefix-length 4
+    (setq company-minimum-prefix-length 2
           company-tooltip-align-annotations t
-          company-tooltip-flip-when-above t
           company-tooltip-limit 16
           company-backends
           '(company-css
@@ -302,7 +306,12 @@
   :defer t
   :init (projectile-global-mode t)
   :config
-  (setq projectile-completion-system 'ivy))
+  (setq projectile-completion-system 'ivy
+        projectile-globally-ignored-file-suffixes
+        '("jpg" "png" "svg" "psd" "sketch" "afdesign"
+          "pdf" "doc" "docx" "xls" "xlsx"
+          "ttf" "otf" "woff"
+          "rar" "zip")))
 
 (use-package projectile-rails
   :ensure t
@@ -396,7 +405,7 @@
 (use-package org
   :defer t
   :config
-  (setq org-directory "~/OneDrive/Documents/Notes/"
+  (setq org-directory "~/Dropbox (Personal)/GTD/"
         org-ellipsis "…"
         org-default-notes-file (expand-file-name "inbox.org" org-directory)
         org-log-done 'time
@@ -522,6 +531,7 @@
   :config (setq js2-basic-offset 2
                 js2-include-node-externs t
                 js2-highlight-level 3
+                js2-mode-show-parse-errors nil
                 js2-strict-missing-semi-warning nil))
 
 (use-package clojure-mode
@@ -539,7 +549,6 @@
          (nil "^\\(.+\\)\\S*{$" 1))))
 
 (use-package css-mode
-  :defer t
   :mode (("\\.css$" . css-mode))
   :config
   (progn
@@ -548,17 +557,14 @@
 
 (use-package scss-mode
   :ensure t
-  :defer t
   :mode (("\\.scss$" . scss-mode)))
 
 (use-package less-css-mode
   :ensure t
-  :defer t
   :mode (("\\.less" . less-css-mode)))
 
 (use-package yaml-mode
   :ensure t
-  :defer t
   :mode (("\\.yaml$" . yaml-mode)
          ("\\.yml$" . yaml-mode)
          ("\\.sls$" . yaml-mode)))
@@ -891,6 +897,32 @@ for a file to visit if current buffer is not visiting a file."
   :config
   (setq ediff-window-setup-function 'ediff-setup-windows-plain
         ediff-split-window-function 'split-window-horizontally))
+
+(use-package ag
+  :defer t
+  :ensure t)
+
+(use-package wgrep-ag
+  :defer t
+  :ensure t)
+
+(use-package editorconfig
+  :defer t
+  :ensure t
+  :init (editorconfig-mode t))
+
+(use-package god-mode
+ :defer t
+ :ensure t
+ :bind ("M-j" . god-local-mode))
+
+(use-package dockerfile-mode
+  :ensure t
+  :mode ("Dockerfile$" . dockerfile-mode))
+
+(use-package docker
+  :ensure t
+  :defer t)
 
 (provide 'init)
 ;;; init.el ends here

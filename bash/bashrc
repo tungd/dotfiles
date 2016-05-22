@@ -62,8 +62,10 @@ export PATH=$LOCAL/bin:$LOCAL/sbin:$PATH
 export GOPATH=$LOCAL/go
 export PATH=$GOPATH/bin:$LOCAL/opt/go/libexec/bin:$PATH
 
-export PIP_USER_BASE=$HOME/Library/Python/2.7
-export PATH=$PIP_USER_BASE/bin:$PATH
+export PYENV_ROOT=/Users/tung/.local/var/pyenv
+
+# export PIP_USER_BASE=$HOME/Library/Python/2.7
+# export PATH=$PIP_USER_BASE/bin:$PATH
 
 export RBENV_HOME=$HOME/.rbenv
 export PATH=$RBENV_HOME/bin:$PATH
@@ -78,18 +80,23 @@ alias g=git
 alias be='bundle exec'
 alias grep='grep --color=auto'
 alias tmux='TERM=xterm-256color tmux'
+alias v='./venv/bin/'
 
 if [ -f $LOCAL/etc/bash_completion ]; then
     . $LOCAL/etc/bash_completion
 fi
 
+ve() {
+  exec "./venv/bin/$*"
+}
+
 # Tools
 faviconize() {
   favicon=favicon
 
-  if [[ ! -z $BW ]]; then
-      bw="-colors 256 PNG8:"
-  fi
+  # if [[ ! -z $BW ]]; then
+  #     bw="-colors 256 PNG8:"
+  # fi
 
   imagemagick_opts="-filter Triangle -define filter:support=2 -unsharp 0.25x0.08+8.3+0.045 -dither None -posterize 136 -quality 82 -define jpeg:fancy-upsampling=off -define png:compression-filter=5 -define png:compression-level=9 -define png:compression-strategy=1 -define png:exclude-chunk=all -interlace none -colorspace sRGB"
 
@@ -99,7 +106,8 @@ faviconize() {
   done
 
   icos="favicon16x16.png favicon32x32.png favicon48x48.png favicon64x64.png"
-  convert $icos -colors 256 favicon.ico
+  # convert $icos -colors 256 favicon.ico
+  convert $icos favicon.ico
   rm $icos
 }
 
@@ -108,10 +116,16 @@ if [ -d "/Applications/VMware Fusion.app/Contents/Library" ]; then
 fi
 
 # rbenv
-eval "$(rbenv init -)"
+if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
+
+# pyenv
+if which pyenv > /dev/null; then
+    eval "$(pyenv init -)"
+    eval "$(pyenv virtualenv-init -)"
+fi
 
 # docker
-eval $(docker-machine env dev)
+if which docker-machine > /dev/null; then eval $(docker-machine env dev); fi
 
 # autoenv
 # source $LOCAL/opt/autoenv/activate.sh
