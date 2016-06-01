@@ -4,13 +4,6 @@
 ;;;
 ;;; Code:
 
-;; (let ((benchmark-init.el "~/.emacs.d/elpa/benchmark-init-20150905.238/benchmark-init.el"))
-;;   (when (file-exists-p benchmark-init.el)
-;;     (load benchmark-init.el)
-;;     (benchmark-init/activate)))
-
-
-
 (require 'package)
 (add-to-list 'package-archives
              '("melpa" . "http://melpa.org/packages/"))
@@ -138,26 +131,19 @@
   :ensure t
   :init (color-theme-approximate-on))
 
+(defvar td/adaptive-theme-functions '()
+  "Hook run after custom themes are loaded.")
+
 (defun td/adaptive-theme (theme &optional no-confirm no-enable)
   "Adapt some faces according to THEME, NO-CONFIRM and NO-ENABLE."
-  (unless no-enable
-    (let ((fg (color-lighten-name
-               (color-desaturate-name (face-foreground 'default) 64) 40))
-          (bg (color-darken-name
-               (color-desaturate-name (face-background 'default) 64) 4)))
-      (set-face-attribute 'fringe nil :background nil)
-      (set-face-attribute 'region nil
-                          :background (color-darken-name (face-background 'default) 8))
-      (eval-after-load 'nlinum
-        `(set-face-attribute 'linum nil
-                             :height 110
-                             :inherit font-lock-comment-face
-                             :background ,bg))
-      (eval-after-load 'hl-line
-        `(set-face-attribute 'hl-line nil :foreground nil :background ,bg)))))
+  (run-hooks 'td/adaptive-theme-functions))
 
 (advice-add 'load-theme :after #'td/adaptive-theme)
-(load-theme 'base16-railscasts-dark t)
+
+(use-package sublime-themes
+  :ensure t
+  :init
+  (load-theme 'hickey t))
 
 
 (scroll-bar-mode -1)
@@ -179,25 +165,32 @@
 
 (use-package isearch
   :bind (([remap isearch-forward] . isearch-forward-regexp)
-         ([remap isearch-backward] . isearch-backward-regexp)))
+         ([remap isearch-backward] . isearch-backward-regexp))
+  :init
+  (progn
+    (defun td/isearch-message (&optional c-q-hack ellipsis)
+      "Cursor flashing in the echo area makes me crazy."
+      (isearch-message c-q-hack nil))
 
-(setq-default lazy-highlight-initial-delay 10
-
-              ;; Apparently this is not working, take a look when Emacs 25 is out
-              ;; search-default-mode 'character-fold-to-regexp
-              )
-
-(autoload 'isearch-character-fold-mode "isearch-character-fold"
-  "Character folding for ISearch.")
-
-;; (use-package isearch-character-fold
-;;   :functions (isearch-character-fold-mode)
-;;   :init (isearch-character-fold-mode t))
+    (setq lazy-highlight-initial-delay 0
+          isearch-message-function #'td/isearch-message)))
 
 (use-package nlinum
   :defer t
   :ensure t
-  :init (add-hook 'prog-mode-hook 'nlinum-mode)
+  :init
+  (progn
+    (defun td/nlinum-custom-faces ()
+      "Custom faces for `nlinum'"
+      (interactive)
+      (set-face-attribute 'linum nil
+                          :height 110
+                          :inherit font-lock-comment-face
+                          :background (face-background 'font-lock-comment-face)
+                          :foreground (face-foreground 'font-lock-comment-face)))
+
+    (add-hook 'prog-mode-hook #'nlinum-mode)
+    (add-hook 'td/adaptive-theme-functions #'td/nlinum-custom-faces))
   :config (setq nlinum-format " %4d "))
 
 (use-package exec-path-from-shell
@@ -215,12 +208,17 @@
     (setq company-minimum-prefix-length 2
           company-tooltip-align-annotations t
           company-tooltip-limit 16
+          company-idle-delay nil
           company-backends
-          '(company-css
-            company-capf
-            (company-dabbrev-code company-gtags company-etags company-keywords)
-            company-dabbrev
-            company-files))
+          '((company-css
+             company-capf
+             company-yasnippet
+             company-dabbrev-code
+             company-gtags
+             company-etags
+             company-keywords
+             company-dabbrev
+             company-files)))
 
     (bind-keys :map company-active-map
                ("C-n" . company-select-next-or-abort)
@@ -321,11 +319,28 @@
 (use-package diff-hl
   :ensure t
   :defer t
-  :init (global-diff-hl-mode t)
+  :init
+  (progn
+    (global-diff-hl-mode t)
+
+    (defun td/diff-hl-custom-faces ()
+      "Setup custom color for `diff-hl' faces."
+      (interactive)
+      (set-face-attribute 'diff-hl-insert nil
+                          :inherit nil :background nil :foreground "#81af34")
+      (set-face-attribute 'diff-hl-delete nil
+                          :inherit nil :background nil :foreground "#ff0000")
+      (set-face-attribute 'diff-hl-change nil
+                          :inherit nil :background nil :foreground "#deae3e"))
+
+    (add-hook 'td/adaptive-theme-functions #'td/diff-hl-custom-faces))
   :config
   (progn
-    (setq diff-hl-side 'right
-          diff-hl-draw-borders nil)
+    (define-fringe-bitmap 'td/diff-hl-bmp [480] 1 16 '(top t))
+    (defun td/diff-hl-bmp (type pos) 'td/diff-hl-bmp)
+
+    (setq diff-hl-draw-borders nil
+          diff-hl-fringe-bmp-function #'td/diff-hl-bmp)
 
     (defun diff-hl-overlay-modified (ov after-p beg end &optional len)
       "Markers disappear and reapear is kind of annoying to me.")))
@@ -360,7 +375,10 @@
 (use-package smart-mode-line
   :ensure t
   :defer t
-  :init (sml/setup)
+  :init
+  (progn
+    (setq sml/theme 'dark)
+    (sml/setup))
   :config
   (progn
     (add-to-list 'sml/replacer-regexp-list
@@ -393,11 +411,6 @@
   :ensure t
   :bind ([remap comment-dwim] . comment-dwim-2)
   :config (setq comment-style 'multi-line))
-
-(use-package paren
-  :defer 1
-  :init (setq-default show-paren-delay 0)
-  :config (show-paren-mode t))
 
 (add-hook 'after-init-hook #'server-start)
 
@@ -645,7 +658,10 @@ for a file to visit if current buffer is not visiting a file."
 (use-package highlight-parentheses
   :ensure t
   :defer t
-  :init (global-highlight-parentheses-mode t))
+  :init (global-highlight-parentheses-mode t)
+  :config
+  (setq hl-paren-delay 0.01
+        hl-paren-colors '("red" "DimGray" "DimGray" "DimGray" "DimGray")))
 
 (use-package hl-todo
   :ensure t
@@ -676,8 +692,17 @@ for a file to visit if current buffer is not visiting a file."
     (hideshowvis-symbols)
 
     (set-face-attribute 'hs-face nil
-                        :height 110 :box nil :background nil
-                        :foreground (color-darken-name (face-background 'default) 64))
+                        :height 110 :box nil
+                        :background (face-background font-lock-comment-face)
+                        :foreground (face-foreground font-lock-comment-face))
+
+    (set-face-attribute 'hs-fringe-face nil
+                        :background (face-background font-lock-comment-face)
+                        :foreground (face-foreground font-lock-comment-face))
+
+    (set-face-attribute 'hideshowvis-hidable-face nil
+                        :background (face-background font-lock-comment-face)
+                        :foreground (face-foreground font-lock-comment-face))
 
     (defun td/hs-setup-overlay (ov)
       (when (eq 'code (overlay-get ov 'hs))
@@ -704,8 +729,10 @@ for a file to visit if current buffer is not visiting a file."
   :config
   (setq undo-tree-mode-lighter ""
         undo-tree-visualizer-timestamps t
-        undo-tree-auto-save-history t
-        undo-tree-history-directory-alist '((".*" . "~/.emacs.d/undos"))))
+        ;; Not working with yasnippet, I'm supposed to fix this but...
+        ;; undo-tree-auto-save-history t
+        ;; undo-tree-history-directory-alist '((".*" . "~/.emacs.d/undos"))
+        ))
 
 (use-package elixir-mode
   :ensure t
@@ -820,6 +847,11 @@ for a file to visit if current buffer is not visiting a file."
   :config
   (setq compilation-scroll-output t))
 
+(use-package swiper
+  :defer t
+  :ensure t
+  :bind (("C-M-j" . swiper)))
+
 (use-package ivy
   :defer t
   :init (ivy-mode t)
@@ -874,7 +906,7 @@ for a file to visit if current buffer is not visiting a file."
 
 (use-package eldoc
   :config
-  (setq eldoc-idle-delay 0))
+  (setq eldoc-idle-delay 5))
 
 (use-package inf-ruby
   :ensure t
@@ -911,11 +943,6 @@ for a file to visit if current buffer is not visiting a file."
   :ensure t
   :init (editorconfig-mode t))
 
-(use-package god-mode
- :defer t
- :ensure t
- :bind ("M-j" . god-local-mode))
-
 (use-package dockerfile-mode
   :ensure t
   :mode ("Dockerfile$" . dockerfile-mode))
@@ -923,6 +950,92 @@ for a file to visit if current buffer is not visiting a file."
 (use-package docker
   :ensure t
   :defer t)
+
+(use-package paren-face
+  :ensure t
+  :defer t
+  :init (global-paren-face-mode t))
+
+(use-package evil
+  :ensure t
+  :defer t
+  :init (evil-mode t)
+  :config
+  (progn
+    (setq evil-ex-substitute-global t
+          evil-cross-lines t
+          evil-move-cursor-back t)
+
+    (use-package evil-surround
+      :ensure t
+      :defer t
+      :init (global-evil-surround-mode t))
+
+    (use-package evil-visualstar
+      :ensure t
+      :defer t
+      :init (global-evil-visualstar-mode))
+
+    (use-package evil-org
+      :ensure t)
+
+    (bind-keys :map evil-insert-state-map
+               ([remap newline] . newline-and-indent))
+
+    (bind-keys :map evil-normal-state-map
+               ("TAB" . evil-jump-item)
+               ("<tab>" . evil-jump-item)
+               ("j" . evil-next-visual-line)
+               ("k" . evil-previous-visual-line)
+               ("M-j" . td/next-ten-visual-line)
+               ("M-k" . td/previous-ten-visual-line))
+
+    (bind-keys :map evil-motion-state-map
+               ("TAB" . evil-jump-item)
+               ("<tab>" . evil-jump-item))
+
+    (defun td/open-line ()
+      (interactive)
+      (end-of-line)
+      (newline-and-indent))
+
+    (defun td/ends-with-colon ()
+      (interactive)
+      (end-of-line)
+      (insert ":"))
+
+    (defun td/ends-with-semicolon ()
+      (interactive)
+      (end-of-line)
+      (insert ";"))
+
+    (bind-keys :map evil-insert-state-map
+               ("C-e" . end-of-line)
+               ((kbd "<C-return>") . td/open-line)
+               ("C-;" . td/ends-with-semicolon)
+               ("C-:" . td/ends-with-colon))))
+
+(use-package dumb-jump
+  :ensure t
+  :init (dumb-jump-mode t))
+
+(use-package anaconda-mode
+  :ensure t
+  :init
+  (progn
+    (add-hook 'python-mode-hook 'anaconda-mode)
+    (add-hook 'python-mode-hook 'anaconda-eldoc-mode)))
+
+(use-package auto-package-update
+  :ensure t
+  :defer 128
+  :init (auto-package-update-maybe))
+
+(use-package yasnippet
+  :ensure t
+  :defer t
+  :init (yas-global-mode t))
+
 
 (provide 'init)
 ;;; init.el ends here

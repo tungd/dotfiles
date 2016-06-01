@@ -2,7 +2,7 @@
 (use-package evil
   :ensure t
   :defer t
-  ;; :init (evil-mode t)
+  :init (evil-mode t)
   :config
   (progn
     (setq evil-ex-substitute-global t
@@ -65,3 +65,5 @@
                ((kbd "<C-return>") . td/open-line)
                ("C-;" . td/ends-with-semicolon)
                ("C-:" . td/ends-with-colon))))
+
+(provide 'config-evil)
