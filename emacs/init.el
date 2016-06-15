@@ -6,7 +6,7 @@
 
 (require 'package)
 (add-to-list 'package-archives
-             '("melpa" . "http://melpa.org/packages/"))
+             '("melpa" . "https://melpa.org/packages/"))
 (package-initialize)
 
 (require 'use-package)
@@ -30,9 +30,10 @@
 
 (setq default-frame-alist
       '(;;(left-fringe . 0)
-        (right-fringe . 4)
-        (font . "Consolas 12")
-        (left . 0)
+        (right-fringe . 0)
+        (font . "Monaco 12")
+        (top . 0)
+        (left . 450)
         (width . 100) (height . 50)
         (border-width . 0)
         (internal-border-width . 0)))
@@ -140,10 +141,15 @@
 
 (advice-add 'load-theme :after #'td/adaptive-theme)
 
-(use-package sublime-themes
+;; (use-package sublime-themes
+;;   :ensure t
+;;   :init
+;;   (load-theme 'hickey t))
+
+(use-package apropospriate-theme
   :ensure t
   :init
-  (load-theme 'hickey t))
+  (load-theme 'apropospriate-light t))
 
 
 (scroll-bar-mode -1)
@@ -183,15 +189,24 @@
     (defun td/nlinum-custom-faces ()
       "Custom faces for `nlinum'"
       (interactive)
+      (require 'linum)
       (set-face-attribute 'linum nil
                           :height 110
                           :inherit font-lock-comment-face
-                          :background (face-background 'font-lock-comment-face)
+                          :background (face-background 'fringe)
                           :foreground (face-foreground 'font-lock-comment-face)))
 
     (add-hook 'prog-mode-hook #'nlinum-mode)
     (add-hook 'td/adaptive-theme-functions #'td/nlinum-custom-faces))
-  :config (setq nlinum-format " %4d "))
+  :config
+  (progn
+    (if (< emacs-major-version 25)
+        (defun nlinum--face-width (face)
+          "Stub for feature not available in stable Emacs. Remove
+          when 25 come out."
+          5))
+
+    (setq nlinum-format " %4d ")))
 
 (use-package exec-path-from-shell
   :ensure t
@@ -209,6 +224,7 @@
           company-tooltip-align-annotations t
           company-tooltip-limit 16
           company-idle-delay nil
+          company-dabbrev-downcase nil
           company-backends
           '((company-css
              company-capf
@@ -296,8 +312,7 @@
 (use-package ace-jump-mode
   :ensure t
   :defer t
-  :bind (("C-c SPC" . ace-jump-mode)
-         ("C-c C-SPC" . ace-jump-mode)))
+  :bind (("C-M-j" . ace-jump-mode)))
 
 (use-package projectile
   :ensure t
@@ -336,11 +351,12 @@
     (add-hook 'td/adaptive-theme-functions #'td/diff-hl-custom-faces))
   :config
   (progn
-    (define-fringe-bitmap 'td/diff-hl-bmp [480] 1 16 '(top t))
+    (define-fringe-bitmap 'td/diff-hl-bmp [192] 1 16 '(top t))
     (defun td/diff-hl-bmp (type pos) 'td/diff-hl-bmp)
 
     (setq diff-hl-draw-borders nil
-          diff-hl-fringe-bmp-function #'td/diff-hl-bmp)
+          ;; diff-hl-fringe-bmp-function #'td/diff-hl-bmp
+          )
 
     (defun diff-hl-overlay-modified (ov after-p beg end &optional len)
       "Markers disappear and reapear is kind of annoying to me.")))
@@ -377,7 +393,7 @@
   :defer t
   :init
   (progn
-    (setq sml/theme 'dark)
+    ;; (setq sml/theme 'dark)
     (sml/setup))
   :config
   (progn
@@ -497,9 +513,15 @@
   :commands emmet-mode
   :init
   (progn
+    (defun td/emmet-jsx-mode ()
+      (interactive)
+      (emmet-mode t)
+      (setq-local emmet-expand-jsx-className? t))
+
     (add-hook 'sgml-mode-hook #'emmet-mode)
     (add-hook 'web-mode-hook #'emmet-mode)
-    (add-hook 'css-mode-hook #'emmet-mode))
+    (add-hook 'css-mode-hook #'emmet-mode)
+    (add-hook 'js2-jsx-mode-hook #'td/emmet-jsx-mode))
   :config
   (progn
     (setq emmet-indentation 2
@@ -536,6 +558,17 @@
   :mode (("\\.json$" . js-mode))
   :config
   (setq js-indent-level 2))
+
+(use-package align
+  :defer t
+  :bind ("M-C-;" . align)
+  :config
+  (progn
+    (add-to-list 'align-rules-list
+                 '(js-object-props
+                   (regexp . "\\(\\s-*\\):")
+                   (modes . '(js-mode js2-mode))
+                   (spacing . 0)))))
 
 (use-package js2-mode
   :ensure t
@@ -661,7 +694,7 @@ for a file to visit if current buffer is not visiting a file."
   :init (global-highlight-parentheses-mode t)
   :config
   (setq hl-paren-delay 0.01
-        hl-paren-colors '("red" "DimGray" "DimGray" "DimGray" "DimGray")))
+        hl-paren-colors '("red")))
 
 (use-package hl-todo
   :ensure t
@@ -717,10 +750,12 @@ for a file to visit if current buffer is not visiting a file."
 
     (defun td/setup-folding ()
       (interactive)
+      ;; TODO: ignore uninteresting files
       (hs-minor-mode t)
       (hideshowvis-minor-mode t))
 
-    (add-hook 'prog-mode-hook #'td/setup-folding)))
+    ;; (add-hook 'prog-mode-hook #'td/setup-folding)
+    ))
 
 
 (use-package undo-tree
@@ -850,11 +885,12 @@ for a file to visit if current buffer is not visiting a file."
 (use-package swiper
   :defer t
   :ensure t
-  :bind (("C-M-j" . swiper)))
+  :bind (("C-M-l" . swiper)))
 
 (use-package ivy
   :defer t
   :init (ivy-mode t)
+  :bind (("C-M-o" . ivy-switch-buffer))
   :config
   (setq ivy-format-function 'ivy-format-function-arrow
         ivy-count-format ""
@@ -954,7 +990,8 @@ for a file to visit if current buffer is not visiting a file."
 (use-package paren-face
   :ensure t
   :defer t
-  :init (global-paren-face-mode t))
+  :init (global-paren-face-mode t)
+  :config (setq paren-face-modes '(prog-mode)))
 
 (use-package evil
   :ensure t
@@ -1019,22 +1056,40 @@ for a file to visit if current buffer is not visiting a file."
   :ensure t
   :init (dumb-jump-mode t))
 
-(use-package anaconda-mode
-  :ensure t
-  :init
-  (progn
-    (add-hook 'python-mode-hook 'anaconda-mode)
-    (add-hook 'python-mode-hook 'anaconda-eldoc-mode)))
+;; (use-package anaconda-mode
+;;   :ensure t
+;;   :init
+;;   (progn
+;;     (add-hook 'python-mode-hook 'anaconda-mode)
+;;     (add-hook 'python-mode-hook 'anaconda-eldoc-mode)))
 
-(use-package auto-package-update
-  :ensure t
-  :defer 128
-  :init (auto-package-update-maybe))
+;; (use-package auto-package-update
+;;   :ensure t
+;;   :defer 128
+;;   :init (auto-package-update-maybe))
 
 (use-package yasnippet
-  :ensure t
-  :defer t
-  :init (yas-global-mode t))
+  :commands yas-global-mode
+  :init
+  (progn
+    (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
+    (yas-global-mode t))
+  :config
+  (progn
+    (setq yas-prompt-functions
+          '(yas-ido-prompt yas-completing-prompt yas-no-prompt)
+          ;; Suppress excessive log messages
+          yas-verbosity 1
+          ;; I am a weird user, I use SPACE to expand my
+          ;; snippets, this save me from triggering them accidentally.
+          yas-expand-only-for-last-commands
+          '(self-insert-command org-self-insert-command))
+
+    (unbind-key "TAB" yas-minor-mode-map)
+    (unbind-key "<tab>" yas-minor-mode-map)
+    (bind-key "SPC" 'yas-expand yas-minor-mode-map)))
+
+(bind-key "C-M-]" 'previous-buffer)
 
 
 (provide 'init)

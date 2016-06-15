@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: onnewprops
+# key: onnewprops
+# --
+componentWillReceiveProps(next) {
+  $0
+}

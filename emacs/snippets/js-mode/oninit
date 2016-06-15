@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: oninit
+# key: oninit
+# --
+constructor(props) {
+  super(props)
+  $0
+}

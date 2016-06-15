@@ -125,7 +125,9 @@ if which pyenv > /dev/null; then
 fi
 
 # docker
-if which docker-machine > /dev/null; then eval $(docker-machine env dev); fi
+# if which docker-machine > /dev/null; then eval $(docker-machine env dev); fi
 
 # autoenv
 # source $LOCAL/opt/autoenv/activate.sh
+
+complete -C aws_completer aws

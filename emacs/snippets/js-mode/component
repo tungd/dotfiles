@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: component
+# key: component
+# --
+class $1 extends Component {
+
+  render() {
+    $0
+  }
+}

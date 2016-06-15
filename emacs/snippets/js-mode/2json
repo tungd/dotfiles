@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: 2json
+# key: 2json
+# --
+then(resp => resp.json())$0

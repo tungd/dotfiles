@@ -8,4 +8,9 @@ emacs/company-statistics-cache.el
 emacs/custom.el
 emacs/places
 emacs/undos/
+emacs/eshell/
 
+/emacs/tramp
+/emacs/.last-package-update-day
+.yas-compiled-snippets.el
+/emacs/history

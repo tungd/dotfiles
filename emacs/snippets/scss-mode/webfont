@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: webfont
+# key: webfont
+# --
+@font-face {
+  font-family: $1;
+  src: url('$2.woff') format('woff');
+  font-weight: ${3:normal};
+  font-style: $3;
+}

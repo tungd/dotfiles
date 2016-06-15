@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: didmount
+# key: didmount
+# --
+componentDidMount() {
+  $0
+}
