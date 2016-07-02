@@ -31,12 +31,13 @@
 (setq default-frame-alist
       '(;;(left-fringe . 0)
         (right-fringe . 0)
-        (font . "Monaco 12")
+        (font . "Fira Mono 12")
         (top . 0)
-        (left . 450)
-        (width . 100) (height . 50)
+        (left . 512)
+        (width . 100) (height . 54)
         (border-width . 0)
         (internal-border-width . 0)))
+(setq-default line-spacing 4)
 
 ;; This is for emacsforosx.com version
 (setq mac-option-modifier 'super
@@ -146,10 +147,14 @@
 ;;   :init
 ;;   (load-theme 'hickey t))
 
-(use-package apropospriate-theme
+;; (use-package apropospriate-theme
+;;   :ensure t
+;;   :init
+;;   (load-theme 'apropospriate-light t))
+(use-package flatland-theme
   :ensure t
   :init
-  (load-theme 'apropospriate-light t))
+  (load-theme 'flatland t))
 
 
 (scroll-bar-mode -1)
@@ -196,7 +201,12 @@
                           :background (face-background 'fringe)
                           :foreground (face-foreground 'font-lock-comment-face)))
 
-    (add-hook 'prog-mode-hook #'nlinum-mode)
+    (defun td/nlinum-may-turn-on ()
+      "Turn on `nlinum' only if we're in GUI."
+      (interactive)
+      (if (display-graphic-p) (nlinum-mode t)))
+
+    (add-hook 'prog-mode-hook #'td/nlinum-may-turn-on)
     (add-hook 'td/adaptive-theme-functions #'td/nlinum-custom-faces))
   :config
   (progn
@@ -318,6 +328,7 @@
   :ensure t
   :defer t
   :init (projectile-global-mode t)
+  :bind ("C-M-'" . projectile-find-file-dwim)
   :config
   (setq projectile-completion-system 'ivy
         projectile-globally-ignored-file-suffixes
@@ -493,7 +504,8 @@
   :init
   (progn
     (add-hook 'text-mode-hook #'flyspell-mode)
-    (add-hook 'prog-mode-hook #'flyspell-prog-mode)))
+    ;; (add-hook 'prog-mode-hook #'flyspell-prog-mode)
+    ))
 
 (use-package dired
   :defer t
@@ -895,7 +907,18 @@ for a file to visit if current buffer is not visiting a file."
   (setq ivy-format-function 'ivy-format-function-arrow
         ivy-count-format ""
         ivy-use-virtual-buffers t
+        ivy-height (- (frame-height) 3)
+        ivy-fixed-height-minibuffer t
+        max-mini-window-height 2.0
         projectile-completion-system 'ivy))
+
+;; (use-package ido
+;;   :init (ido-mode t)
+;;   :config
+;;   (setq ido-virtual-buffers t
+;;         ido-auto-merge-delay-time 99999
+;;         max-mini-window-height 1
+;;         projectile-completion-system 'ido))
 
 (use-package counsel
   :ensure t
