@@ -21,6 +21,7 @@
       auto-save-list-file-prefix td/data-directory
       auto-save-timeout (* 5 60)
       create-lockfiles nil
+      make-backup-files nil
       ring-bell-function 'ignore)
 
 ;;
@@ -146,15 +147,14 @@
 ;;   :ensure t
 ;;   :init
 ;;   (load-theme 'hickey t))
-
-;; (use-package apropospriate-theme
-;;   :ensure t
-;;   :init
-;;   (load-theme 'apropospriate-light t))
-(use-package flatland-theme
+(use-package apropospriate-theme
   :ensure t
   :init
-  (load-theme 'flatland t))
+  (load-theme 'apropospriate-dark t))
+;; (use-package flatland-theme
+;;   :ensure t
+;;   :init
+;;   (load-theme 'flatland t))
 
 
 (scroll-bar-mode -1)
@@ -214,7 +214,7 @@
         (defun nlinum--face-width (face)
           "Stub for feature not available in stable Emacs. Remove
           when 25 come out."
-          5))
+          6))
 
     (setq nlinum-format " %4d ")))
 
@@ -330,7 +330,7 @@
   :init (projectile-global-mode t)
   :bind ("C-M-'" . projectile-find-file-dwim)
   :config
-  (setq projectile-completion-system 'ivy
+  (setq projectile-completion-system 'ido
         projectile-globally-ignored-file-suffixes
         '("jpg" "png" "svg" "psd" "sketch" "afdesign"
           "pdf" "doc" "docx" "xls" "xlsx"
@@ -404,7 +404,7 @@
   :defer t
   :init
   (progn
-    ;; (setq sml/theme 'dark)
+    (setq sml/theme 'dark)
     (sml/setup))
   :config
   (progn
@@ -599,6 +599,12 @@
          ("\\.cljs$" . clojure-mode)
          ("build\\.boot$" . clojure-mode)))
 
+(use-package cider
+  :ensure t
+  :defer t
+  :init
+  (add-hook 'clojure-mode-hook 'cider-mode))
+
 
 (defun td/css-imenu-expressions ()
   "TODO: docs."
@@ -635,6 +641,11 @@
 (use-package go-mode
   :ensure t
   :mode (("\\.go$" . go-mode)))
+
+(use-package go-eldoc
+  :ensure t
+  :defer t
+  :init (add-hook 'go-mode-hook 'go-eldoc-setup))
 
 (use-package php-mode
   :ensure t
@@ -899,33 +910,38 @@ for a file to visit if current buffer is not visiting a file."
   :ensure t
   :bind (("C-M-l" . swiper)))
 
-(use-package ivy
-  :defer t
-  :init (ivy-mode t)
-  :bind (("C-M-o" . ivy-switch-buffer))
-  :config
-  (setq ivy-format-function 'ivy-format-function-arrow
-        ivy-count-format ""
-        ivy-use-virtual-buffers t
-        ivy-height (- (frame-height) 3)
-        ivy-fixed-height-minibuffer t
-        max-mini-window-height 2.0
-        projectile-completion-system 'ivy))
-
-;; (use-package ido
-;;   :init (ido-mode t)
+;; (use-package ivy
+;;   :defer t
+;;   :init (ivy-mode t)
+;;   :bind (("C-M-o" . ivy-switch-buffer))
 ;;   :config
-;;   (setq ido-virtual-buffers t
-;;         ido-auto-merge-delay-time 99999
-;;         max-mini-window-height 1
-;;         projectile-completion-system 'ido))
+;;   (setq ivy-format-function 'ivy-format-function-arrow
+;;         ivy-count-format ""
+;;         ivy-use-virtual-buffers t
+;;         ivy-height (- (frame-height) 3)
+;;         ivy-fixed-height-minibuffer t
+;;         max-mini-window-height 2.0
+;;         projectile-completion-system 'ivy))
 
-(use-package counsel
-  :ensure t
-  :defer t
-  :bind (([remap find-file] . counsel-find-file)
-         ("M-m" . counsel-M-x)
-         ("C-c i" . counsel-imenu)))
+(use-package ido
+  :init (ido-mode t)
+  :config
+  (setq ido-use-virtual-buffers t
+        ido-auto-merge-delay-time 99999
+        max-mini-window-height 1
+        projectile-completion-system 'ido))
+
+(use-package smex
+  :init (smex-initialize)
+  :bind (("M-m" . smex)))
+
+;; (use-package counsel
+;;   :ensure t
+;;   :defer t
+;;   :bind (([remap find-file] . counsel-find-file)
+;;          ([remap execute-extended-command] . counsel-M-x)
+;;          ("M-m" . counsel-M-x)
+;;          ("C-c i" . counsel-imenu)))
 
 (use-package imenu
   :defer t
@@ -1024,7 +1040,8 @@ for a file to visit if current buffer is not visiting a file."
   (progn
     (setq evil-ex-substitute-global t
           evil-cross-lines t
-          evil-move-cursor-back t)
+          evil-move-cursor-back t
+          evil-insert-state-cursor '(bar . 2))
 
     (use-package evil-surround
       :ensure t
@@ -1113,6 +1130,18 @@ for a file to visit if current buffer is not visiting a file."
     (bind-key "SPC" 'yas-expand yas-minor-mode-map)))
 
 (bind-key "C-M-]" 'previous-buffer)
+
+(use-package go-mode
+  :ensure t
+  :mode ("\.go$" . go-mode)
+  :config
+  (progn
+
+    (defun td/setup-go ()
+      (interactive)
+      (setq-local tab-width 4)))
+
+  (add-hook 'go-mode-hook #'td/setup-go))
 
 
 (provide 'init)

@@ -59,7 +59,7 @@ export SBT_OPTS="-XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=256M"
 export LOCAL=$HOME/.local
 export PATH=$LOCAL/bin:$LOCAL/sbin:$PATH
 
-export GOPATH=$LOCAL/go
+export GOPATH=$HOME/Projects/go
 export PATH=$GOPATH/bin:$LOCAL/opt/go/libexec/bin:$PATH
 
 export PYENV_ROOT=/Users/tung/.local/var/pyenv
@@ -136,5 +136,5 @@ if [ -f "~/.iterm2_shell_integration.$(basename $SHELL)" ]; then
     source ~/.iterm2_shell_integration.`basename $SHELL`
 fi
 
-# autojump
-[[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
+# z
+[[ -s $(brew --prefix)/etc/profile.d/z.sh ]] && . $(brew --prefix)/etc/profile.d/z.sh
