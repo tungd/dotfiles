@@ -20,8 +20,8 @@
 (setq backup-directory-alist `((".*" . ,td/data-directory))
       auto-save-list-file-prefix td/data-directory
       auto-save-timeout (* 5 60)
+      auto-save-file-name-transforms `((".*" ,td/data-directory))
       create-lockfiles nil
-      make-backup-files nil
       ring-bell-function 'ignore)
 
 ;;
@@ -32,17 +32,20 @@
 (setq default-frame-alist
       '(;;(left-fringe . 0)
         (right-fringe . 0)
-        (font . "Fira Mono 12")
+        (font . "Fira Code 14")
         (top . 0)
         (left . 512)
         (width . 100) (height . 54)
         (border-width . 0)
         (internal-border-width . 0)))
-(setq-default line-spacing 4)
+(setq-default line-spacing 2)
 
 ;; This is for emacsforosx.com version
 (setq mac-option-modifier 'super
       mac-command-modifier 'meta)
+
+(if (fboundp 'mac-auto-operator-composition-mode)
+    (mac-auto-operator-composition-mode))
 
 (set-default-coding-systems 'utf-8-unix)
 (set-terminal-coding-system 'utf-8-unix)
@@ -53,6 +56,9 @@
               tab-width 2)
 (setq require-final-newline t
       echo-keystrokes 0.1)
+
+(global-auto-revert-mode t)
+
 
 (use-package etags
   :defer t
@@ -143,18 +149,9 @@
 
 (advice-add 'load-theme :after #'td/adaptive-theme)
 
-;; (use-package sublime-themes
-;;   :ensure t
-;;   :init
-;;   (load-theme 'hickey t))
-(use-package apropospriate-theme
+(use-package subatomic-theme
   :ensure t
-  :init
-  (load-theme 'apropospriate-dark t))
-;; (use-package flatland-theme
-;;   :ensure t
-;;   :init
-;;   (load-theme 'flatland t))
+  :init (load-theme 'subatomic t))
 
 
 (scroll-bar-mode -1)
@@ -302,11 +299,6 @@
       (let ((anzu-replace-at-cursor-thing 'buffer))
         (call-interactively 'anzu-query-replace-at-cursor-thing)))))
 
-(use-package osx-dictionary
-  :ensure t
-  :defer t
-  :bind (("C-c d" . osx-dictionary-search-pointer)))
-
 (use-package window-numbering
   :ensure t
   :defer t
@@ -345,67 +337,34 @@
 (use-package diff-hl
   :ensure t
   :defer t
-  :init
-  (progn
-    (global-diff-hl-mode t)
-
-    (defun td/diff-hl-custom-faces ()
-      "Setup custom color for `diff-hl' faces."
-      (interactive)
-      (set-face-attribute 'diff-hl-insert nil
-                          :inherit nil :background nil :foreground "#81af34")
-      (set-face-attribute 'diff-hl-delete nil
-                          :inherit nil :background nil :foreground "#ff0000")
-      (set-face-attribute 'diff-hl-change nil
-                          :inherit nil :background nil :foreground "#deae3e"))
-
-    (add-hook 'td/adaptive-theme-functions #'td/diff-hl-custom-faces))
+  :init (global-diff-hl-mode t)
   :config
   (progn
-    (define-fringe-bitmap 'td/diff-hl-bmp [192] 1 16 '(top t))
-    (defun td/diff-hl-bmp (type pos) 'td/diff-hl-bmp)
+    (setq diff-hl-draw-borders nil)
 
-    (setq diff-hl-draw-borders nil
-          ;; diff-hl-fringe-bmp-function #'td/diff-hl-bmp
-          )
+    (defun td/diff-hl-custom-faces ()
+      (interactive)
+      (let ((highlight (color-lighten-name (face-background 'default) 10)))
+        (set-face-attribute 'diff-hl-change nil :background highlight)
+        (set-face-attribute 'diff-hl-insert nil :background highlight)))
+
+    (add-hook 'diff-hl-mode-hook #'td/diff-hl-custom-faces)
 
     (defun diff-hl-overlay-modified (ov after-p beg end &optional len)
       "Markers disappear and reapear is kind of annoying to me.")))
 
 (use-package magit
   :ensure t
-  :defer t)
-
-(use-package popwin
-  :defer 1
-  :ensure t
-  :commands popwin-mode
-  :init (popwin-mode t)
+  :defer t
   :config
   (progn
-    (bind-key "C-x p" popwin:keymap)
-
-    (mapc (lambda (c)
-            (add-to-list 'popwin:special-display-config c))
-          '((occur-mode :noselect nil)
-            ("*Org Agenda*" :width 60 :position right :dedicated t :stick t)
-            ("*Compile-Log*" :height 20 :noselect t)
-            ("*Ido Completions*" :noselect t :height 15)
-            ("*cider-error*" :height 15 :stick t)
-            ("*cider-doc*" :height 15 :stick t)
-            ("*cider-src*" :height 15 :stick t)
-            ("*cider-result*" :height 15 :stick t)
-            ("*cider-macroexpansion*" :height 15 :stick t)
-            (shell-mode :height 15)
-            (ag-mode :height 15)))))
+    (setq magit-display-buffer-function
+          #'magit-display-buffer-fullframe-status-v1)))
 
 (use-package smart-mode-line
   :ensure t
   :defer t
-  :init
-  (progn
-    (setq sml/theme 'dark)
-    (sml/setup))
+  :init (sml/setup)
   :config
   (progn
     (add-to-list 'sml/replacer-regexp-list
@@ -596,7 +555,6 @@
   :ensure t
   :defer t
   :mode (("\\.clj$" . clojure-mode)
-         ("\\.cljs$" . clojure-mode)
          ("build\\.boot$" . clojure-mode)))
 
 (use-package cider
@@ -910,48 +868,44 @@ for a file to visit if current buffer is not visiting a file."
   :ensure t
   :bind (("C-M-l" . swiper)))
 
-;; (use-package ivy
-;;   :defer t
-;;   :init (ivy-mode t)
-;;   :bind (("C-M-o" . ivy-switch-buffer))
-;;   :config
-;;   (setq ivy-format-function 'ivy-format-function-arrow
-;;         ivy-count-format ""
-;;         ivy-use-virtual-buffers t
-;;         ivy-height (- (frame-height) 3)
-;;         ivy-fixed-height-minibuffer t
-;;         max-mini-window-height 2.0
-;;         projectile-completion-system 'ivy))
-
-(use-package ido
-  :init (ido-mode t)
+(use-package ivy
+  :defer t
+  :init (ivy-mode t)
+  :bind (("C-M-o" . ivy-switch-buffer))
   :config
-  (setq ido-use-virtual-buffers t
-        ido-auto-merge-delay-time 99999
-        max-mini-window-height 1
-        projectile-completion-system 'ido))
+  (setq ivy-format-function 'ivy-format-function-arrow
+        ivy-count-format ""
+        ivy-use-virtual-buffers t
+        ivy-height (- (frame-height) 3)
+        ivy-fixed-height-minibuffer t
+        projectile-completion-system 'ivy))
+
+(use-package counsel
+  :ensure t
+  :defer t
+  :bind (([remap find-file] . counsel-find-file)
+         ([remap execute-extended-command] . counsel-M-x)
+         ("M-m" . counsel-M-x)
+         ("C-c i" . counsel-imenu)))
+
+;; (use-package ido
+;;   :init (ido-mode t)
+;;   :config
+;;   (setq ido-use-virtual-buffers t
+;;         ido-auto-merge-delay-time 99999
+;;         max-mini-window-height 1
+;;         projectile-completion-system 'ido))
 
 (use-package smex
-  :init (smex-initialize)
-  :bind (("M-m" . smex)))
-
-;; (use-package counsel
-;;   :ensure t
-;;   :defer t
-;;   :bind (([remap find-file] . counsel-find-file)
-;;          ([remap execute-extended-command] . counsel-M-x)
-;;          ("M-m" . counsel-M-x)
-;;          ("C-c i" . counsel-imenu)))
+  :ensure t
+  ;; :init (smex-initialize)
+  ;; :bind (("M-m" . smex))
+  )
 
 (use-package imenu
   :defer t
   :config
   (setq imenu-auto-rescan t))
-
-(use-package haml-mode
-  :ensure t
-  :defer t
-  :mode ("\\.haml" . haml-mode))
 
 (use-package indent-guide
   :ensure t
@@ -978,17 +932,9 @@ for a file to visit if current buffer is not visiting a file."
     (eval-after-load 'js2-mode
       '(setq js2-mode-show-parse-errors nil))))
 
-
 (use-package eldoc
   :config
   (setq eldoc-idle-delay 5))
-
-(use-package inf-ruby
-  :ensure t
-  :defer t
-  :config
-  (progn
-    (setq inf-ruby-default-implementation "pry")))
 
 (use-package ediff
   :defer t
@@ -1041,7 +987,8 @@ for a file to visit if current buffer is not visiting a file."
     (setq evil-ex-substitute-global t
           evil-cross-lines t
           evil-move-cursor-back t
-          evil-insert-state-cursor '(bar . 2))
+          evil-insert-state-cursor '(bar . 2)
+          evil-normal-state-cursor '(box "orange"))
 
     (use-package evil-surround
       :ensure t

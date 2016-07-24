@@ -63,6 +63,7 @@ export GOPATH=$HOME/Projects/go
 export PATH=$GOPATH/bin:$LOCAL/opt/go/libexec/bin:$PATH
 
 export PYENV_ROOT=/Users/tung/.local/var/pyenv
+export PYTHONUNBUFFERED=1
 
 # export PIP_USER_BASE=$HOME/Library/Python/2.7
 # export PATH=$PIP_USER_BASE/bin:$PATH
