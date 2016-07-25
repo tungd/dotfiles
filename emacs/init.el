@@ -351,7 +351,9 @@
     (add-hook 'diff-hl-mode-hook #'td/diff-hl-custom-faces)
 
     (defun diff-hl-overlay-modified (ov after-p beg end &optional len)
-      "Markers disappear and reapear is kind of annoying to me.")))
+      "Markers disappear and reapear is kind of annoying to me.")
+
+    (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh)))
 
 (use-package magit
   :ensure t
