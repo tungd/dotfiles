@@ -1,7 +1,15 @@
 ;;; init.el -- Emacs initialization file
-;;;
+;;
 ;;; Commentary:
-;;;
+;; Sections:
+;; - Package loading
+;; - Global variable declaration
+;; - Text editor behaviors
+;; - Programming features
+;; - Programming language support
+;; - Looks and feels
+;; - Utilities
+;;
 ;;; Code:
 
 (require 'package)
@@ -55,7 +63,8 @@
 (setq-default indent-tabs-mode nil
               tab-width 2)
 (setq require-final-newline t
-      echo-keystrokes 0.1)
+      echo-keystrokes 0.1
+      scroll-margin 4)
 
 (global-auto-revert-mode t)
 
@@ -206,14 +215,7 @@
     (add-hook 'prog-mode-hook #'td/nlinum-may-turn-on)
     (add-hook 'td/adaptive-theme-functions #'td/nlinum-custom-faces))
   :config
-  (progn
-    (if (< emacs-major-version 25)
-        (defun nlinum--face-width (face)
-          "Stub for feature not available in stable Emacs. Remove
-          when 25 come out."
-          6))
-
-    (setq nlinum-format " %4d ")))
+  (setq nlinum-format " %4d "))
 
 (use-package exec-path-from-shell
   :ensure t
@@ -246,13 +248,6 @@
     (bind-keys :map company-active-map
                ("C-n" . company-select-next-or-abort)
                ("C-p" . company-select-previous-or-abort))))
-
-(use-package company-go
-  :ensure t
-  :defer t
-  :init
-  (eval-after-load 'go-mode
-    '(add-to-list 'company-backends 'company-go)))
 
 (use-package company-web
   :ensure t
@@ -348,7 +343,7 @@
         (set-face-attribute 'diff-hl-change nil :background highlight)
         (set-face-attribute 'diff-hl-insert nil :background highlight)))
 
-    (add-hook 'diff-hl-mode-hook #'td/diff-hl-custom-faces)
+    ;;(add-hook 'diff-hl-mode-hook #'td/diff-hl-custom-faces)
 
     (defun diff-hl-overlay-modified (ov after-p beg end &optional len)
       "Markers disappear and reapear is kind of annoying to me.")
@@ -601,11 +596,6 @@
 (use-package go-mode
   :ensure t
   :mode (("\\.go$" . go-mode)))
-
-(use-package go-eldoc
-  :ensure t
-  :defer t
-  :init (add-hook 'go-mode-hook 'go-eldoc-setup))
 
 (use-package php-mode
   :ensure t
@@ -875,12 +865,19 @@ for a file to visit if current buffer is not visiting a file."
   :init (ivy-mode t)
   :bind (("C-M-o" . ivy-switch-buffer))
   :config
-  (setq ivy-format-function 'ivy-format-function-arrow
-        ivy-count-format ""
-        ivy-use-virtual-buffers t
-        ivy-height (- (frame-height) 3)
-        ivy-fixed-height-minibuffer t
-        projectile-completion-system 'ivy))
+  (progn
+    (setq ivy-format-function 'ivy-format-function-arrow
+          ivy-count-format ""
+          ivy-use-virtual-buffers t
+          ivy-height 16
+          projectile-completion-system 'ivy)
+
+    (use-package flx
+      :ensure t
+      :init (setq ivy-re-builders-alist
+                  '((t . ivy--regex-plus))))
+
+    (require 'ivy-popup)))
 
 (use-package counsel
   :ensure t
@@ -900,9 +897,7 @@ for a file to visit if current buffer is not visiting a file."
 
 (use-package smex
   :ensure t
-  ;; :init (smex-initialize)
-  ;; :bind (("M-m" . smex))
-  )
+  :init (smex-initialize))
 
 (use-package imenu
   :defer t
@@ -1092,6 +1087,19 @@ for a file to visit if current buffer is not visiting a file."
 
   (add-hook 'go-mode-hook #'td/setup-go))
 
+(use-package ztree
+  :ensure t
+  :defer t)
+
+(use-package pyvenv
+  :ensure t
+  :defer t)
+
+(defun imenu-elisp-sections ()
+  (setq imenu-prev-index-position-function nil)
+  (add-to-list 'imenu-generic-expression '("Sections" "^;;;; \\(.+\\)$" 1) t))
+
+(add-hook 'emacs-lisp-mode-hook 'imenu-elisp-sections)
 
 (provide 'init)
 ;;; init.el ends here
