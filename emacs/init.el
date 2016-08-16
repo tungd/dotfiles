@@ -42,7 +42,7 @@
         (font . "Fira Code 12")
         (top . 0)
         (left . 512)
-        (width . 100) (height . 54)
+        (width . 128) (height . 64)
         (border-width . 0)
         (internal-border-width . 0)))
 (setq-default line-spacing 2
@@ -356,22 +356,21 @@
   (progn
     (setq diff-hl-draw-borders t)
 
-    ;; 61440 = (+ (expt 2 15) (expt 2 14) (expt 2 13) (expt 2 12))
-    ;; 49152 = (+ (expt 2 15) (expt 2 14))
-    (define-fringe-bitmap 'diff-hl-bmp-middle [49152] 1 16 '(top t))
-    (define-fringe-bitmap 'diff-hl-bmp-top [49152] 1 16 '(top t))
-    (define-fringe-bitmap 'diff-hl-bmp-bottom [49152] 1 16 '(top t))
-    (define-fringe-bitmap 'diff-hl-bmp-single [49152] 1 16 '(top t))
-
     (defun td/diff-hl-custom-faces ()
       (interactive)
+      ;; 61440 = (+ (expt 2 15) (expt 2 14) (expt 2 13) (expt 2 12))
+      ;; 49152 = (+ (expt 2 15) (expt 2 14))
+      (define-fringe-bitmap 'diff-hl-bmp-middle [49152] 1 16 '(top t))
+      (define-fringe-bitmap 'diff-hl-bmp-top [49152] 1 16 '(top t))
+      (define-fringe-bitmap 'diff-hl-bmp-bottom [49152] 1 16 '(top t))
+      (define-fringe-bitmap 'diff-hl-bmp-single [49152] 1 16 '(top t))
+
       (let ((highlight (color-lighten-name (face-background 'default) 10)))
         (set-face-attribute 'diff-hl-delete nil :background nil :foreground "#ff0000")
         (set-face-attribute 'diff-hl-change nil :background nil :foreground "#deae3e")
         (set-face-attribute 'diff-hl-insert nil :background nil :foreground "#81af34")))
 
     (add-hook 'diff-hl-mode-hook #'td/diff-hl-custom-faces)
-    (td/diff-hl-custom-faces)
 
     (defun diff-hl-overlay-modified (ov after-p beg end &optional len)
       "Markers disappear and reapear is kind of annoying to me.")
