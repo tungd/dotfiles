@@ -4,10 +4,10 @@
 ;; Sections:
 ;; - Package loading
 ;; - Global variable declaration
-;; - Text editor behaviors
-;; - Programming features
+;; - Editing
+;; - Navigation
 ;; - Programming language support
-;; - Looks and feels
+;; - UI
 ;; - Utilities
 ;;
 ;;; Code:
@@ -19,12 +19,14 @@
 
 (require 'use-package)
 
-;;;;
-(defvar td/data-directory "/tmp/")
 (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
 
-;; I rarely turn off the computer, so it's ok to have these at /tmp.
+
+;;;; Globals
+
+;; I rarely turn off the computer, so it's ok to have these in /tmp.
 ;; You know, auto cleanup as a service ;)
+(defvar td/data-directory "/tmp/")
 (setq backup-directory-alist `((".*" . ,td/data-directory))
       auto-save-list-file-prefix td/data-directory
       auto-save-timeout (* 5 60)
@@ -32,53 +34,114 @@
       create-lockfiles nil
       ring-bell-function 'ignore)
 
-;;
 (setq user-full-name "Tung Dao"
       user-mail-address "me@tungdao.com"
       default-input-method 'vietnamese-telex)
 
-(setq default-frame-alist
-      '((right-fringe . 0)
-        (font . "Fira Code 12")
-        (top . 0)
-        (left . 512)
-        (width . 128) (height . 64)
-        (border-width . 0)
-        (internal-border-width . 0)))
-(setq-default line-spacing 2
-              fringes-outside-margins t)
+(setq-default
+ visible-bell nil
+ inhibit-startup-screen t
+ delete-by-moving-to-trash t
+ custom-file (expand-file-name "custom.el" user-emacs-directory))
 
-;; This is for emacsforosx.com version
-(setq mac-option-modifier 'super
-      mac-command-modifier 'meta)
+(defalias 'yes-or-no-p 'y-or-n-p)
 
-(if (fboundp 'mac-auto-operator-composition-mode)
-    (mac-auto-operator-composition-mode))
+(load custom-file :no-error)
+
+(savehist-mode t)
+(save-place-mode t)
+(add-hook 'after-init-hook #'server-start)
+
+(when (eq system-type 'darwin)
+  (setq trash-directory "~/.Trash/"
+        mac-option-modifier 'super
+        mac-command-modifier 'meta)
+
+  (if (fboundp 'mac-auto-operator-composition-mode)
+      (mac-auto-operator-composition-mode)))
+
+(use-package exec-path-from-shell
+  :ensure t
+  :defer t
+  :init
+  (progn
+    (exec-path-from-shell-initialize)
+
+    (exec-path-from-shell-copy-envs '("PYENV_ROOT"))
+    (setenv "WORKON_HOME" (expand-file-name "versions" (getenv "PYENV_ROOT")))))
+
+
+
+;;;; Editing
+(setq-default
+ indent-tabs-mode nil
+ tab-width 2
+ require-final-newline t
+ echo-keystrokes 0.1
+ scroll-margin 4)
 
 (set-default-coding-systems 'utf-8-unix)
 (set-terminal-coding-system 'utf-8-unix)
 (set-keyboard-coding-system 'utf-8-unix)
 (prefer-coding-system 'utf-8-unix)
 
-(setq-default indent-tabs-mode nil
-              tab-width 2)
-(setq require-final-newline t
-      echo-keystrokes 0.1
-      scroll-margin 4)
-
 (global-auto-revert-mode t)
+(pending-delete-mode t)
 
+(setq-default
+ comment-auto-fill-only-comments t
+ fill-column 80)
 
-(use-package etags
+(add-hook 'text-mode-hook 'turn-on-auto-fill)
+(add-hook 'prog-mode-hook 'turn-on-auto-fill)
+
+(autoload 'zap-up-to-char "misc"
+  "Kill up to, but not including ARGth occurrence of CHAR.
+
+  \(fn arg char)"
+  'interactive)
+
+(bind-key "M-z" 'zap-up-to-char)
+
+(defun td/join-next-line ()
+  "TODO: docs."
+  (interactive)
+  (join-line -1))
+
+(bind-key "M-J" #'td/join-next-line)
+
+(defun td/cleanup-buffer ()
+  "TODO: docs."
+  (interactive)
+  (save-excursion
+    (whitespace-cleanup-region (point-min) (point-max))
+    (indent-region (point-min) (point-max))))
+
+(bind-key "M-=" #'td/cleanup-buffer)
+
+(defun sudo-edit (&optional arg)
+  "Edit currently visited file as root.
+With a prefix ARG prompt for a file to visit.  Will also prompt
+for a file to visit if current buffer is not visiting a file."
+  (interactive "P")
+  (if (or arg (not buffer-file-name))
+      (find-file (concat "/sudo:root@localhost:"
+                         (ido-read-file-name "Find file(as root): ")))
+    (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
+
+(bind-key [remap delete-horizontal-space] #'just-one-space)
+
+(use-package editorconfig
   :defer t
-  :config
-  (setq tags-revert-without-query t))
+  :ensure t
+  :init (editorconfig-mode t))
 
 (use-package whitespace
   :commands (whitespace-cleanup
              whitespace-mode)
   :bind ("C-c w" . whitespace-mode)
-  :init (add-hook 'before-save-hook #'whitespace-cleanup)
+  :init
+  (add-hook 'before-save-hook #'whitespace-cleanup)
   :config
   (progn
     (add-to-list 'whitespace-display-mappings
@@ -96,140 +159,26 @@
     (add-hook 'before-save-hook #'whitespace-cleanup)
     (add-hook 'before-save-hook #'delete-trailing-whitespace)))
 
-(setq-default comment-auto-fill-only-comments t
-              fill-column 80)
-
-(add-hook 'text-mode-hook 'turn-on-auto-fill)
-(add-hook 'prog-mode-hook 'turn-on-auto-fill)
-
-(use-package tramp
-  :defer t
-  :config
-  (progn
-    (setq password-cache-expiry nil
-          tramp-default-method "ftp")
-
-    (add-to-list 'auth-sources "~/.emacs.d/authinfo.gpg")))
-
-(use-package ange-ftp
-  :defer t
-  :config
-  (setq ange-ftp-netrc-filename "~/.emacs.d/authinfo.gpg"))
-
-;;
-(setq visible-bell nil
-      inhibit-startup-screen t
-      delete-by-moving-to-trash t
-      custom-file (expand-file-name "custom.el" user-emacs-directory))
-
-(use-package exec-path-from-shell
-  :ensure t
-  :defer t
+(use-package yasnippet
+  :commands yas-global-mode
   :init
   (progn
-    (exec-path-from-shell-copy-envs
-     '("PYENV_ROOT"))
-
-    (setenv "WORKON_HOME" (expand-file-name "versions" (getenv "PYENV_ROOT")))))
-
-(when (eq system-type 'darwin)
-  (setq trash-directory "~/.Trash/")
-
-  ;; BSD ls does not support --dired. Use GNU core-utils: brew install coreutils
-  (when (executable-find "gls")
-    (setq insert-directory-program "gls"))
-
-  ;; Derive PATH by running a shell so that GUI Emacs sessions have access to it
-  (exec-path-from-shell-initialize))
-
-;; Never require full word answers
-(defalias 'yes-or-no-p 'y-or-n-p)
-
-(load custom-file :no-error)
-
-(use-package color-theme-approximate
-  :ensure t
-  :init (color-theme-approximate-on))
-
-(defvar td/adaptive-theme-functions '()
-  "Hook run after custom themes are loaded.")
-
-(defun td/adaptive-theme (theme &optional no-confirm no-enable)
-  "Adapt some faces according to THEME, NO-CONFIRM and NO-ENABLE."
-  (run-hooks 'td/adaptive-theme-functions))
-
-(advice-add 'load-theme :after #'td/adaptive-theme)
-
-(use-package subatomic-theme
-  :ensure t
-  :init (load-theme 'subatomic t))
-
-
-(scroll-bar-mode -1)
-(tool-bar-mode -1)
-(blink-cursor-mode -1)
-(electric-pair-mode t)
-(column-number-mode t)
-(unless (display-graphic-p)
-  (menu-bar-mode -1))
-
-(pending-delete-mode t)
-
-(use-package recentf
-  :defer t
-  :init (recentf-mode t)
-  :config
-  (setq recentf-max-saved-items 64
-        recentf-auto-cleanup 'never))
-
-(use-package isearch
-  :bind (([remap isearch-forward] . isearch-forward-regexp)
-         ([remap isearch-backward] . isearch-backward-regexp))
-  :init
-  (progn
-    (defun td/isearch-message (&optional c-q-hack ellipsis)
-      "Cursor flashing in the echo area makes me crazy."
-      (isearch-message c-q-hack nil))
-
-    (setq lazy-highlight-initial-delay 0
-          isearch-message-function #'td/isearch-message)))
-
-(use-package nlinum
-  :defer t
-  :commands (nlinum-mode)
+    (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
+    (yas-global-mode t))
   :config
   (progn
-    (setq nlinum-format " %4d "
-          nlinum-highlight-current-line t)
+    (setq yas-prompt-functions
+          '(yas-ido-prompt yas-completing-prompt yas-no-prompt)
+          ;; Suppress excessive log messages
+          yas-verbosity 1
+          ;; I am a weird user, I use SPACE to expand my
+          ;; snippets, this save me from triggering them accidentally.
+          yas-expand-only-for-last-commands
+          '(self-insert-command org-self-insert-command))
 
-    (defun td/nlinum-custom-faces ()
-      "Custom faces for `nlinum'"
-      (interactive)
-      (require 'linum)
-      (require 'color)
-      (set-face-attribute 'linum nil
-                          :height 110
-                          :inherit font-lock-comment-face
-                          :background (face-background 'fringe)
-                          :foreground (face-foreground 'font-lock-comment-face))
-      (set-face-attribute 'nlinum-current-line nil
-                          :background (color-lighten-name (face-background 'linum) 10)))
-
-    (add-hook 'nlinum-mode-hook  #'td/nlinum-custom-faces)
-    (add-hook 'td/adaptive-theme-functions #'td/nlinum-custom-faces))
-  :init
-  (progn
-    (defun td/nlinum-may-turn-on ()
-      "Turn on `nlinum' only if we're in GUI."
-      (interactive)
-      (when (display-graphic-p) (nlinum-mode t)))
-
-    (add-hook 'prog-mode-hook #'td/nlinum-may-turn-on)))
-
-(use-package exec-path-from-shell
-  :ensure t
-  :defer t
-  :init (exec-path-from-shell-initialize))
+    (unbind-key "TAB" yas-minor-mode-map)
+    (unbind-key "<tab>" yas-minor-mode-map)
+    (bind-key "SPC" 'yas-expand yas-minor-mode-map)))
 
 (use-package company
   :ensure t
@@ -278,14 +227,167 @@
   :defer t
   :init (company-statistics-mode t))
 
-(use-package savehist
+(use-package expand-region
+  :ensure t
   :defer t
-  :init (savehist-mode t))
+  :bind ("M--" . er/expand-region))
 
-(use-package saveplace
+(use-package multiple-cursors
+  :ensure t
+  :defer t
+  :bind (("M-C-9" . mc/mark-previous-like-this)
+         ("M-C-0" . mc/mark-next-like-this)
+         ("M-(" . mc/skip-to-previous-like-this)
+         ("M-)" . mc/skip-to-next-like-this)
+         ("M-C-a" . mc/mark-all-like-this)
+         ("C-x SPC" . set-rectangular-region-anchor)))
+
+(use-package comment-dwim-2
+  :ensure t
+  :bind ([remap comment-dwim] . comment-dwim-2)
+  :config (setq comment-style 'multi-line))
+
+(use-package flyspell
+  :defer t
+  :bind (("C-c s" . ispell-word))
+  :config
+  (setq flyspell-prog-text-faces
+        '(font-lock-comment-face font-lock-doc-face font-lock-doc-string-face))
   :init
   (progn
-    (setq-default save-place t)))
+    ;; (add-hook 'prog-mode-hook #'flyspell-prog-mode)
+    (add-hook 'text-mode-hook #'flyspell-mode)))
+
+(use-package evil
+  :ensure t
+  :defer t
+  :init (evil-mode t)
+  :config
+  (progn
+    (setq evil-ex-substitute-global t
+          evil-cross-lines t
+          evil-move-cursor-back t
+          evil-insert-state-cursor '(bar . 2)
+          evil-normal-state-cursor '(box "orange"))
+
+    (use-package evil-surround
+      :ensure t
+      :defer t
+      :init (global-evil-surround-mode t))
+
+    (use-package evil-visualstar
+      :ensure t
+      :defer t
+      :init (global-evil-visualstar-mode))
+
+    (use-package evil-org
+      :ensure t)
+
+    (bind-keys :map evil-insert-state-map
+               ([remap newline] . newline-and-indent))
+
+    (bind-keys :map evil-normal-state-map
+               ("TAB" . evil-jump-item)
+               ("<tab>" . evil-jump-item)
+               ("j" . evil-next-visual-line)
+               ("k" . evil-previous-visual-line)
+               ("M-j" . td/next-ten-visual-line)
+               ("M-k" . td/previous-ten-visual-line))
+
+    (bind-keys :map evil-motion-state-map
+               ("TAB" . evil-jump-item)
+               ("<tab>" . evil-jump-item))
+
+    (defun td/open-line ()
+      (interactive)
+      (end-of-line)
+      (newline-and-indent))
+
+    (defun td/ends-with-colon ()
+      (interactive)
+      (end-of-line)
+      (insert ":"))
+
+    (defun td/ends-with-semicolon ()
+      (interactive)
+      (end-of-line)
+      (insert ";"))
+
+    (bind-keys :map evil-insert-state-map
+               ("C-e" . end-of-line)
+               ((kbd "<C-return>") . td/open-line)
+               ("C-;" . td/ends-with-semicolon)
+               ("C-:" . td/ends-with-colon))))
+
+(use-package evil-snipe
+  :ensure t
+  :defer t
+  :init
+  (progn
+    (evil-snipe-mode 1)
+    (evil-snipe-override-mode 1))
+  :config
+  (progn
+    (setq evil-snipe-spillover-scope 'visible)
+    (add-hook 'magit-mode-hook 'turn-off-evil-snipe-override-mode)))
+
+(use-package align
+  :defer t
+  :bind ("M-C-;" . align)
+  :config
+  (progn
+    (add-to-list 'align-rules-list
+                 '(js-object-props
+                   (regexp . "\\(\\s-*\\):")
+                   (modes . '(js-mode js2-mode))
+                   (spacing . 0)))))
+
+(use-package undo-tree
+  :ensure t
+  :init (global-undo-tree-mode t)
+  :config
+  (setq undo-tree-mode-lighter ""
+        undo-tree-visualizer-timestamps t
+        ;; Not working with yasnippet, I'm supposed to fix this but...
+        ;; undo-tree-auto-save-history t
+        ;; undo-tree-history-directory-alist '((".*" . "~/.emacs.d/undos"))
+        ))
+
+
+;;;; Navigation
+(bind-key "C-M-]" 'previous-buffer)
+
+(defun td/next-ten-visual-line ()
+  "TODO: docs."
+  (interactive)
+  (next-logical-line 10))
+
+(defun td/previous-ten-visual-line ()
+  "TODO: docs."
+  (interactive)
+  (next-logical-line -10))
+
+(bind-keys ("M-n" . td/next-ten-visual-line)
+           ("M-p" . td/previous-ten-visual-line))
+
+(use-package recentf
+  :defer t
+  :init (recentf-mode t)
+  :config
+  (setq recentf-max-saved-items 64
+        recentf-auto-cleanup 'never))
+
+(use-package isearch
+  :bind (([remap isearch-forward] . isearch-forward-regexp)
+         ([remap isearch-backward] . isearch-backward-regexp))
+  :init
+  (progn
+    (defun td/isearch-message (&optional c-q-hack ellipsis)
+      "Cursor flashing in the echo area makes me crazy."
+      (isearch-message c-q-hack nil))
+
+    (setq lazy-highlight-initial-delay 0
+          isearch-message-function #'td/isearch-message)))
 
 (use-package thingatpt
   :defer t
@@ -346,162 +448,63 @@
   :defer t
   :init (add-hook 'projectile-mode-hook #'projectile-rails-on))
 
-(use-package diff-hl
+(use-package dumb-jump
   :ensure t
+  :init (dumb-jump-mode t))
+
+(use-package swiper
   :defer t
-  :init (global-diff-hl-mode t)
+  :ensure t
+  :bind (("C-M-l" . swiper)))
+
+(use-package ivy
+  :defer t
+  :init (ivy-mode t)
+  :bind (("C-M-o" . ivy-switch-buffer))
   :config
   (progn
-    (setq diff-hl-draw-borders t)
+    (setq ivy-format-function 'ivy-format-function-arrow
+          ivy-count-format ""
+          ivy-use-virtual-buffers t
+          ivy-height 16
+          projectile-completion-system 'ivy)
 
-    (defun td/diff-hl-custom-faces ()
-      (interactive)
-      ;; 61440 = (+ (expt 2 15) (expt 2 14) (expt 2 13) (expt 2 12))
-      ;; 49152 = (+ (expt 2 15) (expt 2 14))
-      (define-fringe-bitmap 'diff-hl-bmp-middle [49152] 1 16 '(top t))
-      (define-fringe-bitmap 'diff-hl-bmp-top [49152] 1 16 '(top t))
-      (define-fringe-bitmap 'diff-hl-bmp-bottom [49152] 1 16 '(top t))
-      (define-fringe-bitmap 'diff-hl-bmp-single [49152] 1 16 '(top t))
-
-      (let ((highlight (color-lighten-name (face-background 'default) 10)))
-        (set-face-attribute 'diff-hl-delete nil :background nil :foreground "#ff0000")
-        (set-face-attribute 'diff-hl-change nil :background nil :foreground "#deae3e")
-        (set-face-attribute 'diff-hl-insert nil :background nil :foreground "#81af34")))
-
-    (add-hook 'diff-hl-mode-hook #'td/diff-hl-custom-faces)
-
-    (defun diff-hl-overlay-modified (ov after-p beg end &optional len)
-      "Markers disappear and reapear is kind of annoying to me.")
-
-    (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh)))
-
-(use-package magit
-  :ensure t
-  :defer t
-  :config
-  (progn
-    (setq magit-display-buffer-function
-          #'magit-display-buffer-fullframe-status-v1)))
-
-(use-package smart-mode-line
-  :ensure t
-  :defer t
-  :init (sml/setup)
-  :config
-  (progn
-    (add-to-list 'sml/replacer-regexp-list
-                 '("^~/Projects/dotfiles/\\(.*\\)/" ":Config:\\1:"))
-
-    (use-package rich-minority
-      :init
-      (progn
-        (add-to-list 'rm-blacklist " Undo-Tree")
-        (add-to-list 'rm-blacklist " Anzu")
-        (add-to-list 'rm-blacklist " yas")
-        (add-to-list 'rm-blacklist " company")))))
-
-(use-package expand-region
-  :ensure t
-  :defer t
-  :bind ("M--" . er/expand-region))
-
-(use-package multiple-cursors
-  :ensure t
-  :defer t
-  :bind (("M-C-9" . mc/mark-previous-like-this)
-         ("M-C-0" . mc/mark-next-like-this)
-         ("M-(" . mc/skip-to-previous-like-this)
-         ("M-)" . mc/skip-to-next-like-this)
-         ("M-C-a" . mc/mark-all-like-this)
-         ("C-x SPC" . set-rectangular-region-anchor)))
-
-(use-package comment-dwim-2
-  :ensure t
-  :bind ([remap comment-dwim] . comment-dwim-2)
-  :config (setq comment-style 'multi-line))
-
-(add-hook 'after-init-hook #'server-start)
-
-;;;;
-(use-package org
-  :defer t
-  :bind (("C-c o a" . org-agenda)
-         ("C-c o t" . org-todo-list))
-  :config
-  (progn
-    (setq org-directory "~/Dropbox (Personal)/GTD/"
-          org-ellipsis "…"
-          org-default-notes-file (expand-file-name "inbox . org" org-directory)
-          org-log-done 'time
-          org-todo-keywords
-          '((sequence "TODO(t)" "STARTED(s!)" "WAITING(w@/!)"
-                      "|" "CANCELED(c@)" "DONE(d!)"))
-          org-src-fontify-natively t
-          org-src-tab-acts-natively t
-          org-hide-leading-stars t)
-
-    (setq org-agenda-files `(,org-default-notes-file)
-          org-agenda-skip-unavailable-files t)
-
-    (use-package ob-http
+    (use-package flx
       :ensure t
-      :config
-      (org-babel-do-load-languages
-       'org-babel-load-languages
-       '((emacs-lisp . t)
-         (http . t))))
-    (setq org-confirm-babel-evaluate nil)))
+      :init
+      (setq ivy-re-builders-alist '((t . ivy--regex-plus))
+            ivy-initial-inputs-alist nil))
 
-(use-package org-agenda
-  :config
-  (setq org-agenda-skip-deadline-if-done nil
-        org-agenda-skip-scheduled-if-done nil
-        org-agenda-restore-windows-after-quit t
-        org-agenda-window-setup 'current-window
-        org-agenda-show-all-dates t
-        org-agenda-show-log t))
+    (require 'ivy-popup)))
 
-(use-package calc
+(use-package counsel
+  :ensure t
   :defer t
-  :bind ("C-c b c" . quick-calc))
+  :bind (([remap find-file] . counsel-find-file)
+         ([remap execute-extended-command] . counsel-M-x)
+         ("M-m" . counsel-M-x)
+         ("C-c i" . counsel-imenu)))
 
-(use-package ispell
+(use-package smex
+  :ensure t
+  :init (smex-initialize))
+
+(use-package imenu
   :defer t
   :config
-  (progn
-    (defun td/org-ispell ()
-      "Configure `ispell-skip-region-alist' for `org-mode'."
-      (make-local-variable 'ispell-skip-region-alist)
-      (add-to-list 'ispell-skip-region-alist '(org-property-drawer-re))
-      (add-to-list 'ispell-skip-region-alist '("~" "~"))
-      (add-to-list 'ispell-skip-region-alist '("=" "="))
-      (add-to-list 'ispell-skip-region-alist '("^#\\+BEGIN_SRC" . "^#\\+END_SRC")))
-    (add-hook 'org-mode-hook #'td/org-ispell)))
+  (setq imenu-auto-rescan t))
 
-(use-package flyspell
+(use-package ag
   :defer t
-  :bind (("C-c s" . ispell-word))
-  :config
-  (setq flyspell-prog-text-faces
-        '(font-lock-comment-face font-lock-doc-face font-lock-doc-string-face))
-  :init
-  (progn
-    (add-hook 'text-mode-hook #'flyspell-mode)
-    ;; (add-hook 'prog-mode-hook #'flyspell-prog-mode)
-    ))
+  :ensure t)
 
-(use-package dired
+(use-package wgrep-ag
   :defer t
-  :config
-  (progn
-    (dired-async-mode t)
+  :ensure t)
 
-    (setq dired-listing-switches "-alh"
-          dired-recursive-copies 'always)
 
-    (bind-keys :map dired-mode-map
-               ("C-c '" . wdired-change-to-wdired-mode))))
-
+;;;; Programming langauges
+;;;; Web
 (use-package emmet-mode
   :ensure t
   :defer t
@@ -549,50 +552,6 @@
           web-mode-css-indent-offset 2
           web-mode-code-indent-offset 2)))
 
-(use-package js
-  :mode (("\\.json$" . js-mode))
-  :config
-  (setq js-indent-level 2))
-
-(use-package align
-  :defer t
-  :bind ("M-C-;" . align)
-  :config
-  (progn
-    (add-to-list 'align-rules-list
-                 '(js-object-props
-                   (regexp . "\\(\\s-*\\):")
-                   (modes . '(js-mode js2-mode))
-                   (spacing . 0)))))
-
-(use-package js2-mode
-  :ensure t
-  :mode (("\\.js$" . js2-mode)
-         ("\\.jsx" . js2-jsx-mode))
-  :config (setq js2-basic-offset 2
-                js2-include-node-externs t
-                js2-highlight-level 3
-                js2-mode-show-parse-errors nil
-                js2-strict-missing-semi-warning nil))
-
-(use-package clojure-mode
-  :ensure t
-  :defer t
-  :mode (("\\.clj$" . clojure-mode)
-         ("build\\.boot$" . clojure-mode)))
-
-;; (use-package cider
-;;   :ensure t
-;;   :defer t
-;;   :init
-;;   (add-hook 'clojure-mode-hook 'cider-mode))
-(use-package monroe
-  :ensure t
-  :defer t
-  :commands (clojure-enable-monroe)
-  :init (add-hook 'clojure-mode-hook 'clojure-enable-monroe))
-
-
 (defun td/css-imenu-expressions ()
   "TODO: docs."
   (set (make-local-variable 'imenu-generic-expression)
@@ -614,6 +573,68 @@
   :ensure t
   :mode (("\\.less" . less-css-mode)))
 
+;;;; Javascript
+(use-package js
+  :mode (("\\.json$" . js-mode))
+  :config
+  (setq js-indent-level 2))
+
+(use-package js2-mode
+  :ensure t
+  :mode (("\\.js$" . js2-mode)
+         ("\\.jsx" . js2-jsx-mode))
+  :config (setq js2-basic-offset 2
+                js2-include-node-externs t
+                js2-highlight-level 3
+                js2-mode-show-parse-errors nil
+                js2-strict-missing-semi-warning nil))
+
+;;;; Clojure
+(use-package clojure-mode
+  :ensure t
+  :defer t
+  :mode (("\\.clj$" . clojure-mode)
+         ("build\\.boot$" . clojure-mode)))
+
+;; (use-package cider
+;;   :ensure t
+;;   :defer t
+;;   :init
+;;   (add-hook 'clojure-mode-hook 'cider-mode))
+
+(use-package monroe
+  :ensure t
+  :defer t
+  :commands (clojure-enable-monroe)
+  :init (add-hook 'clojure-mode-hook 'clojure-enable-monroe))
+
+;;;; Elixir
+(use-package elixir-mode
+  :ensure t
+  :defer t)
+
+(use-package alchemist
+  :ensure t
+  :defer t
+  :init (add-hook 'elixir-mode-hook #'alchemist-mode))
+
+
+;;;; Python
+(use-package pyvenv
+  :ensure t
+  :defer t)
+
+
+;;;; Emacs Lisp
+(use-package elisp-mode
+  :config
+  (progn
+    (defun td/imenu-elisp-sections ()
+      (setq imenu-prev-index-position-function nil)
+      (add-to-list 'imenu-generic-expression '("Sections" "^;;;; \\(.+\\)$" 1) t))
+
+    (add-hook 'emacs-lisp-mode-hook 'td/imenu-elisp-sections)))
+;;;; Misc
 (use-package yaml-mode
   :ensure t
   :mode (("\\.yaml$" . yaml-mode)
@@ -625,156 +646,14 @@
   :config
   (setq sh-basic-offset 2))
 
-(use-package go-mode
+(use-package dockerfile-mode
   :ensure t
-  :mode (("\\.go$" . go-mode)))
-
-(use-package php-mode
-  :ensure t
-  :defer t
-  :mode (("\\.php$" . php-mode))
-  :config
-  (setq php-template-compatibility nil
-        php-mode-coding-style 'drupal))
-
-;;;;
-
-(autoload 'zap-up-to-char "misc" "Kill up to, but not including ARGth occurrence of CHAR.
-
-  \(fn arg char)"
-  'interactive)
-
-(bind-key "M-z" 'zap-up-to-char)
-
-(defun td/next-ten-visual-line ()
-  "TODO: docs."
-  (interactive)
-  (next-logical-line 10))
-
-(defun td/previous-ten-visual-line ()
-  "TODO: docs."
-  (interactive)
-  (next-logical-line -10))
-
-(bind-keys ("M-n" . td/next-ten-visual-line)
-           ("M-p" . td/previous-ten-visual-line))
-
-(defun td/join-next-line ()
-  "TODO: docs."
-  (interactive)
-  (join-line -1))
-
-(bind-key "M-J" #'td/join-next-line)
-
-(defun td/cleanup-buffer ()
-  "TODO: docs."
-  (interactive)
-  (save-excursion
-    (whitespace-cleanup-region (point-min) (point-max))
-    (indent-region (point-min) (point-max))))
-
-(bind-key "M-=" #'td/cleanup-buffer)
-
-(defun sudo-edit (&optional arg)
-  "Edit currently visited file as root.
-With a prefix ARG prompt for a file to visit. Will also prompt
-for a file to visit if current buffer is not visiting a file."
-  (interactive "P")
-  (if (or arg (not buffer-file-name))
-      (find-file (concat "/sudo:root@localhost:"
-                         (ido-read-file-name "Find file(as root): ")))
-    (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
-
-(bind-key [remap delete-horizontal-space] #'just-one-space)
-
-(bind-key "M-j" #'find-function-at-point)
-
-(use-package which-func
-  :defer t
-  :init (which-function-mode t))
-
-(use-package hl-todo
-  :ensure t
-  :defer t
-  :init (add-hook 'prog-mode-hook #'hl-todo-mode))
-
-(bind-key "C-c m" #'recompile)
-
-(use-package ansi-color
-  :defer t
-  :init
-  (progn
-    (defun td/ansi-colorize-compilation-buffer ()
-      (let ((inhibit-read-only t))
-        (ansi-color-apply-on-region compilation-filter-start (point))))
-
-    (add-hook 'compilation-filter-hook #'td/ansi-colorize-compilation-buffer)))
-
-(use-package hideshow
-  :defer t
-  :bind (("C-c C-n" . hs-toggle-hiding))
-  :init
-  (progn
-    (use-package hideshowvis
-      :defer t
-      :ensure t)
-
-    (hideshowvis-symbols)
-
-    (set-face-attribute 'hs-face nil
-                        :height 110 :box nil
-                        :background (face-background font-lock-comment-face)
-                        :foreground (face-foreground font-lock-comment-face))
-
-    (set-face-attribute 'hs-fringe-face nil
-                        :background (face-background font-lock-comment-face)
-                        :foreground (face-foreground font-lock-comment-face))
-
-    (set-face-attribute 'hideshowvis-hidable-face nil
-                        :background (face-background font-lock-comment-face)
-                        :foreground (face-foreground font-lock-comment-face))
-
-    (defun td/hs-setup-overlay (ov)
-      (when (eq 'code (overlay-get ov 'hs))
-        (let* ((content (buffer-substring (overlay-start ov) (overlay-end ov)))
-               (display-string "{...}"))
-          (overlay-put ov 'help-echo content)
-          (put-text-property 0 (length display-string)
-                             'face 'hs-face display-string)
-          (overlay-put ov 'display display-string))))
-
-    (advice-add 'display-code-line-counts :after #'td/hs-setup-overlay)
-
-    (defun td/setup-folding ()
-      (interactive)
-      ;; TODO: ignore uninteresting files
-      (hs-minor-mode t)
-      (hideshowvis-minor-mode t))
-
-    ;; (add-hook 'prog-mode-hook #'td/setup-folding)
-    ))
+  :mode ("Dockerfile$" . dockerfile-mode))
 
 
-(use-package undo-tree
-  :ensure t
-  :init (global-undo-tree-mode t)
-  :config
-  (setq undo-tree-mode-lighter ""
-        undo-tree-visualizer-timestamps t
-        ;; Not working with yasnippet, I'm supposed to fix this but...
-        ;; undo-tree-auto-save-history t
-        ;; undo-tree-history-directory-alist '((".*" . "~/.emacs.d/undos"))
-        ))
 
-(use-package elixir-mode
-  :ensure t
-  :defer t)
 
-(use-package alchemist
-  :ensure t
-  :defer t
-  :init (add-hook 'elixir-mode-hook #'alchemist-mode))
-
+;;;; Utilities
 (use-package eshell
   :defer t
   :config
@@ -874,60 +753,110 @@ for a file to visit if current buffer is not visiting a file."
                ("a" . td/vc-git-add)
                ("u" . td/vc-git-reset))))
 
+(use-package ztree
+  :ensure t
+  :defer t)
+
+(use-package workgroups2
+  :ensure t
+  :defer t
+  :config
+  (progn
+    (setq wg-mode-line-decor-left-brace "["
+          wg-mode-line-decor-right-brace "]")
+
+    (add-hook 'wg-before-switch-to-workgroup-hook 'wg-save-session)))
+
+(use-package tramp
+  :defer t
+  :config
+  (progn
+    (setq password-cache-expiry nil
+          tramp-default-method "ftp")
+
+    (add-to-list 'auth-sources "~/.emacs.d/authinfo.gpg")))
+
+(use-package ange-ftp
+  :defer t
+  :config
+  (setq ange-ftp-netrc-filename "~/.emacs.d/authinfo.gpg"))
+
+(use-package org
+  :defer t
+  :bind (("C-c o a" . org-agenda)
+         ("C-c o t" . org-todo-list))
+  :config
+  (progn
+    (setq org-directory "~/Dropbox (Personal)/GTD/"
+          org-ellipsis "…"
+          org-default-notes-file (expand-file-name "inbox . org" org-directory)
+          org-log-done 'time
+          org-todo-keywords
+          '((sequence "TODO(t)" "STARTED(s!)" "WAITING(w@/!)"
+                      "|" "CANCELED(c@)" "DONE(d!)"))
+          org-src-fontify-natively t
+          org-src-tab-acts-natively t
+          org-hide-leading-stars t)
+
+    (setq org-agenda-files `(,org-default-notes-file)
+          org-agenda-skip-unavailable-files t)
+
+    (defun td/org-ispell ()
+      "Configure `ispell-skip-region-alist' for `org-mode'."
+      (make-local-variable 'ispell-skip-region-alist)
+      (add-to-list 'ispell-skip-region-alist '(org-property-drawer-re))
+      (add-to-list 'ispell-skip-region-alist '("~" "~"))
+      (add-to-list 'ispell-skip-region-alist '("=" "="))
+      (add-to-list 'ispell-skip-region-alist '("^#\\+BEGIN_SRC" . "^#\\+END_SRC")))
+    (add-hook 'org-mode-hook #'td/org-ispell)
+
+    (use-package ob-http
+      :ensure t
+      :config
+      (org-babel-do-load-languages
+       'org-babel-load-languages
+       '((emacs-lisp . t)
+         (http . t))))
+    (setq org-confirm-babel-evaluate nil)))
+
+(use-package org-agenda
+  :config
+  (setq org-agenda-skip-deadline-if-done nil
+        org-agenda-skip-scheduled-if-done nil
+        org-agenda-restore-windows-after-quit t
+        org-agenda-window-setup 'current-window
+        org-agenda-show-all-dates t
+        org-agenda-show-log t))
+
+(use-package calc
+  :defer t
+  :bind ("C-c b c" . quick-calc))
+
+(use-package magit
+  :ensure t
+  :defer t
+  :config
+  (progn
+    (setq magit-display-buffer-function
+          #'magit-display-buffer-fullframe-status-v1)))
+
+(use-package dired
+  :defer t
+  :config
+  (progn
+    (dired-async-mode t)
+
+    (setq dired-listing-switches "-alh"
+          dired-recursive-copies 'always)
+
+    (bind-keys :map dired-mode-map
+               ("C-c '" . wdired-change-to-wdired-mode))))
+
 (use-package compile
   :defer t
+  :bind ("C-c m" . recompile)
   :config
   (setq compilation-scroll-output t))
-
-(use-package swiper
-  :defer t
-  :ensure t
-  :bind (("C-M-l" . swiper)))
-
-(use-package ivy
-  :defer t
-  :init (ivy-mode t)
-  :bind (("C-M-o" . ivy-switch-buffer))
-  :config
-  (progn
-    (setq ivy-format-function 'ivy-format-function-arrow
-          ivy-count-format ""
-          ivy-use-virtual-buffers t
-          ivy-height 16
-          projectile-completion-system 'ivy)
-
-    (use-package flx
-      :ensure t
-      :init
-      (setq ivy-re-builders-alist '((t . ivy--regex-plus))
-            ivy-initial-inputs-alist nil))
-
-    (require 'ivy-popup)))
-
-(use-package counsel
-  :ensure t
-  :defer t
-  :bind (([remap find-file] . counsel-find-file)
-         ([remap execute-extended-command] . counsel-M-x)
-         ("M-m" . counsel-M-x)
-         ("C-c i" . counsel-imenu)))
-
-(use-package smex
-  :ensure t
-  :init (smex-initialize))
-
-(use-package imenu
-  :defer t
-  :config
-  (setq imenu-auto-rescan t))
-
-(use-package indent-guide
-  :ensure t
-  :defer t
-  :init
-  (progn
-    (add-hook 'haml-mode-hook #'indent-guide-mode)
-    (add-hook 'python-mode-hook #'indent-guide-mode)))
 
 (use-package ibuffer
   :defer t
@@ -965,26 +894,77 @@ for a file to visit if current buffer is not visiting a file."
   (setq ediff-window-setup-function 'ediff-setup-windows-plain
         ediff-split-window-function 'split-window-horizontally))
 
-(use-package ag
-  :defer t
-  :ensure t)
 
-(use-package wgrep-ag
-  :defer t
-  :ensure t)
+;;;; UI
+(setq-default
+ line-spacing 2
+ fringes-outside-margins t
+ indicate-empty-lines t
+ default-frame-alist
+ '((right-fringe . 0)
+   (font . "Fira Code 13")
+   (top . 0)
+   (left . 512)
+   (width . 120) (height . 64)
+   (border-width . 0)
+   (internal-border-width . 0)))
 
-(use-package editorconfig
-  :defer t
+(scroll-bar-mode -1)
+(tool-bar-mode -1)
+(blink-cursor-mode -1)
+(electric-pair-mode t)
+(column-number-mode t)
+(unless (display-graphic-p)
+  (menu-bar-mode -1))
+
+(defvar td/adaptive-theme-functions '()
+  "Hook run after custom themes are loaded.")
+
+(defun td/adaptive-theme (theme &optional no-confirm no-enable)
+  "Adapt some faces according to THEME, NO-CONFIRM and NO-ENABLE."
+  (run-hooks 'td/adaptive-theme-functions))
+
+(advice-add 'load-theme :after #'td/adaptive-theme)
+
+(define-fringe-bitmap 'tilde
+  [#b01110001
+   #b11011011
+   #b00001110]
+  nil nil 'center)
+(setcdr (assq 'empty-line fringe-indicator-alist) 'tilde)
+(eval-after-load 'linum
+  '(set-fringe-bitmap-face 'tilde 'linum))
+
+
+(use-package color-theme-approximate
   :ensure t
-  :init (editorconfig-mode t))
+  :init (color-theme-approximate-on))
 
-(use-package dockerfile-mode
-  :ensure t
-  :mode ("Dockerfile$" . dockerfile-mode))
 
-(use-package docker
+(use-package subatomic-theme
   :ensure t
-  :defer t)
+  :init (load-theme 'subatomic t))
+
+
+(use-package smart-mode-line
+  :ensure t
+  :defer t
+  :init (sml/setup)
+  :config
+  (progn
+    (add-to-list 'sml/replacer-regexp-list
+                 '("^~/Projects/dotfiles/\\(.*\\)/" ":Config:\\1:"))
+
+    (use-package rich-minority
+      :init
+      (progn
+        (add-to-list 'rm-blacklist " wg")
+        (add-to-list 'rm-blacklist " snipe")
+        (add-to-list 'rm-blacklist " ivy")
+        (add-to-list 'rm-blacklist " Undo-Tree")
+        (add-to-list 'rm-blacklist " Anzu")
+        (add-to-list 'rm-blacklist " yas")
+        (add-to-list 'rm-blacklist " company")))))
 
 (use-package paren-face
   :ensure t
@@ -992,154 +972,153 @@ for a file to visit if current buffer is not visiting a file."
   :init (global-paren-face-mode t)
   :config (setq paren-face-modes '(prog-mode)))
 
-(use-package evil
-  :ensure t
+(use-package nlinum
   :defer t
-  :init (evil-mode t)
+  :commands (nlinum-mode)
   :config
   (progn
-    (setq evil-ex-substitute-global t
-          evil-cross-lines t
-          evil-move-cursor-back t
-          evil-insert-state-cursor '(bar . 2)
-          evil-normal-state-cursor '(box "orange"))
+    (setq-default
+     nlinum-format " %4d "
+     nlinum-highlight-current-line t)
 
-    (use-package evil-surround
-      :ensure t
+    (defun td/nlinum-custom-faces ()
+      "Custom faces for `nlinum'"
+      (interactive)
+      (require 'linum)
+      (require 'color)
+      (set-face-attribute 'linum nil
+                          :height 100
+                          :inherit font-lock-comment-face
+                          :background (face-background 'fringe)
+                          :foreground (face-foreground 'font-lock-comment-face))
+      (set-face-attribute 'nlinum-current-line nil
+                          :background (color-lighten-name (face-background 'linum) 10)))
+
+    (add-hook 'nlinum-mode-hook  #'td/nlinum-custom-faces)
+    (add-hook 'td/adaptive-theme-functions #'td/nlinum-custom-faces))
+  :init
+  (progn
+    (defun td/nlinum-may-turn-on ()
+      "Turn on `nlinum' only if we're in GUI."
+      (interactive)
+      (when (display-graphic-p) (nlinum-mode t)))
+
+    (add-hook 'prog-mode-hook #'td/nlinum-may-turn-on)))
+
+(use-package diff-hl
+  :ensure t
+  :defer t
+  :init (global-diff-hl-mode t)
+  :config
+  (progn
+    (define-fringe-bitmap 'td/diff-hl-bmp-default
+      [#b11000000] 1 8 '(top t))
+
+    (define-fringe-bitmap 'td/diff-hl-bmp-delete
+      [#b11111100
+       #b11111000
+       #b11110000
+       #b11100000
+       #b11000000
+       #b10000000] nil 8 'top)
+
+    (defun td/diff-hl-fringe-bmp (type pos)
+      (cl-case type
+        (delete 'td/diff-hl-bmp-delete)
+        (t 'td/diff-hl-bmp-default)))
+
+    (setq diff-hl-draw-borders t
+          diff-hl-fringe-bmp-function #'td/diff-hl-fringe-bmp)
+
+    (defun td/diff-hl-custom-faces ()
+      (interactive)
+      (set-face-attribute 'diff-hl-delete nil :background nil :foreground "#ff0000")
+      (set-face-attribute 'diff-hl-change nil :background nil :foreground "#deae3e")
+      (set-face-attribute 'diff-hl-insert nil :background nil :foreground "#81af34"))
+
+    (add-hook 'diff-hl-mode-hook #'td/diff-hl-custom-faces)
+
+    (defun diff-hl-overlay-modified (ov after-p beg end &optional len)
+      "Markers disappear and reapear is kind of annoying to me.")
+
+    (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh)))
+
+
+(use-package which-func
+  :defer t
+  :init (which-function-mode t))
+
+
+(use-package hl-todo
+  :ensure t
+  :defer t
+  :init (add-hook 'prog-mode-hook #'hl-todo-mode))
+
+(use-package ansi-color
+  :defer t
+  :init
+  (progn
+    (defun td/ansi-colorize-compilation-buffer ()
+      (let ((inhibit-read-only t))
+        (ansi-color-apply-on-region compilation-filter-start (point))))
+
+    (add-hook 'compilation-filter-hook #'td/ansi-colorize-compilation-buffer)))
+
+(use-package hideshow
+  :defer t
+  :bind (("C-c C-n" . hs-toggle-hiding))
+  :init
+  (progn
+    (use-package hideshowvis
       :defer t
-      :init (global-evil-surround-mode t))
-
-    (use-package evil-visualstar
-      :ensure t
-      :defer t
-      :init (global-evil-visualstar-mode))
-
-    (use-package evil-org
       :ensure t)
 
-    (bind-keys :map evil-insert-state-map
-               ([remap newline] . newline-and-indent))
+    (hideshowvis-symbols)
 
-    (bind-keys :map evil-normal-state-map
-               ("TAB" . evil-jump-item)
-               ("<tab>" . evil-jump-item)
-               ("j" . evil-next-visual-line)
-               ("k" . evil-previous-visual-line)
-               ("M-j" . td/next-ten-visual-line)
-               ("M-k" . td/previous-ten-visual-line))
+    (set-face-attribute 'hs-face nil
+                        :height 110 :box nil
+                        :background (face-background font-lock-comment-face)
+                        :foreground (face-foreground font-lock-comment-face))
 
-    (bind-keys :map evil-motion-state-map
-               ("TAB" . evil-jump-item)
-               ("<tab>" . evil-jump-item))
+    (set-face-attribute 'hs-fringe-face nil
+                        :background (face-background font-lock-comment-face)
+                        :foreground (face-foreground font-lock-comment-face))
 
-    (defun td/open-line ()
+    (set-face-attribute 'hideshowvis-hidable-face nil
+                        :background (face-background font-lock-comment-face)
+                        :foreground (face-foreground font-lock-comment-face))
+
+    (defun td/hs-setup-overlay (ov)
+      (when (eq 'code (overlay-get ov 'hs))
+        (let* ((content (buffer-substring (overlay-start ov) (overlay-end ov)))
+               (display-string " {...}"))
+          (overlay-put ov 'help-echo content)
+          (put-text-property 0 (length display-string)
+                             'face 'hs-face display-string)
+          (overlay-put ov 'display display-string))))
+
+    (advice-add 'display-code-line-counts :after #'td/hs-setup-overlay)
+
+    (defun td/setup-folding ()
       (interactive)
-      (end-of-line)
-      (newline-and-indent))
+      (when (< (buffer-size) (expt 2 16))
+        (hs-minor-mode t)
+        ;; (hideshowvis-minor-mode t)
+        (hs-hide-all)))
 
-    (defun td/ends-with-colon ()
-      (interactive)
-      (end-of-line)
-      (insert ":"))
+    (add-hook 'prog-mode-hook #'td/setup-folding)))
 
-    (defun td/ends-with-semicolon ()
-      (interactive)
-      (end-of-line)
-      (insert ";"))
-
-    (bind-keys :map evil-insert-state-map
-               ("C-e" . end-of-line)
-               ((kbd "<C-return>") . td/open-line)
-               ("C-;" . td/ends-with-semicolon)
-               ("C-:" . td/ends-with-colon))))
-
-(use-package evil-snipe
+(use-package indent-guide
   :ensure t
   :defer t
   :init
   (progn
-    (evil-snipe-mode 1)
-    (evil-snipe-override-mode 1))
-  :config
-  (progn
-    (setq evil-snipe-spillover-scope 'visible)
-    (add-hook 'magit-mode-hook 'turn-off-evil-snipe-override-mode)))
+    (add-hook 'haml-mode-hook #'indent-guide-mode)
+    (add-hook 'python-mode-hook #'indent-guide-mode)))
 
-(use-package dumb-jump
-  :ensure t
-  :init (dumb-jump-mode t))
 
-;; (use-package anaconda-mode
-;;   :ensure t
-;;   :init
-;;   (progn
-;;     (add-hook 'python-mode-hook 'anaconda-mode)
-;;     (add-hook 'python-mode-hook 'anaconda-eldoc-mode)))
-
-;; (use-package auto-package-update
-;;   :ensure t
-;;   :defer 128
-;;   :init (auto-package-update-maybe))
-
-(use-package yasnippet
-  :commands yas-global-mode
-  :init
-  (progn
-    (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
-    (yas-global-mode t))
-  :config
-  (progn
-    (setq yas-prompt-functions
-          '(yas-ido-prompt yas-completing-prompt yas-no-prompt)
-          ;; Suppress excessive log messages
-          yas-verbosity 1
-          ;; I am a weird user, I use SPACE to expand my
-          ;; snippets, this save me from triggering them accidentally.
-          yas-expand-only-for-last-commands
-          '(self-insert-command org-self-insert-command))
-
-    (unbind-key "TAB" yas-minor-mode-map)
-    (unbind-key "<tab>" yas-minor-mode-map)
-    (bind-key "SPC" 'yas-expand yas-minor-mode-map)))
-
-(bind-key "C-M-]" 'previous-buffer)
-
-(use-package go-mode
-  :ensure t
-  :mode ("\.go$" . go-mode)
-  :config
-  (progn
-
-    (defun td/setup-go ()
-      (interactive)
-      (setq-local tab-width 4)))
-
-  (add-hook 'go-mode-hook #'td/setup-go))
-
-(use-package ztree
-  :ensure t
-  :defer t)
-
-(use-package pyvenv
-  :ensure t
-  :defer t)
-
-(defun imenu-elisp-sections ()
-  (setq imenu-prev-index-position-function nil)
-  (add-to-list 'imenu-generic-expression '("Sections" "^;;;; \\(.+\\)$" 1) t))
-
-(add-hook 'emacs-lisp-mode-hook 'imenu-elisp-sections)
-
-(use-package workgroups2
-  :ensure t
-  :defer t
-  :init (workgroups-mode t)
-  :config
-  (progn
-    (setq wg-mode-line-decor-left-brace "["
-          wg-mode-line-decor-right-brace "]")
-
-    (add-hook 'wg-before-switch-to-workgroup-hook 'wg-save-session)))
+;; This need to be at the bottom
+(workgroups-mode t)
 
 (provide 'init)
 ;;; init.el ends here
