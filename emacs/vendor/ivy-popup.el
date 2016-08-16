@@ -21,7 +21,7 @@
       ;; New completion -> popup
       (setq *ivy-popup-buffer* (get-buffer-create "*ivy-popup*"))
       (setq *ivy-popup-window*
-            (split-window (minibuffer-selected-window) -40 ivy-popup-direction))
+            (split-window (minibuffer-selected-window) nil ivy-popup-direction))
       (window--display-buffer *ivy-popup-buffer* *ivy-popup-window* nil))
 
     (with-current-buffer *ivy-popup-buffer*
