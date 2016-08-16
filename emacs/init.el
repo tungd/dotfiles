@@ -242,20 +242,18 @@
           ;; The basic idea is preview completion inline immediately,
           ;; and then wait a little bit to show all the available completions
           company-idle-delay 0.2
-          company-echo-delay 1.6
-          company-tooltip-idle-delay 1.6
+          company-echo-delay 0.8
+          company-tooltip-idle-delay 0.8
           company-tooltip-align-annotations t
-          company-tooltip-limit 16
+          company-tooltip-limit 8
           company-frontends
-          '(company-echo-metadata-frontend
-            ;; company-pseudo-tooltip-unless-just-one-frontend-with-delay
-            company-preview-frontend)
+          '(company-pseudo-tooltip-unless-just-one-frontend-with-delay
+            company-preview-frontend
+            company-echo-metadata-frontend)
           company-backends
           '((company-css
              company-files
              company-yasnippet
-             company-keywords
-             company-dabbrev-code
              company-dabbrev
              company-capf)))
 
@@ -278,7 +276,7 @@
 (use-package company-statistics
   :ensure t
   :defer t
-  :init (add-hook 'after-init-hook 'company-statistics-mode))
+  :init (company-statistics-mode t))
 
 (use-package savehist
   :defer t
@@ -583,11 +581,16 @@
   :mode (("\\.clj$" . clojure-mode)
          ("build\\.boot$" . clojure-mode)))
 
-(use-package cider
+;; (use-package cider
+;;   :ensure t
+;;   :defer t
+;;   :init
+;;   (add-hook 'clojure-mode-hook 'cider-mode))
+(use-package monroe
   :ensure t
   :defer t
-  :init
-  (add-hook 'clojure-mode-hook 'cider-mode))
+  :commands (clojure-enable-monroe)
+  :init (add-hook 'clojure-mode-hook 'clojure-enable-monroe))
 
 
 (defun td/css-imenu-expressions ()
@@ -909,14 +912,6 @@ for a file to visit if current buffer is not visiting a file."
          ("M-m" . counsel-M-x)
          ("C-c i" . counsel-imenu)))
 
-;; (use-package ido
-;;   :init (ido-mode t)
-;;   :config
-;;   (setq ido-use-virtual-buffers t
-;;         ido-auto-merge-delay-time 99999
-;;         max-mini-window-height 1
-;;         projectile-completion-system 'ido))
-
 (use-package smex
   :ensure t
   :init (smex-initialize))
@@ -953,7 +948,7 @@ for a file to visit if current buffer is not visiting a file."
 
 (use-package eldoc
   :config
-  (setq eldoc-idle-delay 5))
+  (setq eldoc-idle-delay 2))
 
 (use-package ediff
   :defer t
@@ -1058,6 +1053,18 @@ for a file to visit if current buffer is not visiting a file."
                ("C-;" . td/ends-with-semicolon)
                ("C-:" . td/ends-with-colon))))
 
+(use-package evil-snipe
+  :ensure t
+  :defer t
+  :init
+  (progn
+    (evil-snipe-mode 1)
+    (evil-snipe-override-mode 1))
+  :config
+  (progn
+    (setq evil-snipe-spillover-scope 'visible)
+    (add-hook 'magit-mode-hook 'turn-off-evil-snipe-override-mode)))
+
 (use-package dumb-jump
   :ensure t
   :init (dumb-jump-mode t))
@@ -1122,6 +1129,17 @@ for a file to visit if current buffer is not visiting a file."
   (add-to-list 'imenu-generic-expression '("Sections" "^;;;; \\(.+\\)$" 1) t))
 
 (add-hook 'emacs-lisp-mode-hook 'imenu-elisp-sections)
+
+(use-package workgroups2
+  :ensure t
+  :defer t
+  :init (workgroups-mode t)
+  :config
+  (progn
+    (setq wg-mode-line-decor-left-brace "["
+          wg-mode-line-decor-right-brace "]")
+
+    (add-hook 'wg-before-switch-to-workgroup-hook 'wg-save-session)))
 
 (provide 'init)
 ;;; init.el ends here
