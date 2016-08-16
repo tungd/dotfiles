@@ -38,15 +38,15 @@
       default-input-method 'vietnamese-telex)
 
 (setq default-frame-alist
-      '(;;(left-fringe . 0)
-        (right-fringe . 0)
-        (font . "Fira Code 14")
+      '((right-fringe . 0)
+        (font . "Fira Code 12")
         (top . 0)
         (left . 512)
         (width . 100) (height . 54)
         (border-width . 0)
         (internal-border-width . 0)))
-(setq-default line-spacing 2)
+(setq-default line-spacing 2
+              fringes-outside-margins t)
 
 ;; This is for emacsforosx.com version
 (setq mac-option-modifier 'super
@@ -128,7 +128,9 @@
   :init
   (progn
     (exec-path-from-shell-copy-envs
-     '("DOCKER_TLS_VERIFY" "DOCKER_HOST" "DOCKER_CERT_PATH" "DOCKER_MACHINE_NAME"))))
+     '("PYENV_ROOT"))
+
+    (setenv "WORKON_HOME" (expand-file-name "versions" (getenv "PYENV_ROOT")))))
 
 (when (eq system-type 'darwin)
   (setq trash-directory "~/.Trash/")
@@ -194,28 +196,35 @@
 
 (use-package nlinum
   :defer t
-  :ensure t
-  :init
+  :commands (nlinum-mode)
+  :config
   (progn
+    (setq nlinum-format " %4d "
+          nlinum-highlight-current-line t)
+
     (defun td/nlinum-custom-faces ()
       "Custom faces for `nlinum'"
       (interactive)
       (require 'linum)
+      (require 'color)
       (set-face-attribute 'linum nil
                           :height 110
                           :inherit font-lock-comment-face
                           :background (face-background 'fringe)
-                          :foreground (face-foreground 'font-lock-comment-face)))
+                          :foreground (face-foreground 'font-lock-comment-face))
+      (set-face-attribute 'nlinum-current-line nil
+                          :background (color-lighten-name (face-background 'linum) 10)))
 
+    (add-hook 'nlinum-mode-hook  #'td/nlinum-custom-faces)
+    (add-hook 'td/adaptive-theme-functions #'td/nlinum-custom-faces))
+  :init
+  (progn
     (defun td/nlinum-may-turn-on ()
       "Turn on `nlinum' only if we're in GUI."
       (interactive)
-      (if (display-graphic-p) (nlinum-mode t)))
+      (when (display-graphic-p) (nlinum-mode t)))
 
-    (add-hook 'prog-mode-hook #'td/nlinum-may-turn-on)
-    (add-hook 'td/adaptive-theme-functions #'td/nlinum-custom-faces))
-  :config
-  (setq nlinum-format " %4d "))
+    (add-hook 'prog-mode-hook #'td/nlinum-may-turn-on)))
 
 (use-package exec-path-from-shell
   :ensure t
@@ -230,22 +239,32 @@
   :config
   (progn
     (setq company-minimum-prefix-length 2
+          ;; The basic idea is preview completion inline immediately,
+          ;; and then wait a little bit to show all the available completions
+          company-idle-delay 0.2
+          company-echo-delay 1.6
+          company-tooltip-idle-delay 1.6
           company-tooltip-align-annotations t
           company-tooltip-limit 16
-          company-idle-delay nil
-          company-dabbrev-downcase nil
+          company-frontends
+          '(company-echo-metadata-frontend
+            ;; company-pseudo-tooltip-unless-just-one-frontend-with-delay
+            company-preview-frontend)
           company-backends
           '((company-css
-             company-capf
+             company-files
              company-yasnippet
-             company-dabbrev-code
-             company-gtags
-             company-etags
              company-keywords
+             company-dabbrev-code
              company-dabbrev
-             company-files)))
+             company-capf)))
+
+    (set-face-attribute 'company-preview nil
+                        :underline t
+                        :foreground (face-foreground 'font-lock-comment-face))
 
     (bind-keys :map company-active-map
+               ("<tab>" . company-complete-common-or-cycle)
                ("C-n" . company-select-next-or-abort)
                ("C-p" . company-select-previous-or-abort))))
 
@@ -335,15 +354,24 @@
   :init (global-diff-hl-mode t)
   :config
   (progn
-    (setq diff-hl-draw-borders nil)
+    (setq diff-hl-draw-borders t)
+
+    ;; 61440 = (+ (expt 2 15) (expt 2 14) (expt 2 13) (expt 2 12))
+    ;; 49152 = (+ (expt 2 15) (expt 2 14))
+    (define-fringe-bitmap 'diff-hl-bmp-middle [49152] 1 16 '(top t))
+    (define-fringe-bitmap 'diff-hl-bmp-top [49152] 1 16 '(top t))
+    (define-fringe-bitmap 'diff-hl-bmp-bottom [49152] 1 16 '(top t))
+    (define-fringe-bitmap 'diff-hl-bmp-single [49152] 1 16 '(top t))
 
     (defun td/diff-hl-custom-faces ()
       (interactive)
       (let ((highlight (color-lighten-name (face-background 'default) 10)))
-        (set-face-attribute 'diff-hl-change nil :background highlight)
-        (set-face-attribute 'diff-hl-insert nil :background highlight)))
+        (set-face-attribute 'diff-hl-delete nil :background nil :foreground "#ff0000")
+        (set-face-attribute 'diff-hl-change nil :background nil :foreground "#deae3e")
+        (set-face-attribute 'diff-hl-insert nil :background nil :foreground "#81af34")))
 
-    ;;(add-hook 'diff-hl-mode-hook #'td/diff-hl-custom-faces)
+    (add-hook 'diff-hl-mode-hook #'td/diff-hl-custom-faces)
+    (td/diff-hl-custom-faces)
 
     (defun diff-hl-overlay-modified (ov after-p beg end &optional len)
       "Markers disappear and reapear is kind of annoying to me.")
@@ -400,39 +428,41 @@
 ;;;;
 (use-package org
   :defer t
-  :config
-  (setq org-directory "~/Dropbox (Personal)/GTD/"
-        org-ellipsis "…"
-        org-default-notes-file (expand-file-name "inbox.org" org-directory)
-        org-log-done 'time
-        org-todo-keywords
-        '((sequence "TODO(t)" "STARTED(s!)" "WAITING(w@/!)"
-                    "|" "CANCELED(c@)" "DONE(d!)"))
-        org-src-fontify-natively t
-        org-src-tab-acts-natively t
-        org-hide-leading-stars t))
-
-(use-package org-agenda
   :bind (("C-c o a" . org-agenda)
          ("C-c o t" . org-todo-list))
   :config
-  (setq org-agenda-files `(,org-default-notes-file)
-        org-agenda-skip-unavailable-files t
-        org-agenda-skip-deadline-if-done nil
+  (progn
+    (setq org-directory "~/Dropbox (Personal)/GTD/"
+          org-ellipsis "…"
+          org-default-notes-file (expand-file-name "inbox . org" org-directory)
+          org-log-done 'time
+          org-todo-keywords
+          '((sequence "TODO(t)" "STARTED(s!)" "WAITING(w@/!)"
+                      "|" "CANCELED(c@)" "DONE(d!)"))
+          org-src-fontify-natively t
+          org-src-tab-acts-natively t
+          org-hide-leading-stars t)
+
+    (setq org-agenda-files `(,org-default-notes-file)
+          org-agenda-skip-unavailable-files t)
+
+    (use-package ob-http
+      :ensure t
+      :config
+      (org-babel-do-load-languages
+       'org-babel-load-languages
+       '((emacs-lisp . t)
+         (http . t))))
+    (setq org-confirm-babel-evaluate nil)))
+
+(use-package org-agenda
+  :config
+  (setq org-agenda-skip-deadline-if-done nil
         org-agenda-skip-scheduled-if-done nil
         org-agenda-restore-windows-after-quit t
         org-agenda-window-setup 'current-window
         org-agenda-show-all-dates t
         org-agenda-show-log t))
-
-(use-package ob-http
-  :ensure t
-  :defer t
-  :config
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((emacs-lisp . t)
-     (http . t))))
 
 (use-package calc
   :defer t
@@ -661,14 +691,6 @@ for a file to visit if current buffer is not visiting a file."
   :defer t
   :init (which-function-mode t))
 
-(use-package highlight-parentheses
-  :ensure t
-  :defer t
-  :init (global-highlight-parentheses-mode t)
-  :config
-  (setq hl-paren-delay 0.01
-        hl-paren-colors '("red")))
-
 (use-package hl-todo
   :ensure t
   :defer t
@@ -874,8 +896,9 @@ for a file to visit if current buffer is not visiting a file."
 
     (use-package flx
       :ensure t
-      :init (setq ivy-re-builders-alist
-                  '((t . ivy--regex-plus))))
+      :init
+      (setq ivy-re-builders-alist '((t . ivy--regex-plus))
+            ivy-initial-inputs-alist nil))
 
     (require 'ivy-popup)))
 
