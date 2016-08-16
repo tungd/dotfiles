@@ -82,10 +82,17 @@ alias be='bundle exec'
 alias grep='grep --color=auto'
 alias tmux='TERM=xterm-256color tmux'
 alias v='./venv/bin/'
+alias s='twistd -no web --path=.'
+alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
+
 
 if [ -f $LOCAL/etc/bash_completion ]; then
     . $LOCAL/etc/bash_completion
 fi
+
+notify() {
+  osascript -e "display notification \"$2\" with title \"$1\""
+}
 
 ve() {
   exec "./venv/bin/$*"
