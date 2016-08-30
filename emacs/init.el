@@ -17,8 +17,6 @@
              '("melpa" . "https://melpa.org/packages/"))
 (package-initialize)
 
-(require 'use-package)
-
 (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
 
 
@@ -195,14 +193,14 @@ for a file to visit if current buffer is not visiting a file."
           company-tooltip-idle-delay 0.8
           company-tooltip-align-annotations t
           company-tooltip-limit 8
+          company-dabbrev-downcase nil
+          company-dabbrev-ignore-case t
           company-frontends
           '(company-pseudo-tooltip-unless-just-one-frontend-with-delay
             company-preview-frontend
             company-echo-metadata-frontend)
           company-backends
-          '((company-css
-             company-files
-             company-yasnippet
+          '((company-yasnippet
              company-dabbrev
              company-capf)))
 
@@ -370,6 +368,13 @@ for a file to visit if current buffer is not visiting a file."
 (bind-keys ("M-n" . td/next-ten-visual-line)
            ("M-p" . td/previous-ten-visual-line))
 
+(defun td/kill-current-buffer ()
+  "Kill current the buffer."
+  (interactive)
+  (kill-buffer (current-buffer)))
+
+(bind-key "C-c C-k" #'td/kill-current-buffer)
+
 (use-package recentf
   :defer t
   :init (recentf-mode t)
@@ -400,19 +405,6 @@ for a file to visit if current buffer is not visiting a file."
     (put 'buffer 'beginning-op 'beginning-of-buffer)
     (put 'buffer 'end-op 'end-of-buffer)))
 
-(use-package anzu
-  :ensure t
-  :init (global-anzu-mode t)
-  :bind (([remap query-replace] . anzu-query-replace)
-         ([remap query-replace-regexp] . td/anzu-smart-query-replace-regexp))
-  :config
-  (progn
-    (defun td/anzu-smart-query-replace-regexp ()
-      "This does not actually query, but it's OK for me."
-      (interactive)
-      (let ((anzu-replace-at-cursor-thing 'buffer))
-        (call-interactively 'anzu-query-replace-at-cursor-thing)))))
-
 (use-package window-numbering
   :ensure t
   :defer t
@@ -425,10 +417,10 @@ for a file to visit if current buffer is not visiting a file."
     (advice-add 'window-numbering-get-number-string
                 :around #'td/bracket-window-number-string)))
 
-(use-package ace-jump-mode
-  :ensure t
-  :defer t
-  :bind (("C-M-j" . ace-jump-mode)))
+;; (use-package ace-jump-mode
+;;   :ensure t
+;;   :defer t
+;;   :bind (("C-M-j" . ace-jump-mode)))
 
 (use-package projectile
   :ensure t
@@ -436,8 +428,7 @@ for a file to visit if current buffer is not visiting a file."
   :init (projectile-global-mode t)
   :bind ("C-M-'" . projectile-find-file-dwim)
   :config
-  (setq projectile-completion-system 'ido
-        projectile-globally-ignored-file-suffixes
+  (setq projectile-globally-ignored-file-suffixes
         '("jpg" "png" "svg" "psd" "sketch" "afdesign"
           "pdf" "doc" "docx" "xls" "xlsx"
           "ttf" "otf" "woff"
@@ -573,6 +564,10 @@ for a file to visit if current buffer is not visiting a file."
   :ensure t
   :mode (("\\.less" . less-css-mode)))
 
+(use-package kite-mini
+  :ensure t
+  :defer t)
+
 ;;;; Javascript
 (use-package js
   :mode (("\\.json$" . js-mode))
@@ -596,17 +591,33 @@ for a file to visit if current buffer is not visiting a file."
   :mode (("\\.clj$" . clojure-mode)
          ("build\\.boot$" . clojure-mode)))
 
-;; (use-package cider
-;;   :ensure t
-;;   :defer t
-;;   :init
-;;   (add-hook 'clojure-mode-hook 'cider-mode))
-
-(use-package monroe
+(use-package inf-clojure
   :ensure t
   :defer t
-  :commands (clojure-enable-monroe)
-  :init (add-hook 'clojure-mode-hook 'clojure-enable-monroe))
+  :init
+  (progn
+    (add-hook 'clojure-mode-hook #'inf-clojure-minor-mode)
+    (add-hook 'clojure-mode-hook #'eldoc-mode)
+    (add-hook 'inf-clojure-mode-hook #'eldoc-mode))
+  :config
+  (progn
+    (defun td/setup-clojurescript ()
+      (interactive)
+      (setq-local inf-clojure-load-command "(load-file \"%s\")\n")
+      (setq-local inf-clojure-var-doc-command "(cljs.repl/doc %s)\n")
+      (setq-local inf-clojure-var-source-command "(cljs.repl/source %s)\n")
+      (setq-local inf-clojure-arglist-command "'()\n")
+      (setq-local inf-clojure-completion-command "'()\n")
+      (setq-local inf-clojure-ns-vars-command "(cljs.repl/dir %s)\n")
+      (setq-local inf-clojure-set-ns-command "(in-ns '%s)\n")
+      (setq-local inf-clojure-apropos-command "(doseq [var (sort (cljs.repl/apropos \"%s\"))]
+                                                 (println (str var)))\n")
+      (setq-local inf-clojure-macroexpand-command "(cljs.core/macroexpand '%s)\n")
+      (setq-local inf-clojure-macroexpand-1-command "(cljs.core/macroexpand-1 '%s)\n")
+
+      (setq-local company-backends '(company-yasnippet company-dabbrev)))
+
+    (add-hook 'clojure-script-mode #'td/setup-clojurescript)))
 
 ;;;; Elixir
 (use-package elixir-mode
@@ -624,6 +635,17 @@ for a file to visit if current buffer is not visiting a file."
   :ensure t
   :defer t)
 
+(use-package python
+  :defer t
+  :config
+  (progn
+    (defun td/run-python-with-project-root ()
+      (interactive)
+      (let ((default-directory (projectile-project-root)))
+        (call-interactively 'run-python)))
+
+    (bind-keys :map python-mode-map
+               ([remap run-python] . td/run-python-with-project-root))))
 
 ;;;; Emacs Lisp
 (use-package elisp-mode
@@ -634,6 +656,7 @@ for a file to visit if current buffer is not visiting a file."
       (add-to-list 'imenu-generic-expression '("Sections" "^;;;; \\(.+\\)$" 1) t))
 
     (add-hook 'emacs-lisp-mode-hook 'td/imenu-elisp-sections)))
+
 ;;;; Misc
 (use-package yaml-mode
   :ensure t
@@ -649,8 +672,6 @@ for a file to visit if current buffer is not visiting a file."
 (use-package dockerfile-mode
   :ensure t
   :mode ("Dockerfile$" . dockerfile-mode))
-
-
 
 
 ;;;; Utilities
@@ -698,7 +719,15 @@ for a file to visit if current buffer is not visiting a file."
   :init
   (progn
     (add-hook 'shell-mode-hook #'ansi-color-for-comint-mode-on)
-    (add-hook 'comint-output-filter-functions #'comint-truncate-buffer)))
+    (add-hook 'comint-output-filter-functions #'comint-truncate-buffer)
+
+    (defun td/clear-comint ()
+      (interactive)
+      (let ((comint-buffer-maximum-size 0))
+        (comint-truncate-buffer)))
+
+    (bind-keys :map comint-mode-map
+               ("C-c C-s" . td/clear-comint))))
 
 (use-package vc-hooks
   :defer t
@@ -875,10 +904,6 @@ for a file to visit if current buffer is not visiting a file."
     (eval-after-load 'js2-mode
       '(setq js2-mode-show-parse-errors nil))))
 
-(use-package eldoc
-  :config
-  (setq eldoc-idle-delay 2))
-
 (use-package ediff
   :defer t
   :init
@@ -931,6 +956,13 @@ for a file to visit if current buffer is not visiting a file."
    #b11011011
    #b00001110]
   nil nil 'center)
+
+(define-fringe-bitmap 'halftone
+  [#b01000000
+   #b10000000]
+  nil nil '(top t))
+
+(setcdr (assq 'continuation fringe-indicator-alist) 'halftone)
 (setcdr (assq 'empty-line fringe-indicator-alist) 'tilde)
 (eval-after-load 'linum
   '(set-fringe-bitmap-face 'tilde 'linum))
@@ -940,11 +972,9 @@ for a file to visit if current buffer is not visiting a file."
   :ensure t
   :init (color-theme-approximate-on))
 
-
 (use-package subatomic-theme
   :ensure t
   :init (load-theme 'subatomic t))
-
 
 (use-package smart-mode-line
   :ensure t
@@ -959,10 +989,11 @@ for a file to visit if current buffer is not visiting a file."
       :init
       (progn
         (add-to-list 'rm-blacklist " wg")
+        (add-to-list 'rm-blacklist " hs")
         (add-to-list 'rm-blacklist " snipe")
         (add-to-list 'rm-blacklist " ivy")
+        (add-to-list 'rm-blacklist " Fill")
         (add-to-list 'rm-blacklist " Undo-Tree")
-        (add-to-list 'rm-blacklist " Anzu")
         (add-to-list 'rm-blacklist " yas")
         (add-to-list 'rm-blacklist " company")))))
 
@@ -974,28 +1005,30 @@ for a file to visit if current buffer is not visiting a file."
 
 (use-package nlinum
   :defer t
+  :ensure t
   :commands (nlinum-mode)
   :config
   (progn
     (setq-default
      nlinum-format " %4d "
-     nlinum-highlight-current-line t)
+     ;; nlinum-highlight-current-line t
+     )
 
     (defun td/nlinum-custom-faces ()
       "Custom faces for `nlinum'"
       (interactive)
       (require 'linum)
-      (require 'color)
+      ;; (require 'color)
       (set-face-attribute 'linum nil
                           :height 100
                           :inherit font-lock-comment-face
                           :background (face-background 'fringe)
                           :foreground (face-foreground 'font-lock-comment-face))
-      (set-face-attribute 'nlinum-current-line nil
-                          :background (color-lighten-name (face-background 'linum) 10)))
+      ;;(set-face-attribute 'nlinum-current-line nil
+      ;;                    :background (color-lighten-name (face-background 'linum) 10))
+      )
 
-    (add-hook 'nlinum-mode-hook  #'td/nlinum-custom-faces)
-    (add-hook 'td/adaptive-theme-functions #'td/nlinum-custom-faces))
+    (add-hook 'nlinum-mode-hook  #'td/nlinum-custom-faces))
   :init
   (progn
     (defun td/nlinum-may-turn-on ()
@@ -1043,12 +1076,6 @@ for a file to visit if current buffer is not visiting a file."
 
     (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh)))
 
-
-(use-package which-func
-  :defer t
-  :init (which-function-mode t))
-
-
 (use-package hl-todo
   :ensure t
   :defer t
@@ -1066,47 +1093,35 @@ for a file to visit if current buffer is not visiting a file."
 
 (use-package hideshow
   :defer t
-  :bind (("C-c C-n" . hs-toggle-hiding))
+  :bind (:map hs-minor-mode-map
+              ("C-c C-m" . hs-toggle-hiding)
+              ("C-c C-S-m" . hs-hide-all))
   :init
+  (add-hook 'prog-mode-hook #'hs-minor-mode)
+  :config
   (progn
-    (use-package hideshowvis
-      :defer t
-      :ensure t)
+    (defface hs-face
+      '((t (:inherit font-lock-comment-face :height 120)))
+      "Face for hideshow marker."
+      :group 'hideshow)
 
-    (hideshowvis-symbols)
-
-    (set-face-attribute 'hs-face nil
-                        :height 110 :box nil
-                        :background (face-background font-lock-comment-face)
-                        :foreground (face-foreground font-lock-comment-face))
-
-    (set-face-attribute 'hs-fringe-face nil
-                        :background (face-background font-lock-comment-face)
-                        :foreground (face-foreground font-lock-comment-face))
-
-    (set-face-attribute 'hideshowvis-hidable-face nil
-                        :background (face-background font-lock-comment-face)
-                        :foreground (face-foreground font-lock-comment-face))
+    (define-fringe-bitmap 'hs-marker [0 24 24 126 126 24 24 0])
 
     (defun td/hs-setup-overlay (ov)
       (when (eq 'code (overlay-get ov 'hs))
-        (let* ((content (buffer-substring (overlay-start ov) (overlay-end ov)))
+        (let* ((marker-string "*fringe-dummy*")
+               (marker-length (length marker-string))
                (display-string " {...}"))
-          (overlay-put ov 'help-echo content)
-          (put-text-property 0 (length display-string)
+          (overlay-put ov 'help-echo "Hiddent text. C-c C-m to show")
+          (put-text-property 0 marker-length
+                             'display
+                             '(left-fringe hs-marker hs-face) marker-string)
+          (overlay-put ov 'before-string marker-string)
+          (put-text-property 1 (length display-string)
                              'face 'hs-face display-string)
           (overlay-put ov 'display display-string))))
 
-    (advice-add 'display-code-line-counts :after #'td/hs-setup-overlay)
-
-    (defun td/setup-folding ()
-      (interactive)
-      (when (< (buffer-size) (expt 2 16))
-        (hs-minor-mode t)
-        ;; (hideshowvis-minor-mode t)
-        (hs-hide-all)))
-
-    (add-hook 'prog-mode-hook #'td/setup-folding)))
+    (setq hs-set-up-overlay 'td/hs-setup-overlay)))
 
 (use-package indent-guide
   :ensure t

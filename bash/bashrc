@@ -98,6 +98,10 @@ ve() {
   exec "./venv/bin/$*"
 }
 
+e() {
+  exec open -a Emacs "$@"
+}
+
 # Tools
 faviconize() {
   favicon=favicon
@@ -120,7 +124,11 @@ faviconize() {
 }
 
 if [ -d "/Applications/VMware Fusion.app/Contents/Library" ]; then
-    export PATH=$PATH:"/Applications/VMware Fusion.app/Contents/Library"
+    export PATH="/Applications/VMware Fusion.app/Contents/Library":$PATH
+fi
+
+if [ -d "$HOME/Applications/Emacs.app/Contents/MacOS" ]; then
+    export PATH="$HOME/Applications/Emacs.app/Contents/MacOS":$PATH
 fi
 
 # rbenv
