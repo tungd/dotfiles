@@ -48,7 +48,17 @@
 
 (savehist-mode t)
 (save-place-mode t)
-(add-hook 'after-init-hook #'server-start)
+
+(use-package server
+  :commands (server-running-p)
+  :init
+  (progn
+    (defun td/start-server ()
+      (interactive)
+      (unless (server-running-p)
+        (server-start)))
+
+    (add-hook 'after-init-hook #'td/start-server)))
 
 (when (eq system-type 'darwin)
   (setq trash-directory "~/.Trash/"
@@ -63,12 +73,12 @@
   :defer t
   :init
   (progn
-    (exec-path-from-shell-initialize)
-
+    (setq-default exec-path-from-shell-check-startup-files nil)
+    (exec-path-from-shell-initialize))
+  :config
+  (progn
     (exec-path-from-shell-copy-envs '("PYENV_ROOT"))
     (setenv "WORKON_HOME" (expand-file-name "versions" (getenv "PYENV_ROOT")))))
-
-
 
 ;;;; Editing
 (setq-default
@@ -178,53 +188,6 @@ for a file to visit if current buffer is not visiting a file."
     (unbind-key "<tab>" yas-minor-mode-map)
     (bind-key "SPC" 'yas-expand yas-minor-mode-map)))
 
-(use-package company
-  :ensure t
-  :defer t
-  :bind ("M-/" . company-complete-common-or-cycle)
-  :init (global-company-mode t)
-  :config
-  (progn
-    (setq company-minimum-prefix-length 2
-          ;; The basic idea is preview completion inline immediately,
-          ;; and then wait a little bit to show all the available completions
-          company-idle-delay 0.2
-          company-echo-delay 0.8
-          company-tooltip-idle-delay 0.8
-          company-tooltip-align-annotations t
-          company-tooltip-limit 8
-          company-dabbrev-downcase nil
-          company-dabbrev-ignore-case t
-          company-frontends
-          '(company-pseudo-tooltip-unless-just-one-frontend-with-delay
-            company-preview-frontend
-            company-echo-metadata-frontend)
-          company-backends
-          '((company-yasnippet
-             company-dabbrev
-             company-capf)))
-
-    (set-face-attribute 'company-preview nil
-                        :underline t
-                        :foreground (face-foreground 'font-lock-comment-face))
-
-    (bind-keys :map company-active-map
-               ("<tab>" . company-complete-common-or-cycle)
-               ("C-n" . company-select-next-or-abort)
-               ("C-p" . company-select-previous-or-abort))))
-
-(use-package company-web
-  :ensure t
-  :defer t
-  :init
-  (eval-after-load 'web-mode
-    '(add-to-list 'company-backends 'company-web-html)))
-
-(use-package company-statistics
-  :ensure t
-  :defer t
-  :init (company-statistics-mode t))
-
 (use-package expand-region
   :ensure t
   :defer t
@@ -239,6 +202,9 @@ for a file to visit if current buffer is not visiting a file."
          ("M-)" . mc/skip-to-next-like-this)
          ("M-C-a" . mc/mark-all-like-this)
          ("C-x SPC" . set-rectangular-region-anchor)))
+
+(use-package hippie-exp
+  :bind (([remap dabbrev-expand] . hippie-expand)))
 
 (use-package comment-dwim-2
   :ensure t
@@ -353,7 +319,12 @@ for a file to visit if current buffer is not visiting a file."
 
 
 ;;;; Navigation
-(bind-key "C-M-]" 'previous-buffer)
+(defun td/quick-switch-buffer ()
+  "TODO: should have named this `switch-to-other-buffer' :)."
+  (interactive)
+  (switch-to-buffer (other-buffer)))
+
+(bind-key* "C-M-]" #'td/quick-switch-buffer)
 
 (defun td/next-ten-visual-line ()
   "TODO: docs."
@@ -365,15 +336,15 @@ for a file to visit if current buffer is not visiting a file."
   (interactive)
   (next-logical-line -10))
 
-(bind-keys ("M-n" . td/next-ten-visual-line)
-           ("M-p" . td/previous-ten-visual-line))
+(bind-keys* ("M-n" . td/next-ten-visual-line)
+            ("M-p" . td/previous-ten-visual-line))
 
 (defun td/kill-current-buffer ()
   "Kill current the buffer."
   (interactive)
   (kill-buffer (current-buffer)))
 
-(bind-key "C-c C-k" #'td/kill-current-buffer)
+(bind-key* "C-c C-k" #'td/kill-current-buffer)
 
 (use-package recentf
   :defer t
@@ -416,11 +387,6 @@ for a file to visit if current buffer is not visiting a file."
 
     (advice-add 'window-numbering-get-number-string
                 :around #'td/bracket-window-number-string)))
-
-;; (use-package ace-jump-mode
-;;   :ensure t
-;;   :defer t
-;;   :bind (("C-M-j" . ace-jump-mode)))
 
 (use-package projectile
   :ensure t
@@ -675,44 +641,13 @@ for a file to visit if current buffer is not visiting a file."
 
 
 ;;;; Utilities
-(use-package eshell
-  :defer t
+(use-package multi-term
+  :ensure t
+  :bind (("C-c n o" . multi-term)
+         ("C-c n n" . multi-term-next)
+         ("C-c n m" . multi-term-prev))
   :config
-  (progn
-    (defmacro td/with-face (str &rest properties)
-      `(propertize ,str 'face (list ,@properties)))
-
-    (defun td/eshell-pwd ()
-      (replace-regexp-in-string
-       (regexp-quote (expand-file-name "~"))
-       "~"
-       (eshell/pwd)))
-
-    (defun td/eshell-prompt ()
-      (format
-       "\n%s@%s in %s\n%s "
-       (td/with-face user-login-name :foreground "#dc322f")
-       (td/with-face (or (getenv "HOST") (system-name)) :foreground "#b58900")
-       (td/with-face (td/eshell-pwd) :foreground "#859900")
-       (if (= (user-uid) 0) (with-face "#" :foreground "red") "$")))
-
-    (defalias 'eshell/e 'find-file-other-window)
-
-    (defun eshell/open (args)
-      (interactive)
-      (shell-command
-       (concat (case system-type
-                 ((darwin) "open")
-                 ((windows-nt) "start")
-                 (t "xdg-open"))
-               (format " %s" args))))
-
-    (use-package em-prompt
-      :defer t
-      :config
-      (setq eshell-prompt-function #'td/eshell-prompt
-            eshell-prompt-regexp "^[^#$\\n]*[#$] "
-            eshell-highlight-prompt nil))))
+  (setq multi-term-program "/bin/bash"))
 
 (use-package comint
   :defer t
@@ -733,55 +668,6 @@ for a file to visit if current buffer is not visiting a file."
   :defer t
   :config (setq vc-follow-symlinks t))
 
-(use-package vc-dir
-  :defer t
-  :config
-  (progn
-    (defun td/vc-git-command (verb fn)
-      (let* ((args (vc-deduce-fileset nil t))
-             (backend (car args))
-             (files (nth 1 args)))
-        (if (eq backend 'Git)
-            (progn
-              (funcall fn files)
-              (message (concat verb " "
-                               (number-to-string (length files))
-                               " file(s).")))
-          (message "Not in a vc git buffer."))))
-
-    (defun td/vc-git-add (&optional revision args comment)
-      (interactive "P")
-      (td/vc-git-command "Staged" 'vc-git-register))
-
-    (defun td/vc-git-reset (&optional revision args comment)
-      (interactive "P")
-      (td/vc-git-command
-       "Unstaged"
-       (lambda (files) (vc-git-command nil 0 files "reset" "-q" "--"))))
-
-    (defun td/vc-git-amend (&optional revision args comment)
-      (interactive "P")
-      (td/vc-git-command
-       "Ammended"
-       (lambda (files)
-         (vc-git-command nil 0 files
-                         "commit" "--amend" "--reuse-message=HEAD"))))
-
-    (defadvice vc-dir-refresh
-        (after td/vc-hide-up-to-date-after-refresh activate)
-      (vc-dir-hide-up-to-date))
-
-    (bind-keys :map vc-dir-mode-map
-               ("r" . vc-revert-buffer)
-               ("a" . td/vc-git-add)
-               ("u" . td/vc-git-reset)
-               ("A" . td/vc-git-amend))
-
-    (bind-keys :map vc-prefix-map
-               ("r" . vc-revert-buffer)
-               ("a" . td/vc-git-add)
-               ("u" . td/vc-git-reset))))
-
 (use-package ztree
   :ensure t
   :defer t)
@@ -789,6 +675,8 @@ for a file to visit if current buffer is not visiting a file."
 (use-package workgroups2
   :ensure t
   :defer t
+  :init
+  (add-hook 'after-init-hook #'workgroups-mode t)
   :config
   (progn
     (setq wg-mode-line-decor-left-brace "["
@@ -906,15 +794,6 @@ for a file to visit if current buffer is not visiting a file."
 
 (use-package ediff
   :defer t
-  :init
-  (progn
-    ;; TODO: setup to work with Emacs client
-    (defun td/command-line-diff (switch)
-      (let ((file1 (pop command-line-args-left))
-            (file2 (pop command-line-args-left)))
-        (ediff file1 file2)))
-
-    (add-to-list 'command-switch-alist '("diff" . td/command-line-diff)))
   :config
   (setq ediff-window-setup-function 'ediff-setup-windows-plain
         ediff-split-window-function 'split-window-horizontally))
@@ -927,10 +806,10 @@ for a file to visit if current buffer is not visiting a file."
  indicate-empty-lines t
  default-frame-alist
  '((right-fringe . 0)
-   (font . "Fira Code 13")
+   (font . "Source Code Pro 14")
    (top . 0)
-   (left . 512)
-   (width . 120) (height . 64)
+   (left . 0)
+   (width . 256) (height . 64)
    (border-width . 0)
    (internal-border-width . 0)))
 
@@ -939,42 +818,32 @@ for a file to visit if current buffer is not visiting a file."
 (blink-cursor-mode -1)
 (electric-pair-mode t)
 (column-number-mode t)
-(unless (display-graphic-p)
-  (menu-bar-mode -1))
+(menu-bar-mode -1)
 
-(defvar td/adaptive-theme-functions '()
-  "Hook run after custom themes are loaded.")
-
-(defun td/adaptive-theme (theme &optional no-confirm no-enable)
-  "Adapt some faces according to THEME, NO-CONFIRM and NO-ENABLE."
-  (run-hooks 'td/adaptive-theme-functions))
-
-(advice-add 'load-theme :after #'td/adaptive-theme)
-
-(define-fringe-bitmap 'tilde
-  [#b01110001
-   #b11011011
-   #b00001110]
-  nil nil 'center)
-
-(define-fringe-bitmap 'halftone
-  [#b01000000
-   #b10000000]
-  nil nil '(top t))
-
-(setcdr (assq 'continuation fringe-indicator-alist) 'halftone)
-(setcdr (assq 'empty-line fringe-indicator-alist) 'tilde)
-(eval-after-load 'linum
-  '(set-fringe-bitmap-face 'tilde 'linum))
-
-
-(use-package color-theme-approximate
+(use-package base16-theme
   :ensure t
-  :init (color-theme-approximate-on))
+  :init (load-theme 'base16-bespin t)
+  :config
+  (progn
+    (unless (display-graphic-p)
+      (set-face-attribute 'default nil :background "black"))
 
-(use-package subatomic-theme
-  :ensure t
-  :init (load-theme 'subatomic t))
+    (define-fringe-bitmap 'tilde
+      [#b01110001
+       #b11011011
+       #b00001110]
+      nil nil 'center)
+
+    (define-fringe-bitmap 'halftone
+      [#b01000000
+       #b10000000]
+      nil nil '(top t))
+
+    (setcdr (assq 'continuation fringe-indicator-alist) 'halftone)
+    (setcdr (assq 'empty-line fringe-indicator-alist) 'tilde)
+    (set-fringe-bitmap-face 'tilde 'font-lock-comment-face)
+    (set-face-attribute 'vertical-border nil :foreground "#222" :background "black")
+    (set-display-table-slot standard-display-table 'vertical-border (make-glyph-code ?│))))
 
 (use-package smart-mode-line
   :ensure t
@@ -1009,24 +878,19 @@ for a file to visit if current buffer is not visiting a file."
   :commands (nlinum-mode)
   :config
   (progn
-    (setq-default
-     nlinum-format " %4d "
-     ;; nlinum-highlight-current-line t
-     )
+    (setq-default nlinum-format " %4d ")
+    ;; nlinum-highlight-current-line t
 
     (defun td/nlinum-custom-faces ()
       "Custom faces for `nlinum'"
       (interactive)
       (require 'linum)
-      ;; (require 'color)
       (set-face-attribute 'linum nil
                           :height 100
-                          :inherit font-lock-comment-face
-                          :background (face-background 'fringe)
+                          :background (face-background 'font-lock-comment-face)
                           :foreground (face-foreground 'font-lock-comment-face))
-      ;;(set-face-attribute 'nlinum-current-line nil
-      ;;                    :background (color-lighten-name (face-background 'linum) 10))
-      )
+      (set-face-attribute 'fringe nil
+                          :background (face-background 'font-lock-comment-face)))
 
     (add-hook 'nlinum-mode-hook  #'td/nlinum-custom-faces))
   :init
@@ -1125,15 +989,11 @@ for a file to visit if current buffer is not visiting a file."
 
 (use-package indent-guide
   :ensure t
-  :defer t
+  :commands (indent-guide-mode)
   :init
   (progn
     (add-hook 'haml-mode-hook #'indent-guide-mode)
     (add-hook 'python-mode-hook #'indent-guide-mode)))
-
-
-;; This need to be at the bottom
-(workgroups-mode t)
 
 (provide 'init)
 ;;; init.el ends here
