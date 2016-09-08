@@ -234,6 +234,8 @@ for a file to visit if current buffer is not visiting a file."
           evil-insert-state-cursor '(bar . 2)
           evil-normal-state-cursor '(box "orange"))
 
+    (add-to-list 'evil-emacs-state-modes 'diff-mode)
+
     (use-package evil-surround
       :ensure t
       :defer t
@@ -579,9 +581,7 @@ for a file to visit if current buffer is not visiting a file."
       (setq-local inf-clojure-apropos-command "(doseq [var (sort (cljs.repl/apropos \"%s\"))]
                                                  (println (str var)))\n")
       (setq-local inf-clojure-macroexpand-command "(cljs.core/macroexpand '%s)\n")
-      (setq-local inf-clojure-macroexpand-1-command "(cljs.core/macroexpand-1 '%s)\n")
-
-      (setq-local company-backends '(company-yasnippet company-dabbrev)))
+      (setq-local inf-clojure-macroexpand-1-command "(cljs.core/macroexpand-1 '%s)\n"))
 
     (add-hook 'clojure-script-mode #'td/setup-clojurescript)))
 
@@ -682,7 +682,7 @@ for a file to visit if current buffer is not visiting a file."
     (setq wg-mode-line-decor-left-brace "["
           wg-mode-line-decor-right-brace "]")
 
-    (add-hook 'wg-before-switch-to-workgroup-hook 'wg-save-session)))
+    (add-hook 'wg-before-switch-to-workgroup-hook #'wg-save-session)))
 
 (use-package tramp
   :defer t
@@ -930,11 +930,10 @@ for a file to visit if current buffer is not visiting a file."
       (set-face-attribute 'diff-hl-change nil :background nil :foreground "#deae3e")
       (set-face-attribute 'diff-hl-insert nil :background nil :foreground "#81af34"))
 
+    (advice-add 'diff-hl-overlay-modified :override #'ignore)
+
     (add-hook 'diff-hl-mode-hook #'td/diff-hl-custom-faces)
-
-    (defun diff-hl-overlay-modified (ov after-p beg end &optional len)
-      "Markers disappear and reapear is kind of annoying to me.")
-
+    (add-hook 'dired-mode-hook #'diff-hl-dired-mode)
     (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh)))
 
 (use-package hl-todo
