@@ -255,8 +255,8 @@ for a file to visit if current buffer is not visiting a file."
                ("<tab>" . evil-jump-item)
                ("j" . evil-next-visual-line)
                ("k" . evil-previous-visual-line)
-               ("M-j" . td/next-ten-visual-line)
-               ("M-k" . td/previous-ten-visual-line))
+               ("M-n" . td/next-ten-visual-line)
+               ("M-p" . td/previous-ten-visual-line))
 
     (bind-keys :map evil-motion-state-map
                ("TAB" . evil-jump-item)
@@ -336,8 +336,8 @@ for a file to visit if current buffer is not visiting a file."
   (interactive)
   (next-logical-line -10))
 
-(bind-keys* ("M-n" . td/next-ten-visual-line)
-            ("M-p" . td/previous-ten-visual-line))
+(bind-keys ("M-n" . td/next-ten-visual-line)
+           ("M-p" . td/previous-ten-visual-line))
 
 (defun td/kill-current-buffer ()
   "Kill current the buffer."
@@ -805,45 +805,42 @@ for a file to visit if current buffer is not visiting a file."
  fringes-outside-margins t
  indicate-empty-lines t
  default-frame-alist
- '((right-fringe . 0)
-   (font . "Source Code Pro 14")
-   (top . 0)
-   (left . 0)
-   (width . 256) (height . 64)
-   (border-width . 0)
-   (internal-border-width . 0)))
+ '((font . "Source Code Pro Medium 14")
+   ;; (top . 0) (left . 0) (width . 180) (height . 64)
+   (fullscreen . fullboth)
+   (vertical-scroll-bars . nil)
+   (menu-bar-lines . 0)
+   (tool-bar-lines . 0)
+   (right-fringe . 0)))
 
-(scroll-bar-mode -1)
-(tool-bar-mode -1)
 (blink-cursor-mode -1)
 (electric-pair-mode t)
 (column-number-mode t)
-(menu-bar-mode -1)
 
 (use-package base16-theme
   :ensure t
-  :init (load-theme 'base16-bespin t)
-  :config
-  (progn
-    (unless (display-graphic-p)
-      (set-face-attribute 'default nil :background "black"))
+  :init (load-theme 'base16-bespin t))
 
-    (define-fringe-bitmap 'tilde
-      [#b01110001
-       #b11011011
-       #b00001110]
-      nil nil 'center)
+(unless (display-graphic-p)
+  (set-face-attribute 'default nil :background "black"))
 
-    (define-fringe-bitmap 'halftone
-      [#b01000000
-       #b10000000]
-      nil nil '(top t))
+(define-fringe-bitmap 'tilde
+  [#b01110001
+   #b11011011
+   #b00001110]
+  nil nil 'center)
 
-    (setcdr (assq 'continuation fringe-indicator-alist) 'halftone)
-    (setcdr (assq 'empty-line fringe-indicator-alist) 'tilde)
-    (set-fringe-bitmap-face 'tilde 'font-lock-comment-face)
-    (set-face-attribute 'vertical-border nil :foreground "#222" :background "black")
-    (set-display-table-slot standard-display-table 'vertical-border (make-glyph-code ?│))))
+(define-fringe-bitmap 'halftone
+  [#b01000000
+   #b10000000]
+  nil nil '(top t))
+
+(setcdr (assq 'continuation fringe-indicator-alist) 'halftone)
+(setcdr (assq 'empty-line fringe-indicator-alist) 'tilde)
+(set-fringe-bitmap-face 'tilde 'font-lock-comment-face)
+(set-face-attribute 'vertical-border nil :foreground "#000" :background "#000")
+(set-display-table-slot standard-display-table
+                        'vertical-border (make-glyph-code ?│))
 
 (use-package smart-mode-line
   :ensure t
