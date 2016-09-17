@@ -6,12 +6,14 @@
   :config
   (progn
     (setq evil-ex-substitute-global t
-          evil-cross-lines t
-          evil-move-cursor-back t)
+          evil-cross-lines t)
+
+    (add-to-list 'evil-emacs-state-modes 'diff-mode)
 
     (use-package evil-surround
       :ensure t
       :defer t
+      ;; :commands (global-evil-surround-mode)
       :init (global-evil-surround-mode t))
 
     (use-package evil-visualstar
@@ -22,6 +24,18 @@
     (use-package evil-org
       :ensure t)
 
+    (use-package evil-snipe
+      :ensure t
+      :defer t
+      :init
+      (progn
+        (evil-snipe-mode 1)
+        (evil-snipe-override-mode 1))
+      :config
+      (progn
+        (setq evil-snipe-spillover-scope 'visible)
+        (add-hook 'magit-mode-hook 'turn-off-evil-snipe-override-mode)))
+
     (bind-keys :map evil-insert-state-map
                ([remap newline] . newline-and-indent))
 
@@ -30,40 +44,14 @@
                ("<tab>" . evil-jump-item)
                ("j" . evil-next-visual-line)
                ("k" . evil-previous-visual-line)
-               ("M-j" . td/evil-next-ten-visual-line)
-               ("M-k" . td/evil-previous-ten-visual-line))
+               ("M-n" . td/next-ten-visual-line)
+               ("M-p" . td/previous-ten-visual-line))
 
     (bind-keys :map evil-motion-state-map
                ("TAB" . evil-jump-item)
                ("<tab>" . evil-jump-item))
 
-    (defun td/evil-next-ten-visual-line ()
-      (interactive)
-      (evil-next-visual-line 10))
-
-    (defun td/evil-previous-ten-visual-line ()
-      (interactive)
-      (evil-previous-visual-line 10))
-
-    (defun td/open-line ()
-      (interactive)
-      (end-of-line)
-      (newline-and-indent))
-
-    (defun td/ends-with-colon ()
-      (interactive)
-      (end-of-line)
-      (insert ":"))
-
-    (defun td/ends-with-semicolon ()
-      (interactive)
-      (end-of-line)
-      (insert ";"))
-
     (bind-keys :map evil-insert-state-map
-               ("C-e" . end-of-line)
-               ((kbd "<C-return>") . td/open-line)
-               ("C-;" . td/ends-with-semicolon)
-               ("C-:" . td/ends-with-colon))))
+               ("C-e" . end-of-line))))
 
 (provide 'config-evil)

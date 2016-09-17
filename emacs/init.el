@@ -103,39 +103,24 @@
 (add-hook 'text-mode-hook 'turn-on-auto-fill)
 (add-hook 'prog-mode-hook 'turn-on-auto-fill)
 
-(autoload 'zap-up-to-char "misc"
-  "Kill up to, but not including ARGth occurrence of CHAR.
+(use-package misc
+  :commands (zap-up-to-char)
+  :bind (("M-z" . zap-up-to-char)))
 
-  \(fn arg char)"
-  'interactive)
-
-(bind-key "M-z" 'zap-up-to-char)
-
-(defun td/join-next-line ()
+(defun td/ends-with-colon ()
   "TODO: docs."
   (interactive)
-  (join-line -1))
+  (end-of-line)
+  (insert ":"))
 
-(bind-key "M-J" #'td/join-next-line)
-
-(defun td/cleanup-buffer ()
+(defun td/ends-with-semicolon ()
   "TODO: docs."
   (interactive)
-  (save-excursion
-    (whitespace-cleanup-region (point-min) (point-max))
-    (indent-region (point-min) (point-max))))
+  (end-of-line)
+  (insert ";"))
 
-(bind-key "M-=" #'td/cleanup-buffer)
-
-(defun sudo-edit (&optional arg)
-  "Edit currently visited file as root.
-With a prefix ARG prompt for a file to visit.  Will also prompt
-for a file to visit if current buffer is not visiting a file."
-  (interactive "P")
-  (if (or arg (not buffer-file-name))
-      (find-file (concat "/sudo:root@localhost:"
-                         (ido-read-file-name "Find file(as root): ")))
-    (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
+(bind-keys ("C-:" . td/ends-with-colon)
+           ("C-;" . td/ends-with-semicolon))
 
 (bind-key [remap delete-horizontal-space] #'just-one-space)
 
@@ -200,11 +185,36 @@ for a file to visit if current buffer is not visiting a file."
          ("M-C-0" . mc/mark-next-like-this)
          ("M-(" . mc/skip-to-previous-like-this)
          ("M-)" . mc/skip-to-next-like-this)
-         ("M-C-a" . mc/mark-all-like-this)
+         ("C-c C-a" . mc/mark-all-like-this)
          ("C-x SPC" . set-rectangular-region-anchor)))
 
-(use-package hippie-exp
-  :bind (([remap dabbrev-expand] . hippie-expand)))
+(use-package company
+  :ensure t
+  :defer t
+  :bind ("M-/" . company-complete-common-or-cycle)
+  :init (global-company-mode t)
+  :config
+  (progn
+    (use-package company-statistics
+      :ensure t
+      :defer t
+      :init (company-statistics-mode t))
+
+    (setq company-minimum-prefix-length 2
+          company-idle-delay nil
+          company-tooltip-align-annotations t
+          company-frontends
+          '(company-pseudo-tooltip-unless-just-one-frontend
+            company-echo-metadata-frontend)
+          company-backends
+          '((company-yasnippet
+             company-dabbrev
+             company-capf)))
+
+    (bind-keys :map company-active-map
+               ("<tab>" . company-complete-common-or-cycle)
+               ("C-n" . company-select-next-or-abort)
+               ("C-p" . company-select-previous-or-abort))))
 
 (use-package comment-dwim-2
   :ensure t
@@ -222,84 +232,9 @@ for a file to visit if current buffer is not visiting a file."
     ;; (add-hook 'prog-mode-hook #'flyspell-prog-mode)
     (add-hook 'text-mode-hook #'flyspell-mode)))
 
-(use-package evil
-  :ensure t
-  :defer t
-  :init (evil-mode t)
-  :config
-  (progn
-    (setq evil-ex-substitute-global t
-          evil-cross-lines t
-          evil-move-cursor-back t
-          evil-insert-state-cursor '(bar . 2)
-          evil-normal-state-cursor '(box "orange"))
-
-    (add-to-list 'evil-emacs-state-modes 'diff-mode)
-
-    (use-package evil-surround
-      :ensure t
-      :defer t
-      :init (global-evil-surround-mode t))
-
-    (use-package evil-visualstar
-      :ensure t
-      :defer t
-      :init (global-evil-visualstar-mode))
-
-    (use-package evil-org
-      :ensure t)
-
-    (bind-keys :map evil-insert-state-map
-               ([remap newline] . newline-and-indent))
-
-    (bind-keys :map evil-normal-state-map
-               ("TAB" . evil-jump-item)
-               ("<tab>" . evil-jump-item)
-               ("j" . evil-next-visual-line)
-               ("k" . evil-previous-visual-line)
-               ("M-n" . td/next-ten-visual-line)
-               ("M-p" . td/previous-ten-visual-line))
-
-    (bind-keys :map evil-motion-state-map
-               ("TAB" . evil-jump-item)
-               ("<tab>" . evil-jump-item))
-
-    (defun td/open-line ()
-      (interactive)
-      (end-of-line)
-      (newline-and-indent))
-
-    (defun td/ends-with-colon ()
-      (interactive)
-      (end-of-line)
-      (insert ":"))
-
-    (defun td/ends-with-semicolon ()
-      (interactive)
-      (end-of-line)
-      (insert ";"))
-
-    (bind-keys :map evil-insert-state-map
-               ("C-e" . end-of-line)
-               ((kbd "<C-return>") . td/open-line)
-               ("C-;" . td/ends-with-semicolon)
-               ("C-:" . td/ends-with-colon))))
-
-(use-package evil-snipe
-  :ensure t
-  :defer t
-  :init
-  (progn
-    (evil-snipe-mode 1)
-    (evil-snipe-override-mode 1))
-  :config
-  (progn
-    (setq evil-snipe-spillover-scope 'visible)
-    (add-hook 'magit-mode-hook 'turn-off-evil-snipe-override-mode)))
-
 (use-package align
   :defer t
-  :bind ("M-C-;" . align)
+  :bind ("C-c =" . align)
   :config
   (progn
     (add-to-list 'align-rules-list
@@ -319,15 +254,7 @@ for a file to visit if current buffer is not visiting a file."
         ;; undo-tree-history-directory-alist '((".*" . "~/.emacs.d/undos"))
         ))
 
-
 ;;;; Navigation
-(defun td/quick-switch-buffer ()
-  "TODO: should have named this `switch-to-other-buffer' :)."
-  (interactive)
-  (switch-to-buffer (other-buffer)))
-
-(bind-key* "C-M-]" #'td/quick-switch-buffer)
-
 (defun td/next-ten-visual-line ()
   "TODO: docs."
   (interactive)
@@ -355,17 +282,12 @@ for a file to visit if current buffer is not visiting a file."
   (setq recentf-max-saved-items 64
         recentf-auto-cleanup 'never))
 
-(use-package isearch
-  :bind (([remap isearch-forward] . isearch-forward-regexp)
-         ([remap isearch-backward] . isearch-backward-regexp))
-  :init
-  (progn
-    (defun td/isearch-message (&optional c-q-hack ellipsis)
-      "Cursor flashing in the echo area makes me crazy."
-      (isearch-message c-q-hack nil))
+(setq-default
+ search-default-mode t
+ isearch-lazy-highlight-initial-delay 0)
 
-    (setq lazy-highlight-initial-delay 0
-          isearch-message-function #'td/isearch-message)))
+(bind-keys :map isearch-mode-map
+           ("<backspace>" . isearch-del-char))
 
 (use-package thingatpt
   :defer t
@@ -401,11 +323,6 @@ for a file to visit if current buffer is not visiting a file."
           "pdf" "doc" "docx" "xls" "xlsx"
           "ttf" "otf" "woff"
           "rar" "zip")))
-
-(use-package projectile-rails
-  :ensure t
-  :defer t
-  :init (add-hook 'projectile-mode-hook #'projectile-rails-on))
 
 (use-package dumb-jump
   :ensure t
@@ -528,10 +445,6 @@ for a file to visit if current buffer is not visiting a file."
   :ensure t
   :mode (("\\.scss$" . scss-mode)))
 
-(use-package less-css-mode
-  :ensure t
-  :mode (("\\.less" . less-css-mode)))
-
 (use-package kite-mini
   :ensure t
   :defer t)
@@ -595,7 +508,6 @@ for a file to visit if current buffer is not visiting a file."
   :defer t
   :init (add-hook 'elixir-mode-hook #'alchemist-mode))
 
-
 ;;;; Python
 (use-package pyvenv
   :ensure t
@@ -612,6 +524,30 @@ for a file to visit if current buffer is not visiting a file."
 
     (bind-keys :map python-mode-map
                ([remap run-python] . td/run-python-with-project-root))))
+
+;; PureScript
+(use-package purescript-mode
+  :ensure t
+  :defer t
+  :config
+  (progn
+    (defun purescript-doc-current-info ())
+
+    (--each load-path
+      (if (string-match-p "purescript-mode" it)
+          (add-to-list 'Info-default-directory-list it)))
+
+    (use-package psc-ide
+      :ensure t
+      :defer t)
+
+    (defun td/setup-purescript ()
+      "TODO: docs."
+      (interactive)
+      (psc-ide-mode)
+      (turn-on-purescript-indentation))
+
+    (add-hook 'purescript-mode-hook #'td/setup-purescript)))
 
 ;;;; Emacs Lisp
 (use-package elisp-mode
@@ -675,8 +611,6 @@ for a file to visit if current buffer is not visiting a file."
 (use-package workgroups2
   :ensure t
   :defer t
-  :init
-  (add-hook 'after-init-hook #'workgroups-mode t)
   :config
   (progn
     (setq wg-mode-line-decor-left-brace "["
@@ -706,7 +640,7 @@ for a file to visit if current buffer is not visiting a file."
   (progn
     (setq org-directory "~/Dropbox (Personal)/GTD/"
           org-ellipsis "…"
-          org-default-notes-file (expand-file-name "inbox . org" org-directory)
+          org-default-notes-file (expand-file-name "inbox.org" org-directory)
           org-log-done 'time
           org-todo-keywords
           '((sequence "TODO(t)" "STARTED(s!)" "WAITING(w@/!)"
@@ -724,7 +658,7 @@ for a file to visit if current buffer is not visiting a file."
       (add-to-list 'ispell-skip-region-alist '(org-property-drawer-re))
       (add-to-list 'ispell-skip-region-alist '("~" "~"))
       (add-to-list 'ispell-skip-region-alist '("=" "="))
-      (add-to-list 'ispell-skip-region-alist '("^#\\+BEGIN_SRC" . "^#\\+END_SRC")))
+      (add-to-list 'ispell-skip-region-alist '("#\\+BEGIN_SRC" . "#\\+END_SRC")))
     (add-hook 'org-mode-hook #'td/org-ispell)
 
     (use-package ob-http
@@ -744,10 +678,6 @@ for a file to visit if current buffer is not visiting a file."
         org-agenda-window-setup 'current-window
         org-agenda-show-all-dates t
         org-agenda-show-log t))
-
-(use-package calc
-  :defer t
-  :bind ("C-c b c" . quick-calc))
 
 (use-package magit
   :ensure t
@@ -798,6 +728,20 @@ for a file to visit if current buffer is not visiting a file."
   (setq ediff-window-setup-function 'ediff-setup-windows-plain
         ediff-split-window-function 'split-window-horizontally))
 
+(use-package realgud
+  :ensure t)
+
+(use-package crux
+  :ensure t
+  :commands (crux-sudo-edit
+             crux-switch-to-previous-buffer
+             crux-top-join-line
+             crux-cleanup-buffer-or-region
+             crux-kill-whole-line)
+  :bind (("C-M-]" . crux-switch-to-previous-buffer)
+         ("M-J" . crux-top-join-line)
+         ("M-=" . crux-cleanup-buffer-or-region)
+         ("C-M-k" . crux-kill-whole-line)))
 
 ;;;; UI
 (setq-default
@@ -816,6 +760,21 @@ for a file to visit if current buffer is not visiting a file."
 (blink-cursor-mode -1)
 (electric-pair-mode t)
 (column-number-mode t)
+
+(use-package highlight-parentheses
+  :ensure t
+  :init (global-highlight-parentheses-mode t)
+  :config
+  (setq hl-paren-colors '("firebrick1")
+        hl-paren-delay 0.01))
+
+(use-package paren-face
+  :ensure t
+  :init (global-paren-face-mode t)
+  :config
+  (progn
+    (setq paren-face-modes '(prog-mode))
+    (set-face-attribute 'parenthesis nil :foreground "#666")))
 
 (use-package base16-theme
   :ensure t
@@ -862,12 +821,6 @@ for a file to visit if current buffer is not visiting a file."
         (add-to-list 'rm-blacklist " Undo-Tree")
         (add-to-list 'rm-blacklist " yas")
         (add-to-list 'rm-blacklist " company")))))
-
-(use-package paren-face
-  :ensure t
-  :defer t
-  :init (global-paren-face-mode t)
-  :config (setq paren-face-modes '(prog-mode)))
 
 (use-package nlinum
   :defer t
@@ -990,6 +943,45 @@ for a file to visit if current buffer is not visiting a file."
   (progn
     (add-hook 'haml-mode-hook #'indent-guide-mode)
     (add-hook 'python-mode-hook #'indent-guide-mode)))
+
+(use-package anzu
+  :ensure t
+  ;; Anzu command names are confusing, at-cursor means initial string, while
+  ;; thing means boundary.
+  :bind (([remap query-replace] . anzu-query-replace)
+         ("C-c C-r" . anzu-query-replace-at-cursor)
+         ("M-r" . anzu-replace-at-cursor-thing)
+         ("C-M-r" . td/anzu-replace-at-cursor-thing-in-buffer))
+  :init (add-hook 'after-init-hook #'global-anzu-mode)
+  :config
+  (progn
+    (defun td/anzu-replace-at-cursor-thing-in-buffer ()
+      "This does not actually query, but it's OK for me."
+      (interactive)
+      (let ((anzu-replace-at-cursor-thing 'buffer))
+        (call-interactively 'anzu-query-replace-at-cursor-thing)))))
+
+;; (use-package key-chord
+;;   :ensure t
+;;   :init
+;;   (key-chord-mode t)
+;;   :config
+;;   (progn
+;;     (defvar td/key-chords
+;;       '(("<<" smart-shift-left)
+;;         (">>" smart-shift-right)
+;;         ("bb" switch-to-other-buffer)))
+
+;;     (dolist (def td/key-chords)
+;;       (key-chord-define-global (car def) (cadr def)))))
+
+(use-package rainbow-mode
+  :ensure t
+  :defer t
+  :init (add-hook 'css-mode-hook #'rainbow-mode))
+
+
+(workgroups-mode t)
 
 (provide 'init)
 ;;; init.el ends here
