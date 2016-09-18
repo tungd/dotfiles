@@ -382,7 +382,7 @@
 (use-package smartparens
   :ensure t
   :init
-  (add-hook 'prog-mode-hook #'smartparens-strict-mode)
+  (add-hook 'prog-mode-hook #'smartparens-mode)
   :bind (("M-s DEL" . sp-splice-sexp)
          ("M-S" . sp-rewrap-sexp)
          ("M-s <right>" . sp-slurp-hybrid-sexp)
@@ -450,10 +450,6 @@
   (progn
     (setq css-indent-offset 2)
     (add-hook 'css-mode-hook #'td/css-imenu-expressions)))
-
-(use-package scss-mode
-  :ensure t
-  :mode (("\\.scss$" . scss-mode)))
 
 (use-package kite-mini
   :ensure t

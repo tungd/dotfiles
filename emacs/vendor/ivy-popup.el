@@ -42,7 +42,7 @@
 
       ;; (when (display-graphic-p)
       ;;   (ivy--resize-minibuffer-to-fit))
-      (fit-window-to-buffer *ivy-popup-window* (+ 2 ivy-height) 2 20 20))))
+      (fit-window-to-buffer *ivy-popup-window* (+ 4 ivy-height) 2 20 20))))
 
 (provide 'ivy-popup)
 ;;; ivy-popup.el ends here
