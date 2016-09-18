@@ -122,7 +122,7 @@
 (bind-keys ("C-:" . td/ends-with-colon)
            ("C-;" . td/ends-with-semicolon))
 
-(bind-key [remap delete-horizontal-space] #'just-one-space)
+(bind-key [remap delete-horizontal-space] #'cycle-spacing)
 
 (use-package editorconfig
   :defer t
@@ -207,9 +207,10 @@
           '(company-pseudo-tooltip-unless-just-one-frontend
             company-echo-metadata-frontend)
           company-backends
-          '((company-yasnippet
-             company-dabbrev
-             company-capf)))
+          '((company-dabbrev-code
+             :with
+             company-capf
+             company-yasnippet)))
 
     (bind-keys :map company-active-map
                ("<tab>" . company-complete-common-or-cycle)
@@ -378,6 +379,15 @@
   :defer t
   :ensure t)
 
+(use-package smartparens
+  :ensure t
+  :init
+  (add-hook 'prog-mode-hook #'smartparens-strict-mode)
+  :bind (("M-s DEL" . sp-splice-sexp)
+         ("M-S" . sp-rewrap-sexp)
+         ("M-s <right>" . sp-slurp-hybrid-sexp)
+         ("M-s <left>" . sp-forward-barf-sexp)))
+
 
 ;;;; Programming langauges
 ;;;; Web
@@ -532,10 +542,6 @@
   :config
   (progn
     (defun purescript-doc-current-info ())
-
-    (--each load-path
-      (if (string-match-p "purescript-mode" it)
-          (add-to-list 'Info-default-directory-list it)))
 
     (use-package psc-ide
       :ensure t
@@ -720,7 +726,10 @@
 
     ;; Disable `js2-mode' built-in error checker
     (eval-after-load 'js2-mode
-      '(setq js2-mode-show-parse-errors nil))))
+      '(setq js2-mode-show-parse-errors nil))
+
+    (setq flycheck-checkers
+          (--remove (eq it 'emacs-lisp-checkdoc) flycheck-checkers))))
 
 (use-package ediff
   :defer t
@@ -742,6 +751,11 @@
          ("M-J" . crux-top-join-line)
          ("M-=" . crux-cleanup-buffer-or-region)
          ("C-M-k" . crux-kill-whole-line)))
+
+(use-package info
+  :defer t
+  :config
+  (add-to-list 'Info-directory-list (expand-file-name "info/" user-emacs-directory)))
 
 ;;;; UI
 (setq-default
@@ -979,7 +993,6 @@
   :ensure t
   :defer t
   :init (add-hook 'css-mode-hook #'rainbow-mode))
-
 
 (workgroups-mode t)
 
