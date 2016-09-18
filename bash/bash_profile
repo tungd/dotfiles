@@ -1,4 +1,8 @@
-export LANG=en_US.UTF_8
+if [ -e $HOME/.nix-profile/etc/profile.d/nix.sh ]; then . $HOME/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
+
+export LANG=en_US.UTF-8
+# export LC_ALL=$LANG
+export LC_CTYPE=$LANG
 
 # Colors
 export CLICOLOR=1
@@ -56,12 +60,7 @@ $RED\u$END@$YELLOW\H$END in $GREEN\w$END \$(git_prompt_info)
 
 export LOCAL=$HOME/.local
 export PATH=$LOCAL/bin:$LOCAL/sbin:$PATH
-
-export PYENV_ROOT=/Users/tung/.local/var/pyenv
-export PYTHONUNBUFFERED=1
-
-export ANDROID_HOME=/Users/tung/.local/opt/android-sdk
-export PATH=$ANDROID_HOME/bin:$PATH
+export INFOPATH=$LOCAL/share/info:$NIX_LINK/share/info:$INFOPATH
 
 alias g=git
 alias be='bundle exec'
@@ -72,9 +71,12 @@ alias s='twistd -no web --path=.'
 alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
 
 
-if [ -f $LOCAL/etc/bash_completion ]; then
-    . $LOCAL/etc/bash_completion
+if [ -f $NIX_LINK/etc/profile.d/bash_completion.sh ]; then
+    . $NIX_LINK/etc/profile.d/bash_completion.sh
 fi
+for file in $NIX_LINK/etc/bash_completion.d/*; do
+  . $file
+done
 
 notify() {
   osascript -e "display notification \"$2\" with title \"$1\""
@@ -120,15 +122,3 @@ fi
 if [ -d "$HOME/Applications/Emacs.app/Contents/MacOS" ]; then
     export PATH="$HOME/Applications/Emacs.app/Contents/MacOS":$PATH
 fi
-
-# pyenv
-if which pyenv > /dev/null; then
-    eval "$(pyenv init -)"
-    eval "$(pyenv virtualenv-init -)"
-fi
-
-# autoenv
-# source $LOCAL/opt/autoenv/activate.sh
-
-# z
-[[ -s $(brew --prefix)/etc/profile.d/z.sh ]] && . $(brew --prefix)/etc/profile.d/z.sh
