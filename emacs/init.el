@@ -201,6 +201,7 @@
       :init (company-statistics-mode t))
 
     (setq company-minimum-prefix-length 2
+          company-require-match nil
           company-idle-delay nil
           company-tooltip-align-annotations t
           company-frontends
@@ -517,7 +518,21 @@
 ;;;; Python
 (use-package pyvenv
   :ensure t
-  :defer t)
+  :defer t
+  :config
+  (progn
+    (require 'seq)
+
+    (defun td/pyenv-activate-project ()
+      (seq-doseq (dir '("env" "venv" "virtualenv"))
+        (let ((path (expand-file-name dir (cdr (project-current)))))
+          (when (file-exists-p path)
+            (path pyvenv-activate)
+            (message "%s activated. Virtualenv" path)))))
+
+    (add-hook 'projectile-after-switch-project-hook #'td/pyenv-activate-project)))
+
+
 
 (use-package python
   :defer t
@@ -576,6 +591,10 @@
 (use-package dockerfile-mode
   :ensure t
   :mode ("Dockerfile$" . dockerfile-mode))
+
+(use-package nix-mode
+  :ensure t
+  :mode ("\\.nix$" . nix-mode))
 
 
 ;;;; Utilities
@@ -821,16 +840,11 @@
                  '("^~/Projects/dotfiles/\\(.*\\)/" ":Config:\\1:"))
 
     (use-package rich-minority
-      :init
-      (progn
-        (add-to-list 'rm-blacklist " wg")
-        (add-to-list 'rm-blacklist " hs")
-        (add-to-list 'rm-blacklist " snipe")
-        (add-to-list 'rm-blacklist " ivy")
-        (add-to-list 'rm-blacklist " Fill")
-        (add-to-list 'rm-blacklist " Undo-Tree")
-        (add-to-list 'rm-blacklist " yas")
-        (add-to-list 'rm-blacklist " company")))))
+      :config
+      (setq rm-blacklist
+            (append rm-blacklist
+                    '(" wg" " hs" " snipe" " ivy"
+                      " Fill" " Undo-Tree" " yas" " company" " SP" " Anzu" " ARev"))))))
 
 (use-package nlinum
   :defer t
