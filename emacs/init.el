@@ -1008,6 +1008,13 @@
   :defer t
   :init (add-hook 'css-mode-hook #'rainbow-mode))
 
+(use-package guide-key
+  :ensure t
+  :init (add-hook 'after-init-hook #'guide-key-mode)
+  :config
+  (setq guide-key/popup-window-position 'bottom
+        guide-key/guide-key-sequence '("C-x")))
+
 (workgroups-mode t)
 
 (provide 'init)
