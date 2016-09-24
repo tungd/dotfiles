@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: react
-# key: react
-# --
-import React, { Component, PropTypes } from 'react'
-$0

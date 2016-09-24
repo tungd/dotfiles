@@ -1,8 +1,0 @@
-# -*- mode: snippet -*-
-# name: wptemplate
-# key: wptemplate
-# --
-/**
- * Template Name: $1
- */
-$0
