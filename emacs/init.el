@@ -200,9 +200,13 @@
       :defer t
       :init (company-statistics-mode t))
 
+    (use-package company-buffer-line
+      :commands (company-same-mode-buffer-lines)
+      :bind ("C-x C-l" . company-same-mode-buffer-lines))
+
     (setq company-minimum-prefix-length 2
           company-require-match nil
-          company-idle-delay nil
+          ;; company-idle-delay nil
           company-tooltip-align-annotations t
           company-frontends
           '(company-pseudo-tooltip-unless-just-one-frontend
@@ -281,7 +285,7 @@
   :defer t
   :init (recentf-mode t)
   :config
-  (setq recentf-max-saved-items 64
+  (setq recentf-max-saved-items 256
         recentf-auto-cleanup 'never))
 
 (setq-default
