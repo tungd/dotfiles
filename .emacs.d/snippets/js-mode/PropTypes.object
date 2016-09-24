@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: PropTypes.object
+# key: pto
+# --
+PropTypes.object

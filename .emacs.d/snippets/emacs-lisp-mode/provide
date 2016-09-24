@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: provide
+# key: provide
+# --
+$0
+
+(provide '`(file-name-base)`)
