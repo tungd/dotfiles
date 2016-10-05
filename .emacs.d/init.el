@@ -256,9 +256,13 @@
   (setq undo-tree-mode-lighter ""
         undo-tree-visualizer-timestamps t
         ;; Not working with yasnippet, I'm supposed to fix this but...
-        ;; undo-tree-auto-save-history t
-        ;; undo-tree-history-directory-alist '((".*" . "~/.emacs.d/undos"))
-        ))
+        undo-tree-auto-save-history t
+        undo-tree-history-directory-alist '((".*" . "/tmp"))))
+
+(use-package paren-completer
+  :ensure t
+  :bind (("M-]" . paren-completer-add-single-delimiter)
+         ("M-}" . paren-completer-add-all-delimiters)))
 
 ;;;; Navigation
 (defun td/next-ten-visual-line ()
@@ -477,37 +481,37 @@
                 js2-strict-missing-semi-warning nil))
 
 ;;;; Clojure
-(use-package clojure-mode
-  :ensure t
-  :defer t
-  :mode (("\\.clj$" . clojure-mode)
-         ("build\\.boot$" . clojure-mode)))
+;; (use-package clojure-mode
+;;   :ensure t
+;;   :defer t
+;;   :mode (("\\.clj$" . clojure-mode)
+;;          ("build\\.boot$" . clojure-mode)))
 
-(use-package inf-clojure
-  :ensure t
-  :defer t
-  :init
-  (progn
-    (add-hook 'clojure-mode-hook #'inf-clojure-minor-mode)
-    (add-hook 'clojure-mode-hook #'eldoc-mode)
-    (add-hook 'inf-clojure-mode-hook #'eldoc-mode))
-  :config
-  (progn
-    (defun td/setup-clojurescript ()
-      (interactive)
-      (setq-local inf-clojure-load-command "(load-file \"%s\")\n")
-      (setq-local inf-clojure-var-doc-command "(cljs.repl/doc %s)\n")
-      (setq-local inf-clojure-var-source-command "(cljs.repl/source %s)\n")
-      (setq-local inf-clojure-arglist-command "'()\n")
-      (setq-local inf-clojure-completion-command "'()\n")
-      (setq-local inf-clojure-ns-vars-command "(cljs.repl/dir %s)\n")
-      (setq-local inf-clojure-set-ns-command "(in-ns '%s)\n")
-      (setq-local inf-clojure-apropos-command "(doseq [var (sort (cljs.repl/apropos \"%s\"))]
-                                                 (println (str var)))\n")
-      (setq-local inf-clojure-macroexpand-command "(cljs.core/macroexpand '%s)\n")
-      (setq-local inf-clojure-macroexpand-1-command "(cljs.core/macroexpand-1 '%s)\n"))
+;; (use-package inf-clojure
+;;   :ensure t
+;;   :defer t
+;;   :init
+;;   (progn
+;;     (add-hook 'clojure-mode-hook #'inf-clojure-minor-mode)
+;;     (add-hook 'clojure-mode-hook #'eldoc-mode)
+;;     (add-hook 'inf-clojure-mode-hook #'eldoc-mode))
+;;   :config
+;;   (progn
+;;     (defun td/setup-clojurescript ()
+;;       (interactive)
+;;       (setq-local inf-clojure-load-command "(load-file \"%s\")\n")
+;;       (setq-local inf-clojure-var-doc-command "(cljs.repl/doc %s)\n")
+;;       (setq-local inf-clojure-var-source-command "(cljs.repl/source %s)\n")
+;;       (setq-local inf-clojure-arglist-command "'()\n")
+;;       (setq-local inf-clojure-completion-command "'()\n")
+;;       (setq-local inf-clojure-ns-vars-command "(cljs.repl/dir %s)\n")
+;;       (setq-local inf-clojure-set-ns-command "(in-ns '%s)\n")
+;;       (setq-local inf-clojure-apropos-command "(doseq [var (sort (cljs.repl/apropos \"%s\"))]
+;;                                                  (println (str var)))\n")
+;;       (setq-local inf-clojure-macroexpand-command "(cljs.core/macroexpand '%s)\n")
+;;       (setq-local inf-clojure-macroexpand-1-command "(cljs.core/macroexpand-1 '%s)\n"))
 
-    (add-hook 'clojure-script-mode #'td/setup-clojurescript)))
+;;     (add-hook 'clojure-script-mode #'td/setup-clojurescript)))
 
 ;;;; Elixir
 (use-package elixir-mode
@@ -535,8 +539,6 @@
             (message "%s activated. Virtualenv" path)))))
 
     (add-hook 'projectile-after-switch-project-hook #'td/pyenv-activate-project)))
-
-
 
 (use-package python
   :defer t
@@ -673,6 +675,9 @@
           org-src-fontify-natively t
           org-src-tab-acts-natively t
           org-hide-leading-stars t)
+
+    (use-package ox-pandoc
+      :ensure t)
 
     (setq org-agenda-files `(,org-default-notes-file)
           org-agenda-skip-unavailable-files t)
@@ -847,7 +852,7 @@
       :config
       (setq rm-blacklist
             (append rm-blacklist
-                    '(" wg" " hs" " snipe" " ivy"
+                    '(" wg" " hs" " snipe" " ivy" " Guide"
                       " Fill" " Undo-Tree" " yas" " company" " SP" " Anzu" " ARev"))))))
 
 (use-package nlinum
