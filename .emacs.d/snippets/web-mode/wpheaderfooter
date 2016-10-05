@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: wpheaderfooter
+# key: wpheaderfooter
+# --
+<?php get_header() ?>
+
+$0
+
+<?php get_footer() ?>
