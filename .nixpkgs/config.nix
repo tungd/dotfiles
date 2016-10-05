@@ -1,33 +1,36 @@
 {
   packageOverrides = pkgs_: with pkgs_; {
+    closurecompilerJdk8 = closurecompiler.override {
+      jre = jdk8.jre;
+    };
+
     all = with pkgs; buildEnv {
       name = "all";
       paths = [
         ag
         aspell
         aspellDicts.en
-        awscli
         bashCompletion
         bundler
-        closurecompiler
+        closurecompilerJdk8
         elixir
-        ghc
+        fswatch
+        # ghc
         git
-        # gnupg
-        (gnupg.override {
-          x11Support = false;
-        })
-        gnutls
+        gnupg
         imagemagick
-        # lftp
+        jdk8
         mosh
+        nixops
         nodejs-6_x
+        pandoc
         postgresql
         python3
         python35Packages.youtube-dl-light
         ruby
         sqlite
         stack
+        # texlive.combined.scheme-gust
         tmux
         tree
         wget
