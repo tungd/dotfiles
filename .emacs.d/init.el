@@ -326,13 +326,13 @@
   :ensure t
   :defer t
   :init (projectile-global-mode t)
-  :bind ("C-M-'" . projectile-find-file-dwim)
+  :bind ("C-M-'" . projectile-find-file)
   :config
   (setq projectile-globally-ignored-file-suffixes
         '("jpg" "png" "svg" "psd" "sketch" "afdesign"
           "pdf" "doc" "docx" "xls" "xlsx"
           "ttf" "otf" "woff"
-          "rar" "zip")))
+          "rar" "zip" "min.js" "min.css" "map")))
 
 (use-package dumb-jump
   :ensure t
@@ -602,16 +602,6 @@
   :ensure t
   :defer t)
 
-(use-package workgroups2
-  :ensure t
-  :defer t
-  :config
-  (progn
-    (setq wg-mode-line-decor-left-brace "["
-          wg-mode-line-decor-right-brace "]")
-
-    (add-hook 'wg-before-switch-to-workgroup-hook #'wg-save-session)))
-
 (use-package tramp
   :defer t
   :config
@@ -641,7 +631,8 @@
                       "|" "CANCELED(c@)" "DONE(d!)"))
           org-src-fontify-natively t
           org-src-tab-acts-natively t
-          org-hide-leading-stars t)
+          org-hide-leading-stars t
+          org-startup-with-inline-images t)
 
     (use-package ox-pandoc
       :ensure t)
@@ -961,20 +952,6 @@
       (let ((anzu-replace-at-cursor-thing 'buffer))
         (call-interactively 'anzu-query-replace-at-cursor-thing)))))
 
-;; (use-package key-chord
-;;   :ensure t
-;;   :init
-;;   (key-chord-mode t)
-;;   :config
-;;   (progn
-;;     (defvar td/key-chords
-;;       '(("<<" smart-shift-left)
-;;         (">>" smart-shift-right)
-;;         ("bb" switch-to-other-buffer)))
-
-;;     (dolist (def td/key-chords)
-;;       (key-chord-define-global (car def) (cadr def)))))
-
 (use-package rainbow-mode
   :ensure t
   :defer t
@@ -986,8 +963,6 @@
   :config
   (setq guide-key/popup-window-position 'bottom
         guide-key/guide-key-sequence '("C-x")))
-
-(workgroups-mode t)
 
 (provide 'init)
 ;;; init.el ends here
