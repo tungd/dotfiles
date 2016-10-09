@@ -1,6 +1,6 @@
 .DS_Store
 .emacs.d/*
-!.emacs.d/init.el
+!.emacs.d/init.org
 !.emacs.d/custom.el
 !.emacs.d/authinfo.gpg
 !.emacs.d/vendor

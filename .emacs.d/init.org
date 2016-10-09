@@ -1,5 +1,6 @@
 #+title: Tung Dao
 #+startup: overview
+#+property: header-args :tangle yes
 
 * Packages and initialization
 
@@ -8,6 +9,7 @@
   directly.
 
   #+BEGIN_SRC emacs-lisp
+    (package-initialize)
     (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
   #+END_SRC
 
@@ -101,6 +103,8 @@
    is that I can make its popup appear at the top of the window.
 
    #+BEGIN_SRC emacs-lisp
+     (ido-mode -1)
+
      (use-package ivy
        :init (ivy-mode t)
        :diminish ivy-mode
@@ -118,10 +122,12 @@
      (use-package counsel
        :ensure t
        :bind (([remap find-file] . counsel-find-file)
+              ([remap ido-find-file] . counsel-find-file)
               ([remap execute-extended-command] . counsel-M-x)
               ("M-m" . counsel-M-x)
               ("C-c i" . counsel-imenu)))
    #+END_SRC
+
 
 * General Editing
 
@@ -200,6 +206,7 @@
 ** Undo
 ** Snippets
 
+
 * Programming
 
 ** Version Control
@@ -277,7 +284,9 @@
 ** TODO PureScript
 ** TODO Misc
 
+
 * TODO Document and management (read: Org)
+
 
 * Look and feel
 
@@ -365,3 +374,10 @@
     (setcdr (assq 'continuation fringe-indicator-alist) 'halftone)
     (setcdr (assq 'truncation fringe-indicator-alist) 'halftone)
   #+END_SRC
+
+
+* Init file generation
+
+;; Local Variables:
+;; eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle)) nil t)
+;; End:
