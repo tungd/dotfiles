@@ -1,7 +1,7 @@
 #+title: Tung Dao
 #+startup: overview
 
-* Packages
+* Packages and initialization
 
   All the packages I used are from [[https://melpa.org][MELPA]]. However, I
   install them automatically with =use-package.el= instead of using =package.el=
@@ -18,8 +18,162 @@
     (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
   #+END_SRC
 
+  Use a dedicate custom file.
+
+  #+BEGIN_SRC emacs-lisp
+    (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+    (load custom-file 'noerror)
+  #+END_SRC
+
+
+* Defaults
+
+  Sane, modern defaults:
+
+  #+BEGIN_SRC emacs-lisp
+    (setq user-full-name "Tung Dao"
+          user-mail-address "me@tungdao.com"
+          default-input-method 'vietnamese-telex)
+
+    (defalias 'yes-or-no-p 'y-or-n-p)
+
+    (use-package better-defaults
+      :ensure t
+      :preface
+      (setq-default show-paren-delay 0))
+  #+END_SRC
+
+  *NOTE*: I also set the delay right here since =better-defaults= loads
+  =show-paren-mode=.
+
+  #+BEGIN_SRC emacs-lisp
+    (use-package smex
+      :ensure t
+      :init (smex-initialize)
+      :bind (("M-m" . smex)
+             ("M-M" . smex-major-mode-commands)))
+  #+END_SRC
+
+
+* Navigation
+
+** Projects
+
+   I use =projectile= to switch between projects and between files in
+   the same project. When possible I will use the functions provided
+   by Emacs, however the project facilities built-in in recent version
+   of Emacs but it is still bare bone.
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package projectile
+       :ensure t
+       :init (projectile-mode t)
+       :bind (("C-M-'" . projectile-find-file))
+       :config
+       (setq projectile-globally-ignored-file-suffixes
+             '("jpg" "png" "svg" "psd" "sketch" "afdesign"
+               "pdf" "doc" "docx" "xls" "xlsx"
+               "ttf" "otf" "woff"
+               "rar" "zip" "min.js" "min.css" "map")))
+   #+END_SRC
+
+** Symbols
+
+   For jumping to defined symbols (functions, classes, .etc), I use
+   =dump-jump=. Mode specific support for this feature is at higher
+   priority, when they fail =dump-jump= will be the fallback.
+
+   The key bindings are:
+
+   | Binding | Command                | Description    |
+   |---------+------------------------+----------------|
+   | =C-M-g= | =dump-jump-go=         | Jump to symbol |
+   | =C-M-p= | =dump-jump-back=       | Back           |
+   | =C-M-q= | =dump-jump-quick-look= | Quick look     |
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package dumb-jump
+       :ensure t
+       :init (dumb-jump-mode t))
+   #+END_SRC
+
 
 * General Editing
+
+  Editing utilities:
+
+  #+BEGIN_SRC emacs-lisp
+    (bind-key [remap delete-horizontal-space] #'cycle-spacing)
+
+    (use-package crux
+      :ensure t
+      :commands (crux-sudo-edit
+                 crux-switch-to-previous-buffer
+                 crux-top-join-line
+                 crux-cleanup-buffer-or-region
+                 crux-kill-whole-line)
+      :bind (("C-M-]" . crux-switch-to-previous-buffer)
+             ("M-J" . crux-top-join-line)
+             ("M-=" . crux-cleanup-buffer-or-region)
+             ("C-M-k" . crux-kill-whole-line)))
+
+    (use-package comment-dwim-2
+      :ensure t
+      :bind ([remap comment-dwim] . comment-dwim-2)
+      :config (setq comment-style 'multi-line))
+  #+END_SRC
+
+** Long lines
+
+  Long lines are annoying. Auto wrap all texts at 80.
+
+  #+BEGIN_SRC emacs-lisp
+    (setq-default
+     comment-auto-fill-only-comments t
+     fill-column 80)
+
+    (add-hook 'text-mode-hook #'turn-on-auto-fill)
+    (add-hook 'prog-mode-hook #'turn-on-auto-fill)
+  #+END_SRC
+
+** Whitespace
+
+  Cleanup whitespaces automatically on save.
+
+  #+BEGIN_SRC emacs-lisp
+    (use-package whitespace
+      :commands (whitespace-cleanup)
+      :init (add-hook 'before-save-hook #'whitespace-cleanup))
+  #+END_SRC
+
+** TODO Alignment
+** Parenthesis
+
+  Parenthesis come in pairs, that's why they are cumbersome to deal with. Better
+  use =smart-parens= to manage them. However the command name use words from an
+  arcane language :(, so I put together a table of human-readable description of
+  the commands. All key bindings are started with =M-s=.
+
+  | Bindings  | Command                | Description                                         |
+  |-----------+------------------------+-----------------------------------------------------|
+  | =DEL=     | =sp-splice-sexp=       | Delete surrounding pair                             |
+  | =M-S=     | =sp-rewrap-sexp=       | Replace the surrounding pair                        |
+  | =<right>= | =sp-slurp-hybrid-sexp= | Extend the pair to include items to the right       |
+  | =<left>=  | =sp-forward-barf-sexp= | Shrink the pair, the right-most item is put outside |
+
+  #+BEGIN_SRC emacs-lisp
+    (use-package smartparens
+      :ensure t
+      :diminish smartparens-mode
+      :init (add-hook 'prog-mode-hook #'smartparens-mode)
+      :bind (("M-s DEL" . sp-splice-sexp)
+             ("M-S" . sp-rewrap-sexp)
+             ("M-s <right>" . sp-slurp-hybrid-sexp)
+             ("M-s <left>" . sp-forward-barf-sexp)))
+  #+END_SRC
+
+** Undo
+** Snippets
 
 * Programming
 
@@ -33,24 +187,94 @@
        :ensure t
        :config
        (setq magit-display-buffer-function
-	     #'magit-display-buffer-fullframe-status-v1))
+             #'magit-display-buffer-fullframe-status-v1))
    #+END_SRC
 
-* Document and management
+** Web Development
+
+   Not programming per-se. I use =web-mode= for all my templating-related
+   editing, including PHP, since I rarely write PHP anymore.
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package web-mode
+       :ensure t
+       :defer t
+       :mode (("\\.html" . web-mode)
+              ("\\.j2" . web-mode)
+              ("\\.jinja2" . web-mode)
+              ("\\.php" . web-mode))
+       :init (add-hook 'web-mode-hook #'emmet-mode)
+       :config
+       (progn
+         (add-hook 'web-mode-hook #'turn-off-auto-fill)
+
+         (setq web-mode-markup-indent-offset 2
+               web-mode-css-indent-offset 2
+               web-mode-code-indent-offset 2)))
+   #+END_SRC
+
+   Also, I can't live without Emmet.
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package emmet-mode
+       :ensure t
+       :diminish emmet-mode
+       :commands emmet-mode
+       :init
+       (progn
+         (defun td/emmet-jsx-mode ()
+           (interactive)
+           (emmet-mode t)
+           (setq-local emmet-expand-jsx-className? t))
+
+         (add-hook 'sgml-mode-hook #'emmet-mode)
+         (add-hook 'web-mode-hook #'emmet-mode)
+         (add-hook 'css-mode-hook #'emmet-mode)
+         (add-hook 'js2-jsx-mode-hook #'td/emmet-jsx-mode))
+       :config
+       (progn
+         (setq emmet-indentation 2
+               emmet-preview-default nil
+               emmet-insert-flash-time 0.1)
+
+         (defun td/hide-emmet-preview-tooltip ()
+           (overlay-put emmet-preview-output 'before-string nil))
+
+         (advice-add 'emmet-preview
+                     :after #'td/hide-emmet-preview-tooltip)))
+   #+END_SRC
+
+** TODO CSS
+** TODO JavaScript
+** TODO Python
+** TODO Elxir
+** TODO Haskell
+** TODO PureScript
+** TODO Misc
+
+* TODO Document and management (read: Org)
 
 * Look and feel
 
   I love eye candy <3. I put quite a lot of efforts to make Emacs look
   the way I liked.
 
+  #+BEGIN_SRC emacs-lisp
+    (setq inhibit-startup-screen t
+          visible-bell nil
+          ring-bell-function nil)
+  #+END_SRC
+
   Default window configuration: half-left of the screen, no scroll
-  bars, no menu bars, no cursor blinking.
+  bars, no menu bars, no cursor blinking. And btw, nothing beats the
+  classic Monaco, not even "Source Code Pro" by Adobe.
 
   #+BEGIN_SRC emacs-lisp
     (setq-default
      fringes-outside-margins t
      default-frame-alist
-     '((top . 0) (left . 640)
+     '((font . "Monaco 13")
+       (top . 0) (left . 640)
        (width . 100) (height . 64)
        (vertical-scroll-bars . nil)
        (menu-bar-lines . 0)
@@ -66,7 +290,20 @@
   #+BEGIN_SRC emacs-lisp
     (use-package sublime-themes
       :ensure t
-      :init (load-theme 'brin t))
+      :init (load-theme 'brin t)
+      :config
+      (progn
+        ;; Some tweak to the theme
+        (set-face-attribute 'font-lock-comment-delimiter-face nil
+                            :foreground nil
+                            :inherit font-lock-comment-face)
+
+        ;; Dark vertical border
+        (set-face-attribute 'vertical-border nil
+                            :foreground "#000" :background "#000")
+
+        (eval-after-load 'nlinum
+          '(set-face-attribute 'linum nil :height 110))))
   #+END_SRC
 
   I also have an alternate light-theme for backup or use in
@@ -87,7 +324,19 @@
       :ensure t
       :init
       (when (display-graphic-p)
-	(add-hook 'prog-mode-hook #'nlinum-mode))
+        (add-hook 'prog-mode-hook #'nlinum-mode))
       :config
       (setq nlinum-format " %3d  "))
+  #+END_SRC
+
+  The default line continuation indicator is too standout and distracting for me.
+
+  #+BEGIN_SRC emacs-lisp
+    (define-fringe-bitmap 'halftone
+      [#b01000000
+       #b10000000]
+      nil nil '(top t))
+
+    (setcdr (assq 'continuation fringe-indicator-alist) 'halftone)
+    (setcdr (assq 'truncation fringe-indicator-alist) 'halftone)
   #+END_SRC
