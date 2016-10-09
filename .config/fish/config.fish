@@ -36,6 +36,8 @@ if test -n "$HOME" ;
   end
 end
 
+set -xg PATH $HOME/.local/bin $PATH
+
 set fish_color_user red
 set fish_color_cwd green
 set fish_color_host FFA500
