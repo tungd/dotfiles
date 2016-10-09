@@ -1,0 +1,93 @@
+#+title: Tung Dao
+#+startup: overview
+
+* Packages
+
+  All the packages I used are from [[https://melpa.org][MELPA]]. However, I
+  install them automatically with =use-package.el= instead of using =package.el=
+  directly.
+
+  #+BEGIN_SRC emacs-lisp
+    (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+  #+END_SRC
+
+  Sometimes I write my own package, they are in the =~/.emacs.d/vendor=
+  directory.
+
+  #+BEGIN_SRC emacs-lisp
+    (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
+  #+END_SRC
+
+
+* General Editing
+
+* Programming
+
+** Version Control
+
+   Git has won the version control war, everyone uses Git now. Emacs'
+   built-in VC has great support for git but Magit is godsend.
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package magit
+       :ensure t
+       :config
+       (setq magit-display-buffer-function
+	     #'magit-display-buffer-fullframe-status-v1))
+   #+END_SRC
+
+* Document and management
+
+* Look and feel
+
+  I love eye candy <3. I put quite a lot of efforts to make Emacs look
+  the way I liked.
+
+  Default window configuration: half-left of the screen, no scroll
+  bars, no menu bars, no cursor blinking.
+
+  #+BEGIN_SRC emacs-lisp
+    (setq-default
+     fringes-outside-margins t
+     default-frame-alist
+     '((top . 0) (left . 640)
+       (width . 100) (height . 64)
+       (vertical-scroll-bars . nil)
+       (menu-bar-lines . 0)
+       (tool-bar-lines . 0)
+       (right-fringe . 0)))
+
+    (blink-cursor-mode -1)
+  #+END_SRC
+
+  My theme of choice is *Brin* from the exellent [[https://github.com/owainlewis/emacs-color-themes][sublime-themes]]
+  collection.
+
+  #+BEGIN_SRC emacs-lisp
+    (use-package sublime-themes
+      :ensure t
+      :init (load-theme 'brin t))
+  #+END_SRC
+
+  I also have an alternate light-theme for backup or use in
+  presentation, which is *base16-github* from [[https://github.com/belak/base16-emacs][base16-themes]] pacakge.
+
+  #+BEGIN_SRC emacs-lisp
+    (use-package base16-theme
+      :ensure t)
+  #+END_SRC
+
+  Line and column numbers, which I find only helpful when tracking
+  down compiler error :(.
+
+  #+BEGIN_SRC emacs-lisp
+    (column-number-mode t)
+
+    (use-package nlinum
+      :ensure t
+      :init
+      (when (display-graphic-p)
+	(add-hook 'prog-mode-hook #'nlinum-mode))
+      :config
+      (setq nlinum-format " %3d  "))
+  #+END_SRC
