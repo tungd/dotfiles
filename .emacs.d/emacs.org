@@ -49,9 +49,7 @@
   #+BEGIN_SRC emacs-lisp
     (use-package smex
       :ensure t
-      :init (smex-initialize)
-      :bind (("M-m" . smex)
-             ("M-M" . smex-major-mode-commands)))
+      :init (smex-initialize))
   #+END_SRC
 
 
@@ -97,6 +95,33 @@
        :init (dumb-jump-mode t))
    #+END_SRC
 
+** Ivy
+
+   Ivy is a nice completion package, however the main reason I use it over =ido=
+   is that I can make its popup appear at the top of the window.
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package ivy
+       :init (ivy-mode t)
+       :diminish ivy-mode
+       :bind (("C-M-o" . ivy-switch-buffer))
+       :config
+       (progn
+         (setq ivy-format-function 'ivy-format-function-arrow
+               ivy-count-format ""
+               ivy-use-virtual-buffers t
+               ivy-height 16
+               projectile-completion-system 'ivy)
+
+         (require 'ivy-popup)))
+
+     (use-package counsel
+       :ensure t
+       :bind (([remap find-file] . counsel-find-file)
+              ([remap execute-extended-command] . counsel-M-x)
+              ("M-m" . counsel-M-x)
+              ("C-c i" . counsel-imenu)))
+   #+END_SRC
 
 * General Editing
 
