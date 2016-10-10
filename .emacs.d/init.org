@@ -1,6 +1,6 @@
 #+title: Tung Dao
 #+startup: overview
-#+property: header-args :tangle yes
+#+property: header-args :tangle yes :results silent
 
 * Packages and initialization
 
@@ -67,8 +67,11 @@
    #+BEGIN_SRC emacs-lisp
      (use-package projectile
        :ensure t
+       :diminish projectile-mode
        :init (projectile-mode t)
-       :bind (("C-M-'" . projectile-find-file))
+       :bind (
+              ;; ("C-M-'" . projectile-find-file)
+              )
        :config
        (setq projectile-globally-ignored-file-suffixes
              '("jpg" "png" "svg" "psd" "sketch" "afdesign"
@@ -124,12 +127,21 @@
        :bind (([remap find-file] . counsel-find-file)
               ([remap ido-find-file] . counsel-find-file)
               ([remap execute-extended-command] . counsel-M-x)
+              ("C-M-'" . counsel-git)
               ("M-m" . counsel-M-x)
               ("C-c i" . counsel-imenu)))
    #+END_SRC
 
 
 * General Editing
+
+  Basic settings:
+
+  #+BEGIN_SRC emacs-lisp
+    (setq-default
+     tab-width 2
+     indent-tabs-mode nil)
+  #+END_SRC
 
   Editing utilities:
 
@@ -152,6 +164,30 @@
       :ensure t
       :bind ([remap comment-dwim] . comment-dwim-2)
       :config (setq comment-style 'multi-line))
+  #+END_SRC
+
+  Create directory for the file if not exists:
+
+  #+BEGIN_SRC emacs-lisp
+    (defun td/before-save-make-directories ()
+      (let ((dir (file-name-directory buffer-file-name)))
+        (when (and buffer-file-name (not (file-exists-p dir)))
+          (make-directory dir t))))
+
+    (add-hook 'before-save-hook #'td/before-save-make-directories)
+  #+END_SRC
+
+  Make the file executable if starting with "shebang":
+
+  #+BEGIN_SRC emacs-lisp
+    (defun td/after-save-auto-chmod ()
+      (when (and (> (length (buffer-string)) 5)
+                 (string-equal "#!" (buffer-substring-no-properties 1 4)))
+        (shell-command
+         (format "chmod u+x %s"
+                 (shell-quote-argument (buffer-file-name))))))
+
+    (add-hook 'after-save-hook #'td/after-save-auto-chmod)
   #+END_SRC
 
 ** Long lines
@@ -192,6 +228,8 @@
   | =<right>= | =sp-slurp-hybrid-sexp= | Extend the pair to include items to the right       |
   | =<left>=  | =sp-forward-barf-sexp= | Shrink the pair, the right-most item is put outside |
 
+  NOTE: This package is huge, I'm still learning it.
+
   #+BEGIN_SRC emacs-lisp
     (use-package smartparens
       :ensure t
@@ -200,7 +238,18 @@
       :bind (("M-s DEL" . sp-splice-sexp)
              ("M-S" . sp-rewrap-sexp)
              ("M-s <right>" . sp-slurp-hybrid-sexp)
-             ("M-s <left>" . sp-forward-barf-sexp)))
+             ("M-s <left>" . sp-forward-barf-sexp)
+             ("C-M-a" . sp-beginning-of-sexp)
+             ("C-M-e" . sp-end-of-sexp)
+             ("M-K" . sp-kill-sexp))
+      :config
+      (set-face-attribute 'sp-pair-overlay-face nil :inherit 'region)
+      (sp-pair "{" nil
+               :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
+      (sp-pair "[" nil
+               :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
+      (sp-pair "(" nil
+               :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC"))))
   #+END_SRC
 
 ** Undo
@@ -220,6 +269,17 @@
        :config
        (setq magit-display-buffer-function
              #'magit-display-buffer-fullframe-status-v1))
+   #+END_SRC
+
+** Compile
+
+   I use =compile= not only for compilation but also as a generic method to run
+   repetitive tasks. For example, I to run unit tests repeatedly, I first run
+   =M-x compile= with the test commands. Subsequence =recompile= call will
+   re-run the tests.
+
+   #+BEGIN_SRC emacs-lisp
+     (bind-key "C-c m" #'recompile)
    #+END_SRC
 
 ** Web Development
@@ -276,13 +336,59 @@
                      :after #'td/hide-emmet-preview-tooltip)))
    #+END_SRC
 
-** TODO CSS
+** CSS
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package css-mode
+       :defer t
+       :config
+       (setq css-indent-offset 2))
+   #+END_SRC
+
 ** TODO JavaScript
 ** TODO Python
 ** TODO Elxir
 ** TODO Haskell
-** TODO PureScript
-** TODO Misc
+** PureScript
+
+   I started using PureScript for all my frontend works.
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package purescript-mode
+       :ensure t
+       :mode (("\\.purs$" . purescript-mode))
+       :config
+       (progn
+         (defun purescript-doc-current-info ())
+
+         (add-hook 'purescript-mode-hook #'turn-on-purescript-indentation)
+
+         (use-package psc-ide
+           :ensure t
+           :init (add-hook 'purescript-mode-hook #'psc-ide-mode))))
+   #+END_SRC
+
+** Misc
+
+   These are supports for other stuffs that I used:
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package nix-mode
+       :ensure t
+       :mode ("\\.nix$" . nix-mode))
+   #+END_SRC
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package dockerfile-mode
+       :ensure t
+       :mode ("Dockerfile$" . dockerfile-mode))
+   #+END_SRC
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package fish-mode
+       :ensure t
+       :mode ("\\.fish$" . fish-mode))
+   #+END_SRC
 
 
 * TODO Document and management (read: Org)
@@ -296,7 +402,7 @@
   #+BEGIN_SRC emacs-lisp
     (setq inhibit-startup-screen t
           visible-bell nil
-          ring-bell-function nil)
+          ring-bell-function 'ignore)
   #+END_SRC
 
   Default window configuration: half-left of the screen, no scroll
@@ -346,6 +452,14 @@
   #+BEGIN_SRC emacs-lisp
     (use-package base16-theme
       :ensure t)
+  #+END_SRC
+
+  Mode line
+
+  #+BEGIN_SRC emacs-lisp
+    (use-package smart-mode-line
+      :ensure t
+      :init (sml/setup))
   #+END_SRC
 
   Line and column numbers, which I find only helpful when tracking
