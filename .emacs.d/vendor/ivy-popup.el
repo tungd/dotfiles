@@ -1,4 +1,3 @@
-
 ;;; Code:
 (require 'ivy)
 
@@ -25,6 +24,7 @@
       (window--display-buffer *ivy-popup-buffer* *ivy-popup-window* nil))
 
     (with-current-buffer *ivy-popup-buffer*
+      (setq-local truncate-lines t)
       (ivy--cleanup)
       (delete-region (point-min) (point-max))
 
