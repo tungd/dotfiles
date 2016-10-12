@@ -36,11 +36,15 @@ if test -n "$HOME" ;
   end
 end
 
+alias g git
+
 set -xg PATH $HOME/.local/bin $PATH
 
 set fish_color_user red
 set fish_color_cwd green
 set fish_color_host FFA500
+
+set -gx VIRTUAL_ENV_DISABLE_PROMPT true
 
 function fish_prompt
   set last_status $status
