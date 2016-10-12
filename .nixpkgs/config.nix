@@ -24,6 +24,8 @@
         nixops
         nodejs-6_x
         pandoc
+        pinentry
+        pinentry_mac
         postgresql
         python3
         python35Packages.youtube-dl-light
