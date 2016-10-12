@@ -258,6 +258,64 @@
 
 * Programming
 
+** Auto completion
+
+   I use auto completion sparingly. Mostly because many of the programing
+   language support package use =company= for some of their functionalities. To
+   be fair, I'd like these mode to support Emacs's standard
+   =completion-at-point-functions= interface.
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package company
+       :ensure t
+       :diminish company-mode
+       :bind ("M-/" . company-complete-common-or-cycle)
+       :init (global-company-mode t)
+       :config
+       (progn
+         (use-package company-buffer-line
+           :commands (company-same-mode-buffer-lines)
+           :bind ("C-x C-l" . company-same-mode-buffer-lines))
+
+         (setq company-minimum-prefix-length 2
+               company-require-match nil
+               company-idle-delay nil
+               company-tooltip-align-annotations t
+               company-frontends
+               '(company-pseudo-tooltip-unless-just-one-frontend
+                 company-echo-metadata-frontend)
+               company-backends
+               '((company-dabbrev-code
+                  :with
+                  company-capf
+                  company-yasnippet)))
+
+         (bind-keys :map company-active-map
+                    ("<tab>" . company-complete-common-or-cycle)
+                    ("C-n" . company-select-next-or-abort)
+                    ("C-p" . company-select-previous-or-abort))))
+   #+END_SRC
+
+** Error checking
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package flycheck
+       :ensure t
+       :defer t
+       :init (global-flycheck-mode t)
+       :config
+       (progn
+         (setq-default flycheck-disabled-checkers
+                       '(scss))
+
+         ;; Disable `js2-mode' built-in error checker
+         (eval-after-load 'js2-mode
+           '(setq js2-mode-show-parse-errors nil))
+
+         (setq flycheck-checkers
+               (--remove (eq it 'emacs-lisp-checkdoc) flycheck-checkers))))
+   #+END_SRC
+
 ** Version Control
 
    Git has won the version control war, everyone uses Git now. Emacs'
@@ -390,9 +448,91 @@
        :mode ("\\.fish$" . fish-mode))
    #+END_SRC
 
+   #+BEGIN_SRC emacs-lisp
+     (use-package nginx-mode
+       :ensure t
+       :mode (".*nginx.*\\.conf$" . nginx-mode))
+   #+END_SRC
 
-* TODO Document and management (read: Org)
 
+* Document and management
+
+  I use Org for almost everything. Blogging, task management, API documentation,
+  literate programming.
+
+** Tracking and tasks management
+
+   I tried many management tools: Wunderlist, Todoist, Google Calendar
+   .etc. However all of them are missing something really crucial for me. For
+   example Wunderlist has agenda overview, but lacks adding note to
+   tasks. Evernote has execllent note support, but their project management is
+   just barebone, not much than a todo list.
+
+   Org on the other hand lacks notification and ubiquitous access. I'm looking
+   for a solution though.
+
+   Here's my basic Org setup:
+
+   - A default =inbox.org= on Desktop for tasks capturing and project management
+   - Nicer display with inline images
+   - Enable GTD todo keyword sequence and time loging
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package org
+       :bind (("C-c o a" . org-agenda)
+              ("C-c o t" . org-todo-list))
+       :config
+       (setq org-directory "~/Desktop/"
+             org-default-notes-file (expand-file-name "inbox.org" org-directory)
+             org-agenda-files (list org-directory user-emacs-directory)
+             org-agenda-skip-unavailable-files t
+
+             org-startup-with-inline-images t
+
+             org-todo-keywords
+             '((sequence "TODO(t)" "STARTED(s!)" "WAITING(w@/!)" "|" "CANCELED(c@)" "DONE(d!)"))
+             org-log-done 'time))
+   #+END_SRC
+
+   Agenda overview and filtering.
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package org-agenda
+       :config
+       (setq org-agenda-restore-windows-after-quit t
+             org-agenda-window-setup 'current-window))
+   #+END_SRC
+
+*** TODO Warn if a project doesn't have at least one TODO (GTD next action) tasks
+
+
+** Literate programming
+
+   Org Babel for literate programming and API documentation.
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package ob-core
+       :defer t
+       :config
+       (setq org-confirm-babel-evaluate nil))
+
+     (use-package ob-http
+       :ensure t
+       :defer t
+       :config
+       (org-babel-do-load-languages
+        'org-babel-load-languages
+        '((emacs-lisp . t)
+          (http . t))))
+   #+END_SRC
+
+** Note taking
+
+** Blogging
+
+   #+BEGIN_SRC emacs-lisp
+
+   #+END_SRC
 
 * Look and feel
 
@@ -491,6 +631,8 @@
 
 
 * Init file generation
+
+  Where the magic happen!
 
 ;; Local Variables:
 ;; eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle)) nil t)
