@@ -37,6 +37,7 @@ if test -n "$HOME" ;
 end
 
 alias g git
+set -xg LC_CTYPE en_US.UTF-8
 
 set -xg PATH $HOME/.local/bin $PATH
 
