@@ -36,10 +36,12 @@ if test -n "$HOME" ;
   end
 end
 
-alias g git
 set -xg LC_CTYPE en_US.UTF-8
 
 set -xg PATH $HOME/.local/bin $PATH
+set -xg PATH $HOME/Library/Python/2.7/bin $PATH
+
+alias g git
 
 set fish_color_user red
 set fish_color_cwd green
