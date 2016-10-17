@@ -15,7 +15,6 @@
         closurecompilerJdk8
         elixir
         fswatch
-        # ghc
         git
         gnupg
         imagemagick
@@ -23,16 +22,14 @@
         mosh
         nixops
         nodejs-6_x
-        pandoc
+        openssl
         pinentry
         pinentry_mac
         postgresql
         python3
         python35Packages.youtube-dl-light
-        ruby
         sqlite
         stack
-        # texlive.combined.scheme-gust
         tmux
         tree
         wget
