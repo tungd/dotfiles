@@ -140,7 +140,8 @@
   #+BEGIN_SRC emacs-lisp
     (setq-default
      tab-width 2
-     indent-tabs-mode nil)
+     indent-tabs-mode nil
+     reb-re-syntax 'string)
   #+END_SRC
 
   Editing utilities:
@@ -190,6 +191,44 @@
     (add-hook 'after-save-hook #'td/after-save-auto-chmod)
   #+END_SRC
 
+** Search and replace
+
+  Anzu command names are confusing, at-cursor means initial string, while thing
+  means boundary.
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package anzu
+       :ensure t
+       :diminish anzu-mode
+       :init (global-anzu-mode t)
+       :bind (([remap query-replace] . anzu-query-replace)
+              ("C-c C-r" . anzu-query-replace-at-cursor)
+              ("M-r" . anzu-replace-at-cursor-thing)
+              ("C-M-r" . td/anzu-replace-at-cursor-thing-in-buffer))
+       :config
+       (progn
+         (defun td/anzu-replace-at-cursor-thing-in-buffer ()
+           "This does not actually query, but it's OK for me."
+           (interactive)
+           (let ((anzu-replace-at-cursor-thing 'buffer))
+             (call-interactively 'anzu-query-replace-at-cursor-thing)))))
+   #+END_SRC
+
+   Also define "buffer-at-point" so that we can do query-replace in the whole
+   buffer without having to jump to the beginning.
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package thingatpt
+       :init
+       (progn
+         (defun td/bounds-of-buffer-at-point ()
+           (cons (point-min) (point-max)))
+
+         (put 'buffer 'bounds-of-thing-at-point 'td/bounds-of-buffer-at-point)
+         (put 'buffer 'beginning-op 'beginning-of-buffer)
+         (put 'buffer 'end-op 'end-of-buffer)))
+   #+END_SRC
+
 ** Long lines
 
   Long lines are annoying. Auto wrap all texts at 80.
@@ -213,7 +252,6 @@
       :init (add-hook 'before-save-hook #'whitespace-cleanup))
   #+END_SRC
 
-** TODO Alignment
 ** Parenthesis
 
   Parenthesis come in pairs, that's why they are cumbersome to deal with. Better
@@ -241,7 +279,9 @@
              ("M-s <left>" . sp-forward-barf-sexp)
              ("C-M-a" . sp-beginning-of-sexp)
              ("C-M-e" . sp-end-of-sexp)
-             ("M-K" . sp-kill-sexp))
+             ("M-K" . sp-kill-sexp)
+             ("M-]" . sp-select-next-thing))
+      :functions (sp-pair)
       :config
       (set-face-attribute 'sp-pair-overlay-face nil :inherit 'region)
       (sp-pair "{" nil
@@ -253,7 +293,56 @@
   #+END_SRC
 
 ** Undo
+
+   By default Emacs doesn't even have redo!
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package undo-tree
+       :ensure t
+       :diminish undo-tree-mode
+       :init (global-undo-tree-mode t))
+   #+END_SRC
+
 ** Snippets
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package yasnippet
+       :ensure t
+       :diminish yas-minor-mode
+       :commands yas-global-mode
+       :init
+       (progn
+         (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
+         (yas-global-mode t))
+       :config
+       (progn
+         (setq yas-prompt-functions
+               '(yas-ido-prompt yas-completing-prompt yas-no-prompt)
+               ;; Suppress excessive log messages
+               yas-verbosity 1
+               ;; I am a weird user, I use SPACE to expand my
+               ;; snippets, this save me from triggering them accidentally.
+               yas-expand-only-for-last-commands
+               '(self-insert-command org-self-insert-command))
+
+         (unbind-key "TAB" yas-minor-mode-map)
+         (unbind-key "<tab>" yas-minor-mode-map)
+         (bind-key "SPC" 'yas-expand yas-minor-mode-map)))
+   #+END_SRC
+
+** TODO Alignment
+
+** Recent files
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package recentf
+       :defer t
+       :config
+       (setq recentf-exclude
+             '("/auto-install/" ".recentf" "/repos/" "/elpa/"
+               "\\.mime-example" "\\.ido.last" "COMMIT_EDITMSG"
+               ".gz" "~$" "/tmp/" "/ssh:" "/sudo:" "/scp:")))
+   #+END_SRC
 
 
 * Programming
@@ -304,16 +393,8 @@
        :defer t
        :init (global-flycheck-mode t)
        :config
-       (progn
-         (setq-default flycheck-disabled-checkers
-                       '(scss))
-
-         ;; Disable `js2-mode' built-in error checker
-         (eval-after-load 'js2-mode
-           '(setq js2-mode-show-parse-errors nil))
-
-         (setq flycheck-checkers
-               (--remove (eq it 'emacs-lisp-checkdoc) flycheck-checkers))))
+       (setq-default flycheck-disabled-checkers
+                     '(scss emacs-lisp-checkdoc)))
    #+END_SRC
 
 ** Version Control
@@ -380,7 +461,8 @@
          (add-hook 'sgml-mode-hook #'emmet-mode)
          (add-hook 'web-mode-hook #'emmet-mode)
          (add-hook 'css-mode-hook #'emmet-mode)
-         (add-hook 'js2-jsx-mode-hook #'td/emmet-jsx-mode))
+         (add-hook 'js2-jsx-mode-hook #'td/emmet-jsx-mode)
+         (add-hook 'js-jsx-mode-hook #'td/emmet-jsx-mode))
        :config
        (progn
          (setq emmet-indentation 2
@@ -403,10 +485,78 @@
        (setq css-indent-offset 2))
    #+END_SRC
 
-** TODO JavaScript
-** TODO Python
+** JavaScript
+
+   Like most people I used to use =js2-mode= for all my JavaScript editing,
+   including JSX. Since I'm no longer write as much JavaScript, and I will use
+   =es-lint= for syntax checking anyways, I think I'm going to give the built-in
+   =js-mode= a try
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package js
+       :mode (("\\.js$" . js-mode)
+              ("\\.jsx$" . js-jsx-mode))
+       :config
+       (setq js-indent-level 2
+             js-indent-first-init 'dynamic
+             js-enabled-frameworks '(javascript)))
+   #+END_SRC
+
+   Old =js2-mode= config:
+
+   #+BEGIN_SRC emacs-lisp :tangle no
+     (use-package js2-mode
+       :ensure t
+       :mode (("\\.js$" . js2-mode)
+              ("\\.jsx" . js2-jsx-mode))
+       :config (setq js2-basic-offset 2
+                     js2-include-node-externs t
+                     js2-highlight-level 3
+                     js2-mode-show-parse-errors nil
+                     js2-strict-missing-semi-warning nil))
+   #+END_SRC
+
+** Python
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package pyvenv
+       :ensure t)
+   #+END_SRC
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package python
+       :mode (("\\.py$" . python-mode)
+              ("\\.waf$" . python-mode))
+       :bind ([remap run-python] . td/run-python-with-project-root)
+       :preface
+       (progn
+         (defun td/run-python-with-project-root ()
+           (interactive)
+           (let ((default-directory (projectile-project-root)))
+             (call-interactively 'run-python)))))
+   #+END_SRC
+
 ** TODO Elxir
-** TODO Haskell
+** Haskell
+
+   I'm also a Haskell beginner :). Setting up Haskell with Emacs is relatively
+   easy. There's also a catch-all IDE-like mode called =intero=, by the very
+   same folk who runs =stack=.
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package haskell-mode
+       :ensure t
+       :mode (("\\.hs$" . haskell-mode))
+       :config
+       (setq haskell-program-name "stack ghci"))
+
+     (use-package intero
+       :ensure t
+       :diminish intero-mode
+       :commands (intero-mode)
+       :init (add-hook 'haskell-mode-hook #'intero-mode))
+   #+END_SRC
+
 ** PureScript
 
    I started using PureScript for all my frontend works.
@@ -454,6 +604,16 @@
        :mode (".*nginx.*\\.conf$" . nginx-mode))
    #+END_SRC
 
+   #+BEGIN_SRC emacs-lisp
+     (use-package yaml-mode
+       :ensure t
+       :mode (("\\.yml$" . yaml-mode)
+              ("\\.yaml$" . yaml-mode)
+              ("\\.sls$" . yaml-mode)
+              ("^master$" . yaml-mode)
+              ("^roster$" . yaml-mode)))
+   #+END_SRC
+
 
 * Document and management
 
@@ -479,8 +639,7 @@
 
    #+BEGIN_SRC emacs-lisp
      (use-package org
-       :bind (("C-c o a" . org-agenda)
-              ("C-c o t" . org-todo-list))
+       :ensure t
        :config
        (setq org-directory "~/Desktop/"
              org-default-notes-file (expand-file-name "inbox.org" org-directory)
@@ -491,20 +650,40 @@
 
              org-todo-keywords
              '((sequence "TODO(t)" "STARTED(s!)" "WAITING(w@/!)" "|" "CANCELED(c@)" "DONE(d!)"))
-             org-log-done 'time))
+             org-log-done 'time
+
+             org-src-fontify-natively t))
    #+END_SRC
 
-   Agenda overview and filtering.
+   Agenda overview and filtering. Org provides a bunch of quick overviews:
+
+   | Binding                | Description                                                 |
+   |------------------------+-------------------------------------------------------------|
+   | =C-c o a t=, =C-c o t= | List the TODO items                                         |
+   |------------------------+-------------------------------------------------------------|
+   | =C-c o a #=            | List stuck projects, which is the one tagged with           |
+   |                        | project but doesn't have any TODO. See =org-stuck-projects= |
+   |------------------------+-------------------------------------------------------------|
+   | =C-c o a s=            | Search Org headers                                          |
 
    #+BEGIN_SRC emacs-lisp
      (use-package org-agenda
+       :bind (("C-c o a" . org-agenda)
+              ("C-c o t" . org-todo-list))
        :config
        (setq org-agenda-restore-windows-after-quit t
-             org-agenda-window-setup 'current-window))
+             org-agenda-window-setup 'current-window
+             org-stuck-projects
+             '("+project/-WAITING-DONE-CANCELLED" ("TODO"))))
    #+END_SRC
 
 *** TODO Warn if a project doesn't have at least one TODO (GTD next action) tasks
 
+** TODO Note taking
+
+   As stated earlier, I practice GTD. Working projects and new stuffs go to
+   =inbox.org= file. Old tasks are archived to =archive.org=. Here's my
+   =org-capture= templates to dump stuffs to =inbox/note=
 
 ** Literate programming
 
@@ -526,13 +705,34 @@
           (http . t))))
    #+END_SRC
 
-** Note taking
+
 
 ** Blogging
 
-   #+BEGIN_SRC emacs-lisp
+   I use =org-publish= for blogging. The configuration is in a separate file
+   here. This section only contains generic default settings for all of my
+   publish project.
 
+   #+BEGIN_SRC emacs-lisp
+     ;; (use-package org-id
+     ;;   :defer t
+     ;;   :config
+     ;;   (progn
+     ;;     (defun td/org-export-anchor-id ())))
    #+END_SRC
+
+** Stuffs to look at when I have time
+
+*** TODO https://github.com/scallywag/org-board
+
+*** TODO https://github.com/bard/org-dashboard
+
+*** TODO https://github.com/abo-abo/org-download
+
+*** TODO https://github.com/myuhe/org-gcal.el
+
+*** TODO https://melpa.org/#/org-mac-link
+
 
 * Look and feel
 
@@ -564,26 +764,33 @@
     (blink-cursor-mode -1)
   #+END_SRC
 
+  Some preferences that I set for all the theme. Per documentation, the custom
+  theme named =user= will always have the highest priority.
+
+  #+BEGIN_SRC emacs-lisp
+    (custom-theme-set-faces
+     'user
+     '(vertical-border ((t (:foreground "#000" :background "#000"))))
+
+     '(linum ((t (:inherit font-lock-comment-face :height 110))))
+
+     '(sp-pair-overlay-face ((t (:inherit region))))
+
+     ;; These actually are specific to the Brin theme
+     '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
+     '(link ((t (:inherit font-lock-function-name-face :underline t))))
+     '(minibuffer-prompt ((t (:inherit font-lock-function-name-face))))
+     '(highlight ((t (:inherit region))))
+     )
+  #+END_SRC
+
   My theme of choice is *Brin* from the exellent [[https://github.com/owainlewis/emacs-color-themes][sublime-themes]]
   collection.
 
   #+BEGIN_SRC emacs-lisp
     (use-package sublime-themes
       :ensure t
-      :init (load-theme 'brin t)
-      :config
-      (progn
-        ;; Some tweak to the theme
-        (set-face-attribute 'font-lock-comment-delimiter-face nil
-                            :foreground nil
-                            :inherit font-lock-comment-face)
-
-        ;; Dark vertical border
-        (set-face-attribute 'vertical-border nil
-                            :foreground "#000" :background "#000")
-
-        (eval-after-load 'nlinum
-          '(set-face-attribute 'linum nil :height 110))))
+      :init (load-theme 'brin t))
   #+END_SRC
 
   I also have an alternate light-theme for backup or use in
