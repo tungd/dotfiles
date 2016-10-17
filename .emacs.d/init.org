@@ -242,6 +242,16 @@
     (add-hook 'prog-mode-hook #'turn-on-auto-fill)
   #+END_SRC
 
+  Sometimes long lines are inevitable though, as I do have to manually edit
+  exported SVG and minified JS :(. In those cases prevent them from making Emacs
+  slow:
+
+  #+BEGIN_SRC emacs-lisp
+    (use-package so-long
+      :commands so-long-enable
+      :init (so-long-enable))
+  #+END_SRC
+
 ** Whitespace
 
   Cleanup whitespaces automatically on save.
