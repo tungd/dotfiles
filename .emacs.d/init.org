@@ -13,8 +13,8 @@
     (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
   #+END_SRC
 
-  Sometimes I write my own package, they are in the =~/.emacs.d/vendor=
-  directory.
+  Sometimes I write my own package, or download package from Emacs wiki; they
+  are stored in the =~/.emacs.d/vendor= directory.
 
   #+BEGIN_SRC emacs-lisp
     (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
@@ -45,7 +45,7 @@
       (setq-default show-paren-delay 0))
   #+END_SRC
 
-  *NOTE*: I also set the delay right here since =better-defaults= loads
+  *NOTE*: I set the delay right here since =better-defaults= loads
   =show-paren-mode=.
 
   #+BEGIN_SRC emacs-lisp
@@ -69,9 +69,6 @@
        :ensure t
        :diminish projectile-mode
        :init (projectile-mode t)
-       :bind (
-              ;; ("C-M-'" . projectile-find-file)
-              )
        :config
        (setq projectile-globally-ignored-file-suffixes
              '("jpg" "png" "svg" "psd" "sketch" "afdesign"
@@ -167,6 +164,16 @@
       :config (setq comment-style 'multi-line))
   #+END_SRC
 
+  Automatically save buffers when focus out:
+
+  #+BEGIN_SRC emacs-lisp
+    (defun td/save-all-buffers ()
+      (interactive)
+      (save-some-buffers t))
+
+    (add-hook 'focus-out-hook 'td/save-all-buffers)
+  #+END_SRC
+
   Create directory for the file if not exists:
 
   #+BEGIN_SRC emacs-lisp
@@ -193,8 +200,8 @@
 
 ** Search and replace
 
-  Anzu command names are confusing, at-cursor means initial string, while thing
-  means boundary.
+   Anzu command names are confusing, at-cursor means initial string, while thing
+   means boundary.
 
    #+BEGIN_SRC emacs-lisp
      (use-package anzu
@@ -227,6 +234,21 @@
          (put 'buffer 'bounds-of-thing-at-point 'td/bounds-of-buffer-at-point)
          (put 'buffer 'beginning-op 'beginning-of-buffer)
          (put 'buffer 'end-op 'end-of-buffer)))
+   #+END_SRC
+
+   I also use ISearch for navigation. In such cases I want to put the cursor at
+   the beginning of the match, not the end.
+
+   #+BEGIN_SRC emacs-lisp
+     (setq lazy-highlight-initial-delay 0)
+
+     (defun td/isearch-exit-goto-match-beginning ()
+       (interactive)
+       (when (and isearch-forward isearch-other-end)
+         (goto-char isearch-other-end)))
+
+     (add-hook 'isearch-mode-end-hook #'td/isearch-exit-goto-match-beginning)
+     (advice-add 'isearch-exit :after #'td/isearch-exit-goto-match-beginning)
    #+END_SRC
 
 ** Long lines
@@ -504,26 +526,12 @@
 
    #+BEGIN_SRC emacs-lisp
      (use-package js
-       :mode (("\\.js$" . js-mode)
+       :mode (("\\.js$" . js-jsx-mode)
               ("\\.jsx$" . js-jsx-mode))
        :config
        (setq js-indent-level 2
              js-indent-first-init 'dynamic
              js-enabled-frameworks '(javascript)))
-   #+END_SRC
-
-   Old =js2-mode= config:
-
-   #+BEGIN_SRC emacs-lisp :tangle no
-     (use-package js2-mode
-       :ensure t
-       :mode (("\\.js$" . js2-mode)
-              ("\\.jsx" . js2-jsx-mode))
-       :config (setq js2-basic-offset 2
-                     js2-include-node-externs t
-                     js2-highlight-level 3
-                     js2-mode-show-parse-errors nil
-                     js2-strict-missing-semi-warning nil))
    #+END_SRC
 
 ** Python
@@ -667,14 +675,19 @@
 
    Agenda overview and filtering. Org provides a bunch of quick overviews:
 
-   | Binding                | Description                                                 |
-   |------------------------+-------------------------------------------------------------|
-   | =C-c o a t=, =C-c o t= | List the TODO items                                         |
-   |------------------------+-------------------------------------------------------------|
-   | =C-c o a #=            | List stuck projects, which is the one tagged with           |
-   |                        | project but doesn't have any TODO. See =org-stuck-projects= |
-   |------------------------+-------------------------------------------------------------|
-   | =C-c o a s=            | Search Org headers                                          |
+   | Binding                | Description                                   |
+   |------------------------+-----------------------------------------------|
+   | =C-c o a t=, =C-c o t= | List the TODO items                           |
+   |------------------------+-----------------------------------------------|
+   | =C-c o a #=            | List stuck projects, see =org-stuck-projects= |
+   |------------------------+-----------------------------------------------|
+   | =C-c o a s=            | Search Org headers                            |
+
+   Stuck projects are the the ones that:
+
+   - Has the tag =project=
+   - Without holding state (waiting/done/cancelled)
+   - But don't have any todo items
 
    #+BEGIN_SRC emacs-lisp
      (use-package org-agenda
@@ -684,10 +697,8 @@
        (setq org-agenda-restore-windows-after-quit t
              org-agenda-window-setup 'current-window
              org-stuck-projects
-             '("+project/-WAITING-DONE-CANCELLED" ("TODO"))))
+             '("+project+LEVEL=1/-WAITING-DONE-CANCELLED" ("TODO" "WAITING") nil "")))
    #+END_SRC
-
-*** TODO Warn if a project doesn't have at least one TODO (GTD next action) tasks
 
 ** TODO Note taking
 
@@ -695,6 +706,7 @@
    =inbox.org= file. Old tasks are archived to =archive.org=. Here's my
    =org-capture= templates to dump stuffs to =inbox/note=
 
+** TODO Org-refile for archive
 ** Literate programming
 
    Org Babel for literate programming and API documentation.
@@ -742,6 +754,7 @@
 *** TODO https://github.com/myuhe/org-gcal.el
 
 *** TODO https://melpa.org/#/org-mac-link
+*** TODO https://www.emacswiki.org/emacs/OutlineMode
 
 
 * Look and feel
@@ -784,14 +797,13 @@
 
      '(linum ((t (:inherit font-lock-comment-face :height 110))))
 
+     '(highlight ((t (:inherit region))))
      '(sp-pair-overlay-face ((t (:inherit region))))
 
      ;; These actually are specific to the Brin theme
      '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
      '(link ((t (:inherit font-lock-function-name-face :underline t))))
-     '(minibuffer-prompt ((t (:inherit font-lock-function-name-face))))
-     '(highlight ((t (:inherit region))))
-     )
+     '(minibuffer-prompt ((t (:inherit font-lock-function-name-face)))))
   #+END_SRC
 
   My theme of choice is *Brin* from the exellent [[https://github.com/owainlewis/emacs-color-themes][sublime-themes]]
@@ -846,11 +858,34 @@
     (setcdr (assq 'truncation fringe-indicator-alist) 'halftone)
   #+END_SRC
 
+  #+BEGIN_SRC emacs-lisp
+    (use-package indent-guide
+      :ensure t
+      :commands (indent-guide-mode)
+      :init
+      (add-hook 'python-mode-hook #'indent-guide-mode)
+      (add-hook 'yaml-mode-hook #'indent-guide-mode))
+  #+END_SRC
+
+  #+BEGIN_SRC emacs-lisp
+    (use-package rainbow-delimiters
+      :ensure t
+      :commands rainbow-delimiters-mode
+      :init (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+      :config
+      (progn
+        (setq rainbow-delimiters-max-face-count 1)
+
+        (custom-theme-set-faces
+         'user
+         '(rainbow-delimiters-unmatched-face ((t (:inherit error :background "#f00")))))))
+  #+END_SRC
+
 
 * Init file generation
 
   Where the magic happen!
 
-;; Local Variables:
-;; eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle)) nil t)
-;; End:
+# Local Variables:
+# eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle)) nil t)
+# End:
