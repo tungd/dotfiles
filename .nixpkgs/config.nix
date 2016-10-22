@@ -15,6 +15,7 @@
         closurecompilerJdk8
         elixir
         fswatch
+        ghc
         git
         gnupg
         imagemagick
