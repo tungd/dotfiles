@@ -28,9 +28,11 @@ export BOLD='\033[1m'
 
 
 # History
+shopt -s histappend
 export HISTCONTROL=ignoredups
-export HISTFILESIZE=3000
-export HISTIGNORE="ls:cd:[bf]g:exit:..:...:ll:lla"
+export HISTFILESIZE=65536
+export HISTIGNORE="ls:[bf]g:exit:..:...:ll:lla"
+export PROMPT_COMMAND="history -a;$PROMPT_COMMAND"
 alias h=history
 hf() {
   grep "$@ $HOME/.bash_history"
