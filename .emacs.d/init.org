@@ -30,30 +30,46 @@
 
 * Defaults
 
-  Sane, modern defaults:
+  Personal information that some package use:
 
   #+BEGIN_SRC emacs-lisp
     (setq user-full-name "Tung Dao"
           user-mail-address "me@tungdao.com"
           default-input-method 'vietnamese-telex)
+  #+END_SRC
 
+  Less verbose choice:
+
+  #+BEGIN_SRC emacs-lisp
     (defalias 'yes-or-no-p 'y-or-n-p)
+  #+END_SRC
 
+  =better-defaults= provide some sane, modern defaults:
+
+  - clean minimal UI
+  - search by regex by default
+  - no unnecessary temporary files (I do keep backup files, but not auto-save
+    and lock files)
+
+  *NOTE*: I also set the delay right here since =better-defaults= loads
+  =show-paren-mode=.
+
+  #+BEGIN_SRC emacs-lisp
     (use-package better-defaults
       :ensure t
       :preface
       (setq-default show-paren-delay 0))
-  #+END_SRC
 
-  *NOTE*: I set the delay right here since =better-defaults= loads
-  =show-paren-mode=.
+    (setq auto-save-file-name-transforms
+          `((".*" ,temporary-file-directory t))
+          create-lockfiles nil)
+  #+END_SRC
 
   #+BEGIN_SRC emacs-lisp
     (use-package smex
       :ensure t
       :init (smex-initialize))
   #+END_SRC
-
 
 * Navigation
 
@@ -209,7 +225,7 @@
        :diminish anzu-mode
        :init (global-anzu-mode t)
        :bind (([remap query-replace] . anzu-query-replace)
-              ("C-c C-r" . anzu-query-replace-at-cursor)
+              ;("C-c C-r" . anzu-query-replace-at-cursor)
               ("M-r" . anzu-replace-at-cursor-thing)
               ("C-M-r" . td/anzu-replace-at-cursor-thing-in-buffer))
        :config
@@ -364,6 +380,24 @@
 
 ** TODO Alignment
 
+   #+BEGIN_SRC emacs-lisp
+     (use-package align
+       :defer t
+       :bind ("C-c =" . align)
+       :config
+       (progn
+         (add-to-list 'align-rules-list
+                      '(js-object-props
+                        (regexp . "\\(\\s-*\\):")
+                        (modes . '(js-mode js2-mode))
+                        (spacing . 0)))
+         (add-to-list 'align-rules-list
+                      '(scss-declaration
+                        (regexp . "^\\s-*\\w+:\\(\\s-*\\).*;")
+                        (group 1)
+                        (modes . '(scss-mode))))))
+   #+END_SRC
+
 ** Recent files
 
    #+BEGIN_SRC emacs-lisp
@@ -422,11 +456,10 @@
    #+BEGIN_SRC emacs-lisp
      (use-package flycheck
        :ensure t
-       :defer t
-       :init (global-flycheck-mode t)
+       :commands flycheck-mode
+       :init (add-hook 'prog-mode-hook #'flycheck-mode)
        :config
-       (setq-default flycheck-disabled-checkers
-                     '(scss emacs-lisp-checkdoc)))
+       (setq-default flycheck-disabled-checkers '(scss emacs-lisp-checkdoc)))
    #+END_SRC
 
 ** Version Control
@@ -465,7 +498,8 @@
        :mode (("\\.html" . web-mode)
               ("\\.j2" . web-mode)
               ("\\.jinja2" . web-mode)
-              ("\\.php" . web-mode))
+              ("\\.php" . web-mode)
+              ("\\.tpl" . web-mode))
        :init (add-hook 'web-mode-hook #'emmet-mode)
        :config
        (progn
@@ -506,6 +540,19 @@
 
          (advice-add 'emmet-preview
                      :after #'td/hide-emmet-preview-tooltip)))
+   #+END_SRC
+
+   #+BEGIN_SRC emacs-lisp
+     (defun td/format-html-attributes ()
+       (interactive)
+       (save-excursion
+         (re-search-backward "<")
+         (while (not (looking-at "[\n\r/]"))
+           (re-search-forward "\s+[^=]+=")
+           (goto-char (match-beginning 0))
+           (newline-and-indent))))
+
+     (bind-key "C-M-=" #'td/format-html-attributes)
    #+END_SRC
 
 ** CSS
@@ -565,14 +612,16 @@
      (use-package haskell-mode
        :ensure t
        :mode (("\\.hs$" . haskell-mode))
-       :config
-       (setq haskell-program-name "stack ghci"))
+       ;; :config
+       ;; (setq haskell-program-name "stack ghci")
+       )
 
      (use-package intero
        :ensure t
        :diminish intero-mode
        :commands (intero-mode)
-       :init (add-hook 'haskell-mode-hook #'intero-mode))
+       ;; :init (add-hook 'haskell-mode-hook #'intero-mode)
+       )
    #+END_SRC
 
 ** PureScript
@@ -597,6 +646,13 @@
 ** Misc
 
    These are supports for other stuffs that I used:
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package markdown-mode
+       :ensure t
+       :mode (("\\.md$" . markdown-mode)
+              ("\\.markdown$" . markdown-mode)))
+   #+END_SRC
 
    #+BEGIN_SRC emacs-lisp
      (use-package nix-mode
@@ -661,7 +717,7 @@
        :config
        (setq org-directory "~/Desktop/"
              org-default-notes-file (expand-file-name "inbox.org" org-directory)
-             org-agenda-files (list org-directory user-emacs-directory)
+             org-agenda-files (list org-directory)
              org-agenda-skip-unavailable-files t
 
              org-startup-with-inline-images t
@@ -683,9 +739,9 @@
    |------------------------+-----------------------------------------------|
    | =C-c o a s=            | Search Org headers                            |
 
-   Stuck projects are the the ones that:
+   Stuck projects are:
 
-   - Has the tag =project=
+   - Top level outlines that have the tag =project=
    - Without holding state (waiting/done/cancelled)
    - But don't have any todo items
 
@@ -776,7 +832,7 @@
     (setq-default
      fringes-outside-margins t
      default-frame-alist
-     '((font . "Monaco 13")
+     '((font . "Source Code Pro 14")
        (top . 0) (left . 640)
        (width . 100) (height . 64)
        (vertical-scroll-bars . nil)
@@ -864,7 +920,9 @@
       :commands (indent-guide-mode)
       :init
       (add-hook 'python-mode-hook #'indent-guide-mode)
-      (add-hook 'yaml-mode-hook #'indent-guide-mode))
+      (add-hook 'yaml-mode-hook #'indent-guide-mode)
+      (add-hook 'purescript-mode-hook #'indent-guide-mode)
+      (add-hook 'haskell-mode-hook #'indent-guide-mode))
   #+END_SRC
 
   #+BEGIN_SRC emacs-lisp

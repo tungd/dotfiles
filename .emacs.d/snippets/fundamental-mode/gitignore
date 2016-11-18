@@ -1,0 +1,15 @@
+# -*- mode: snippet -*-
+# name: gitignore
+# key: gitignore
+# --
+.DS_Store
+*.tmp
+*.log
+
+env/
+*.pyc
+__pycache__/
+*.o
+
+node_modules/
+bower_components/
