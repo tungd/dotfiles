@@ -1,11 +1,12 @@
 [user]
-	name = Tung Dao
-	email = me@tungdao.com
+  name = Tung Dao
+  email = me@tungdao.com
 [alias]
   cl = clone
   co = checkout
   st = status -sb
   ci = commit
+  br = branch
   ls = log --graph --decorate --oneline
   lsh = log --oneline --stat --decorate
   conflicts = diff --name-only --diff-filter=U
@@ -20,4 +21,4 @@
 [url "git@bitbucket.org:/tungd/"]
   insteadOf = tungd:
 [push]
-	default = matching
+  default = matching
