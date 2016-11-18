@@ -79,6 +79,7 @@ export LOCAL=$HOME/.local
 export PATH=$LOCAL/bin:$LOCAL/sbin:$PATH
 export INFOPATH=$LOCAL/share/info:$NIX_LINK/share/info:$INFOPATH
 export GEM_HOME=$LOCAL
+export CDPATH=$HOME/Projects:$CDPATH
 
 alias g=git
 alias be='bundle exec'
@@ -87,14 +88,15 @@ alias tmux='TERM=xterm-256color tmux'
 alias v='./venv/bin/'
 alias s='twistd -no web --path=.'
 alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
+alias fixmod='find . -type f -exec chmod 644 {} \; && find . -type d -exec chmod 755 {} \;'
 
 
-if [ -f $NIX_LINK/etc/profile.d/bash_completion.sh ]; then
-    . $NIX_LINK/etc/profile.d/bash_completion.sh
-fi
-for file in $NIX_LINK/etc/bash_completion.d/*; do
-  . $file
-done
+# if [ -f $NIX_LINK/etc/profile.d/bash_completion.sh ]; then
+#     . $NIX_LINK/etc/profile.d/bash_completion.sh
+# fi
+# for file in $NIX_LINK/etc/bash_completion.d/*; do
+#   . $file
+# done
 
 notify() {
   osascript -e "display notification \"$2\" with title \"$1\""
@@ -120,7 +122,7 @@ faviconize() {
   #     bw="-colors 256 PNG8:"
   # fi
 
-  imagemagick_opts="-filter Triangle -define filter:support=2 -unsharp 0.25x0.08+8.3+0.045 -dither None -posterize 136 -quality 82 -define jpeg:fancy-upsampling=off -define png:compression-filter=5 -define png:compression-level=9 -define png:compression-strategy=1 -define png:exclude-chunk=all -interlace none -colorspace sRGB"
+  # imagemagick_opts="-filter Triangle -define filter:support=2 -unsharp 0.25x0.08+8.3+0.045 -dither None -posterize 136 -quality 82 -define jpeg:fancy-upsampling=off -define png:compression-filter=5 -define png:compression-level=9 -define png:compression-strategy=1 -define png:exclude-chunk=all -interlace none -colorspace sRGB"
 
   sizes=("16x16" "32x32" "48x48" "64x64" "144x144")
   for size in "${sizes[@]}"; do
@@ -140,3 +142,9 @@ fi
 if [ -d "$HOME/Applications/Emacs.app/Contents/MacOS" ]; then
     export PATH="$HOME/Applications/Emacs.app/Contents/MacOS":$PATH
 fi
+
+if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
+
+if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
+
+. $LOCAL/vendor/z.sh

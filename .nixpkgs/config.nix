@@ -14,21 +14,23 @@
         bundler
         closurecompilerJdk8
         elixir
-        fswatch
-        ghc
-        git
         gnupg
         imagemagick
         jdk8
+        libxml2
+        mysql57
+        mongodb
         mosh
         nixops
         nodejs-6_x
         openssl
-        pinentry
+        optipng
         pinentry_mac
+        pkgconfig
         postgresql
-        python3
-        python35Packages.youtube-dl-light
+        php
+        php70Packages.xdebug
+        php70Packages.composer
         sqlite
         stack
         tmux
