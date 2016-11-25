@@ -71,6 +71,7 @@
       :init (smex-initialize))
   #+END_SRC
 
+
 * Navigation
 
 ** Projects
@@ -173,6 +174,12 @@
              ("M-J" . crux-top-join-line)
              ("M-=" . crux-cleanup-buffer-or-region)
              ("C-M-k" . crux-kill-whole-line)))
+
+    (defun td/kill-current-buffer ()
+      (interactive)
+      (kill-buffer))
+
+    (bind-key "C-c C-k" #'td/kill-current-buffer)
 
     (use-package comment-dwim-2
       :ensure t
@@ -821,7 +828,9 @@
   #+BEGIN_SRC emacs-lisp
     (setq inhibit-startup-screen t
           visible-bell nil
-          ring-bell-function 'ignore)
+          ring-bell-function 'ignore
+          scroll-preserve-screen-position t
+          scroll-margin 8)
   #+END_SRC
 
   Default window configuration: half-left of the screen, no scroll
@@ -841,6 +850,12 @@
        (right-fringe . 0)))
 
     (blink-cursor-mode -1)
+  #+END_SRC
+
+  Truncate lines:
+
+  #+BEGIN_SRC emacs-lisp
+    (setq-default truncate-lines t)
   #+END_SRC
 
   Some preferences that I set for all the theme. Per documentation, the custom
@@ -881,7 +896,7 @@
 
   Mode line
 
-  #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp :tangle no
     (use-package smart-mode-line
       :ensure t
       :init (sml/setup))
