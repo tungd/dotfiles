@@ -36,6 +36,7 @@
     (setq user-full-name "Tung Dao"
           user-mail-address "me@tungdao.com"
           default-input-method 'vietnamese-telex)
+    (defvar personal-keybindings nil)
   #+END_SRC
 
   Less verbose choice:
@@ -506,7 +507,8 @@
               ("\\.j2" . web-mode)
               ("\\.jinja2" . web-mode)
               ("\\.php" . web-mode)
-              ("\\.tpl" . web-mode))
+              ("\\.tpl" . web-mode)
+              ("\\.jsx" . web-mode))
        :init (add-hook 'web-mode-hook #'emmet-mode)
        :config
        (progn
@@ -514,7 +516,9 @@
 
          (setq web-mode-markup-indent-offset 2
                web-mode-css-indent-offset 2
-               web-mode-code-indent-offset 2)))
+               web-mode-code-indent-offset 2
+               web-mode-script-padding 2
+               web-mode-style-padding 2)))
    #+END_SRC
 
    Also, I can't live without Emmet.
@@ -580,8 +584,7 @@
 
    #+BEGIN_SRC emacs-lisp
      (use-package js
-       :mode (("\\.js$" . js-jsx-mode)
-              ("\\.jsx$" . js-jsx-mode))
+       :mode (("\\.js$" . js-jsx-mode))
        :config
        (setq js-indent-level 2
              js-indent-first-init 'dynamic
@@ -726,6 +729,7 @@
              org-default-notes-file (expand-file-name "inbox.org" org-directory)
              org-agenda-files (list org-directory)
              org-agenda-skip-unavailable-files t
+             org-hide-leading-stars t
 
              org-startup-with-inline-images t
 
@@ -867,23 +871,38 @@
      '(vertical-border ((t (:foreground "#000" :background "#000"))))
 
      '(linum ((t (:inherit font-lock-comment-face :height 110))))
+     `(fringe ((t (:inherit font-lock-comment-face))))
 
      '(highlight ((t (:inherit region))))
      '(sp-pair-overlay-face ((t (:inherit region))))
 
-     ;; These actually are specific to the Brin theme
-     '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
-     '(link ((t (:inherit font-lock-function-name-face :underline t))))
-     '(minibuffer-prompt ((t (:inherit font-lock-function-name-face)))))
+     ;; tango-plus
+     '(font-lock-keyword-face ((t (:weight normal))))
+     '(font-lock-comment-face ((t (:slant normal))))
+     '(font-lock-comment-delimiter-face ((t (:slant normal))))
+     '(font-lock-string-face ((t (:slant normal))))
+     '(font-lock-constant-face ((t (:slant normal))))
+
+     ;; brin
+     ;; '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
+     ;; '(link ((t (:inherit font-lock-function-name-face :underline t))))
+     ;; '(minibuffer-prompt ((t (:inherit font-lock-function-name-face))))
+     )
   #+END_SRC
 
   My theme of choice is *Brin* from the exellent [[https://github.com/owainlewis/emacs-color-themes][sublime-themes]]
   collection.
 
-  #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp :tangle no
     (use-package sublime-themes
       :ensure t
       :init (load-theme 'brin t))
+  #+END_SRC
+
+  #+BEGIN_SRC emacs-lisp
+    (use-package tango-plus-theme
+      :ensure t
+      :init (load-theme 'tango-plus t))
   #+END_SRC
 
   I also have an alternate light-theme for backup or use in
@@ -896,9 +915,10 @@
 
   Mode line
 
-  #+BEGIN_SRC emacs-lisp :tangle no
+  #+BEGIN_SRC emacs-lisp
     (use-package smart-mode-line
       :ensure t
+      :preface (setq-default sml/theme nil)
       :init (sml/setup))
   #+END_SRC
 
@@ -914,7 +934,9 @@
       (when (display-graphic-p)
         (add-hook 'prog-mode-hook #'nlinum-mode))
       :config
-      (setq nlinum-format " %3d  "))
+      (setq nlinum-format " %3d ")
+      (advice-add 'web-mode-fold-or-unfold :after 'nlinum--flush)
+      (set-face-attribute 'fringe nil :background (face-background 'linum)))
   #+END_SRC
 
   The default line continuation indicator is too standout and distracting for me.
@@ -959,6 +981,30 @@
 
   Where the magic happen!
 
+  #+BEGIN_SRC emacs-lisp
+    (use-package async
+      :ensure t
+      :commands (async-start))
+
+    (defun td/tangle-init ()
+      (async-start
+       (lambda ()
+         (package-initialize)
+
+         (require 'org)
+         (org-babel-tangle-file
+          (expand-file-name (concat user-emacs-directory "init.org"))
+          (expand-file-name (concat user-emacs-directory "init.el"))
+          "emacs-lisp")
+
+         (require 'use-package)
+         (require 'bind-key)
+
+         (byte-compile-file
+          (expand-file-name  (concat user-emacs-directory "init.el"))))
+       'ignore))
+  #+END_SRC
+
 # Local Variables:
-# eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle)) nil t)
+# after-save-hook: td/tangle-init
 # End:
