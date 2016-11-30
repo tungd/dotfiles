@@ -11,13 +11,11 @@
         aspell
         aspellDicts.en
         bashCompletion
-        bundler
         closurecompilerJdk8
         elixir
         gnupg
         imagemagick
         jdk8
-        libxml2
         mysql57
         mongodb
         mosh

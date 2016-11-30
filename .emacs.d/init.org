@@ -72,6 +72,9 @@
       :init (smex-initialize))
   #+END_SRC
 
+  #+BEGIN_SRC emacs-lisp
+    (savehist-mode t)
+  #+END_SRC
 
 * Navigation
 
@@ -174,7 +177,11 @@
       :bind (("C-M-]" . crux-switch-to-previous-buffer)
              ("M-J" . crux-top-join-line)
              ("M-=" . crux-cleanup-buffer-or-region)
-             ("C-M-k" . crux-kill-whole-line)))
+             ("C-M-k" . crux-kill-whole-line))
+      :config
+      (crux-with-region-or-buffer indent-region)
+      (crux-with-region-or-buffer untabify)
+      (crux-with-region-or-point-to-eol kill-ring-save))
 
     (defun td/kill-current-buffer ()
       (interactive)
@@ -273,6 +280,9 @@
 
      (add-hook 'isearch-mode-end-hook #'td/isearch-exit-goto-match-beginning)
      (advice-add 'isearch-exit :after #'td/isearch-exit-goto-match-beginning)
+
+     (use-package isearch+
+       :ensure t)
    #+END_SRC
 
 ** Long lines
@@ -332,6 +342,7 @@
       :bind (("M-s DEL" . sp-splice-sexp)
              ("M-S" . sp-rewrap-sexp)
              ("M-s <right>" . sp-slurp-hybrid-sexp)
+             ("C-S-f" . sp-slurp-hybrid-sexp)
              ("M-s <left>" . sp-forward-barf-sexp)
              ("C-M-a" . sp-beginning-of-sexp)
              ("C-M-e" . sp-end-of-sexp)
@@ -346,6 +357,19 @@
                :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
       (sp-pair "(" nil
                :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC"))))
+  #+END_SRC
+
+  #+BEGIN_SRC emacs-lisp
+    (use-package expand-region
+      :ensure t
+      :bind ("M--" . er/expand-region))
+
+    (defun td/mark-line-dwim ()
+      (interactive)
+      (call-interactively #'beginning-of-line)
+      (call-interactively #'set-mark-command))
+
+    (bind-key "M-C-SPC" #'td/mark-line-dwim)
   #+END_SRC
 
 ** Undo
@@ -507,8 +531,7 @@
               ("\\.j2" . web-mode)
               ("\\.jinja2" . web-mode)
               ("\\.php" . web-mode)
-              ("\\.tpl" . web-mode)
-              ("\\.jsx" . web-mode))
+              ("\\.tpl" . web-mode))
        :init (add-hook 'web-mode-hook #'emmet-mode)
        :config
        (progn
@@ -584,7 +607,10 @@
 
    #+BEGIN_SRC emacs-lisp
      (use-package js
-       :mode (("\\.js$" . js-jsx-mode))
+       :mode (("\\.js$" . js-mode)
+              ("\\.jsx$" . js-jsx-mode)
+              ("\\.json$" . js-mode)
+              ("\\.eslintrc$" . js-mode))
        :config
        (setq js-indent-level 2
              js-indent-first-init 'dynamic
@@ -903,6 +929,15 @@
     (use-package tango-plus-theme
       :ensure t
       :init (load-theme 'tango-plus t))
+  #+END_SRC
+
+  #+BEGIN_SRC emacs-lisp :tangle no
+    (use-package zerodark-theme
+      :ensure t
+      :init
+      (progn
+        (load-theme 'zerodark t)
+        (zerodark-setup-modeline-format)))
   #+END_SRC
 
   I also have an alternate light-theme for backup or use in
