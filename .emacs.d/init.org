@@ -76,6 +76,7 @@
     (savehist-mode t)
   #+END_SRC
 
+
 * Navigation
 
 ** Projects
@@ -614,6 +615,7 @@
        :config
        (setq js-indent-level 2
              js-indent-first-init 'dynamic
+             js-switch-indent-offset 2
              js-enabled-frameworks '(javascript)))
    #+END_SRC
 

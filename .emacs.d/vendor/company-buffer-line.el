@@ -1,4 +1,3 @@
-
 (require 'cl-lib)
 (require 'company)
 (require 's)
@@ -23,9 +22,8 @@
     (interactive (company-begin-backend 'company-current-buffer-lines))
     (prefix (when (looking-back "^\s*\\(.+\\)" (line-beginning-position))
               (match-string-no-properties 1)))
-    (candidates (all-completions arg (company-buffer-line--buffer-lines)))
+    (candidates (all-completions arg (seq-uniq (company-buffer-line--buffer-lines))))
     (sorted t)))
-
 
 (defun company-same-mode-buffer-lines (command &optional arg &rest ignored)
   (interactive (list 'interactive))
@@ -33,10 +31,9 @@
     (interactive (company-begin-backend 'company-same-mode-buffer-lines))
     (prefix (when (looking-back "^\s*\\(.+\\)" (line-beginning-position))
               (match-string-no-properties 1)))
-    (candidates (all-completions
-                 arg
-                 (seq-mapcat #'company-buffer-line--buffer-lines
-                             (company-buffer-line--same-mode-buffers))))
+    (candidates (let* ((buffers (company-buffer-line--same-mode-buffers))
+                       (lines (seq-mapcat #'company-buffer-line--buffer-lines buffers)))
+                  (all-completions arg (seq-uniq lines))))
     (sorted t)))
 
 (provide 'company-buffer-line)
