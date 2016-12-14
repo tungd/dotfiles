@@ -12,23 +12,24 @@
         aspellDicts.en
         bashCompletion
         closurecompilerJdk8
-        elixir
+        # elixir
+        ffmpeg
         gnupg
         imagemagick
         jdk8
-        mysql57
-        mongodb
+        # mysql57
+        # mongodb
         mosh
-        nixops
+        # nixops
         nodejs-6_x
         openssl
         optipng
         pinentry_mac
         pkgconfig
-        postgresql
-        php
-        php70Packages.xdebug
-        php70Packages.composer
+        # postgresql
+        # php
+        # php70Packages.xdebug
+        # php70Packages.composer
         sqlite
         stack
         tmux
