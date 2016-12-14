@@ -79,6 +79,7 @@ export LOCAL=$HOME/.local
 export PATH=$LOCAL/bin:$LOCAL/sbin:$PATH
 export INFOPATH=$LOCAL/share/info:$NIX_LINK/share/info:$INFOPATH
 export GEM_HOME=$LOCAL
+export GEMOPTS='--no-rdoc --no-ri'
 export CDPATH=$HOME/Projects:$CDPATH
 
 alias g=git
