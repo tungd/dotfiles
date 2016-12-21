@@ -6,3 +6,10 @@ echo 'pinentry-program /Users/tung/.nix-profile/Applications/pinentry-mac.app/Co
 
 defaults write com.apple.screencapture disable-shadow -bool true
 killall SystemUIServer
+
+# Fix macOS Sierra ssh-agent issue
+echo >> ~/.ssh/config <EOF
+Host *
+    IdentityFile ~/.ssh/id_rsa
+    AddKeysToAgent yes
+EOF
