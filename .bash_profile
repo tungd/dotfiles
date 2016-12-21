@@ -78,9 +78,10 @@ $RED\u$END@$YELLOW\H$END in $GREEN\w$END \$(git_prompt_info) \$(env_prompt_info)
 export LOCAL=$HOME/.local
 export PATH=$LOCAL/bin:$LOCAL/sbin:$PATH
 export INFOPATH=$LOCAL/share/info:$NIX_LINK/share/info:$INFOPATH
-export GEM_HOME=$LOCAL
 export GEMOPTS='--no-rdoc --no-ri'
-export CDPATH=$HOME/Projects:$CDPATH
+export GOPATH=$HOME/Projects/go
+export PATH=$GOPATH/bin:$PATH
+
 
 alias g=git
 alias be='bundle exec'

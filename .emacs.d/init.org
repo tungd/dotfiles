@@ -740,6 +740,22 @@
            :init (add-hook 'purescript-mode-hook #'psc-ide-mode))))
    #+END_SRC
 
+** Go
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package go-mode
+       :ensure t
+       :mode (("\\.go$" . go-mode)))
+
+     (use-package company-go
+       :ensure t
+       :init (add-to-list 'company-backends 'company-go))
+
+     (use-package go-eldoc
+       :ensure t
+       :init (add-hook 'go-mode-hook 'go-eldoc-setup))
+   #+END_SRC
+
 ** Misc
 
    These are supports for other stuffs that I used:
