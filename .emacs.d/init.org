@@ -184,11 +184,7 @@
       (crux-with-region-or-buffer untabify)
       (crux-with-region-or-point-to-eol kill-ring-save))
 
-    (defun td/kill-current-buffer ()
-      (interactive)
-      (kill-buffer))
-
-    (bind-key "C-c C-k" #'td/kill-current-buffer)
+    (bind-key "C-c C-k" #'kill-this-buffer)
 
     (use-package comment-dwim-2
       :ensure t
@@ -443,16 +439,18 @@
                ".gz" "~$" "/tmp/" "/ssh:" "/sudo:" "/scp:")))
    #+END_SRC
 
-** Shell
+
+* Shell and remote
+** EShell
 
    #+BEGIN_SRC emacs-lisp
+     (defun td/with-face (str &rest properties)
+       (propertize str 'face properties))
+
      (use-package eshell
        :defer t
        :config
        (progn
-         (defmacro td/with-face (str &rest properties)
-           `(propertize ,str 'face (list ,@properties)))
-
          (defun td/eshell-pwd ()
            (replace-regexp-in-string
             (regexp-quote (expand-file-name "~"))
@@ -487,6 +485,23 @@
    #+END_SRC
 
 
+** Tramp
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package tramp
+       :defer t
+       :config
+       (progn
+         (setq password-cache-expiry nil
+               tramp-debug-buffer t
+               tramp-default-method "ssh"
+               tramp-verbose 2)
+
+         (add-to-list 'auth-sources "~/.emacs.d/authinfo.gpg")
+         (setq ange-ftp-netrc-filename "~/.emacs.d/authinfo.gpg")))
+   #+END_SRC
+
+
 * Programming
 
 ** Auto completion
@@ -512,6 +527,7 @@
                company-require-match nil
                company-idle-delay nil
                company-tooltip-align-annotations t
+               company-echo-delay 0
                company-frontends
                '(company-pseudo-tooltip-unless-just-one-frontend
                  company-echo-metadata-frontend)
