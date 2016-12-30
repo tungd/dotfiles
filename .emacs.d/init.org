@@ -277,9 +277,6 @@
 
      (add-hook 'isearch-mode-end-hook #'td/isearch-exit-goto-match-beginning)
      (advice-add 'isearch-exit :after #'td/isearch-exit-goto-match-beginning)
-
-     (use-package isearch+
-       :ensure t)
    #+END_SRC
 
 ** Long lines
@@ -591,7 +588,8 @@
               ("\\.j2" . web-mode)
               ("\\.jinja2" . web-mode)
               ("\\.php" . web-mode)
-              ("\\.tpl" . web-mode))
+              ("\\.tpl" . web-mode)
+              ("\\.erb" . web-mode))
        :init (add-hook 'web-mode-hook #'emmet-mode)
        :config
        (progn
@@ -1093,30 +1091,6 @@
 
   Where the magic happen!
 
-  #+BEGIN_SRC emacs-lisp
-    (use-package async
-      :ensure t
-      :commands (async-start))
-
-    (defun td/tangle-init ()
-      (async-start
-       (lambda ()
-         (package-initialize)
-
-         (require 'org)
-         (org-babel-tangle-file
-          (expand-file-name (concat user-emacs-directory "init.org"))
-          (expand-file-name (concat user-emacs-directory "init.el"))
-          "emacs-lisp")
-
-         (require 'use-package)
-         (require 'bind-key)
-
-         (byte-compile-file
-          (expand-file-name  (concat user-emacs-directory "init.el"))))
-       'ignore))
-  #+END_SRC
-
-# Local Variables:
-# after-save-hook: td/tangle-init
-# End:
+;; Local Variables:
+;; eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle)) nil t)
+;; End:
