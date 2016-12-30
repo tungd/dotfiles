@@ -20,7 +20,9 @@
       ;; New completion -> popup
       (setq *ivy-popup-buffer* (get-buffer-create "*ivy-popup*"))
       (setq *ivy-popup-window*
-            (split-window (minibuffer-selected-window) nil ivy-popup-direction))
+            (split-window (minibuffer-selected-window)
+                          (- -1 ivy-height)
+                          ivy-popup-direction))
       (window--display-buffer *ivy-popup-buffer* *ivy-popup-window* nil))
 
     (with-current-buffer *ivy-popup-buffer*
@@ -42,7 +44,7 @@
 
       ;; (when (display-graphic-p)
       ;;   (ivy--resize-minibuffer-to-fit))
-      (fit-window-to-buffer *ivy-popup-window* (+ 4 ivy-height) 2 20 20))))
+      (fit-window-to-buffer *ivy-popup-window* (+ 2 ivy-height) 2))))
 
 (provide 'ivy-popup)
 ;;; ivy-popup.el ends here
