@@ -26,7 +26,7 @@
         optipng
         pinentry_mac
         pkgconfig
-        # postgresql
+        postgresql
         # php
         # php70Packages.xdebug
         # php70Packages.composer

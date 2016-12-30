@@ -10,7 +10,14 @@
     ("e5f0f3c53f268ae8fc72cd569f99023d86187a7061f16196c350584b227e868f" "80ceeb45ccb797fe510980900eda334c777f05ee3181cb7e19cd6bb6fc7fda7c" "9c79dde113d5718497be6636b7358ec3ef3dad98d6c166fe88a8cdcd8b8abfc2" default)))
  '(package-selected-packages
    (quote
-    (go-eldoc company-go go-mode docker-tramp isearch+ rainbow-mode yasnippet yaml-mode wgrep-ag web-mode use-package tango-plus-theme sublime-themes smex smartparens smart-mode-line rainbow-delimiters pyvenv purescript-mode psc-ide projectile ob-http nlinum nix-mode nginx-mode markdown-mode magit intero indent-guide htmlize expand-region emmet-mode dumb-jump dockerfile-mode crux counsel comment-dwim-2 color-theme-sanityinc-tomorrow better-defaults base16-theme anzu ag))))
+    (php-mode go-eldoc company-go go-mode docker-tramp rainbow-mode yasnippet yaml-mode wgrep-ag web-mode use-package tango-plus-theme sublime-themes smex smartparens smart-mode-line rainbow-delimiters pyvenv purescript-mode psc-ide projectile ob-http nlinum nix-mode nginx-mode markdown-mode magit intero indent-guide htmlize expand-region emmet-mode dumb-jump dockerfile-mode crux counsel comment-dwim-2 color-theme-sanityinc-tomorrow better-defaults base16-theme anzu ag)))
+ '(safe-local-variable-values
+   (quote
+    ((eval add-hook
+           (quote after-save-hook)
+           (lambda nil
+             (org-babel-tangle))
+           nil t)))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
