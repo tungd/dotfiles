@@ -76,6 +76,12 @@
     (savehist-mode t)
   #+END_SRC
 
+** Server
+
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'after-init-hook #'server-start)
+   #+END_SRC
+
 
 * Navigation
 
@@ -236,7 +242,7 @@
        :ensure t
        :diminish anzu-mode
        :init (global-anzu-mode t)
-       :bind (([remap query-replace] . anzu-query-replace)
+       :bind (([remap query-replace] . anzu-query-replace-regexp)
               ;("C-c C-r" . anzu-query-replace-at-cursor)
               ("M-r" . anzu-replace-at-cursor-thing)
               ("C-M-r" . td/anzu-replace-at-cursor-thing-in-buffer))
@@ -572,6 +578,7 @@
    re-run the tests.
 
    #+BEGIN_SRC emacs-lisp
+     (setq-default compilation-scroll-output 'first-error)
      (bind-key "C-c m" #'recompile)
    #+END_SRC
 
@@ -654,6 +661,11 @@
        :defer t
        :config
        (setq css-indent-offset 2))
+
+     (use-package rainbow-mode
+       :ensure t
+       :defer t
+       :init (add-hook 'css-mode-hook #'rainbow-mode))
    #+END_SRC
 
 ** JavaScript
@@ -978,41 +990,32 @@
      '(sp-pair-overlay-face ((t (:inherit region))))
 
      ;; tango-plus
-     '(font-lock-keyword-face ((t (:weight normal))))
-     '(font-lock-comment-face ((t (:slant normal))))
-     '(font-lock-comment-delimiter-face ((t (:slant normal))))
-     '(font-lock-string-face ((t (:slant normal))))
-     '(font-lock-constant-face ((t (:slant normal))))
+     ;; '(font-lock-keyword-face ((t (:weight normal))))
+     ;; '(font-lock-comment-face ((t (:slant normal))))
+     ;; '(font-lock-comment-delimiter-face ((t (:slant normal))))
+     ;; '(font-lock-string-face ((t (:slant normal))))
+     ;; '(font-lock-constant-face ((t (:slant normal))))
 
      ;; brin
-     ;; '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
-     ;; '(link ((t (:inherit font-lock-function-name-face :underline t))))
-     ;; '(minibuffer-prompt ((t (:inherit font-lock-function-name-face))))
+     '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
+     '(link ((t (:inherit font-lock-function-name-face :underline t))))
+     '(minibuffer-prompt ((t (:inherit font-lock-function-name-face))))
      )
   #+END_SRC
 
   My theme of choice is *Brin* from the exellent [[https://github.com/owainlewis/emacs-color-themes][sublime-themes]]
   collection.
 
-  #+BEGIN_SRC emacs-lisp :tangle no
+  #+BEGIN_SRC emacs-lisp
     (use-package sublime-themes
       :ensure t
       :init (load-theme 'brin t))
   #+END_SRC
 
-  #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp :tangle no
     (use-package tango-plus-theme
       :ensure t
       :init (load-theme 'tango-plus t))
-  #+END_SRC
-
-  #+BEGIN_SRC emacs-lisp :tangle no
-    (use-package zerodark-theme
-      :ensure t
-      :init
-      (progn
-        (load-theme 'zerodark t)
-        (zerodark-setup-modeline-format)))
   #+END_SRC
 
   I also have an alternate light-theme for backup or use in
@@ -1032,6 +1035,12 @@
       :init (sml/setup))
   #+END_SRC
 
+  Show current function name in the mode line:
+
+  #+BEGIN_SRC emacs-lisp
+    (which-function-mode t)
+  #+END_SRC
+
   Line and column numbers, which I find only helpful when tracking
   down compiler error :(.
 
@@ -1047,6 +1056,15 @@
       (setq nlinum-format " %3d ")
       (advice-add 'web-mode-fold-or-unfold :after 'nlinum--flush)
       (set-face-attribute 'fringe nil :background (face-background 'linum)))
+  #+END_SRC
+
+  Window spliting
+
+  #+BEGIN_SRC emacs-lisp
+    (use-package golden-ratio
+      :ensure t
+      :diminish golden-ratio-mode
+      :init (add-hook 'after-init-hook #'golden-ratio-mode))
   #+END_SRC
 
   The default line continuation indicator is too standout and distracting for me.
