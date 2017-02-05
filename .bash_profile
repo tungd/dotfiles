@@ -1,5 +1,3 @@
-if [ -e $HOME/.nix-profile/etc/profile.d/nix.sh ]; then . $HOME/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
-
 export LANG=en_US.UTF-8
 # export LC_ALL=$LANG
 export LC_CTYPE=$LANG
@@ -58,11 +56,8 @@ function git_prompt_short_sha() {
 
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 function env_prompt_info() {
-  if [ ! -z "$NIX_BUILD_TOP$VIRTUAL_ENV" ]; then
-    echo -ne "$LIGHT_BLUE["
-    [ ! -z "$NIX_BUILD_TOP" ] && echo -ne "nix-shell"
-    [ ! -z "$VIRTUAL_ENV" ] && echo -ne ",pyvenv:$(basename $VIRTUAL_ENV)"
-    echo -ne "]$END"
+  if [ ! -z "$VIRTUAL_ENV" ]; then
+    echo -ne "$LIGHT_BLUE[pyvenv:$(basename $VIRTUAL_ENV)]$END"
   fi
 }
 
@@ -77,7 +72,6 @@ $RED\u$END@$YELLOW\H$END in $GREEN\w$END \$(git_prompt_info) \$(env_prompt_info)
 
 export LOCAL=$HOME/.local
 export PATH=$LOCAL/bin:$LOCAL/sbin:$PATH
-export INFOPATH=$LOCAL/share/info:$NIX_LINK/share/info:$INFOPATH
 export GEMOPTS='--no-rdoc --no-ri'
 export GOPATH=$HOME/Projects/go
 export PATH=$GOPATH/bin:$PATH
@@ -92,13 +86,6 @@ alias s='twistd -no web --path=.'
 alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
 alias fixmod='find . -type f -exec chmod 644 {} \; && find . -type d -exec chmod 755 {} \;'
 
-
-# if [ -f $NIX_LINK/etc/profile.d/bash_completion.sh ]; then
-#     . $NIX_LINK/etc/profile.d/bash_completion.sh
-# fi
-# for file in $NIX_LINK/etc/bash_completion.d/*; do
-#   . $file
-# done
 
 notify() {
   osascript -e "display notification \"$2\" with title \"$1\""
@@ -150,3 +137,6 @@ if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
 
 . $LOCAL/vendor/z.sh
+eval $(/usr/libexec/path_helper -s)
+
+test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
