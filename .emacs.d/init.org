@@ -67,6 +67,19 @@
   #+END_SRC
 
   #+BEGIN_SRC emacs-lisp
+    (use-package exec-path-from-shell
+      :ensure t
+      :init
+      (when (memq window-system '(mac ns))
+        (exec-path-from-shell-initialize)))
+  #+END_SRC
+
+  #+BEGIN_SRC emacs-lisp
+    (setq ns-command-modifier 'meta
+          ns-option-modifier 'super)
+  #+END_SRC
+
+  #+BEGIN_SRC emacs-lisp
     (use-package smex
       :ensure t
       :init (smex-initialize))
@@ -407,7 +420,8 @@
 
          (unbind-key "TAB" yas-minor-mode-map)
          (unbind-key "<tab>" yas-minor-mode-map)
-         (bind-key "SPC" 'yas-expand yas-minor-mode-map)))
+         ;; (bind-key "SPC" 'yas-expand yas-minor-mode-map)
+         ))
    #+END_SRC
 
 ** TODO Alignment
@@ -990,29 +1004,29 @@
      '(sp-pair-overlay-face ((t (:inherit region))))
 
      ;; tango-plus
-     ;; '(font-lock-keyword-face ((t (:weight normal))))
-     ;; '(font-lock-comment-face ((t (:slant normal))))
-     ;; '(font-lock-comment-delimiter-face ((t (:slant normal))))
-     ;; '(font-lock-string-face ((t (:slant normal))))
-     ;; '(font-lock-constant-face ((t (:slant normal))))
+     '(font-lock-keyword-face ((t (:weight normal))))
+     '(font-lock-comment-face ((t (:slant normal))))
+     '(font-lock-comment-delimiter-face ((t (:slant normal))))
+     '(font-lock-string-face ((t (:slant normal))))
+     '(font-lock-constant-face ((t (:slant normal))))
 
      ;; brin
-     '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
-     '(link ((t (:inherit font-lock-function-name-face :underline t))))
-     '(minibuffer-prompt ((t (:inherit font-lock-function-name-face))))
+     ;; '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
+     ;; '(link ((t (:inherit font-lock-function-name-face :underline t))))
+     ;; '(minibuffer-prompt ((t (:inherit font-lock-function-name-face))))
      )
   #+END_SRC
 
   My theme of choice is *Brin* from the exellent [[https://github.com/owainlewis/emacs-color-themes][sublime-themes]]
   collection.
 
-  #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp :tangle no
     (use-package sublime-themes
       :ensure t
       :init (load-theme 'brin t))
   #+END_SRC
 
-  #+BEGIN_SRC emacs-lisp :tangle no
+  #+BEGIN_SRC emacs-lisp
     (use-package tango-plus-theme
       :ensure t
       :init (load-theme 'tango-plus t))
