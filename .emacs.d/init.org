@@ -245,6 +245,10 @@
     (add-hook 'after-save-hook #'td/after-save-auto-chmod)
   #+END_SRC
 
+  #+BEGIN_SRC emacs-lisp
+
+  #+END_SRC
+
 ** Search and replace
 
    Anzu command names are confusing, at-cursor means initial string, while thing
@@ -416,12 +420,13 @@
                ;; I am a weird user, I use SPACE to expand my
                ;; snippets, this save me from triggering them accidentally.
                yas-expand-only-for-last-commands
-               '(self-insert-command org-self-insert-command))
+               '(self-insert-command org-self-insert-command)
+
+               yas-fallback-behavior '(apply self-insert-command))
 
          (unbind-key "TAB" yas-minor-mode-map)
          (unbind-key "<tab>" yas-minor-mode-map)
-         ;; (bind-key "SPC" 'yas-expand yas-minor-mode-map)
-         ))
+         (bind-key "SPC" 'yas-expand yas-minor-mode-map)))
    #+END_SRC
 
 ** TODO Alignment
@@ -966,13 +971,14 @@
 
   Default window configuration: half-left of the screen, no scroll
   bars, no menu bars, no cursor blinking. And btw, nothing beats the
-  classic Monaco, not even "Source Code Pro" by Adobe.
+  classic Monaco, not even "Source Code Pro" from Adobe. I'm using the MonacoB
+  for bold variant.
 
   #+BEGIN_SRC emacs-lisp
     (setq-default
      fringes-outside-margins t
      default-frame-alist
-     '((font . "Source Code Pro 14")
+     '((font . "MonacoB 14")
        (top . 0) (left . 640)
        (width . 100) (height . 64)
        (vertical-scroll-bars . nil)

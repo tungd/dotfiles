@@ -75,6 +75,7 @@ export PATH=$LOCAL/bin:$LOCAL/sbin:$PATH
 export GEMOPTS='--no-rdoc --no-ri'
 export GOPATH=$HOME/Projects/go
 export PATH=$GOPATH/bin:$PATH
+export PATH=$HOME/Library/Python/2.7/bin/:$PATH
 
 
 alias g=git
@@ -85,6 +86,7 @@ alias v='./venv/bin/'
 alias s='twistd -no web --path=.'
 alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
 alias fixmod='find . -type f -exec chmod 644 {} \; && find . -type d -exec chmod 755 {} \;'
+alias pfreeze='pip freeze > requirements.txt'
 
 
 notify() {
@@ -115,7 +117,7 @@ faviconize() {
 
   sizes=("16x16" "32x32" "48x48" "64x64" "144x144")
   for size in "${sizes[@]}"; do
-    convert $1 $imagemagick_opts -thumbnail $size "$bw$favicon$size.png" && optipng -o9 -strip all "favicon$size.png"
+    convert $1 $imagemagick_opts -thumbnail $size "$bw$favicon$size.png" #&& optipng -o9 -strip all "favicon$size.png"
   done
 
   icos="favicon16x16.png favicon32x32.png favicon48x48.png favicon64x64.png"
@@ -132,8 +134,13 @@ if [ -d "$HOME/Applications/Emacs.app/Contents/MacOS" ]; then
     export PATH="$HOME/Applications/Emacs.app/Contents/MacOS":$PATH
 fi
 
+
+export RBENV_ROOT="$HOME/.rbenv"
+export PATH="$RBENV_ROOT/bin:$PATH"
 if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
 if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
 
 . $LOCAL/vendor/z.sh
