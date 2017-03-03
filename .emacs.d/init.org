@@ -785,6 +785,14 @@
        :init (add-hook 'go-mode-hook 'go-eldoc-setup))
    #+END_SRC
 
+** Swift
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package swift-mode
+       :ensure t
+       :mode (("\\.swift" . swift-mode)))
+   #+END_SRC
+
 ** Misc
 
    These are supports for other stuffs that I used:
@@ -1080,7 +1088,7 @@
 
   Window spliting
 
-  #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp :tangle no
     (use-package golden-ratio
       :ensure t
       :diminish golden-ratio-mode

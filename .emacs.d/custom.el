@@ -15,7 +15,7 @@
  '(fci-rule-color "#343d46")
  '(package-selected-packages
    (quote
-    (exec-path-from-shell alchemist elixir-mode golden-ratio undo-tree fish-mode php-mode go-eldoc company-go go-mode docker-tramp rainbow-mode yasnippet yaml-mode wgrep-ag web-mode use-package tango-plus-theme sublime-themes smex smartparens smart-mode-line rainbow-delimiters pyvenv purescript-mode psc-ide projectile ob-http nlinum nix-mode nginx-mode markdown-mode magit intero indent-guide htmlize expand-region emmet-mode dumb-jump dockerfile-mode crux counsel comment-dwim-2 color-theme-sanityinc-tomorrow better-defaults base16-theme anzu ag)))
+    (swift-mode exec-path-from-shell alchemist elixir-mode golden-ratio undo-tree fish-mode php-mode go-eldoc company-go go-mode docker-tramp rainbow-mode yasnippet yaml-mode wgrep-ag web-mode use-package tango-plus-theme sublime-themes smex smartparens smart-mode-line rainbow-delimiters pyvenv purescript-mode psc-ide projectile ob-http nlinum nix-mode nginx-mode markdown-mode magit intero indent-guide htmlize expand-region emmet-mode dumb-jump dockerfile-mode crux counsel comment-dwim-2 color-theme-sanityinc-tomorrow better-defaults base16-theme anzu ag)))
  '(pos-tip-background-color "#36473A")
  '(pos-tip-foreground-color "#FFFFC8")
  '(safe-local-variable-values
