@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: debug
+# key: debug
+# --
+logging.debug($0)
