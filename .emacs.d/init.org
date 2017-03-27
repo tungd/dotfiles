@@ -76,7 +76,8 @@
 
   #+BEGIN_SRC emacs-lisp
     (setq ns-command-modifier 'meta
-          ns-option-modifier 'super)
+          ns-option-modifier 'super
+          delete-by-moving-to-trash t)
   #+END_SRC
 
   #+BEGIN_SRC emacs-lisp
@@ -977,16 +978,16 @@
           scroll-margin 8)
   #+END_SRC
 
-  Default window configuration: half-left of the screen, no scroll
-  bars, no menu bars, no cursor blinking. And btw, nothing beats the
-  classic Monaco, not even "Source Code Pro" from Adobe. I'm using the MonacoB
-  for bold variant.
+  Default window configuration: half-left of the screen, no scroll bars, no menu
+  bars, no cursor blinking. And btw, nothing beats the classic Monaco. "Source
+  Code Pro" and "Fira Code" come close, currently I have to use them for bold
+  and ligatures support :(.
 
   #+BEGIN_SRC emacs-lisp
     (setq-default
      fringes-outside-margins t
      default-frame-alist
-     '((font . "MonacoB 14")
+     '((font . "Monaco 14")
        (top . 0) (left . 640)
        (width . 100) (height . 64)
        (vertical-scroll-bars . nil)
@@ -995,6 +996,13 @@
        (right-fringe . 0)))
 
     (blink-cursor-mode -1)
+  #+END_SRC
+
+  Enable ligatures, only available in railwaycat Mac port.
+
+  #+BEGIN_SRC emacs-lisp
+    (ignore-errors
+      (mac-auto-operator-composition-mode))
   #+END_SRC
 
   Truncate lines:
