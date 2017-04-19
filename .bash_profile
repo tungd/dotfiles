@@ -76,6 +76,7 @@ export GEMOPTS='--no-rdoc --no-ri'
 export GOPATH=$HOME/Projects/go
 export PATH=$GOPATH/bin:$PATH
 export PATH=$HOME/Library/Python/2.7/bin/:$PATH
+export PATH=$HOME/.yarn/bin:$PATH
 
 
 alias g=git
@@ -87,6 +88,7 @@ alias s='twistd -no web --path=.'
 alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
 alias fixmod='find . -type f -exec chmod 644 {} \; && find . -type d -exec chmod 755 {} \;'
 alias pfreeze='pip freeze > requirements.txt'
+alias sock5=''
 
 
 notify() {
