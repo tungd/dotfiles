@@ -1,0 +1,12 @@
+#!/bin/sh
+
+URL=https://github.com/purescript/purescript/releases/download/v0.11.3/macos.tar.gz
+
+pushd /tmp
+
+curl -LO $URL
+tar vxzf macos.tar.gz
+# TODO verify checksum
+cp -v purescript/* $HOME/.local/bin
+
+popd
