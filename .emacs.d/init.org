@@ -871,6 +871,7 @@
              org-agenda-files (list org-directory)
              org-agenda-skip-unavailable-files t
              org-hide-leading-stars t
+             org-refile-targets (list '("~/Desktop/archive.org" . (:level . 1)))
 
              org-startup-with-inline-images t
 
@@ -908,13 +909,23 @@
              '("+project+LEVEL=1/-WAITING-DONE-CANCELLED" ("TODO" "WAITING") nil "")))
    #+END_SRC
 
-** TODO Note taking
+** Note taking
 
    As stated earlier, I practice GTD. Working projects and new stuffs go to
    =inbox.org= file. Old tasks are archived to =archive.org=. Here's my
    =org-capture= templates to dump stuffs to =inbox/note=
 
-** TODO Org-refile for archive
+** Archive
+
+   I also use =org-board= to have an offline pin-board with org-mode.
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package org-board
+       :ensure t
+       :defer t
+       :bind-keymap ("C-c b" . org-board-keymap))
+   #+END_SRC
+
 ** Literate programming
 
    Org Babel for literate programming and API documentation.
@@ -927,7 +938,6 @@
 
      (use-package ob-http
        :ensure t
-       :defer t
        :config
        (org-babel-do-load-languages
         'org-babel-load-languages
@@ -936,31 +946,11 @@
    #+END_SRC
 
 
-
-** Blogging
-
-   I use =org-publish= for blogging. The configuration is in a separate file
-   here. This section only contains generic default settings for all of my
-   publish project.
-
-   #+BEGIN_SRC emacs-lisp
-     ;; (use-package org-id
-     ;;   :defer t
-     ;;   :config
-     ;;   (progn
-     ;;     (defun td/org-export-anchor-id ())))
-   #+END_SRC
-
 ** Stuffs to look at when I have time
 
-*** TODO https://github.com/scallywag/org-board
-
 *** TODO https://github.com/bard/org-dashboard
-
 *** TODO https://github.com/abo-abo/org-download
-
 *** TODO https://github.com/myuhe/org-gcal.el
-
 *** TODO https://melpa.org/#/org-mac-link
 *** TODO https://www.emacswiki.org/emacs/OutlineMode
 
@@ -1026,11 +1016,11 @@
      '(sp-pair-overlay-face ((t (:inherit region))))
 
      ;; tango-plus
-     '(font-lock-keyword-face ((t (:weight normal))))
-     '(font-lock-comment-face ((t (:slant normal))))
-     '(font-lock-comment-delimiter-face ((t (:slant normal))))
-     '(font-lock-string-face ((t (:slant normal))))
-     '(font-lock-constant-face ((t (:slant normal))))
+     ;; '(font-lock-keyword-face ((t (:weight normal))))
+     ;; '(font-lock-comment-face ((t (:slant normal))))
+     ;; '(font-lock-comment-delimiter-face ((t (:slant normal))))
+     ;; '(font-lock-string-face ((t (:slant normal))))
+     ;; '(font-lock-constant-face ((t (:slant normal))))
 
      ;; brin
      ;; '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
@@ -1049,9 +1039,9 @@
   #+END_SRC
 
   #+BEGIN_SRC emacs-lisp
-    (use-package tango-plus-theme
+    (use-package nord-theme
       :ensure t
-      :init (load-theme 'tango-plus t))
+      :init (load-theme 'nord t))
   #+END_SRC
 
   I also have an alternate light-theme for backup or use in
@@ -1061,6 +1051,13 @@
     (use-package base16-theme
       :ensure t)
   #+END_SRC
+
+  #+BEGIN_SRC emacs-lisp :tangle no
+    (use-package tango-plus-theme
+      :ensure t
+      :init (load-theme 'tango-plus t))
+  #+END_SRC
+
 
   Mode line
 
