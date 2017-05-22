@@ -3,3 +3,5 @@
 # fi
 
 source $HOME/.bash_profile
+
+export PATH="$HOME/.yarn/bin:$PATH"

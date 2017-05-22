@@ -212,6 +212,15 @@
       :config (setq comment-style 'multi-line))
   #+END_SRC
 
+  Automatically apply external changes: This is debatable, from my own
+  experience it is helpful.
+
+  #+BEGIN_SRC emacs-lisp
+    (use-package autorevert
+      :diminish auto-revert-mode
+      :init (add-hook 'after-init-hook #'global-auto-revert-mode))
+  #+END_SRC
+
   Automatically save buffers when focus out:
 
   #+BEGIN_SRC emacs-lisp
@@ -244,10 +253,6 @@
                  (shell-quote-argument (buffer-file-name))))))
 
     (add-hook 'after-save-hook #'td/after-save-auto-chmod)
-  #+END_SRC
-
-  #+BEGIN_SRC emacs-lisp
-
   #+END_SRC
 
 ** Search and replace
@@ -616,7 +621,8 @@
               ("\\.jinja2" . web-mode)
               ("\\.php" . web-mode)
               ("\\.tpl" . web-mode)
-              ("\\.erb" . web-mode))
+              ("\\.erb" . web-mode)
+              ("\\.mustache" . web-mode))
        :init (add-hook 'web-mode-hook #'emmet-mode)
        :config
        (progn
@@ -728,7 +734,6 @@
              (call-interactively 'run-python)))))
    #+END_SRC
 
-** TODO Elxir
 ** Haskell
 
    I'm also a Haskell beginner :). Setting up Haskell with Emacs is relatively
@@ -739,16 +744,15 @@
      (use-package haskell-mode
        :ensure t
        :mode (("\\.hs$" . haskell-mode))
-       ;; :config
-       ;; (setq haskell-program-name "stack ghci")
-       )
+       :bind (([remap haskell-mode-format-imports] . haskell-sort-imports))
+       :config
+       (setq haskell-program-name "stack ghci"))
 
      (use-package intero
        :ensure t
        :diminish intero-mode
        :commands (intero-mode)
-       ;; :init (add-hook 'haskell-mode-hook #'intero-mode)
-       )
+       :init (add-hook 'haskell-mode-hook #'intero-mode))
    #+END_SRC
 
 ** PureScript
@@ -802,7 +806,8 @@
      (use-package markdown-mode
        :ensure t
        :mode (("\\.md$" . markdown-mode)
-              ("\\.markdown$" . markdown-mode)))
+              ("\\.markdown$" . markdown-mode))
+       :init (add-hook 'markdown-mode-hook #'whitespace-turn-off))
    #+END_SRC
 
    #+BEGIN_SRC emacs-lisp
@@ -978,6 +983,7 @@
      fringes-outside-margins t
      default-frame-alist
      '((font . "Monaco 14")
+       ;(font . "PT Mono 14")
        (top . 0) (left . 640)
        (width . 100) (height . 64)
        (vertical-scroll-bars . nil)
@@ -986,6 +992,7 @@
        (right-fringe . 0)))
 
     (blink-cursor-mode -1)
+    ;(setq-default line-spacing 4)
   #+END_SRC
 
   Enable ligatures, only available in railwaycat Mac port.
@@ -1015,6 +1022,10 @@
      '(highlight ((t (:inherit region))))
      '(sp-pair-overlay-face ((t (:inherit region))))
 
+     '(diff-hl-insert ((t (:inherit nil :background "#81af34" :foreground "#81af34"))))
+     '(diff-hl-delete ((t (:inherit nil :background "#ff0000" :foreground "#ff0000"))))
+     '(diff-hl-change ((t (:inherit nil :background "#deae3e" :foreground "#deae3e"))))
+
      ;; tango-plus
      ;; '(font-lock-keyword-face ((t (:weight normal))))
      ;; '(font-lock-comment-face ((t (:slant normal))))
@@ -1038,7 +1049,7 @@
       :init (load-theme 'brin t))
   #+END_SRC
 
-  #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp :tangle no
     (use-package nord-theme
       :ensure t
       :init (load-theme 'nord t))
@@ -1052,12 +1063,11 @@
       :ensure t)
   #+END_SRC
 
-  #+BEGIN_SRC emacs-lisp :tangle no
+  #+BEGIN_SRC emacs-lisp
     (use-package tango-plus-theme
       :ensure t
       :init (load-theme 'tango-plus t))
   #+END_SRC
-
 
   Mode line
 
@@ -1135,6 +1145,23 @@
         (custom-theme-set-faces
          'user
          '(rainbow-delimiters-unmatched-face ((t (:inherit error :background "#f00")))))))
+  #+END_SRC
+
+  #+BEGIN_SRC emacs-lisp :tangle no
+    (use-package diff-hl
+      :defer 1
+      :ensure t
+      :init (add-hook 'after-init-hook #'global-diff-hl-mode)
+      :preface
+      (progn
+        (define-fringe-bitmap 'td/diff-hl-bmp [#b11000000] nil nil '(top t))
+        (defun td/diff-hl-bmp (type pos) 'td/diff-hl-bmp)
+
+        (setq diff-hl-draw-borders nil
+              diff-hl-fringe-bmp-function #'td/diff-hl-bmp)
+
+        (defun diff-hl-overlay-modified (ov after-p beg end &optional len)
+          "Markers disappear and reapear is kind of annoying to me.")))
   #+END_SRC
 
 

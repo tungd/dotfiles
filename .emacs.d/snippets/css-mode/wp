@@ -1,15 +1,15 @@
 # -*- mode: snippet -*-
-# name: wordpress
-# key: wordpress
+# name: Wordpress Header
+# key: wp
 # --
 /*
 Theme Name: $1
 Theme URI: http$2
-Description: Custom theme for $3
+Description: Custom theme for http$2
 Author: Tung Dao
 Author URI: https://tungdao.com
-Version: 0.1
+Version: 1.0
+${3:Template: ${4:parenttheme}}
 */
 
-/** THIS IS PURELY FOR INFORMATION **/
 $0
