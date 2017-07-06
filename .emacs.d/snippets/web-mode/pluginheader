@@ -1,0 +1,19 @@
+# -*- mode: snippet -*-
+# name: pluginheader
+# key: pluginheader
+# --
+<?php
+/**
+ * Plugin Name: $1
+ * Plugin URI:  ${2:https://tungdao.com}
+ * Description: $1
+ * Version:     0.0.1
+ * Author:      ${3:Tung Dao <me@tungdao.com>}
+ * Author URI:  ${4:https://tungdao.com}
+ * License:     Apache-2.0
+ * License URI: https://www.apache.org/licenses/LICENSE-2.0
+ */
+
+defined('ABSPATH') or die();
+
+$0

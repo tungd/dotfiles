@@ -15,7 +15,7 @@
  '(fci-rule-color "#343d46")
  '(package-selected-packages
    (quote
-    (diff-hl toml-mode org-board nord-theme swift-mode exec-path-from-shell alchemist elixir-mode golden-ratio undo-tree fish-mode php-mode go-eldoc company-go go-mode docker-tramp rainbow-mode yasnippet yaml-mode wgrep-ag web-mode use-package tango-plus-theme sublime-themes smex smartparens smart-mode-line rainbow-delimiters pyvenv purescript-mode psc-ide projectile ob-http nlinum nix-mode nginx-mode markdown-mode magit intero indent-guide htmlize expand-region emmet-mode dumb-jump dockerfile-mode crux counsel comment-dwim-2 color-theme-sanityinc-tomorrow better-defaults base16-theme anzu ag)))
+    (py-isort ivy-historian pydoc evil-visualstar evil-visualstar-mode evil-surround evil shackle popup-switcher diff-hl toml-mode org-board nord-theme swift-mode exec-path-from-shell alchemist elixir-mode golden-ratio undo-tree fish-mode php-mode go-eldoc company-go go-mode docker-tramp rainbow-mode yasnippet yaml-mode wgrep-ag web-mode use-package tango-plus-theme sublime-themes smex smartparens smart-mode-line rainbow-delimiters pyvenv purescript-mode psc-ide projectile ob-http nlinum nix-mode nginx-mode markdown-mode magit intero indent-guide htmlize expand-region emmet-mode dumb-jump dockerfile-mode crux counsel comment-dwim-2 color-theme-sanityinc-tomorrow better-defaults base16-theme anzu ag)))
  '(pos-tip-background-color "#36473A")
  '(pos-tip-foreground-color "#FFFFC8")
  '(safe-local-variable-values
@@ -52,6 +52,9 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(diff-hl-change ((t (:inherit nil :background "#deae3e" :foreground "#deae3e"))))
+ '(diff-hl-delete ((t (:inherit nil :background "#ff0000" :foreground "#ff0000"))))
+ '(diff-hl-insert ((t (:inherit nil :background "#81af34" :foreground "#81af34"))))
  '(font-lock-comment-delimiter-face ((t (:slant normal))))
  '(font-lock-comment-face ((t (:slant normal))))
  '(font-lock-constant-face ((t (:slant normal))))

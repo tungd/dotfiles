@@ -171,6 +171,28 @@
               ("C-c i" . counsel-imenu)))
    #+END_SRC
 
+   Use =historian.el= to sort ivy completion based on frequency - similar to smex.
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package ivy-historian
+       :ensure t
+       :defer t
+       :init (add-hook 'after-init-hook 'ivy-historian-mode))
+   #+END_SRC
+
+
+* Window Management
+
+  #+BEGIN_SRC emacs-lisp :tangle no
+    (use-package shackle
+      :ensure t
+      :init (add-hook 'after-init-hook 'shackle-mode)
+      :config
+      (setq shackle-default-alignment 'below
+            shackle-default-rule
+            '((compilation-mode :align 'below))))
+  #+END_SRC
+
 
 * General Editing
 
@@ -253,6 +275,26 @@
                  (shell-quote-argument (buffer-file-name))))))
 
     (add-hook 'after-save-hook #'td/after-save-auto-chmod)
+  #+END_SRC
+
+  I was a pretty die-hard Vim fanboy, let's bring back the memory.
+
+  #+BEGIN_SRC emacs-lisp
+    (use-package evil
+      :ensure t
+      :init (evil-mode t)
+      :config
+      (progn
+        (setq evil-cross-lines t
+              evil-ex-substitute-global t)))
+
+    (use-package evil-surround
+      :ensure t
+      :init (global-evil-surround-mode t))
+
+    (use-package evil-visualstar
+      :ensure t
+      :init (global-evil-visualstar-mode))
   #+END_SRC
 
 ** Search and replace
@@ -461,7 +503,8 @@
      (use-package recentf
        :defer t
        :config
-       (setq recentf-exclude
+       (setq recentf-max-saved-items 128
+             recentf-exclude
              '("/auto-install/" ".recentf" "/repos/" "/elpa/"
                "\\.mime-example" "\\.ido.last" "COMMIT_EDITMSG"
                ".gz" "~$" "/tmp/" "/ssh:" "/sudo:" "/scp:")))
@@ -469,6 +512,7 @@
 
 
 * Shell and remote
+
 ** EShell
 
    #+BEGIN_SRC emacs-lisp
@@ -591,8 +635,7 @@
      (use-package magit
        :ensure t
        :config
-       (setq magit-display-buffer-function
-             #'magit-display-buffer-fullframe-status-v1))
+       (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
    #+END_SRC
 
 ** Compile
@@ -605,6 +648,15 @@
    #+BEGIN_SRC emacs-lisp
      (setq-default compilation-scroll-output 'first-error)
      (bind-key "C-c m" #'recompile)
+
+     (defun td/compilation-hide-window-on-finish (buffer string)
+       (if (and (string-match "compilation" (buffer-name buffer))
+                (string-match "finished" string)
+                (not (with-current-buffer buffer
+                       (search-forward "warning" nil t))))
+           (run-with-timer 1 nil #'delete-window (get-buffer-window buffer))))
+
+     (add-hook 'compilation-finish-functions #'td/compilation-hide-window-on-finish)
    #+END_SRC
 
 ** Web Development
@@ -615,13 +667,13 @@
    #+BEGIN_SRC emacs-lisp
      (use-package web-mode
        :ensure t
-       :defer t
        :mode (("\\.html" . web-mode)
               ("\\.j2" . web-mode)
               ("\\.jinja2" . web-mode)
-              ("\\.php" . web-mode)
+              ;("\\.php" . web-mode)
               ("\\.tpl" . web-mode)
               ("\\.erb" . web-mode)
+              ("\\.tag" . web-mode)
               ("\\.mustache" . web-mode))
        :init (add-hook 'web-mode-hook #'emmet-mode)
        :config
@@ -632,7 +684,9 @@
                web-mode-css-indent-offset 2
                web-mode-code-indent-offset 2
                web-mode-script-padding 2
-               web-mode-style-padding 2)))
+               web-mode-style-padding 2
+               web-mode-engines-alist '(("riot" . "\\.tag\\'")))
+         ))
    #+END_SRC
 
    Also, I can't live without Emmet.
@@ -680,6 +734,16 @@
      (bind-key "C-M-=" #'td/format-html-attributes)
    #+END_SRC
 
+** PHP
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package php-mode
+       :ensure t
+       :mode (("\\.php" . php-mode))
+       :config
+       (setq php-mode-coding-style 'drupal))
+   #+END_SRC
+
 ** CSS
 
    #+BEGIN_SRC emacs-lisp
@@ -722,6 +786,11 @@
    #+END_SRC
 
    #+BEGIN_SRC emacs-lisp
+     (use-package pydoc
+       :ensure t)
+   #+END_SRC
+
+   #+BEGIN_SRC emacs-lisp
      (use-package python
        :mode (("\\.py$" . python-mode)
               ("\\.waf$" . python-mode))
@@ -732,6 +801,13 @@
            (interactive)
            (let ((default-directory (projectile-project-root)))
              (call-interactively 'run-python)))))
+   #+END_SRC
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package py-isort
+       :ensure t
+       :defer t
+       :init (add-hook 'before-save-hook 'py-isort-before-save))
    #+END_SRC
 
 ** Haskell
@@ -870,6 +946,7 @@
    #+BEGIN_SRC emacs-lisp
      (use-package org
        :ensure t
+       :bind (("C-c o c" . org-occur-in-agenda-files))
        :config
        (setq org-directory "~/Desktop/"
              org-default-notes-file (expand-file-name "inbox.org" org-directory)
@@ -950,14 +1027,27 @@
           (http . t))))
    #+END_SRC
 
+** Spell checking
 
-** Stuffs to look at when I have time
+   #+BEGIN_SRC emacs-lisp
+     (when (executable-find "aspell")
+       (use-package ispell
+         :bind ("<f8>" . ispell-word)
+         :init (setq-default ispell-program-name "aspell"
+                             ispell-extra-args '("--sug-mode=ultra" "--lang=en_US" "--personal=~/.emacs.d/dictionary")
+                             ispell-skip-html t
+                             ispell-silently-savep t
+                             ispell-really-aspell t))
 
-*** TODO https://github.com/bard/org-dashboard
-*** TODO https://github.com/abo-abo/org-download
-*** TODO https://github.com/myuhe/org-gcal.el
-*** TODO https://melpa.org/#/org-mac-link
-*** TODO https://www.emacswiki.org/emacs/OutlineMode
+       (use-package flyspell
+         :defer t
+         :init (add-hook 'org-mode-hook 'flyspell-mode)
+         ;; :config
+         ;; (progn
+         ;;   (require 'flyspell-ignore-faces)
+         ;;   (put 'org-mode 'flyspell-mode-predicate 'td/flyspell-check-p))
+         ))
+   #+END_SRC
 
 
 * Look and feel
@@ -984,7 +1074,7 @@
      default-frame-alist
      '((font . "Monaco 14")
        ;(font . "PT Mono 14")
-       (top . 0) (left . 640)
+       (top . 0) (left . 480)
        (width . 100) (height . 64)
        (vertical-scroll-bars . nil)
        (menu-bar-lines . 0)
@@ -1147,11 +1237,13 @@
          '(rainbow-delimiters-unmatched-face ((t (:inherit error :background "#f00")))))))
   #+END_SRC
 
-  #+BEGIN_SRC emacs-lisp :tangle no
+  Display change marker based on =git=. I usually turn this off because it is
+  kind of distracting, but it is really helpful sometimes.
+
+  #+BEGIN_SRC emacs-lisp
     (use-package diff-hl
       :defer 1
       :ensure t
-      :init (add-hook 'after-init-hook #'global-diff-hl-mode)
       :preface
       (progn
         (define-fringe-bitmap 'td/diff-hl-bmp [#b11000000] nil nil '(top t))

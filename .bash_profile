@@ -136,7 +136,6 @@ if [ -d "$HOME/Applications/Emacs.app/Contents/MacOS" ]; then
     export PATH="$HOME/Applications/Emacs.app/Contents/MacOS":$PATH
 fi
 
-
 export RBENV_ROOT="$HOME/.rbenv"
 export PATH="$RBENV_ROOT/bin:$PATH"
 if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
@@ -146,6 +145,6 @@ export PATH="$PYENV_ROOT/bin:$PATH"
 if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
 
 . $LOCAL/vendor/z.sh
-eval $(/usr/libexec/path_helper -s)
 
 test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
+source ~/.autoenv/activate.sh
