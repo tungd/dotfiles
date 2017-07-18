@@ -245,7 +245,7 @@
 
   Automatically save buffers when focus out:
 
-  #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp :tangle no
     (defun td/save-all-buffers ()
       (interactive)
       (save-some-buffers t))
@@ -1072,8 +1072,9 @@
     (setq-default
      fringes-outside-margins t
      default-frame-alist
-     '((font . "Monaco 14")
+     '(;(font . "Monaco 14")
        ;(font . "PT Mono 14")
+       (font . "Source Code Pro 14")
        (top . 0) (left . 480)
        (width . 100) (height . 64)
        (vertical-scroll-bars . nil)
@@ -1139,7 +1140,7 @@
       :init (load-theme 'brin t))
   #+END_SRC
 
-  #+BEGIN_SRC emacs-lisp :tangle no
+  #+BEGIN_SRC emacs-lisp
     (use-package nord-theme
       :ensure t
       :init (load-theme 'nord t))
@@ -1153,7 +1154,7 @@
       :ensure t)
   #+END_SRC
 
-  #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp :tangle no
     (use-package tango-plus-theme
       :ensure t
       :init (load-theme 'tango-plus t))
@@ -1164,7 +1165,7 @@
   #+BEGIN_SRC emacs-lisp
     (use-package smart-mode-line
       :ensure t
-      :preface (setq-default sml/theme nil)
+      :preface (setq-default sml/theme 'respectful)
       :init (sml/setup))
   #+END_SRC
 
@@ -1216,6 +1217,7 @@
     (use-package indent-guide
       :ensure t
       :commands (indent-guide-mode)
+      :diminish indent-guide-mode
       :init
       (add-hook 'python-mode-hook #'indent-guide-mode)
       (add-hook 'yaml-mode-hook #'indent-guide-mode)
