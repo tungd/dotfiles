@@ -57,7 +57,7 @@ function git_prompt_short_sha() {
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 function env_prompt_info() {
   if [ ! -z "$VIRTUAL_ENV" ]; then
-    echo -ne "$LIGHT_BLUE[pyvenv:$(basename $VIRTUAL_ENV)]$END"
+    echo -ne "$BLUE[pyvenv:$(basename $VIRTUAL_ENV)]$END"
   fi
 }
 
@@ -70,6 +70,7 @@ export PS1="\[\033[G\]
 $RED\u$END@$YELLOW\H$END in $GREEN\w$END \$(git_prompt_info) \$(env_prompt_info)
 › "
 
+export ENV=development
 export LOCAL=$HOME/.local
 export PATH=$LOCAL/bin:$LOCAL/sbin:$PATH
 export GEMOPTS='--no-rdoc --no-ri'
@@ -77,6 +78,9 @@ export GOPATH=$HOME/Projects/go
 export PATH=$GOPATH/bin:$PATH
 export PATH=$HOME/Library/Python/2.7/bin/:$PATH
 export PATH=$HOME/.yarn/bin:$PATH
+export PGHOST=127.0.0.1
+export PGPASS=postgres
+export PGUSER=postgres
 
 
 alias g=git
@@ -147,4 +151,3 @@ if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
 . $LOCAL/vendor/z.sh
 
 test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
-source ~/.autoenv/activate.sh

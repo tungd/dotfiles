@@ -12,7 +12,15 @@ echo >> ~/.ssh/config <<EOF
 Host *
     IdentityFile ~/.ssh/id_rsa
     AddKeysToAgent yes
+    UseKeychain yes
 EOF
 
 mkdir -p ~/.local/vendor
 curl -L https://raw.githubusercontent.com/rupa/z/master/z.sh > ~/.local/vendor/z.sh
+
+sudo pkgin install perl-5.26.0nb2 ImageMagick postgresql96-client the_silver_searcher mosh
+
+mkdir -p ~/.local/bin
+curl -sSL https://get.haskellstack.org/ | sh -s - -d ~/.local/bin/
+
+curl -o- -L https://yarnpkg.com/install.sh | bash
