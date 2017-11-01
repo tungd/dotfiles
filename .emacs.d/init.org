@@ -678,14 +678,13 @@
        :init (add-hook 'web-mode-hook #'emmet-mode)
        :config
        (progn
-         (add-hook 'web-mode-hook #'turn-off-auto-fill)
-
          (setq web-mode-markup-indent-offset 2
                web-mode-css-indent-offset 2
                web-mode-code-indent-offset 2
                web-mode-script-padding 2
-               web-mode-style-padding 2
-               web-mode-engines-alist '(("riot" . "\\.tag\\'")))
+               web-mode-style-padding 2)
+
+         (add-hook 'web-mode-hook #'turn-off-auto-fill)
          ))
    #+END_SRC
 
@@ -776,6 +775,11 @@
              js-indent-first-init 'dynamic
              js-switch-indent-offset 2
              js-enabled-frameworks '(javascript)))
+
+     (use-package add-node-modules-path
+       :ensure t
+       :defer t
+       :init (add-hook 'js-mode-hook #'add-node-modules-path))
    #+END_SRC
 
 ** Python

@@ -1,0 +1,8 @@
+parser: babel-eslint
+globals:
+  window: true
+  console: true
+  document: true
+  FileReader: true
+rules:
+  semi: off
