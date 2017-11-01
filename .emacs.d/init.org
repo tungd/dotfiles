@@ -1099,8 +1099,7 @@
        (width . 100) (height . 64)
        (vertical-scroll-bars . nil)
        (menu-bar-lines . 0)
-       (tool-bar-lines . 0)
-       (right-fringe . 0)))
+       (tool-bar-lines . 0)))
 
     (blink-cursor-mode -1)
     ;(setq-default line-spacing 4)
@@ -1127,7 +1126,8 @@
      'user
      '(vertical-border ((t (:foreground "#000" :background "#000"))))
 
-     '(linum ((t (:inherit font-lock-comment-face :height 110))))
+     '(line-number ((t (:inherit font-lock-comment-face :height 110))))
+     '(line-number-current-line ((t (:inherit line-number :foreground "#222" :background "#ddd"))))
      `(fringe ((t (:inherit font-lock-comment-face))))
 
      '(highlight ((t (:inherit region))))
@@ -1138,23 +1138,23 @@
      '(diff-hl-change ((t (:inherit nil :background "#deae3e" :foreground "#deae3e"))))
 
      ;; tango-plus
-     ;; '(font-lock-keyword-face ((t (:weight normal))))
-     ;; '(font-lock-comment-face ((t (:slant normal))))
-     ;; '(font-lock-comment-delimiter-face ((t (:slant normal))))
-     ;; '(font-lock-string-face ((t (:slant normal))))
-     ;; '(font-lock-constant-face ((t (:slant normal))))
+     '(font-lock-keyword-face ((t (:weight normal))))
+     '(font-lock-comment-face ((t (:slant normal))))
+     '(font-lock-comment-delimiter-face ((t (:slant normal))))
+     '(font-lock-string-face ((t (:slant normal))))
+     '(font-lock-constant-face ((t (:slant normal))))
 
      ;; brin
-     '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
-     '(link ((t (:inherit font-lock-function-name-face :underline t))))
-     '(minibuffer-prompt ((t (:inherit font-lock-function-name-face))))
+     ;; '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
+     ;; '(link ((t (:inherit font-lock-function-name-face :underline t))))
+     ;; '(minibuffer-prompt ((t (:inherit font-lock-function-name-face))))
      )
   #+END_SRC
 
   My theme of choice is *Brin* from the exellent [[https://github.com/owainlewis/emacs-color-themes][sublime-themes]]
   collection.
 
-  #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp :tangle no
     (use-package sublime-themes
       :ensure t
       :init (load-theme 'brin t))
@@ -1174,7 +1174,7 @@
       :ensure t)
   #+END_SRC
 
-  #+BEGIN_SRC emacs-lisp :tangle no
+  #+BEGIN_SRC emacs-lisp
     (use-package tango-plus-theme
       :ensure t
       :init (load-theme 'tango-plus t))
@@ -1185,7 +1185,7 @@
   #+BEGIN_SRC emacs-lisp
     (use-package smart-mode-line
       :ensure t
-      :preface (setq-default sml/theme 'dark)
+      :preface (setq-default sml/theme nil)
       :init (sml/setup))
   #+END_SRC
 
@@ -1200,16 +1200,20 @@
 
   #+BEGIN_SRC emacs-lisp
     (column-number-mode t)
+    (line-number-mode t)
 
-    (use-package nlinum
-      :ensure t
-      :init
-      (when (display-graphic-p)
-        (add-hook 'prog-mode-hook #'nlinum-mode))
-      :config
-      (setq nlinum-format " %3d ")
-      (advice-add 'web-mode-fold-or-unfold :after 'nlinum--flush)
-      (set-face-attribute 'fringe nil :background (face-background 'linum)))
+    (setq-default display-line-numbers-width 3)
+    (add-hook 'prog-mode-hook #'display-line-numbers-mode)
+
+    ;; (use-package nlinum
+    ;;   :ensure t
+    ;;   :init
+    ;;   (when (display-graphic-p)
+    ;;     (add-hook 'prog-mode-hook #'nlinum-mode))
+    ;;   :config
+    ;;   (setq nlinum-format " %3d ")
+    ;;   (advice-add 'web-mode-fold-or-unfold :after 'nlinum--flush)
+    ;;   (set-face-attribute 'fringe nil :background (face-background 'linum)))
   #+END_SRC
 
   Window spliting
