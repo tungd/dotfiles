@@ -1,12 +1,19 @@
 #!/bin/sh
 
-URL=https://github.com/purescript/purescript/releases/download/v0.11.4/macos.tar.gz
+PURS_VERSION="v0.11.6"
+PSC_PACKAGE_VERSION="v0.2.3"
 
 pushd /tmp
 
-curl -LO $URL
-tar vxzf macos.tar.gz
+curl -LO https://github.com/purescript/purescript/releases/download/$PURS_VERSION/macos.tar.gz
 # TODO verify checksum
+tar vxzf macos.tar.gz
 cp -v purescript/* $HOME/.local/bin
+
+
+curl -LO https://github.com/purescript/psc-package/releases/download/$PSC_PACKAGE_VERSION/macos.tar.gz
+tar vxzf macos.tar.gz
+cp -v psc-package/psc-package $HOME/.local/bin
+
 
 popd
