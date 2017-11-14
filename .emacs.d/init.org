@@ -613,6 +613,12 @@
                     ("<tab>" . company-complete-common-or-cycle)
                     ("C-n" . company-select-next-or-abort)
                     ("C-p" . company-select-previous-or-abort))))
+
+
+     (use-package company-statistics
+       :ensure t
+       :defer t
+       :init (add-hook 'after-init-hook #'company-statistics-mode))
    #+END_SRC
 
 ** Error checking
@@ -912,12 +918,6 @@
    #+END_SRC
 
    #+BEGIN_SRC emacs-lisp
-     (use-package fish-mode
-       :ensure t
-       :mode ("\\.fish$" . fish-mode))
-   #+END_SRC
-
-   #+BEGIN_SRC emacs-lisp
      (use-package nginx-mode
        :ensure t
        :mode (".*nginx.*\\.conf$" . nginx-mode))
@@ -1042,9 +1042,6 @@
 
      (use-package ob-http
        :ensure t)
-
-     (use-package ob-ipython
-       :ensure t)
    #+END_SRC
 
 ** Spell checking
@@ -1090,7 +1087,7 @@
 
   #+BEGIN_SRC emacs-lisp
     (setq-default
-     fringes-outside-margins t
+     ;; fringes-outside-margins t
      default-frame-alist
      '(;(font . "Monaco 14")
        ;(font . "Source Code Pro 14")
@@ -1127,7 +1124,6 @@
      '(vertical-border ((t (:foreground "#000" :background "#000"))))
 
      '(line-number ((t (:inherit font-lock-comment-face :height 110))))
-     '(line-number-current-line ((t (:inherit line-number :foreground "#222" :background "#ddd"))))
      `(fringe ((t (:inherit font-lock-comment-face))))
 
      '(highlight ((t (:inherit region))))
@@ -1138,23 +1134,24 @@
      '(diff-hl-change ((t (:inherit nil :background "#deae3e" :foreground "#deae3e"))))
 
      ;; tango-plus
-     '(font-lock-keyword-face ((t (:weight normal))))
-     '(font-lock-comment-face ((t (:slant normal))))
-     '(font-lock-comment-delimiter-face ((t (:slant normal))))
-     '(font-lock-string-face ((t (:slant normal))))
-     '(font-lock-constant-face ((t (:slant normal))))
+     ;; '(font-lock-keyword-face ((t (:weight normal))))
+     ;; '(font-lock-comment-face ((t (:slant normal))))
+     ;; '(font-lock-comment-delimiter-face ((t (:slant normal))))
+     ;; '(font-lock-string-face ((t (:slant normal))))
+     ;; '(font-lock-constant-face ((t (:slant normal))))
 
      ;; brin
-     ;; '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
-     ;; '(link ((t (:inherit font-lock-function-name-face :underline t))))
-     ;; '(minibuffer-prompt ((t (:inherit font-lock-function-name-face))))
+     '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
+     '(link ((t (:inherit font-lock-function-name-face :underline t))))
+     '(minibuffer-prompt ((t (:inherit font-lock-function-name-face))))
+     '(line-number-current-line ((t (:inherit line-number :foreground "#8993a9" :background "#566076"))))
      )
   #+END_SRC
 
   My theme of choice is *Brin* from the exellent [[https://github.com/owainlewis/emacs-color-themes][sublime-themes]]
   collection.
 
-  #+BEGIN_SRC emacs-lisp :tangle no
+  #+BEGIN_SRC emacs-lisp
     (use-package sublime-themes
       :ensure t
       :init (load-theme 'brin t))
@@ -1174,7 +1171,7 @@
       :ensure t)
   #+END_SRC
 
-  #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp :tangle no
     (use-package tango-plus-theme
       :ensure t
       :init (load-theme 'tango-plus t))
