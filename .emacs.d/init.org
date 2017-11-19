@@ -1086,7 +1086,7 @@
     (setq-default
      fringes-outside-margins t
      default-frame-alist
-     '((left-fringe . 8) (right-fringe . 2)
+     '((left-fringe . 8) (right-fringe . 4)
        (border-width . 0) (internal-border-width . 0)
        (font . "Menlo 12")
        ;(font . "Monaco 14")
@@ -1265,7 +1265,7 @@
       :ensure t
       :preface
       (progn
-        (define-fringe-bitmap 'td/diff-hl-bmp [#b11000000] 1 8 '(top t))
+        (define-fringe-bitmap 'td/diff-hl-bmp [#b11110000] 1 8 '(top t))
         (defun td/diff-hl-bmp-fn (type pos) 'td/diff-hl-bmp)
 
         (setq diff-hl-draw-borders nil

@@ -30,16 +30,21 @@ shopt -s histappend
 export HISTCONTROL=ignoredups
 export HISTFILESIZE=65536
 export HISTIGNORE="ls:[bf]g:exit:..:...:ll:lla"
-export PROMPT_COMMAND="history -a;$PROMPT_COMMAND"
+
+# export PROMPT_COMMAND="history -a;$PROMPT_COMMAND"
+# if [[ "$TERM" = "eterm-color" ]]; then
+#   unset PROMPT_COMMAND
+# fi
+
 alias h=history
 hf() {
   grep "$@ $HOME/.bash_history"
 }
 
-function xtitle {
-  unset PROMPT_COMMAND
-  echo -ne "\033]0;$1\007"
-}
+# function xtitle {
+#   unset PROMPT_COMMAND
+#   echo -ne "\033]0;$1\007"
+# }
 
 # git prompt
 function git_prompt_info() {
@@ -133,11 +138,11 @@ faviconize() {
 }
 
 if [ -d "/Applications/VMware Fusion.app/Contents/Library" ]; then
-    export PATH="/Applications/VMware Fusion.app/Contents/Library":$PATH
+  export PATH="/Applications/VMware Fusion.app/Contents/Library":$PATH
 fi
 
 if [ -d "$HOME/Applications/Emacs.app/Contents/MacOS" ]; then
-    export PATH="$HOME/Applications/Emacs.app/Contents/MacOS":$PATH
+  export PATH="$HOME/Applications/Emacs.app/Contents/MacOS":$PATH
 fi
 
 export RBENV_ROOT="$HOME/.rbenv"
@@ -148,6 +153,9 @@ export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
 
-. $LOCAL/vendor/z.sh
-
-test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
+if [[ "$TERM" != "eterm-color" ]]; then
+  . $LOCAL/vendor/z.sh
+  test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
+else
+  unset PROMPT_COMMAND
+fi
