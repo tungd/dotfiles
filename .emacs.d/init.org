@@ -415,7 +415,6 @@
              ("M-]" . sp-select-next-thing))
       :functions (sp-pair)
       :config
-      (set-face-attribute 'sp-pair-overlay-face nil :inherit 'region)
       (sp-pair "{" nil
                :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
       (sp-pair "[" nil
@@ -613,7 +612,6 @@
                     ("<tab>" . company-complete-common-or-cycle)
                     ("C-n" . company-select-next-or-abort)
                     ("C-p" . company-select-previous-or-abort))))
-
 
      (use-package company-statistics
        :ensure t
@@ -1086,19 +1084,25 @@
 
   #+BEGIN_SRC emacs-lisp
     (setq-default
-     ;; fringes-outside-margins t
+     fringes-outside-margins t
      default-frame-alist
-     '(;(font . "Monaco 14")
+     '((left-fringe . 8) (right-fringe . 2)
+       (border-width . 0) (internal-border-width . 0)
+       (font . "Menlo 12")
+       ;(font . "Monaco 14")
        ;(font . "Source Code Pro 14")
-       (font . "Fira Code Retina 14")
+       ;(font . "Fira Code Retina 13")
        (top . 0) (left . 480)
-       (width . 100) (height . 64)
+       (width . 128) (height . 96)
        (vertical-scroll-bars . nil)
        (menu-bar-lines . 0)
        (tool-bar-lines . 0)))
 
     (blink-cursor-mode -1)
-    ;(setq-default line-spacing 4)
+    (setq-default
+     line-spacing 2
+    ;;  cursor-type '(bar . 4)
+    )
   #+END_SRC
 
   Enable ligatures, only available in railwaycat Mac port.
@@ -1122,15 +1126,15 @@
      'user
      '(vertical-border ((t (:foreground "#000" :background "#000"))))
 
-     '(line-number ((t (:inherit font-lock-comment-face :height 110))))
+     '(line-number ((t (:inherit font-lock-comment-face :height 100))))
      `(fringe ((t (:inherit font-lock-comment-face))))
 
      '(highlight ((t (:inherit region))))
      '(sp-pair-overlay-face ((t (:inherit region))))
 
-     '(diff-hl-insert ((t (:inherit nil :background "#81af34" :foreground "#81af34"))))
-     '(diff-hl-delete ((t (:inherit nil :background "#ff0000" :foreground "#ff0000"))))
-     '(diff-hl-change ((t (:inherit nil :background "#deae3e" :foreground "#deae3e"))))
+     ;; '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#81af34"))))
+     ;; '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#ff0000"))))
+     ;; '(diff-hl-change ((t (:inherit nil :background nil :foreground "#deae3e"))))
 
      ;; tango-plus
      ;; '(font-lock-keyword-face ((t (:weight normal))))
@@ -1140,23 +1144,35 @@
      ;; '(font-lock-constant-face ((t (:slant normal))))
 
      ;; brin
-     '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
-     '(link ((t (:inherit font-lock-function-name-face :underline t))))
-     '(minibuffer-prompt ((t (:inherit font-lock-function-name-face))))
-     '(line-number-current-line ((t (:inherit line-number :foreground "#8993a9" :background "#566076"))))
+     ;; '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
+     ;; '(link ((t (:inherit font-lock-function-name-face :underline t))))
+     ;; '(minibuffer-prompt ((t (:inherit font-lock-function-name-face))))
+     ;; '(line-number-current-line ((t (:inherit line-number :foreground "#8993a9" :background "#566076"))))
+
+     ;; nord
+     '(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
+     '(highlight-numbers-number ((t (:inherit nil :foreground "#B48EAD")))) ; nord15
+     '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#A3BE8C"))))
+     '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#BF616A"))))
+     '(diff-hl-change ((t (:inherit nil :background nil :foreground "#EBCB8B"))))
      )
+
+    (use-package highlight-numbers
+      :ensure t
+      :defer t
+      :init (add-hook 'prog-mode-hook #'highlight-numbers-mode))
   #+END_SRC
 
   My theme of choice is *Brin* from the exellent [[https://github.com/owainlewis/emacs-color-themes][sublime-themes]]
   collection.
 
-  #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp :tangle no
     (use-package sublime-themes
       :ensure t
       :init (load-theme 'brin t))
   #+END_SRC
 
-  #+BEGIN_SRC emacs-lisp :tangle no
+  #+BEGIN_SRC emacs-lisp
     (use-package nord-theme
       :ensure t
       :init (load-theme 'nord t))
@@ -1181,7 +1197,7 @@
   #+BEGIN_SRC emacs-lisp
     (use-package smart-mode-line
       :ensure t
-      :preface (setq-default sml/theme nil)
+      ;; :preface (setq-default sml/theme nil)
       :init (sml/setup))
   #+END_SRC
 
@@ -1200,25 +1216,6 @@
 
     (setq-default display-line-numbers-width 3)
     (add-hook 'prog-mode-hook #'display-line-numbers-mode)
-
-    ;; (use-package nlinum
-    ;;   :ensure t
-    ;;   :init
-    ;;   (when (display-graphic-p)
-    ;;     (add-hook 'prog-mode-hook #'nlinum-mode))
-    ;;   :config
-    ;;   (setq nlinum-format " %3d ")
-    ;;   (advice-add 'web-mode-fold-or-unfold :after 'nlinum--flush)
-    ;;   (set-face-attribute 'fringe nil :background (face-background 'linum)))
-  #+END_SRC
-
-  Window spliting
-
-  #+BEGIN_SRC emacs-lisp :tangle no
-    (use-package golden-ratio
-      :ensure t
-      :diminish golden-ratio-mode
-      :init (add-hook 'after-init-hook #'golden-ratio-mode))
   #+END_SRC
 
   The default line continuation indicator is too standout and distracting for me.
@@ -1268,20 +1265,31 @@
       :ensure t
       :preface
       (progn
-        (define-fringe-bitmap 'td/diff-hl-bmp [#b11000000] nil nil '(top t))
-        (defun td/diff-hl-bmp (type pos) 'td/diff-hl-bmp)
+        (define-fringe-bitmap 'td/diff-hl-bmp [#b11000000] 1 8 '(top t))
+        (defun td/diff-hl-bmp-fn (type pos) 'td/diff-hl-bmp)
 
         (setq diff-hl-draw-borders nil
-              diff-hl-fringe-bmp-function #'td/diff-hl-bmp)
+              diff-hl-side 'right
+              diff-hl-fringe-bmp-function #'td/diff-hl-bmp-fn)
 
         (defun diff-hl-overlay-modified (ov after-p beg end &optional len)
-          "Markers disappear and reapear is kind of annoying to me.")))
+          "Markers disappear and reapear is kind of annoying to me.")
+
+        (global-diff-hl-mode t)))
   #+END_SRC
 
 
 * Investigate
 
-** https://melpa.org/?utm_source=dlvr.it&utm_medium=twitter#/copy-file-on-save
+* Misc
+
+  #+BEGIN_SRC emacs-lisp
+    (defun td/refresh-front-most-tab ()
+      (interactive)
+      (shell-command "osascript -e 'tell application \"Google Chrome\" to reload active tab of window 1'"))
+
+    (bind-key* "C-c b r" #'td/refresh-front-most-tab)
+  #+END_SRC
 
 
 * Init file generation
