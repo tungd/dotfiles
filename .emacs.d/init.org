@@ -1,4 +1,4 @@
-#+title: Tung Dao
+#+title: Tung Dao's Emacs Setup
 #+startup: overview
 #+property: header-args :tangle yes :results silent
 
@@ -431,7 +431,8 @@
     (defun td/mark-line-dwim ()
       (interactive)
       (call-interactively #'beginning-of-line)
-      (call-interactively #'set-mark-command))
+      (call-interactively #'set-mark-command)
+      (call-interactively #'end-of-line))
 
     (bind-key "M-C-SPC" #'td/mark-line-dwim)
   #+END_SRC
@@ -457,7 +458,7 @@
        :init
        (progn
          (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
-         (yas-global-mode t))
+         (add-hook 'after-init-hook #'yas-global-mode))
        :config
        (progn
          (setq yas-prompt-functions
@@ -1078,9 +1079,9 @@
   #+END_SRC
 
   Default window configuration: half-left of the screen, no scroll bars, no menu
-  bars, no cursor blinking. And btw, nothing beats the classic Monaco. "Source
-  Code Pro" and "Fira Code" come close, currently I have to use them for bold
-  and ligatures support :(.
+  bars, no cursor blinking. And btw, nothing beats the classic Monaco. "Menlo",
+  "Source Code Pro" and "Fira Code" come close, currently I have to use them for
+  bold and ligatures support :(.
 
   #+BEGIN_SRC emacs-lisp
     (setq-default
@@ -1088,8 +1089,8 @@
      default-frame-alist
      '((left-fringe . 8) (right-fringe . 4)
        (border-width . 0) (internal-border-width . 0)
-       (font . "Menlo 12")
        ;(font . "Monaco 14")
+       (font . "Menlo 12")
        ;(font . "Source Code Pro 14")
        ;(font . "Fira Code Retina 13")
        (top . 0) (left . 480)
@@ -1163,14 +1164,8 @@
       :init (add-hook 'prog-mode-hook #'highlight-numbers-mode))
   #+END_SRC
 
-  My theme of choice is *Brin* from the exellent [[https://github.com/owainlewis/emacs-color-themes][sublime-themes]]
-  collection.
-
-  #+BEGIN_SRC emacs-lisp :tangle no
-    (use-package sublime-themes
-      :ensure t
-      :init (load-theme 'brin t))
-  #+END_SRC
+  My theme of choice now is *Nord*, before that it was *Brin* from the excellent
+  [[https://github.com/owainlewis/emacs-color-themes][sublime-themes]] collection.
 
   #+BEGIN_SRC emacs-lisp
     (use-package nord-theme
@@ -1178,13 +1173,22 @@
       :init (load-theme 'nord t))
   #+END_SRC
 
+  #+BEGIN_SRC emacs-lisp :tangle no
+    (use-package sublime-themes
+      :ensure t
+      :init (load-theme 'brin t))
+  #+END_SRC
+
   I also have an alternate light-theme for backup or use in
-  presentation, which is *base16-github* from [[https://github.com/belak/base16-emacs][base16-themes]] pacakge.
+  presentation, which is *base16-github* from [[https://github.com/belak/base16-emacs][base16-themes]] package.
 
   #+BEGIN_SRC emacs-lisp
     (use-package base16-theme
       :ensure t)
   #+END_SRC
+
+  I also have very good experience with *Tango Plus*. Its philosophy of not
+  getting in the way is interesting.
 
   #+BEGIN_SRC emacs-lisp :tangle no
     (use-package tango-plus-theme
@@ -1281,6 +1285,7 @@
 
 * Investigate
 
+
 * Misc
 
   #+BEGIN_SRC emacs-lisp
@@ -1294,7 +1299,13 @@
 
 * Init file generation
 
-  Where the magic happen!
+  Where the magic happen! (Note: It not showing up on Github preview)
+
+  #+BEGIN_SRC text :tangle no
+    # Local Variables:
+    # eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle)) nil t)
+    # End:
+  #+END_SRC
 
 # Local Variables:
 # eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle)) nil t)
