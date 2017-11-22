@@ -62,17 +62,18 @@ function git_prompt_short_sha() {
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 function env_prompt_info() {
   if [ ! -z "$VIRTUAL_ENV" ]; then
-    echo -ne "$BLUE[pyvenv:$(basename $VIRTUAL_ENV)]$END"
+    echo -ne "$BLUE[venv:$(basename $VIRTUAL_ENV)]$END"
   fi
 }
 
 function todo_prompt_info() {
-  todo=$(ag --nogroup TODO | wc -l | tr -d ' \n') || return
-  echo -ne "[todo:$todo]"
+  ref=$(git symbolic-ref HEAD 2> /dev/null) || return
+  todo=$(ag --py --haskell --nogroup --literal TODO | wc -l | tr -d ' \n') || return
+  echo -ne "$PURPLE[#:$todo]$END"
 }
 
 export PS1="\[\033[G\]
-$RED\u$END@$YELLOW\H$END in $GREEN\w$END \$(git_prompt_info) \$(env_prompt_info)
+$RED\u$END@$YELLOW\H$END in $GREEN\w$END \$(git_prompt_info) \$(env_prompt_info) \$(todo_prompt_info)
 › "
 
 export ENV=development
