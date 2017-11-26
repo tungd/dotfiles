@@ -160,3 +160,6 @@ if [[ "$TERM" != "eterm-color" ]]; then
 else
   unset PROMPT_COMMAND
 fi
+
+# OPAM configuration
+. $HOME/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true
