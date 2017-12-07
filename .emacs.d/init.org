@@ -18,6 +18,7 @@
 
   #+BEGIN_SRC emacs-lisp
     (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
+    (require 'use-package)
   #+END_SRC
 
   Use a dedicate custom file.
