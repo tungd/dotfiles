@@ -19,6 +19,7 @@
   #+BEGIN_SRC emacs-lisp
     (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
     (require 'use-package)
+    (use-package diminish :ensure t)
   #+END_SRC
 
   Use a dedicate custom file.
@@ -287,7 +288,10 @@
       :config
       (progn
         (setq evil-cross-lines t
-              evil-ex-substitute-global t)))
+              evil-ex-substitute-global t)
+
+        (bind-keys :map evil-normal-state-map
+                   ("M-." . xref-find-definitions))))
 
     (use-package evil-surround
       :ensure t
@@ -577,6 +581,13 @@
 
 * Programming
 
+  #+BEGIN_SRC emacs-lisp :tangle no
+    (use-package lsp-mode
+      :ensure t
+      :config
+      (setq lsp-highlight-symbol-at-point nil))
+  #+END_SRC
+
 ** Auto completion
 
    I use auto completion sparingly. Mostly because many of the programing
@@ -596,6 +607,8 @@
            :commands (company-same-mode-buffer-lines)
            :bind ("C-x C-l" . company-same-mode-buffer-lines))
 
+         (use-package company-web :ensure t)
+
          (setq company-minimum-prefix-length 2
                company-require-match nil
                company-idle-delay nil
@@ -605,10 +618,11 @@
                '(company-pseudo-tooltip-unless-just-one-frontend
                  company-echo-metadata-frontend)
                company-backends
-               '((company-dabbrev-code
-                  :with
-                  company-capf
-                  company-yasnippet)))
+               '((company-capf company-dabbrev-code)
+                 :with
+                 company-yasnippet
+                 company-web
+                 company-dict))
 
          (bind-keys :map company-active-map
                     ("<tab>" . company-complete-common-or-cycle)
@@ -778,6 +792,9 @@
    =js-mode= a try
 
    #+BEGIN_SRC emacs-lisp
+     ;; (use-package lsp-javascript-typescript
+     ;;  :ensure t)
+
      (use-package js
        :mode (("\\.js$" . js-mode)
               ("\\.jsx$" . js-jsx-mode)
@@ -787,7 +804,15 @@
        (setq js-indent-level 2
              js-indent-first-init 'dynamic
              js-switch-indent-offset 2
-             js-enabled-frameworks '(javascript)))
+             js-enabled-frameworks '(javascript))
+       ;; :preface
+       ;; (progn
+       ;;   (defun td/setup-js-mode ()
+       ;;     (interactive)
+       ;;     (require 'lsp-javascript-typescript)
+       ;;     (lsp-javascript-typescript-enable))
+       ;;   (add-hook 'js-mode-hook #'td/setup-js-mode))
+       )
 
      (use-package add-node-modules-path
        :ensure t
@@ -808,6 +833,8 @@
    #+END_SRC
 
    #+BEGIN_SRC emacs-lisp
+     ;; (use-package lsp-python :ensure t)
+
      (use-package python
        :mode (("\\.py$" . python-mode)
               ("\\.waf$" . python-mode))
@@ -819,7 +846,15 @@
          (defun td/run-python-with-project-root ()
            (interactive)
            (let ((default-directory (projectile-project-root)))
-             (call-interactively 'run-python)))))
+             (call-interactively 'run-python)))
+
+         ;; (defun td/setup-python-mode ()
+         ;;   (interactive)
+         ;;   (require 'lsp-python)
+         ;;   (lsp-python-enable))
+
+         ;; (add-hook 'python-mode-hook #'td/setup-python-mode)
+         ))
    #+END_SRC
 
    #+BEGIN_SRC emacs-lisp
@@ -836,12 +871,22 @@
    same folk who runs =stack=.
 
    #+BEGIN_SRC emacs-lisp
+     ;; (use-package lsp-haskell :ensure t)
+
      (use-package haskell-mode
        :ensure t
        :mode (("\\.hs$" . haskell-mode))
        :bind (([remap haskell-mode-format-imports] . haskell-sort-imports))
        :config
-       (setq haskell-program-name "stack ghci"))
+       (setq haskell-program-name "stack ghci")
+       :preface
+       ;; (progn
+       ;;   (defun td/setup-haskell-mode ()
+       ;;     (interactive)
+       ;;     (require 'lsp-haskell)
+       ;;     (lsp-haskell-enable))
+       ;;   (add-hook 'haskell-mode-hook #'td/setup-haskell-mode))
+       )
 
      (use-package intero
        :ensure t
@@ -871,7 +916,7 @@
 
 ** Go
 
-   #+BEGIN_SRC emacs-lisp
+   #+BEGIN_SRC emacs-lisp :tangle no
      (use-package go-mode
        :ensure t
        :mode (("\\.go$" . go-mode)))
@@ -1095,7 +1140,7 @@
        (font . "Source Code Pro 14")
        ;(font . "Fira Code Retina 13")
        (top . 0) (left . 480)
-       (width . 128) (height . 96)
+       (width . 96) (height . 96)
        (vertical-scroll-bars . nil)
        (menu-bar-lines . 0)
        (tool-bar-lines . 0)))
