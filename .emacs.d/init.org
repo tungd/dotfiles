@@ -171,6 +171,10 @@
               ("C-M-'" . counsel-git)
               ("M-m" . counsel-M-x)
               ("C-c i" . counsel-imenu)))
+
+     (use-package imenu
+       :config
+       (add-hook 'imenu-after-jump-hook #'recenter-top-bottom))
    #+END_SRC
 
    Use =historian.el= to sort ivy completion based on frequency - similar to smex.
@@ -872,6 +876,10 @@
 
    #+BEGIN_SRC emacs-lisp
      ;; (use-package lsp-haskell :ensure t)
+     (defun td/turn-off-evil-auto-indent ()
+       (setq-local evil-auto-indent nil))
+
+     (add-hook 'haskell-mode-hook #'td/turn-off-evil-auto-indent)
 
      (use-package haskell-mode
        :ensure t
@@ -900,6 +908,8 @@
    I started using PureScript for all my frontend works.
 
    #+BEGIN_SRC emacs-lisp
+     (add-hook 'purescript-mode-hook #'td/turn-off-evil-auto-indent)
+
      (use-package purescript-mode
        :ensure t
        :mode (("\\.purs$" . purescript-mode))

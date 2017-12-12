@@ -1,5 +1,5 @@
 hs.loadSpoon('ReloadConfiguration')
-spoon.ReloadConfiguration:start()
+-- spoon.ReloadConfiguration:start()
 spoon.ReloadConfiguration:bindHotkeys({ reloadConfiguration = {{"option"}, "r"}})
 
 
