@@ -1182,12 +1182,18 @@
     (custom-theme-set-faces
      'user
      '(vertical-border ((t (:foreground "#000" :background "#000"))))
-
-     '(line-number ((t (:inherit font-lock-comment-face :height 120))))
-     `(fringe ((t (:inherit font-lock-comment-face))))
-
      '(highlight ((t (:inherit region))))
      '(sp-pair-overlay-face ((t (:inherit region))))
+     '(font-lock-string-face ((t (:slant normal))))
+     '(font-lock-comment-face ((t (:slant normal))))
+     '(font-lock-comment-delimiter-face
+       ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
+
+     '(line-number ((t (:inherit font-lock-comment-face :height 120))))
+     '(line-number-current-line ((t (:inherit line-number))))
+     ;; '(fringe ((t (:inherit nil))))
+     '(mode-line ((t (:box nil))))
+     '(mode-line-inactive ((t (:box nil))))
 
      ;; '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#81af34"))))
      ;; '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#ff0000"))))
@@ -1195,8 +1201,6 @@
 
      ;; tango-plus
      ;; '(font-lock-keyword-face ((t (:weight normal))))
-     ;; '(font-lock-comment-face ((t (:slant normal))))
-     ;; '(font-lock-comment-delimiter-face ((t (:slant normal))))
      ;; '(font-lock-string-face ((t (:slant normal))))
      ;; '(font-lock-constant-face ((t (:slant normal))))
 
@@ -1207,11 +1211,13 @@
      ;; '(line-number-current-line ((t (:inherit line-number :foreground "#8993a9" :background "#566076"))))
 
      ;; nord
-     '(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
-     '(highlight-numbers-number ((t (:inherit nil :foreground "#B48EAD")))) ; nord15
-     '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#A3BE8C"))))
-     '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#BF616A"))))
-     '(diff-hl-change ((t (:inherit nil :background nil :foreground "#EBCB8B"))))
+     ;; '(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
+     ;; '(highlight-numbers-number ((t (:inherit nil :foreground "#B48EAD")))) ; nord15
+     ;; '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#A3BE8C"))))
+     ;; '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#BF616A"))))
+     ;; '(diff-hl-change ((t (:inherit nil :background nil :foreground "#EBCB8B"))))
+
+     ;; tango
      )
 
     (use-package highlight-numbers
@@ -1224,21 +1230,21 @@
   [[https://github.com/owainlewis/emacs-color-themes][sublime-themes]] collection.
 
   #+BEGIN_SRC emacs-lisp
-    (use-package nord-theme
-      :ensure t
-      :init (load-theme 'nord t))
-  #+END_SRC
-
-  #+BEGIN_SRC emacs-lisp :tangle no
     (use-package sublime-themes
       :ensure t
       :init (load-theme 'brin t))
   #+END_SRC
 
+  #+BEGIN_SRC emacs-lisp :tangle no
+    (use-package nord-theme
+      :ensure t
+      :init (load-theme 'nord t))
+  #+END_SRC
+
   I also have an alternate light-theme for backup or use in
   presentation, which is *base16-github* from [[https://github.com/belak/base16-emacs][base16-themes]] package.
 
-  #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp :tangle no
     (use-package base16-theme
       :ensure t)
   #+END_SRC
@@ -1246,7 +1252,7 @@
   I also have very good experience with *Tango Plus*. Its philosophy of not
   getting in the way is interesting.
 
-  #+BEGIN_SRC emacs-lisp :tangle no
+  #+BEGIN_SRC emacs-lisp
     (use-package tango-plus-theme
       :ensure t
       :init (load-theme 'tango-plus t))
@@ -1257,7 +1263,7 @@
   #+BEGIN_SRC emacs-lisp
     (use-package smart-mode-line
       :ensure t
-      ;; :preface (setq-default sml/theme nil)
+      :preface (setq-default sml/theme nil)
       :init (sml/setup))
   #+END_SRC
 
@@ -1350,6 +1356,18 @@
       (shell-command "osascript -e 'tell application \"Google Chrome\" to reload active tab of window 1'"))
 
     (bind-key* "C-c b r" #'td/refresh-front-most-tab)
+  #+END_SRC
+
+  #+BEGIN_SRC emacs-lisp
+    (defun td/cycle-themes ()
+      (interactive)
+      (let* ((current-theme (car custom-enabled-themes))
+             (index (or (-elem-index current-theme (custom-available-themes)) 0))
+             (next-theme (nth (+ 1 index) (custom-available-themes))))
+        (disable-theme current-theme)
+        (load-theme next-theme t)))
+
+    (bind-key "C-c t n" #'td/cycle-themes)
   #+END_SRC
 
 
