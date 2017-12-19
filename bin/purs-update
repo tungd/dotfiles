@@ -1,7 +1,7 @@
 #!/bin/sh
 
-PURS_VERSION="v0.11.6"
-PSC_PACKAGE_VERSION="v0.2.3"
+PURS_VERSION="v0.11.7"
+PSC_PACKAGE_VERSION="v0.2.5"
 
 pushd /tmp
 
