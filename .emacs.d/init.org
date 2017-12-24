@@ -585,7 +585,7 @@
 
 * Programming
 
-  #+BEGIN_SRC emacs-lisp :tangle no
+  #+BEGIN_SRC emacs-lisp
     (use-package lsp-mode
       :ensure t
       :config
@@ -875,7 +875,8 @@
    same folk who runs =stack=.
 
    #+BEGIN_SRC emacs-lisp
-     ;; (use-package lsp-haskell :ensure t)
+     (use-package lsp-haskell :ensure t)
+
      (defun td/turn-off-evil-auto-indent ()
        (setq-local evil-auto-indent nil))
 
@@ -887,7 +888,7 @@
        :bind (([remap haskell-mode-format-imports] . haskell-sort-imports))
        :config
        (setq haskell-program-name "stack ghci")
-       :preface
+       ;; :preface
        ;; (progn
        ;;   (defun td/setup-haskell-mode ()
        ;;     (interactive)
