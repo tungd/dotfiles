@@ -1346,10 +1346,16 @@
   #+END_SRC
 
 
-* Investigate
-
-
 * Misc
+
+  #+BEGIN_SRC emacs-lisp
+    (use-package aria2
+      :ensure t
+      :defer t
+      :config
+      (setq aria2-add-evil-quirks t
+            aria2-download-directory (expand-file-name "~/Downloads")))
+  #+END_SRC
 
   #+BEGIN_SRC emacs-lisp
     (defun td/refresh-front-most-tab ()
