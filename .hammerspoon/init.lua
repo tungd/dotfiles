@@ -1,8 +1,3 @@
-hs.loadSpoon('ReloadConfiguration')
--- spoon.ReloadConfiguration:start()
-spoon.ReloadConfiguration:bindHotkeys({ reloadConfiguration = {{"option"}, "r"}})
-
-
 local logger = hs.logger.new('init', 'info')
 
 local eventTypes = hs.eventtap.event.types
@@ -48,3 +43,9 @@ hs.hotkey.bind({"option"}, "j", function()
       -- expose:show()
 end)
 hs.hotkey.bind({"option"}, "k", focus_prev, nil, focus_prev)
+
+
+hs.hotkey.bind({"option"}, "r", function()
+      hs.alert('Reloading')
+      hs.timer.delayed.new(0.4, hs.fnutils.partial(hs.reload, self)):start()
+end)
