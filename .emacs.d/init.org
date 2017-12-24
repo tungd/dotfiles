@@ -989,6 +989,13 @@
               ("^roster$" . yaml-mode)))
    #+END_SRC
 
+   #+BEGIN_SRC emacs-lisp
+     (use-package typescript-mode
+       :ensure t
+       :config
+       (setq typescript-indent-level 2))
+   #+END_SRC
+
 
 * Document and management
 
