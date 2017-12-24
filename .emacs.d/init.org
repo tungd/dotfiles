@@ -1219,8 +1219,8 @@
      ;; '(line-number-current-line ((t (:inherit line-number :foreground "#8993a9" :background "#566076"))))
 
      ;; nord
-     ;; '(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
-     ;; '(highlight-numbers-number ((t (:inherit nil :foreground "#B48EAD")))) ; nord15
+     '(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
+     '(highlight-numbers-number ((t (:inherit nil :foreground "#B48EAD")))) ; nord15
      ;; '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#A3BE8C"))))
      ;; '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#BF616A"))))
      ;; '(diff-hl-change ((t (:inherit nil :background nil :foreground "#EBCB8B"))))
@@ -1237,13 +1237,13 @@
   My theme of choice now is *Nord*, before that it was *Brin* from the excellent
   [[https://github.com/owainlewis/emacs-color-themes][sublime-themes]] collection.
 
-  #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp :tangle no
     (use-package sublime-themes
       :ensure t
       :init (load-theme 'brin t))
   #+END_SRC
 
-  #+BEGIN_SRC emacs-lisp :tangle no
+  #+BEGIN_SRC emacs-lisp
     (use-package nord-theme
       :ensure t
       :init (load-theme 'nord t))
@@ -1260,7 +1260,7 @@
   I also have very good experience with *Tango Plus*. Its philosophy of not
   getting in the way is interesting.
 
-  #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp :tangle no
     (use-package tango-plus-theme
       :ensure t
       :init (load-theme 'tango-plus t))
@@ -1271,7 +1271,7 @@
   #+BEGIN_SRC emacs-lisp
     (use-package smart-mode-line
       :ensure t
-      :preface (setq-default sml/theme nil)
+      ;:preface (setq-default sml/theme nil)
       :init (sml/setup))
   #+END_SRC
 
