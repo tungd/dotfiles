@@ -685,6 +685,15 @@
      ;; (add-hook 'compilation-finish-functions #'td/compilation-hide-window-on-finish)
    #+END_SRC
 
+** Code folding
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package hideshowvis
+       :ensure t
+       :init
+       (add-hook 'hs-minor-mode-hook 'hideshowvis-enable))
+   #+END_SRC
+
 ** Web Development
 
    Not programming per-se. I use =web-mode= for all my templating-related
