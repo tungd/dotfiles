@@ -934,11 +934,22 @@
        ;;   (add-hook 'haskell-mode-hook #'td/setup-haskell-mode))
        )
 
-     (use-package intero
+     ;; (use-package intero
+     ;;   :ensure t
+     ;;   :diminish intero-mode
+     ;;   :commands (intero-mode)
+     ;;   :init (add-hook 'haskell-mode-hook #'intero-mode))
+
+     (use-package dante
        :ensure t
-       :diminish intero-mode
-       :commands (intero-mode)
-       :init (add-hook 'haskell-mode-hook #'intero-mode))
+       :after haskell-mode
+       :commands 'dante-mode
+       :init
+       (add-hook 'haskell-mode-hook 'dante-mode)
+       (add-hook 'haskell-mode-hook 'flycheck-mode)
+       (add-hook 'dante-mode-hook
+        '(lambda () (flycheck-add-next-checker 'haskell-dante
+                     '(warning . haskell-hlint)))))
    #+END_SRC
 
 ** PureScript
@@ -998,7 +1009,7 @@
        :init (add-hook 'markdown-mode-hook #'whitespace-turn-off))
    #+END_SRC
 
-   #+BEGIN_SRC emacs-lisp
+   #+BEGIN_SRC emacs-lisp :tangle no
      (use-package nix-mode
        :ensure t
        :mode ("\\.nix$" . nix-mode))
@@ -1024,13 +1035,6 @@
               ("\\.sls$" . yaml-mode)
               ("^master$" . yaml-mode)
               ("^roster$" . yaml-mode)))
-   #+END_SRC
-
-   #+BEGIN_SRC emacs-lisp
-     (use-package typescript-mode
-       :ensure t
-       :config
-       (setq typescript-indent-level 2))
    #+END_SRC
 
 
@@ -1114,7 +1118,7 @@
 
    I also use =org-board= to have an offline pin-board with org-mode.
 
-   #+BEGIN_SRC emacs-lisp
+   #+BEGIN_SRC emacs-lisp :tangle no
      (use-package org-board
        :ensure t
        :defer t
@@ -1308,7 +1312,7 @@
   #+BEGIN_SRC emacs-lisp
     (use-package smart-mode-line
       :ensure t
-      ;:preface (setq-default sml/theme nil)
+      :preface (setq-default sml/theme 'respectful)
       :init (sml/setup))
   #+END_SRC
 
