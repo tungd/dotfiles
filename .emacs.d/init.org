@@ -703,12 +703,13 @@
      (use-package web-mode
        :ensure t
        :mode (("\\.html" . web-mode)
-              ("\\.j2" . web-mode)
-              ("\\.jinja2" . web-mode)
-              ;("\\.php" . web-mode)
+              ("\\.jsx" . web-mode)
+              ("\\.tsx" . web-mode)
               ("\\.tpl" . web-mode)
               ("\\.erb" . web-mode)
               ("\\.tag" . web-mode)
+              ("themes/.+\\.php" . web-mode)
+              ("\\.hbs" . web-mode)
               ("\\.mustache" . web-mode))
        :init (add-hook 'web-mode-hook #'emmet-mode)
        :config
@@ -831,6 +832,33 @@
        :ensure t
        :defer t
        :init (add-hook 'js-mode-hook #'add-node-modules-path))
+   #+END_SRC
+
+   Well, I'm also on the TypeScript train lately, mostly because of the super
+   awesome StencilJS project.
+
+   #+BEGIN_SRC emacs-lisp
+     (use-package typescript-mode
+       :ensure t
+       :config
+       (setq typescript-indent-level 2)
+       (flycheck-add-mode 'typescript-tslint 'web-mode))
+
+     (use-package tide
+       :ensure t
+       :diminish t
+       :config
+       (progn
+         (defun td/setup-tide-mode ()
+           (interactive)
+           (when (string-equal "tsx" (file-name-extension buffer-file-name))
+             (tide-setup)
+             ;; (flycheck-add-next-checker 'typescript-tide '(t . typescript-tslint) 'append)
+             ;; (tide-hl-identifier-mode +1)
+             ))
+
+         (add-hook 'web-mode-hook #'td/setup-tide-mode)
+         (flycheck-add-mode 'typescript-tslint 'web-mode)))
    #+END_SRC
 
 ** Python
