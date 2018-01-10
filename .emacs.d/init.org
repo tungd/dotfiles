@@ -841,8 +841,12 @@
      (use-package typescript-mode
        :ensure t
        :config
-       (setq typescript-indent-level 2)
-       (flycheck-add-mode 'typescript-tslint 'web-mode))
+       (progn
+         (setq typescript-indent-level 2)
+         (defun td/enable-tslint-web-mode ()
+           (interactive)
+           (flycheck-add-mode 'typescript-tslint 'web-mode))
+         (add-hook 'flycheck-mode-hook #'td/enable-tslint-web-mode)))
 
      (use-package tide
        :ensure t
@@ -857,8 +861,7 @@
              ;; (tide-hl-identifier-mode +1)
              ))
 
-         (add-hook 'web-mode-hook #'td/setup-tide-mode)
-         (flycheck-add-mode 'typescript-tslint 'web-mode)))
+         (add-hook 'web-mode-hook #'td/setup-tide-mode)))
    #+END_SRC
 
 ** Python
