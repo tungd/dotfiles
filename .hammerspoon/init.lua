@@ -17,17 +17,18 @@ hs.eventtap.new({eventTypes.keyDown}, function(event)
 
       -- 43 is the internal keyboard
       if keyboardType == 43 and keyCode == hs.keycodes.map["\\"] then
+         local e = event:copy()
          if modifiers["alt"] then
             -- Unless the 'option' key is down, clear the flag so it is still
             -- '\\', but passing through other modifiers such as
             -- 'shift'. Doesn't work well with repeat but it's fine for me
             modifiers["alt"] = nil
-            event:setFlags(modifiers)
-            return false, event
+            e:setFlags(modifiers)
+            return true, {e}
          end
 
-         event:setKeyCode(hs.keycodes.map["n"])
-         return false, event
+         e:setKeyCode(hs.keycodes.map["n"])
+         return true, {e}
       end
 end):start()
 
