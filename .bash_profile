@@ -86,6 +86,7 @@ export PATH=$HOME/Library/Python/2.7/bin/:$PATH
 export PATH=$HOME/.yarn/bin:$PATH
 export PGHOST=127.0.0.1
 export PGPASS=postgres
+export PGPASSWORD=postgres
 export PGUSER=postgres
 
 

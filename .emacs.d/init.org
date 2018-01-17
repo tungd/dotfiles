@@ -92,6 +92,10 @@
     (savehist-mode t)
   #+END_SRC
 
+  #+BEGIN_SRC emacs-lisp
+    (setq locate-command "mdfind")
+  #+END_SRC
+
 ** Server
 
    #+BEGIN_SRC emacs-lisp
