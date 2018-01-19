@@ -12,7 +12,7 @@
   system.defaults.NSGlobalDomain.NSAutomaticCapitalizationEnabled = false;
   system.defaults.NSGlobalDomain.NSAutomaticSpellingCorrectionEnabled = false;
   system.defaults.NSGlobalDomain.InitialKeyRepeat = 16;
-  system.defaults.NSGlobalDomain.KeyRepeat = 2;
+  system.defaults.NSGlobalDomain.KeyRepeat = 1;
 
   system.defaults.dock.autohide = true;
   system.defaults.dock.orientation = "left";
