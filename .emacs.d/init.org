@@ -931,21 +931,7 @@
        :mode (("\\.hs$" . haskell-mode))
        :bind (([remap haskell-mode-format-imports] . haskell-sort-imports))
        :config
-       (setq haskell-program-name "stack ghci")
-       ;; :preface
-       ;; (progn
-       ;;   (defun td/setup-haskell-mode ()
-       ;;     (interactive)
-       ;;     (require 'lsp-haskell)
-       ;;     (lsp-haskell-enable))
-       ;;   (add-hook 'haskell-mode-hook #'td/setup-haskell-mode))
-       )
-
-     ;; (use-package intero
-     ;;   :ensure t
-     ;;   :diminish intero-mode
-     ;;   :commands (intero-mode)
-     ;;   :init (add-hook 'haskell-mode-hook #'intero-mode))
+       (setq haskell-program-name "stack ghci"))
 
      (use-package dante
        :ensure t
@@ -955,8 +941,8 @@
        (add-hook 'haskell-mode-hook 'dante-mode)
        (add-hook 'haskell-mode-hook 'flycheck-mode)
        (add-hook 'dante-mode-hook
-        '(lambda () (flycheck-add-next-checker 'haskell-dante
-                     '(warning . haskell-hlint)))))
+                 '(lambda () (flycheck-add-next-checker
+                              'haskell-dante '(warning . haskell-hlint)))))
    #+END_SRC
 
 ** PureScript
@@ -1016,10 +1002,12 @@
        :init (add-hook 'markdown-mode-hook #'whitespace-turn-off))
    #+END_SRC
 
-   #+BEGIN_SRC emacs-lisp :tangle no
+   #+BEGIN_SRC emacs-lisp
      (use-package nix-mode
        :ensure t
-       :mode ("\\.nix$" . nix-mode))
+       :mode (("\\.nix$" . nix-mode))
+       :config
+       (exec-path-from-shell-copy-env "NIX_REMOTE"))
    #+END_SRC
 
    #+BEGIN_SRC emacs-lisp
@@ -1237,19 +1225,21 @@
   #+BEGIN_SRC emacs-lisp
     (custom-theme-set-faces
      'user
-     '(vertical-border ((t (:foreground "#000" :background "#000"))))
-     '(highlight ((t (:inherit region))))
-     '(sp-pair-overlay-face ((t (:inherit region))))
-     '(font-lock-string-face ((t (:slant normal))))
-     '(font-lock-comment-face ((t (:slant normal))))
-     '(font-lock-comment-delimiter-face
-       ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
+     ;'(vertical-border ((t (:foreground "#000" :background "#000"))))
+     ;'(highlight ((t (:inherit region))))
+     ;'(sp-pair-overlay-face ((t (:inherit region))))
+     ;'(font-lock-string-face ((t (:slant normal))))
+     ;'(font-lock-comment-face ((t (:slant normal))))
+     ;'(font-lock-comment-delimiter-face
+     ;  ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
 
-     '(line-number ((t (:inherit font-lock-comment-face :height 120))))
-     '(line-number-current-line ((t (:inherit line-number))))
-     ;; '(fringe ((t (:inherit nil))))
-     '(mode-line ((t (:box nil))))
-     '(mode-line-inactive ((t (:box nil))))
+     '(line-number ((t (:height 120))))
+     '(line-number-current-line ((t (:height 120))))
+     ;;; '(fringe ((t (:inherit nil))))
+     ;'(mode-line ((t (:box nil))))
+     ;'(mode-line-inactive ((t (:box nil))))
+
+     '(indent-guide-face ((t (:inherit font-lock-comment-face))))
 
      ;; '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#81af34"))))
      ;; '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#ff0000"))))
@@ -1267,8 +1257,8 @@
      ;; '(line-number-current-line ((t (:inherit line-number :foreground "#8993a9" :background "#566076"))))
 
      ;; nord
-     '(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
-     '(highlight-numbers-number ((t (:inherit nil :foreground "#B48EAD")))) ; nord15
+     ;'(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
+     ;'(highlight-numbers-number ((t (:inherit nil :foreground "#B48EAD")))) ; nord15
      ;; '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#A3BE8C"))))
      ;; '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#BF616A"))))
      ;; '(diff-hl-change ((t (:inherit nil :background nil :foreground "#EBCB8B"))))
@@ -1282,19 +1272,20 @@
       :init (add-hook 'prog-mode-hook #'highlight-numbers-mode))
   #+END_SRC
 
-  My theme of choice now is *Nord*, before that it was *Brin* from the excellent
-  [[https://github.com/owainlewis/emacs-color-themes][sublime-themes]] collection.
-
   #+BEGIN_SRC emacs-lisp :tangle no
-    (use-package sublime-themes
-      :ensure t
-      :init (load-theme 'brin t))
-  #+END_SRC
-
-  #+BEGIN_SRC emacs-lisp
     (use-package nord-theme
       :ensure t
       :init (load-theme 'nord t))
+  #+END_SRC
+
+  #+BEGIN_SRC emacs-lisp
+    (use-package doom-themes
+      :ensure t
+      :init
+      (progn
+        (setq doom-themes-enable-italic nil
+              doom-spacegrey-brighter-modeline t)
+        (load-theme 'doom-spacegrey t)))
   #+END_SRC
 
   I also have an alternate light-theme for backup or use in
@@ -1319,7 +1310,7 @@
   #+BEGIN_SRC emacs-lisp
     (use-package smart-mode-line
       :ensure t
-      :preface (setq-default sml/theme 'respectful)
+      ;:preface (setq-default sml/theme 'respectful)
       :init (sml/setup))
   #+END_SRC
 
