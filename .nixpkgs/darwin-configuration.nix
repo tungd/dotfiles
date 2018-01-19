@@ -11,8 +11,8 @@
   system.defaults.NSGlobalDomain.AppleShowAllExtensions = true;
   system.defaults.NSGlobalDomain.NSAutomaticCapitalizationEnabled = false;
   system.defaults.NSGlobalDomain.NSAutomaticSpellingCorrectionEnabled = false;
-  system.defaults.NSGlobalDomain.InitialKeyRepeat = 10;
-  system.defaults.NSGlobalDomain.KeyRepeat = 1;
+  system.defaults.NSGlobalDomain.InitialKeyRepeat = 16;
+  system.defaults.NSGlobalDomain.KeyRepeat = 2;
 
   system.defaults.dock.autohide = true;
   system.defaults.dock.orientation = "left";
@@ -31,12 +31,15 @@
       pkgs.closurecompiler
       pkgs.curl
       pkgs.gettext
+      pkgs.git-lfs
       pkgs.gnupg
+      pkgs.hlint
       pkgs.imagemagick
       pkgs.jdk
       pkgs.mosh
       pkgs.mysql.client
       pkgs.nixops
+      pkgs.nmap
       pkgs.nodejs-8_x
       pkgs.openssl
       pkgs.optipng
@@ -54,7 +57,7 @@
       pkgs.nix-repl
     ];
 
-  programs.bash.enable = true;
+  # programs.bash.enable = true;
   programs.bash.enableCompletion = false;
 
   services.activate-system.enable = true;
