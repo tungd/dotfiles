@@ -4,1435 +4,1437 @@
 
 * Packages and initialization
 
-  All the packages I used are from [[https://melpa.org][MELPA]]. However, I
-  install them automatically with =use-package.el= instead of using =package.el=
-  directly.
+All the packages I used are from [[https://melpa.org][MELPA]]. However, I
+install them automatically with =use-package.el= instead of using =package.el=
+directly.
 
-  #+BEGIN_SRC emacs-lisp
-    (package-initialize)
-    (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (package-initialize)
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+#+END_SRC
 
-  Sometimes I write my own package, or download package from Emacs wiki; they
-  are stored in the =~/.emacs.d/vendor= directory.
+Sometimes I write my own package, or download package from Emacs wiki; they
+are stored in the =~/.emacs.d/vendor= directory.
 
-  #+BEGIN_SRC emacs-lisp
-    (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
-    (require 'use-package)
-    (use-package diminish :ensure t)
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
+  (require 'use-package)
+  (use-package diminish :ensure t)
+#+END_SRC
 
-  Use a dedicate custom file.
+Use a dedicate custom file.
 
-  #+BEGIN_SRC emacs-lisp
-    (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-    (load custom-file 'noerror)
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+  (load custom-file 'noerror)
+#+END_SRC
 
 
 * Defaults
 
-  Personal information that some package use:
+Personal information that some package use:
 
-  #+BEGIN_SRC emacs-lisp
-    (setq user-full-name "Tung Dao"
-          user-mail-address "me@tungdao.com"
-          default-input-method 'vietnamese-telex)
-    (defvar personal-keybindings nil)
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (setq user-full-name "Tung Dao"
+        user-mail-address "me@tungdao.com"
+        default-input-method 'vietnamese-telex)
+  (defvar personal-keybindings nil)
+#+END_SRC
 
-  Less verbose choice:
+Less verbose choice:
 
-  #+BEGIN_SRC emacs-lisp
-    (defalias 'yes-or-no-p 'y-or-n-p)
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (defalias 'yes-or-no-p 'y-or-n-p)
+#+END_SRC
 
-  =better-defaults= provide some sane, modern defaults:
+=better-defaults= provide some sane, modern defaults:
 
-  - clean minimal UI
-  - search by regex by default
-  - no unnecessary temporary files (I do keep backup files, but not auto-save
-    and lock files)
+- clean minimal UI
+- search by regex by default
+- no unnecessary temporary files (I do keep backup files, but not auto-save
+  and lock files)
 
-  *NOTE*: I also set the delay right here since =better-defaults= loads
-  =show-paren-mode=.
+*NOTE*: I also set the delay right here since =better-defaults= loads
+=show-paren-mode=.
 
-  #+BEGIN_SRC emacs-lisp
-    (use-package better-defaults
-      :ensure t
-      :preface
-      (setq-default show-paren-delay 0))
+#+BEGIN_SRC emacs-lisp
+  (use-package better-defaults
+    :ensure t
+    :preface
+    (setq-default show-paren-delay 0))
 
-    (setq auto-save-file-name-transforms
-          `((".*" ,temporary-file-directory t))
-          create-lockfiles nil)
-  #+END_SRC
+  (setq auto-save-file-name-transforms
+        `((".*" ,temporary-file-directory t))
+        create-lockfiles nil)
+#+END_SRC
 
-  #+BEGIN_SRC emacs-lisp
-    (use-package exec-path-from-shell
-      :ensure t
-      :init
-      (when (memq window-system '(mac ns))
-        (exec-path-from-shell-initialize)))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package exec-path-from-shell
+    :ensure t
+    :init
+    (when (memq window-system '(mac ns))
+      (exec-path-from-shell-initialize)))
+#+END_SRC
 
-  #+BEGIN_SRC emacs-lisp
-    (setq ns-command-modifier 'meta
-          ns-option-modifier 'super
-          delete-by-moving-to-trash t)
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (setq ns-command-modifier 'meta
+        ns-option-modifier 'super
+        delete-by-moving-to-trash t)
+#+END_SRC
 
-  #+BEGIN_SRC emacs-lisp
-    (use-package smex
-      :ensure t
-      :init (smex-initialize))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package smex
+    :ensure t
+    :init (smex-initialize))
+#+END_SRC
 
-  #+BEGIN_SRC emacs-lisp
-    (savehist-mode t)
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (savehist-mode t)
+#+END_SRC
 
-  #+BEGIN_SRC emacs-lisp
-    (setq locate-command "mdfind")
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (setq locate-command "mdfind")
+#+END_SRC
 
 ** Server
 
-   #+BEGIN_SRC emacs-lisp
-     (add-hook 'after-init-hook #'server-start)
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'after-init-hook #'server-start)
+#+END_SRC
 
 
 * Navigation
 
 ** Projects
 
-   I use =projectile= to switch between projects and between files in
-   the same project. When possible I will use the functions provided
-   by Emacs, however the project facilities built-in in recent version
-   of Emacs but it is still bare bone.
+I use =projectile= to switch between projects and between files in
+the same project. When possible I will use the functions provided
+by Emacs, however the project facilities built-in in recent version
+of Emacs but it is still bare bone.
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package projectile
-       :ensure t
-       :diminish projectile-mode
-       :init (projectile-mode t)
-       :config
-       (setq projectile-globally-ignored-file-suffixes
-             '("jpg" "png" "svg" "psd" "sketch" "afdesign"
-               "pdf" "doc" "docx" "xls" "xlsx"
-               "ttf" "otf" "woff"
-               "rar" "zip" "min.js" "min.css" "map")))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package projectile
+    :ensure t
+    :diminish projectile-mode
+    :init (projectile-mode t)
+    :config
+    (setq projectile-globally-ignored-file-suffixes
+          '("jpg" "png" "svg" "psd" "sketch" "afdesign"
+            "pdf" "doc" "docx" "xls" "xlsx"
+            "ttf" "otf" "woff"
+            "rar" "zip" "min.js" "min.css" "map")))
+#+END_SRC
 
 ** Symbols
 
-   For jumping to defined symbols (functions, classes, .etc), I use
-   =dump-jump=. Mode specific support for this feature is at higher
-   priority, when they fail =dump-jump= will be the fallback.
+For jumping to defined symbols (functions, classes, .etc), I use
+=dump-jump=. Mode specific support for this feature is at higher
+priority, when they fail =dump-jump= will be the fallback.
 
-   The key bindings are:
+The key bindings are:
 
-   | Binding | Command                | Description    |
-   |---------+------------------------+----------------|
-   | =C-M-g= | =dump-jump-go=         | Jump to symbol |
-   | =C-M-p= | =dump-jump-back=       | Back           |
-   | =C-M-q= | =dump-jump-quick-look= | Quick look     |
+| Binding | Command                | Description    |
+|---------+------------------------+----------------|
+| =C-M-g= | =dump-jump-go=         | Jump to symbol |
+| =C-M-p= | =dump-jump-back=       | Back           |
+| =C-M-q= | =dump-jump-quick-look= | Quick look     |
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package dumb-jump
-       :ensure t
-       :init (dumb-jump-mode t))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package dumb-jump
+    :ensure t
+    :init (dumb-jump-mode t))
+#+END_SRC
 
 ** Ivy
 
-   Ivy is a nice completion package, however the main reason I use it over =ido=
-   is that I can make its popup appear at the top of the window.
+Ivy is a nice completion package, however the main reason I use it over =ido=
+is that I can make its popup appear at the top of the window.
 
-   #+BEGIN_SRC emacs-lisp
-     (ido-mode -1)
+#+BEGIN_SRC emacs-lisp
+  (ido-mode -1)
 
-     (use-package ivy
-       :init (add-hook 'after-init-hook #'ivy-mode)
-       :diminish ivy-mode
-       :bind (("C-M-o" . ivy-switch-buffer))
-       :config
-       (progn
-         (setq ivy-format-function 'ivy-format-function-arrow
-               ivy-count-format ""
-               ivy-use-virtual-buffers t
-               ivy-height 16
-               projectile-completion-system 'ivy)
+  (use-package ivy
+    :init (add-hook 'after-init-hook #'ivy-mode)
+    :diminish ivy-mode
+    :bind (("C-M-o" . ivy-switch-buffer))
+    :config
+    (progn
+      (setq ivy-format-function 'ivy-format-function-arrow
+            ivy-count-format ""
+            ivy-use-virtual-buffers t
+            ivy-height 16
+            projectile-completion-system 'ivy)
 
-         (require 'ivy-popup)))
+      (require 'ivy-popup)))
 
-     (use-package counsel
-       :ensure t
-       :bind (([remap find-file] . counsel-find-file)
-              ([remap ido-find-file] . counsel-find-file)
-              ([remap execute-extended-command] . counsel-M-x)
-              ("C-M-'" . counsel-git)
-              ("M-m" . counsel-M-x)
-              ("C-c i" . counsel-imenu)))
+  (use-package counsel
+    :ensure t
+    :bind (([remap find-file] . counsel-find-file)
+           ([remap ido-find-file] . counsel-find-file)
+           ([remap execute-extended-command] . counsel-M-x)
+           ("C-M-'" . counsel-git)
+           ("M-m" . counsel-M-x)
+           ("C-c i" . counsel-imenu)))
 
-     (use-package imenu
-       :config
-       (add-hook 'imenu-after-jump-hook #'recenter-top-bottom))
-   #+END_SRC
+  (use-package imenu
+    :config
+    (add-hook 'imenu-after-jump-hook #'recenter-top-bottom))
+#+END_SRC
 
-   Use =historian.el= to sort ivy completion based on frequency - similar to smex.
+Use =historian.el= to sort ivy completion based on frequency - similar to smex.
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package ivy-historian
-       :ensure t
-       :defer t
-       :init (add-hook 'after-init-hook 'ivy-historian-mode))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package ivy-historian
+    :ensure t
+    :defer t
+    :init (add-hook 'after-init-hook 'ivy-historian-mode))
+#+END_SRC
 
 
 * Window Management
 
-  #+BEGIN_SRC emacs-lisp :tangle no
-    (use-package shackle
-      :ensure t
-      :init (add-hook 'after-init-hook 'shackle-mode)
-      :config
-      (setq shackle-default-alignment 'below
-            shackle-default-rule
-            '((compilation-mode :align 'below))))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp :tangle no
+  (use-package shackle
+    :ensure t
+    :init (add-hook 'after-init-hook 'shackle-mode)
+    :config
+    (setq shackle-default-alignment 'below
+          shackle-default-rule
+          '((compilation-mode :align 'below))))
+#+END_SRC
 
 
 * General Editing
 
-  Basic settings:
+Basic settings:
 
-  #+BEGIN_SRC emacs-lisp
-    (setq-default
-     tab-width 2
-     indent-tabs-mode nil
-     reb-re-syntax 'string)
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (setq-default
+   tab-width 2
+   indent-tabs-mode nil
+   reb-re-syntax 'string)
+#+END_SRC
 
-  Editing utilities:
+Editing utilities:
 
-  #+BEGIN_SRC emacs-lisp
-    (bind-key [remap delete-horizontal-space] #'cycle-spacing)
+#+BEGIN_SRC emacs-lisp
+  (bind-key [remap delete-horizontal-space] #'cycle-spacing)
 
-    (use-package crux
-      :ensure t
-      :commands (crux-sudo-edit
-                 crux-switch-to-previous-buffer
-                 crux-top-join-line
-                 crux-cleanup-buffer-or-region
-                 crux-kill-whole-line)
-      :bind (("C-M-]" . crux-switch-to-previous-buffer)
-             ("M-J" . crux-top-join-line)
-             ("M-=" . crux-cleanup-buffer-or-region)
-             ("C-M-k" . crux-kill-whole-line))
-      :config
-      (crux-with-region-or-buffer indent-region)
-      (crux-with-region-or-buffer untabify)
-      (crux-with-region-or-point-to-eol kill-ring-save))
+  (use-package crux
+    :ensure t
+    :commands (crux-sudo-edit
+               crux-switch-to-previous-buffer
+               crux-top-join-line
+               crux-cleanup-buffer-or-region
+               crux-kill-whole-line)
+    :bind (("C-M-]" . crux-switch-to-previous-buffer)
+           ("M-J" . crux-top-join-line)
+           ("M-=" . crux-cleanup-buffer-or-region)
+           ("C-M-k" . crux-kill-whole-line))
+    :config
+    (crux-with-region-or-buffer indent-region)
+    (crux-with-region-or-buffer untabify)
+    (crux-with-region-or-point-to-eol kill-ring-save))
 
-    (bind-key "C-c C-k" #'kill-this-buffer)
+  (bind-key "C-c C-k" #'kill-this-buffer)
 
-    (use-package comment-dwim-2
-      :ensure t
-      :bind ([remap comment-dwim] . comment-dwim-2)
-      :config (setq comment-style 'multi-line))
-  #+END_SRC
+  (use-package comment-dwim-2
+    :ensure t
+    :bind ([remap comment-dwim] . comment-dwim-2)
+    :config (setq comment-style 'multi-line))
+#+END_SRC
 
-  Automatically apply external changes: This is debatable, from my own
-  experience it is helpful.
+Automatically apply external changes: This is debatable, from my own
+experience it is helpful.
 
-  #+BEGIN_SRC emacs-lisp
-    (use-package autorevert
-      :diminish auto-revert-mode
-      :init (add-hook 'after-init-hook #'global-auto-revert-mode))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package autorevert
+    :diminish auto-revert-mode
+    :init (add-hook 'after-init-hook #'global-auto-revert-mode))
+#+END_SRC
 
-  Automatically save buffers when focus out:
+Automatically save buffers when focus out:
 
-  #+BEGIN_SRC emacs-lisp :tangle no
-    (defun td/save-all-buffers ()
-      (interactive)
-      (save-some-buffers t))
+#+BEGIN_SRC emacs-lisp :tangle no
+  (defun td/save-all-buffers ()
+    (interactive)
+    (save-some-buffers t))
 
-    (add-hook 'focus-out-hook 'td/save-all-buffers)
-  #+END_SRC
+  (add-hook 'focus-out-hook 'td/save-all-buffers)
+#+END_SRC
 
-  Create directory for the file if not exists:
+Create directory for the file if not exists:
 
-  #+BEGIN_SRC emacs-lisp
-    (defun td/before-save-make-directories ()
-      (let ((dir (file-name-directory buffer-file-name)))
-        (when (and buffer-file-name (not (file-exists-p dir)))
-          (make-directory dir t))))
+#+BEGIN_SRC emacs-lisp
+  (defun td/before-save-make-directories ()
+    (let ((dir (file-name-directory buffer-file-name)))
+      (when (and buffer-file-name (not (file-exists-p dir)))
+        (make-directory dir t))))
 
-    (add-hook 'before-save-hook #'td/before-save-make-directories)
-  #+END_SRC
+  (add-hook 'before-save-hook #'td/before-save-make-directories)
+#+END_SRC
 
-  Make the file executable if starting with "shebang":
+Make the file executable if starting with "shebang":
 
-  #+BEGIN_SRC emacs-lisp
-    (defun td/after-save-auto-chmod ()
-      (when (and (> (length (buffer-string)) 5)
-                 (string-equal "#!" (buffer-substring-no-properties 1 4)))
-        (shell-command
-         (format "chmod u+x %s"
-                 (shell-quote-argument (buffer-file-name))))))
+#+BEGIN_SRC emacs-lisp
+  (defun td/after-save-auto-chmod ()
+    (when (and (> (length (buffer-string)) 5)
+               (string-equal "#!" (buffer-substring-no-properties 1 4)))
+      (shell-command
+       (format "chmod u+x %s"
+               (shell-quote-argument (buffer-file-name))))))
 
-    (add-hook 'after-save-hook #'td/after-save-auto-chmod)
-  #+END_SRC
+  (add-hook 'after-save-hook #'td/after-save-auto-chmod)
+#+END_SRC
 
-  I was a pretty die-hard Vim fanboy, let's bring back the memory.
+I was a pretty die-hard Vim fanboy, let's bring back the memory.
 
-  #+BEGIN_SRC emacs-lisp
-    (use-package evil
-      :ensure t
-      :init (evil-mode t)
-      :config
-      (progn
-        (setq evil-cross-lines t
-              evil-ex-substitute-global t)
+#+BEGIN_SRC emacs-lisp
+  (use-package evil
+    :ensure t
+    :init (evil-mode t)
+    :config
+    (progn
+      (setq evil-cross-lines t
+            evil-ex-substitute-global t)
 
-        (bind-keys :map evil-normal-state-map
-                   ("M-." . xref-find-definitions))))
+      (bind-keys :map evil-normal-state-map
+                 ("M-." . xref-find-definitions))))
 
-    (use-package evil-surround
-      :ensure t
-      :init (global-evil-surround-mode t))
+  (use-package evil-surround
+    :ensure t
+    :init (global-evil-surround-mode t))
 
-    (use-package evil-visualstar
-      :ensure t
-      :init (global-evil-visualstar-mode))
-  #+END_SRC
+  (use-package evil-visualstar
+    :ensure t
+    :init (global-evil-visualstar-mode))
+#+END_SRC
 
 ** Search and replace
 
-   Anzu command names are confusing, at-cursor means initial string, while thing
-   means boundary.
+Anzu command names are confusing, at-cursor means initial string, while thing
+means boundary.
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package anzu
-       :ensure t
-       :diminish anzu-mode
-       :init (global-anzu-mode t)
-       :bind (([remap query-replace] . anzu-query-replace-regexp)
-              ;("C-c C-r" . anzu-query-replace-at-cursor)
-              ("M-r" . anzu-replace-at-cursor-thing)
-              ("C-M-r" . td/anzu-replace-at-cursor-thing-in-buffer))
-       :config
-       (progn
-         (defun td/anzu-replace-at-cursor-thing-in-buffer ()
-           "This does not actually query, but it's OK for me."
-           (interactive)
-           (let ((anzu-replace-at-cursor-thing 'buffer))
-             (call-interactively 'anzu-query-replace-at-cursor-thing)))))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package anzu
+    :ensure t
+    :diminish anzu-mode
+    :init (global-anzu-mode t)
+    :bind (([remap query-replace] . anzu-query-replace-regexp)
+           ;("C-c C-r" . anzu-query-replace-at-cursor)
+           ("M-r" . anzu-replace-at-cursor-thing)
+           ("C-M-r" . td/anzu-replace-at-cursor-thing-in-buffer))
+    :config
+    (progn
+      (defun td/anzu-replace-at-cursor-thing-in-buffer ()
+        "This does not actually query, but it's OK for me."
+        (interactive)
+        (let ((anzu-replace-at-cursor-thing 'buffer))
+          (call-interactively 'anzu-query-replace-at-cursor-thing)))))
+#+END_SRC
 
-   Also define "buffer-at-point" so that we can do query-replace in the whole
-   buffer without having to jump to the beginning.
+Also define "buffer-at-point" so that we can do query-replace in the whole
+buffer without having to jump to the beginning.
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package thingatpt
-       :init
-       (progn
-         (defun td/bounds-of-buffer-at-point ()
-           (cons (point-min) (point-max)))
+#+BEGIN_SRC emacs-lisp
+  (use-package thingatpt
+    :init
+    (progn
+      (defun td/bounds-of-buffer-at-point ()
+        (cons (point-min) (point-max)))
 
-         (put 'buffer 'bounds-of-thing-at-point 'td/bounds-of-buffer-at-point)
-         (put 'buffer 'beginning-op 'beginning-of-buffer)
-         (put 'buffer 'end-op 'end-of-buffer)))
-   #+END_SRC
+      (put 'buffer 'bounds-of-thing-at-point 'td/bounds-of-buffer-at-point)
+      (put 'buffer 'beginning-op 'beginning-of-buffer)
+      (put 'buffer 'end-op 'end-of-buffer)))
+#+END_SRC
 
-   I also use ISearch for navigation. In such cases I want to put the cursor at
-   the beginning of the match, not the end.
+I also use ISearch for navigation. In such cases I want to put the cursor at
+the beginning of the match, not the end.
 
-   #+BEGIN_SRC emacs-lisp
-     (setq lazy-highlight-initial-delay 0)
+#+BEGIN_SRC emacs-lisp
+  (setq lazy-highlight-initial-delay 0)
 
-     (defun td/isearch-exit-goto-match-beginning ()
-       (interactive)
-       (when (and isearch-forward isearch-other-end)
-         (goto-char isearch-other-end)))
+  (defun td/isearch-exit-goto-match-beginning ()
+    (interactive)
+    (when (and isearch-forward isearch-other-end)
+      (goto-char isearch-other-end)))
 
-     (add-hook 'isearch-mode-end-hook #'td/isearch-exit-goto-match-beginning)
-     (advice-add 'isearch-exit :after #'td/isearch-exit-goto-match-beginning)
-   #+END_SRC
+  (add-hook 'isearch-mode-end-hook #'td/isearch-exit-goto-match-beginning)
+  (advice-add 'isearch-exit :after #'td/isearch-exit-goto-match-beginning)
+#+END_SRC
 
 ** Long lines
 
-  Long lines are annoying. Auto wrap all texts at 80.
+Long lines are annoying. Auto wrap all texts at 80.
 
-  #+BEGIN_SRC emacs-lisp
-    (setq-default
-     comment-auto-fill-only-comments t
-     fill-column 80)
+#+BEGIN_SRC emacs-lisp
+  (setq-default
+   comment-auto-fill-only-comments t
+   fill-column 80)
 
-    (add-hook 'text-mode-hook #'turn-on-auto-fill)
-    (add-hook 'prog-mode-hook #'turn-on-auto-fill)
-  #+END_SRC
+  (add-hook 'text-mode-hook #'turn-on-auto-fill)
+  (add-hook 'prog-mode-hook #'turn-on-auto-fill)
+#+END_SRC
 
-  Sometimes long lines are inevitable though, as I do have to manually edit
-  exported SVG and minified JS :(. In those cases prevent them from making Emacs
-  slow:
+Sometimes long lines are inevitable though, as I do have to manually edit
+exported SVG and minified JS :(. In those cases prevent them from making Emacs
+slow:
 
-  #+BEGIN_SRC emacs-lisp
-    (use-package so-long
-      :commands so-long-enable
-      :init (so-long-enable))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package so-long
+    :commands so-long-enable
+    :init (so-long-enable))
+#+END_SRC
 
 ** Whitespace
 
-  Cleanup whitespaces automatically on save.
+Cleanup whitespaces automatically on save.
 
-  #+BEGIN_SRC emacs-lisp
-    (use-package whitespace
-      :commands (whitespace-cleanup)
-      :init (add-hook 'before-save-hook #'whitespace-cleanup))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package whitespace
+    :commands (whitespace-cleanup)
+    :init (add-hook 'before-save-hook #'whitespace-cleanup))
+#+END_SRC
 
 ** Parenthesis
 
-  Parenthesis come in pairs, that's why they are cumbersome to deal with. Better
-  use =smart-parens= to manage them. However the command name use words from an
-  arcane language :(, so I put together a table of human-readable description of
-  the commands. All key bindings are started with =M-s=.
+Parenthesis come in pairs, that's why they are cumbersome to deal with. Better
+use =smart-parens= to manage them. However the command name use words from an
+arcane language :(, so I put together a table of human-readable description of
+the commands. All key bindings are started with =M-s=.
 
-  | Bindings  | Command                | Description                                         |
-  |-----------+------------------------+-----------------------------------------------------|
-  | =DEL=     | =sp-splice-sexp=       | Delete surrounding pair                             |
-  | =M-S=     | =sp-rewrap-sexp=       | Replace the surrounding pair                        |
-  | =<right>= | =sp-slurp-hybrid-sexp= | Extend the pair to include items to the right       |
-  | =<left>=  | =sp-forward-barf-sexp= | Shrink the pair, the right-most item is put outside |
+| Bindings  | Command                | Description                                         |
+|-----------+------------------------+-----------------------------------------------------|
+| =DEL=     | =sp-splice-sexp=       | Delete surrounding pair                             |
+| =M-S=     | =sp-rewrap-sexp=       | Replace the surrounding pair                        |
+| =<right>= | =sp-slurp-hybrid-sexp= | Extend the pair to include items to the right       |
+| =<left>=  | =sp-forward-barf-sexp= | Shrink the pair, the right-most item is put outside |
 
-  NOTE: This package is huge, I'm still learning it.
+NOTE: This package is huge, I'm still learning it.
 
-  #+BEGIN_SRC emacs-lisp
-    (use-package smartparens
-      :ensure t
-      :diminish smartparens-mode
-      :init (add-hook 'prog-mode-hook #'smartparens-mode)
-      :bind (("M-s DEL" . sp-splice-sexp)
-             ("M-S" . sp-rewrap-sexp)
-             ("M-s <right>" . sp-slurp-hybrid-sexp)
-             ("C-S-f" . sp-slurp-hybrid-sexp)
-             ("M-s <left>" . sp-forward-barf-sexp)
-             ("C-M-a" . sp-beginning-of-sexp)
-             ("C-M-e" . sp-end-of-sexp)
-             ("M-K" . sp-kill-sexp)
-             ("M-]" . sp-select-next-thing))
-      :functions (sp-pair)
-      :config
-      (sp-pair "{" nil
-               :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
-      (sp-pair "[" nil
-               :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
-      (sp-pair "(" nil
-               :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC"))))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package smartparens
+    :ensure t
+    :diminish smartparens-mode
+    :init (add-hook 'prog-mode-hook #'smartparens-mode)
+    :bind (("M-s DEL" . sp-splice-sexp)
+           ("M-S" . sp-rewrap-sexp)
+           ("M-s <right>" . sp-slurp-hybrid-sexp)
+           ("C-S-f" . sp-slurp-hybrid-sexp)
+           ("M-s <left>" . sp-forward-barf-sexp)
+           ("C-M-a" . sp-beginning-of-sexp)
+           ("C-M-e" . sp-end-of-sexp)
+           ("M-K" . sp-kill-sexp)
+           ("M-]" . sp-select-next-thing))
+    :functions (sp-pair)
+    :config
+    (sp-pair "{" nil
+             :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
+    (sp-pair "[" nil
+             :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
+    (sp-pair "(" nil
+             :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC"))))
+#+END_SRC
 
-  #+BEGIN_SRC emacs-lisp
-    (use-package expand-region
-      :ensure t
-      :bind ("M--" . er/expand-region))
+#+BEGIN_SRC emacs-lisp
+  (use-package expand-region
+    :ensure t
+    :bind ("M--" . er/expand-region))
 
-    (defun td/mark-line-dwim ()
-      (interactive)
-      (call-interactively #'beginning-of-line)
-      (call-interactively #'set-mark-command)
-      (call-interactively #'end-of-line))
+  (defun td/mark-line-dwim ()
+    (interactive)
+    (call-interactively #'beginning-of-line)
+    (call-interactively #'set-mark-command)
+    (call-interactively #'end-of-line))
 
-    (bind-key "M-C-SPC" #'td/mark-line-dwim)
-  #+END_SRC
+  (bind-key "M-C-SPC" #'td/mark-line-dwim)
+#+END_SRC
 
 ** Undo
 
-   By default Emacs doesn't even have redo!
+By default Emacs doesn't even have redo!
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package undo-tree
-       :ensure t
-       :diminish undo-tree-mode
-       :init (global-undo-tree-mode t))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package undo-tree
+    :ensure t
+    :diminish undo-tree-mode
+    :init (global-undo-tree-mode t))
+#+END_SRC
 
 ** Snippets
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package yasnippet
-       :ensure t
-       :diminish yas-minor-mode
-       :commands yas-global-mode
-       :init
-       (progn
-         (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
-         (add-hook 'after-init-hook #'yas-global-mode))
-       :config
-       (progn
-         (setq yas-prompt-functions
-               '(yas-ido-prompt yas-completing-prompt yas-no-prompt)
-               ;; Suppress excessive log messages
-               yas-verbosity 1
-               ;; I am a weird user, I use SPACE to expand my
-               ;; snippets, this save me from triggering them accidentally.
-               yas-expand-only-for-last-commands
-               '(self-insert-command org-self-insert-command)
+#+BEGIN_SRC emacs-lisp
+  (use-package yasnippet
+    :ensure t
+    :diminish yas-minor-mode
+    :commands yas-global-mode
+    :init
+    (progn
+      (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
+      (add-hook 'after-init-hook #'yas-global-mode))
+    :config
+    (progn
+      (setq yas-prompt-functions
+            '(yas-ido-prompt yas-completing-prompt yas-no-prompt)
+            ;; Suppress excessive log messages
+            yas-verbosity 1
+            ;; I am a weird user, I use SPACE to expand my
+            ;; snippets, this save me from triggering them accidentally.
+            yas-expand-only-for-last-commands
+            '(self-insert-command org-self-insert-command)
 
-               yas-fallback-behavior '(apply self-insert-command))
+            yas-fallback-behavior '(apply self-insert-command))
 
-         (unbind-key "TAB" yas-minor-mode-map)
-         (unbind-key "<tab>" yas-minor-mode-map)
-         (bind-key "SPC" 'yas-expand yas-minor-mode-map)))
-   #+END_SRC
+      (unbind-key "TAB" yas-minor-mode-map)
+      (unbind-key "<tab>" yas-minor-mode-map)
+      (bind-key "SPC" 'yas-expand yas-minor-mode-map)))
+#+END_SRC
 
 ** TODO Alignment
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package align
-       :defer t
-       :bind ("C-c =" . align)
-       :config
-       (progn
-         (add-to-list 'align-rules-list
-                      '(js-object-props
-                        (regexp . "\\(\\s-*\\):")
-                        (modes . '(js-mode js2-mode))
-                        (spacing . 0)))
-         (add-to-list 'align-rules-list
-                      '(scss-declaration
-                        (regexp . "^\\s-*\\w+:\\(\\s-*\\).*;")
-                        (group 1)
-                        (modes . '(scss-mode))))))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package align
+    :defer t
+    :bind ("C-c =" . align)
+    :config
+    (progn
+      (add-to-list 'align-rules-list
+                   '(js-object-props
+                     (regexp . "\\(\\s-*\\):")
+                     (modes . '(js-mode js2-mode))
+                     (spacing . 0)))
+      (add-to-list 'align-rules-list
+                   '(scss-declaration
+                     (regexp . "^\\s-*\\w+:\\(\\s-*\\).*;")
+                     (group 1)
+                     (modes . '(scss-mode))))))
+#+END_SRC
 
 ** Recent files
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package recentf
-       :defer t
-       :config
-       (setq recentf-max-saved-items 128
-             recentf-exclude
-             '("/auto-install/" ".recentf" "/repos/" "/elpa/"
-               "\\.mime-example" "\\.ido.last" "COMMIT_EDITMSG"
-               ".gz" "~$" "/tmp/" "/ssh:" "/sudo:" "/scp:")))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package recentf
+    :defer t
+    :config
+    (setq recentf-max-saved-items 128
+          recentf-exclude
+          '("/auto-install/" ".recentf" "/repos/" "/elpa/"
+            "\\.mime-example" "\\.ido.last" "COMMIT_EDITMSG"
+            ".gz" "~$" "/tmp/" "/ssh:" "/sudo:" "/scp:")))
+#+END_SRC
 
 
 * Shell and remote
 
 ** EShell
 
-   #+BEGIN_SRC emacs-lisp
-     (defun td/with-face (str &rest properties)
-       (propertize str 'face properties))
+#+BEGIN_SRC emacs-lisp
+  (defun td/with-face (str &rest properties)
+    (propertize str 'face properties))
 
-     (use-package eshell
-       :defer t
-       :config
-       (progn
-         (defun td/eshell-pwd ()
-           (replace-regexp-in-string
-            (regexp-quote (expand-file-name "~"))
-            "~"
-            (eshell/pwd)))
+  (use-package eshell
+    :defer t
+    :config
+    (progn
+      (defun td/eshell-pwd ()
+        (replace-regexp-in-string
+         (regexp-quote (expand-file-name "~"))
+         "~"
+         (eshell/pwd)))
 
-         (defun td/eshell-prompt ()
-           (format
-            "\n%s@%s in %s\n%s "
-            (td/with-face user-login-name :foreground "#dc322f")
-            (td/with-face (or (getenv "HOST") (system-name)) :foreground "#b58900")
-            (td/with-face (td/eshell-pwd) :foreground "#859900")
-            (if (= (user-uid) 0) (with-face "#" :foreground "red") "$")))
+      (defun td/eshell-prompt ()
+        (format
+         "\n%s@%s in %s\n%s "
+         (td/with-face user-login-name :foreground "#dc322f")
+         (td/with-face (or (getenv "HOST") (system-name)) :foreground "#b58900")
+         (td/with-face (td/eshell-pwd) :foreground "#859900")
+         (if (= (user-uid) 0) (with-face "#" :foreground "red") "$")))
 
-         (defalias 'eshell/e 'find-file-other-window)
+      (defalias 'eshell/e 'find-file-other-window)
 
-         (defun eshell/open (args)
-           (interactive)
-           (shell-command
-            (concat (cl-case system-type
-                      ((darwin) "open")
-                      ((windows-nt) "start")
-                      (t "xdg-open"))
-                    (format " %s" args))))
+      (defun eshell/open (args)
+        (interactive)
+        (shell-command
+         (concat (cl-case system-type
+                   ((darwin) "open")
+                   ((windows-nt) "start")
+                   (t "xdg-open"))
+                 (format " %s" args))))
 
-         (use-package em-prompt
-           :defer t
-           :config
-           (setq eshell-prompt-function #'td/eshell-prompt
-                 eshell-prompt-regexp "^[^#$\\n]*[#$] "
-                 eshell-highlight-prompt nil))))
-   #+END_SRC
+      (use-package em-prompt
+        :defer t
+        :config
+        (setq eshell-prompt-function #'td/eshell-prompt
+              eshell-prompt-regexp "^[^#$\\n]*[#$] "
+              eshell-highlight-prompt nil))))
+#+END_SRC
 
 
 ** Tramp
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package tramp
-       :defer t
-       :config
-       (progn
-         (setq password-cache-expiry nil
-               tramp-debug-buffer t
-               tramp-default-method "ssh"
-               tramp-verbose 2)
+#+BEGIN_SRC emacs-lisp
+  (use-package tramp
+    :defer t
+    :config
+    (progn
+      (setq password-cache-expiry nil
+            tramp-debug-buffer t
+            tramp-default-method "ssh"
+            tramp-verbose 2)
 
-         (add-to-list 'auth-sources "~/.emacs.d/authinfo.gpg")
-         (setq ange-ftp-netrc-filename "~/.emacs.d/authinfo.gpg")))
-   #+END_SRC
+      (add-to-list 'auth-sources "~/.emacs.d/authinfo.gpg")
+      (setq ange-ftp-netrc-filename "~/.emacs.d/authinfo.gpg")))
+#+END_SRC
 
 
 * Programming
 
-  #+BEGIN_SRC emacs-lisp
-    (use-package lsp-mode
-      :ensure t
-      :config
-      (setq lsp-highlight-symbol-at-point nil))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package lsp-mode
+    :ensure t
+    :config
+    (setq lsp-highlight-symbol-at-point nil))
+#+END_SRC
 
 ** Auto completion
 
-   I use auto completion sparingly. Mostly because many of the programing
-   language support package use =company= for some of their functionalities. To
-   be fair, I'd like these mode to support Emacs's standard
-   =completion-at-point-functions= interface.
+I use auto completion sparingly. Mostly because many of the programing
+language support package use =company= for some of their functionalities. To
+be fair, I'd like these mode to support Emacs's standard
+=completion-at-point-functions= interface.
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package company
-       :ensure t
-       :diminish company-mode
-       :bind ("M-/" . company-complete-common-or-cycle)
-       :init (global-company-mode t)
-       :config
-       (progn
-         (use-package company-buffer-line
-           :commands (company-same-mode-buffer-lines)
-           :bind ("C-x C-l" . company-same-mode-buffer-lines))
+#+BEGIN_SRC emacs-lisp
+  (use-package company
+    :ensure t
+    :diminish company-mode
+    :bind ("M-/" . company-complete-common-or-cycle)
+    :init (global-company-mode t)
+    :config
+    (progn
+      (use-package company-buffer-line
+        :commands (company-same-mode-buffer-lines)
+        :bind ("C-x C-l" . company-same-mode-buffer-lines))
 
-         (use-package company-web :ensure t)
+      (use-package company-web :ensure t)
 
-         (setq company-minimum-prefix-length 2
-               company-require-match nil
-               company-idle-delay nil
-               company-tooltip-align-annotations t
-               company-echo-delay 0
-               company-frontends
-               '(company-pseudo-tooltip-unless-just-one-frontend
-                 company-echo-metadata-frontend)
-               company-backends
-               '((company-capf company-dabbrev-code)
-                 :with
-                 company-yasnippet
-                 company-web
-                 company-dict))
+      (setq company-minimum-prefix-length 2
+            company-require-match nil
+            company-idle-delay nil
+            company-tooltip-align-annotations t
+            company-echo-delay 0
+            company-frontends
+            '(company-pseudo-tooltip-unless-just-one-frontend
+              company-echo-metadata-frontend)
+            company-backends
+            '((company-capf company-dabbrev-code)
+              :with
+              company-yasnippet
+              company-web
+              company-dict))
 
-         (bind-keys :map company-active-map
-                    ("<tab>" . company-complete-common-or-cycle)
-                    ("C-n" . company-select-next-or-abort)
-                    ("C-p" . company-select-previous-or-abort))))
+      (bind-keys :map company-active-map
+                 ("<tab>" . company-complete-common-or-cycle)
+                 ("C-n" . company-select-next-or-abort)
+                 ("C-p" . company-select-previous-or-abort))))
 
-     (use-package company-statistics
-       :ensure t
-       :defer t
-       :init (add-hook 'after-init-hook #'company-statistics-mode))
-   #+END_SRC
+  (use-package company-statistics
+    :ensure t
+    :defer t
+    :init (add-hook 'after-init-hook #'company-statistics-mode))
+#+END_SRC
 
 ** Error checking
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package flycheck
-       :ensure t
-       :commands flycheck-mode
-       :init (add-hook 'prog-mode-hook #'flycheck-mode)
-       :config
-       (setq-default flycheck-disabled-checkers '(scss emacs-lisp-checkdoc)))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package flycheck
+    :ensure t
+    :commands flycheck-mode
+    :init (add-hook 'prog-mode-hook #'flycheck-mode)
+    :config
+    (setq-default flycheck-disabled-checkers '(scss emacs-lisp-checkdoc)))
+#+END_SRC
 
 ** Version Control
 
-   Git has won the version control war, everyone uses Git now. Emacs'
-   built-in VC has great support for git but Magit is godsend.
+Git has won the version control war, everyone uses Git now. Emacs'
+built-in VC has great support for git but Magit is godsend.
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package magit
-       :ensure t
-       :config
-       (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package magit
+    :ensure t
+    :config
+    (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
+#+END_SRC
 
 ** Compile
 
-   I use =compile= not only for compilation but also as a generic method to run
-   repetitive tasks. For example, I to run unit tests repeatedly, I first run
-   =M-x compile= with the test commands. Subsequence =recompile= call will
-   re-run the tests.
+I use =compile= not only for compilation but also as a generic method to run
+repetitive tasks. For example, I to run unit tests repeatedly, I first run
+=M-x compile= with the test commands. Subsequence =recompile= call will
+re-run the tests.
 
-   #+BEGIN_SRC emacs-lisp
-     (setq-default compilation-scroll-output 'first-error)
-     (bind-key "C-c m" #'recompile)
+#+BEGIN_SRC emacs-lisp
+  (setq-default compilation-scroll-output 'first-error)
+  (bind-key "C-c m" #'recompile)
 
-     (defun td/compilation-hide-window-on-finish (buffer string)
-       (if (and (string-match "compilation" (buffer-name buffer))
-                (string-match "finished" string)
-                (not (with-current-buffer buffer
-                       (search-forward "warning" nil t)))
-                (not (with-current-buffer buffer
-                       (search-forward "Error" nil t))))
-           (run-with-timer 1 nil #'delete-window (get-buffer-window buffer))))
+  (defun td/compilation-hide-window-on-finish (buffer string)
+    (if (and (string-match "compilation" (buffer-name buffer))
+             (string-match "finished" string)
+             (not (with-current-buffer buffer
+                    (search-forward "warning" nil t)))
+             (not (with-current-buffer buffer
+                    (search-forward "Error" nil t))))
+        (run-with-timer 1 nil #'delete-window (get-buffer-window buffer))))
 
-     ;; (add-hook 'compilation-finish-functions #'td/compilation-hide-window-on-finish)
-   #+END_SRC
+  ;; (add-hook 'compilation-finish-functions #'td/compilation-hide-window-on-finish)
+#+END_SRC
 
 ** Code folding
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package hideshowvis
-       :ensure t
-       :init
-       (add-hook 'hs-minor-mode-hook 'hideshowvis-enable))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package hideshowvis
+    :ensure t
+    :init
+    (add-hook 'hs-minor-mode-hook 'hideshowvis-enable))
+#+END_SRC
 
 ** Web Development
 
-   Not programming per-se. I use =web-mode= for all my templating-related
-   editing, including PHP, since I rarely write PHP anymore.
+Not programming per-se. I use =web-mode= for all my templating-related
+editing, including PHP, since I rarely write PHP anymore.
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package web-mode
-       :ensure t
-       :mode (("\\.html" . web-mode)
-              ("\\.jsx" . web-mode)
-              ("\\.tsx" . web-mode)
-              ("\\.tpl" . web-mode)
-              ("\\.erb" . web-mode)
-              ("\\.tag" . web-mode)
-              ("themes/.+\\.php" . web-mode)
-              ("\\.hbs" . web-mode)
-              ("\\.mustache" . web-mode))
-       :init (add-hook 'web-mode-hook #'emmet-mode)
-       :config
-       (progn
-         (setq web-mode-markup-indent-offset 2
-               web-mode-css-indent-offset 2
-               web-mode-code-indent-offset 2
-               web-mode-script-padding 2
-               web-mode-style-padding 2)
+#+BEGIN_SRC emacs-lisp
+  (use-package web-mode
+    :ensure t
+    :mode (("\\.html" . web-mode)
+           ("\\.jsx" . web-mode)
+           ("\\.tsx" . web-mode)
+           ("\\.tpl" . web-mode)
+           ("\\.erb" . web-mode)
+           ("\\.tag" . web-mode)
+           ("themes/.+\\.php" . web-mode)
+           ("\\.hbs" . web-mode)
+           ("\\.mustache" . web-mode))
+    :init (add-hook 'web-mode-hook #'emmet-mode)
+    :config
+    (progn
+      (setq web-mode-markup-indent-offset 2
+            web-mode-css-indent-offset 2
+            web-mode-code-indent-offset 2
+            web-mode-script-padding 2
+            web-mode-style-padding 2)
 
-         (add-hook 'web-mode-hook #'turn-off-auto-fill)
-         ))
-   #+END_SRC
+      (add-hook 'web-mode-hook #'turn-off-auto-fill)
+      ))
+#+END_SRC
 
-   Also, I can't live without Emmet.
+Also, I can't live without Emmet.
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package emmet-mode
-       :ensure t
-       :diminish emmet-mode
-       :commands emmet-mode
-       :init
-       (progn
-         (defun td/emmet-jsx-mode ()
-           (interactive)
-           (emmet-mode t)
-           (setq-local emmet-expand-jsx-className? t))
+#+BEGIN_SRC emacs-lisp
+  (use-package emmet-mode
+    :ensure t
+    :diminish emmet-mode
+    :commands emmet-mode
+    :init
+    (progn
+      (defun td/emmet-jsx-mode ()
+        (interactive)
+        (emmet-mode t)
+        (setq-local emmet-expand-jsx-className? t))
 
-         (add-hook 'sgml-mode-hook #'emmet-mode)
-         (add-hook 'web-mode-hook #'emmet-mode)
-         (add-hook 'css-mode-hook #'emmet-mode)
-         (add-hook 'js2-jsx-mode-hook #'td/emmet-jsx-mode)
-         (add-hook 'js-jsx-mode-hook #'td/emmet-jsx-mode))
-       :config
-       (progn
-         (setq emmet-indentation 2
-               emmet-preview-default nil
-               emmet-insert-flash-time 0.1)
+      (add-hook 'sgml-mode-hook #'emmet-mode)
+      (add-hook 'web-mode-hook #'emmet-mode)
+      (add-hook 'css-mode-hook #'emmet-mode)
+      (add-hook 'js2-jsx-mode-hook #'td/emmet-jsx-mode)
+      (add-hook 'js-jsx-mode-hook #'td/emmet-jsx-mode))
+    :config
+    (progn
+      (setq emmet-indentation 2
+            emmet-preview-default nil
+            emmet-insert-flash-time 0.1)
 
-         (defun td/hide-emmet-preview-tooltip ()
-           (overlay-put emmet-preview-output 'before-string nil))
+      (defun td/hide-emmet-preview-tooltip ()
+        (overlay-put emmet-preview-output 'before-string nil))
 
-         (advice-add 'emmet-preview
-                     :after #'td/hide-emmet-preview-tooltip)))
-   #+END_SRC
+      (advice-add 'emmet-preview
+                  :after #'td/hide-emmet-preview-tooltip)))
+#+END_SRC
 
-   #+BEGIN_SRC emacs-lisp
-     (defun td/format-html-attributes ()
-       (interactive)
-       (save-excursion
-         (re-search-backward "<")
-         (while (not (looking-at "[\n\r/]"))
-           (re-search-forward "\s+[^=]+=")
-           (goto-char (match-beginning 0))
-           (newline-and-indent))))
+#+BEGIN_SRC emacs-lisp
+  (defun td/format-html-attributes ()
+    (interactive)
+    (save-excursion
+      (re-search-backward "<")
+      (while (not (looking-at "[\n\r/]"))
+        (re-search-forward "\s+[^=]+=")
+        (goto-char (match-beginning 0))
+        (newline-and-indent))))
 
-     (bind-key "C-M-=" #'td/format-html-attributes)
-   #+END_SRC
+  (bind-key "C-M-=" #'td/format-html-attributes)
+#+END_SRC
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package sgml-mode
-       :mode (("\\.svg" . sgml-mode)))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package sgml-mode
+    :mode (("\\.svg" . sgml-mode)))
+#+END_SRC
 
 ** PHP
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package php-mode
-       :ensure t
-       :mode (("\\.php" . php-mode))
-       :config
-       (setq php-mode-coding-style 'drupal))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package php-mode
+    :ensure t
+    :mode (("\\.php" . php-mode))
+    :config
+    (setq php-mode-coding-style 'drupal))
+#+END_SRC
 
 ** CSS
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package css-mode
-       :defer t
-       :config
-       (setq css-indent-offset 2))
+#+BEGIN_SRC emacs-lisp
+  (use-package css-mode
+    :defer t
+    :config
+    (setq css-indent-offset 2))
 
-     (use-package rainbow-mode
-       :ensure t
-       :defer t
-       :init (add-hook 'css-mode-hook #'rainbow-mode))
-   #+END_SRC
+  (use-package rainbow-mode
+    :ensure t
+    :defer t
+    :init (add-hook 'css-mode-hook #'rainbow-mode))
+#+END_SRC
 
 ** JavaScript
 
-   Like most people I used to use =js2-mode= for all my JavaScript editing,
-   including JSX. Since I'm no longer write as much JavaScript, and I will use
-   =es-lint= for syntax checking anyways, I think I'm going to give the built-in
-   =js-mode= a try
+Like most people I used to use =js2-mode= for all my JavaScript editing,
+including JSX. Since I'm no longer write as much JavaScript, and I will use
+=es-lint= for syntax checking anyways, I think I'm going to give the built-in
+=js-mode= a try
 
-   #+BEGIN_SRC emacs-lisp
-     ;; (use-package lsp-javascript-typescript
-     ;;  :ensure t)
+#+BEGIN_SRC emacs-lisp
+  ;; (use-package lsp-javascript-typescript
+  ;;  :ensure t)
 
-     (use-package js
-       :mode (("\\.js$" . js-mode)
-              ("\\.jsx$" . js-jsx-mode)
-              ("\\.json$" . js-mode)
-              ("\\.eslintrc$" . js-mode))
-       :config
-       (setq js-indent-level 2
-             js-indent-first-init 'dynamic
-             js-switch-indent-offset 2
-             js-enabled-frameworks '(javascript))
-       ;; :preface
-       ;; (progn
-       ;;   (defun td/setup-js-mode ()
-       ;;     (interactive)
-       ;;     (require 'lsp-javascript-typescript)
-       ;;     (lsp-javascript-typescript-enable))
-       ;;   (add-hook 'js-mode-hook #'td/setup-js-mode))
-       )
+  (use-package js
+    :mode (("\\.js$" . js-mode)
+           ("\\.jsx$" . js-jsx-mode)
+           ("\\.json$" . js-mode)
+           ("\\.eslintrc$" . js-mode))
+    :config
+    (setq js-indent-level 2
+          js-indent-first-init 'dynamic
+          js-switch-indent-offset 2
+          js-enabled-frameworks '(javascript))
+    ;; :preface
+    ;; (progn
+    ;;   (defun td/setup-js-mode ()
+    ;;     (interactive)
+    ;;     (require 'lsp-javascript-typescript)
+    ;;     (lsp-javascript-typescript-enable))
+    ;;   (add-hook 'js-mode-hook #'td/setup-js-mode))
+    )
 
-     (use-package add-node-modules-path
-       :ensure t
-       :defer t
-       :init (add-hook 'js-mode-hook #'add-node-modules-path))
-   #+END_SRC
+  (use-package add-node-modules-path
+    :ensure t
+    :defer t
+    :init (add-hook 'js-mode-hook #'add-node-modules-path))
+#+END_SRC
 
-   Well, I'm also on the TypeScript train lately, mostly because of the super
-   awesome StencilJS project.
+Well, I'm also on the TypeScript train lately, mostly because of the super
+awesome StencilJS project.
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package typescript-mode
-       :ensure t
-       :config
-       (progn
-         (setq typescript-indent-level 2)
-         (defun td/enable-tslint-web-mode ()
-           (interactive)
-           (flycheck-add-mode 'typescript-tslint 'web-mode))
-         (add-hook 'flycheck-mode-hook #'td/enable-tslint-web-mode)))
+#+BEGIN_SRC emacs-lisp
+  (use-package typescript-mode
+    :ensure t
+    :config
+    (progn
+      (setq typescript-indent-level 2)
+      (defun td/enable-tslint-web-mode ()
+        (interactive)
+        (flycheck-add-mode 'typescript-tslint 'web-mode))
+      (add-hook 'flycheck-mode-hook #'td/enable-tslint-web-mode)))
 
-     (use-package tide
-       :ensure t
-       :diminish t
-       :config
-       (progn
-         (defun td/setup-tide-mode ()
-           (interactive)
-           (when (string-equal "tsx" (file-name-extension buffer-file-name))
-             (tide-setup)
-             ;; (flycheck-add-next-checker 'typescript-tide '(t . typescript-tslint) 'append)
-             ;; (tide-hl-identifier-mode +1)
-             ))
+  (use-package tide
+    :ensure t
+    :diminish t
+    :config
+    (progn
+      (defun td/setup-tide-mode ()
+        (interactive)
+        (when (string-equal "tsx" (file-name-extension buffer-file-name))
+          (tide-setup)
+          ;; (flycheck-add-next-checker 'typescript-tide '(t . typescript-tslint) 'append)
+          ;; (tide-hl-identifier-mode +1)
+          ))
 
-         (add-hook 'web-mode-hook #'td/setup-tide-mode)))
-   #+END_SRC
+      (add-hook 'web-mode-hook #'td/setup-tide-mode)))
+#+END_SRC
 
 ** Python
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package pyvenv
-       :ensure t)
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package pyvenv
+    :ensure t)
+#+END_SRC
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package pydoc
-       :ensure t)
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package pydoc
+    :ensure t)
+#+END_SRC
 
-   #+BEGIN_SRC emacs-lisp
-     ;; (use-package lsp-python :ensure t)
+#+BEGIN_SRC emacs-lisp
+  ;; (use-package lsp-python :ensure t)
 
-     (use-package python
-       :mode (("\\.py$" . python-mode)
-              ("\\.waf$" . python-mode))
-       :bind ([remap run-python] . td/run-python-with-project-root)
-       :preface
-       (progn
-         (setq python-shell-interpreter-interactive-arg "")
+  (use-package python
+    :mode (("\\.py$" . python-mode)
+           ("\\.waf$" . python-mode))
+    :bind ([remap run-python] . td/run-python-with-project-root)
+    :preface
+    (progn
+      (setq python-shell-interpreter-interactive-arg "")
 
-         (defun td/run-python-with-project-root ()
-           (interactive)
-           (let ((default-directory (projectile-project-root)))
-             (call-interactively 'run-python)))
+      (defun td/run-python-with-project-root ()
+        (interactive)
+        (let ((default-directory (projectile-project-root)))
+          (call-interactively 'run-python)))
 
-         ;; (defun td/setup-python-mode ()
-         ;;   (interactive)
-         ;;   (require 'lsp-python)
-         ;;   (lsp-python-enable))
+      ;; (defun td/setup-python-mode ()
+      ;;   (interactive)
+      ;;   (require 'lsp-python)
+      ;;   (lsp-python-enable))
 
-         ;; (add-hook 'python-mode-hook #'td/setup-python-mode)
-         ))
-   #+END_SRC
+      ;; (add-hook 'python-mode-hook #'td/setup-python-mode)
+      ))
+#+END_SRC
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package py-isort
-       :ensure t
-       :defer t
-       :init (add-hook 'before-save-hook 'py-isort-before-save))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package py-isort
+    :ensure t
+    :defer t
+    :init (add-hook 'before-save-hook 'py-isort-before-save))
+#+END_SRC
 
 ** Haskell
 
-   I'm also a Haskell beginner :). Setting up Haskell with Emacs is relatively
-   easy. There's also a catch-all IDE-like mode called =intero=, by the very
-   same folk who runs =stack=.
+I'm also a Haskell beginner :). Setting up Haskell with Emacs is relatively
+easy. There's also a catch-all IDE-like mode called =intero=, by the very
+same folk who runs =stack=.
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package lsp-haskell :ensure t)
+#+BEGIN_SRC emacs-lisp
+  (use-package lsp-haskell :ensure t)
 
-     (defun td/turn-off-evil-auto-indent ()
-       (setq-local evil-auto-indent nil))
+  (defun td/turn-off-evil-auto-indent ()
+    (setq-local evil-auto-indent nil))
 
-     (add-hook 'haskell-mode-hook #'td/turn-off-evil-auto-indent)
+  (add-hook 'haskell-mode-hook #'td/turn-off-evil-auto-indent)
 
-     (use-package haskell-mode
-       :ensure t
-       :mode (("\\.hs$" . haskell-mode))
-       :bind (([remap haskell-mode-format-imports] . haskell-sort-imports))
-       :config
-       (setq haskell-program-name "stack ghci"))
+  (use-package haskell-mode
+    :ensure t
+    :mode (("\\.hs$" . haskell-mode))
+    :bind (([remap haskell-mode-format-imports] . haskell-sort-imports))
+    :config
+    (setq haskell-program-name "stack ghci"))
 
-     (use-package dante
-       :ensure t
-       :after haskell-mode
-       :commands 'dante-mode
-       :init
-       (add-hook 'haskell-mode-hook 'dante-mode)
-       (add-hook 'haskell-mode-hook 'flycheck-mode)
-       (add-hook 'dante-mode-hook
-                 '(lambda () (flycheck-add-next-checker
-                              'haskell-dante '(warning . haskell-hlint)))))
-   #+END_SRC
+  (use-package dante
+    :ensure t
+    :after haskell-mode
+    :commands 'dante-mode
+    :init
+    (add-hook 'haskell-mode-hook 'dante-mode)
+    (add-hook 'haskell-mode-hook 'flycheck-mode)
+    (add-hook 'dante-mode-hook
+              '(lambda () (flycheck-add-next-checker
+                           'haskell-dante '(warning . haskell-hlint)))))
+#+END_SRC
 
 ** PureScript
 
-   I started using PureScript for all my frontend works.
+I started using PureScript for all my frontend works.
 
-   #+BEGIN_SRC emacs-lisp
-     (add-hook 'purescript-mode-hook #'td/turn-off-evil-auto-indent)
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'purescript-mode-hook #'td/turn-off-evil-auto-indent)
 
-     (use-package purescript-mode
-       :ensure t
-       :mode (("\\.purs$" . purescript-mode))
-       :config
-       (progn
-         (defun purescript-doc-current-info ())
+  (use-package purescript-mode
+    :ensure t
+    :mode (("\\.purs$" . purescript-mode))
+    :config
+    (progn
+      (defun purescript-doc-current-info ())
 
-         (add-hook 'purescript-mode-hook #'turn-on-purescript-indentation)
+      (add-hook 'purescript-mode-hook #'turn-on-purescript-indentation)
 
-         (use-package psc-ide
-           :ensure t
-           :init (add-hook 'purescript-mode-hook #'psc-ide-mode))))
-   #+END_SRC
+      (use-package psc-ide
+        :ensure t
+        :init (add-hook 'purescript-mode-hook #'psc-ide-mode))))
+#+END_SRC
 
 ** Go
 
-   #+BEGIN_SRC emacs-lisp :tangle no
-     (use-package go-mode
-       :ensure t
-       :mode (("\\.go$" . go-mode)))
+#+BEGIN_SRC emacs-lisp :tangle no
+  (use-package go-mode
+    :ensure t
+    :mode (("\\.go$" . go-mode)))
 
-     (use-package company-go
-       :ensure t
-       :init (add-to-list 'company-backends 'company-go))
+  (use-package company-go
+    :ensure t
+    :init (add-to-list 'company-backends 'company-go))
 
-     (use-package go-eldoc
-       :ensure t
-       :init (add-hook 'go-mode-hook 'go-eldoc-setup))
-   #+END_SRC
+  (use-package go-eldoc
+    :ensure t
+    :init (add-hook 'go-mode-hook 'go-eldoc-setup))
+#+END_SRC
 
 ** Swift
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package swift-mode
-       :ensure t
-       :mode (("\\.swift" . swift-mode)))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package swift-mode
+    :ensure t
+    :mode (("\\.swift" . swift-mode)))
+#+END_SRC
 
 ** Misc
 
-   These are supports for other stuffs that I used:
+These are supports for other stuffs that I used:
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package markdown-mode
-       :ensure t
-       :mode (("\\.md$" . markdown-mode)
-              ("\\.markdown$" . markdown-mode))
-       :init (add-hook 'markdown-mode-hook #'whitespace-turn-off))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package markdown-mode
+    :ensure t
+    :mode (("\\.md$" . markdown-mode)
+           ("\\.markdown$" . markdown-mode))
+    :init (add-hook 'markdown-mode-hook #'whitespace-turn-off))
+#+END_SRC
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package nix-mode
-       :ensure t
-       :mode (("\\.nix$" . nix-mode))
-       :config
-       (exec-path-from-shell-copy-env "NIX_REMOTE"))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package nix-mode
+    :ensure t
+    :mode (("\\.nix$" . nix-mode))
+    :config
+    (exec-path-from-shell-copy-env "NIX_REMOTE"))
+#+END_SRC
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package dockerfile-mode
-       :ensure t
-       :mode ("Dockerfile$" . dockerfile-mode))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package dockerfile-mode
+    :ensure t
+    :mode ("Dockerfile$" . dockerfile-mode))
+#+END_SRC
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package nginx-mode
-       :ensure t
-       :mode (".*nginx.*\\.conf$" . nginx-mode))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package nginx-mode
+    :ensure t
+    :mode (".*nginx.*\\.conf$" . nginx-mode))
+#+END_SRC
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package yaml-mode
-       :ensure t
-       :mode (("\\.yml$" . yaml-mode)
-              ("\\.yaml$" . yaml-mode)
-              ("\\.sls$" . yaml-mode)
-              ("^master$" . yaml-mode)
-              ("^roster$" . yaml-mode)))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package yaml-mode
+    :ensure t
+    :mode (("\\.yml$" . yaml-mode)
+           ("\\.yaml$" . yaml-mode)
+           ("\\.sls$" . yaml-mode)
+           ("^master$" . yaml-mode)
+           ("^roster$" . yaml-mode)))
+#+END_SRC
 
 
 * Document and management
 
-  I use Org for almost everything. Blogging, task management, API documentation,
-  literate programming.
+I use Org for almost everything. Blogging, task management, API documentation,
+literate programming.
 
 ** Tracking and tasks management
 
-   I tried many management tools: Wunderlist, Todoist, Google Calendar
-   .etc. However all of them are missing something really crucial for me. For
-   example Wunderlist has agenda overview, but lacks adding note to
-   tasks. Evernote has execllent note support, but their project management is
-   just barebone, not much than a todo list.
+I tried many management tools: Wunderlist, Todoist, Google Calendar
+.etc. However all of them are missing something really crucial for me. For
+example Wunderlist has agenda overview, but lacks adding note to
+tasks. Evernote has execllent note support, but their project management is
+just barebone, not much than a todo list.
 
-   Org on the other hand lacks notification and ubiquitous access. I'm looking
-   for a solution though.
+Org on the other hand lacks notification and ubiquitous access. I'm looking
+for a solution though.
 
-   Here's my basic Org setup:
+Here's my basic Org setup:
 
-   - A default =inbox.org= on Desktop for tasks capturing and project management
-   - Nicer display with inline images
-   - Enable GTD todo keyword sequence and time loging
+- A default =inbox.org= on Desktop for tasks capturing and project management
+- Nicer display with inline images
+- Enable GTD todo keyword sequence and time loging
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package org
-       :ensure t
-       :bind (("C-c o c" . org-occur-in-agenda-files))
-       :config
-       (setq org-directory "~/Desktop/"
-             org-default-notes-file (expand-file-name "inbox.org" org-directory)
-             org-agenda-files (list org-directory)
-             org-agenda-skip-unavailable-files t
-             org-hide-leading-stars t
-             org-refile-targets (list '("~/Desktop/archive.org" . (:level . 1)))
+#+BEGIN_SRC emacs-lisp
+  (use-package org
+    :ensure t
+    :bind (("C-c o c" . org-occur-in-agenda-files))
+    :config
+    (setq org-directory "~/Desktop/"
+          org-default-notes-file (expand-file-name "inbox.org" org-directory)
+          org-agenda-files (list org-directory)
+          org-agenda-skip-unavailable-files t
+          org-hide-leading-stars t
+          org-refile-targets (list '("~/Desktop/archive.org" . (:level . 1)))
 
-             org-startup-with-inline-images t
+          org-startup-with-inline-images t
 
-             org-todo-keywords
-             '((sequence "TODO(t)" "STARTED(s!)" "WAITING(w@/!)" "|" "CANCELED(c@)" "DONE(d!)"))
-             org-log-done 'time
+          org-todo-keywords
+          '((sequence "[ ](t)" "[-](p)" "[?](m)" "|" "[X](d)")
+            (sequence "TODO(T)" "|" "DONE(D)")
+            (sequence "NEXT(n)" "ACTIVE(a)" "WAITING(w)" "LATER(l)" "|" "CANCELLED(c)"))
+          org-log-done 'time
 
-             org-src-fontify-natively t))
-   #+END_SRC
+          org-src-fontify-natively t)
+    (add-hook 'org-mode-hook #'org-indent-mode))
+#+END_SRC
 
-   Agenda overview and filtering. Org provides a bunch of quick overviews:
+Agenda overview and filtering. Org provides a bunch of quick overviews:
 
-   | Binding                | Description                                   |
-   |------------------------+-----------------------------------------------|
-   | =C-c o a t=, =C-c o t= | List the TODO items                           |
-   |------------------------+-----------------------------------------------|
-   | =C-c o a #=            | List stuck projects, see =org-stuck-projects= |
-   |------------------------+-----------------------------------------------|
-   | =C-c o a s=            | Search Org headers                            |
+| Binding                | Description                                   |
+|------------------------+-----------------------------------------------|
+| =C-c o a t=, =C-c o t= | List the TODO items                           |
+|------------------------+-----------------------------------------------|
+| =C-c o a #=            | List stuck projects, see =org-stuck-projects= |
+|------------------------+-----------------------------------------------|
+| =C-c o a s=            | Search Org headers                            |
 
-   Stuck projects are:
+Stuck projects are:
 
-   - Top level outlines that have the tag =project=
-   - Without holding state (waiting/done/cancelled)
-   - But don't have any todo items
+- Top level outlines that have the tag =project=
+- Without holding state (waiting/done/cancelled)
+- But don't have any todo items
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package org-agenda
-       :bind (("C-c o a" . org-agenda)
-              ("C-c o t" . org-todo-list))
-       :config
-       (setq org-agenda-restore-windows-after-quit t
-             org-agenda-window-setup 'current-window
-             org-stuck-projects
-             '("+project+LEVEL=1/-WAITING-DONE-CANCELLED" ("TODO" "WAITING") nil "")))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package org-agenda
+    :bind (("C-c o a" . org-agenda)
+           ("C-c o t" . org-todo-list))
+    :config
+    (setq org-agenda-restore-windows-after-quit t
+          org-agenda-window-setup 'current-window
+          org-stuck-projects
+          '("+project+LEVEL=1/-WAITING-DONE-CANCELLED" ("TODO" "WAITING") nil "")))
+#+END_SRC
 
 ** Note taking
 
-   As stated earlier, I practice GTD. Working projects and new stuffs go to
-   =inbox.org= file. Old tasks are archived to =archive.org=. Here's my
-   =org-capture= templates to dump stuffs to =inbox/note=
+As stated earlier, I practice GTD. Working projects and new stuffs go to
+=inbox.org= file. Old tasks are archived to =archive.org=. Here's my
+=org-capture= templates to dump stuffs to =inbox/note=
 
 ** Archive
 
-   I also use =org-board= to have an offline pin-board with org-mode.
+I also use =org-board= to have an offline pin-board with org-mode.
 
-   #+BEGIN_SRC emacs-lisp :tangle no
-     (use-package org-board
-       :ensure t
-       :defer t
-       :bind-keymap ("C-c b" . org-board-keymap))
-   #+END_SRC
+#+BEGIN_SRC emacs-lisp :tangle no
+  (use-package org-board
+    :ensure t
+    :defer t
+    :bind-keymap ("C-c b" . org-board-keymap))
+#+END_SRC
 
 ** Literate programming
 
-   Org Babel for literate programming and API documentation.
+Org Babel for literate programming and API documentation.
 
-   #+BEGIN_SRC emacs-lisp
-     (use-package ob-http
-       :ensure t)
+#+BEGIN_SRC emacs-lisp
+  (use-package ob-http
+    :ensure t)
 
-     (use-package ob-core
-       :defer t
-       :config
-       (progn
-         (setq org-confirm-babel-evaluate nil)
+  (use-package ob-core
+    :defer t
+    :config
+    (progn
+      (setq org-confirm-babel-evaluate nil)
 
-         (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+      (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
 
-         (org-babel-do-load-languages
-          'org-babel-load-languages
-          '((emacs-lisp . t)
-            (http . t)))))
-   #+END_SRC
+      (org-babel-do-load-languages
+       'org-babel-load-languages
+       '((emacs-lisp . t)
+         (http . t)))))
+#+END_SRC
 
 ** Spell checking
 
-   #+BEGIN_SRC emacs-lisp
-     (when (executable-find "aspell")
-       (use-package ispell
-         :bind ("<f8>" . ispell-word)
-         :init (setq-default ispell-program-name "aspell"
-                             ispell-extra-args '("--sug-mode=ultra" "--lang=en_US" "--personal=~/.emacs.d/dictionary")
-                             ispell-skip-html t
-                             ispell-silently-savep t
-                             ispell-really-aspell t))
+#+BEGIN_SRC emacs-lisp
+  (when (executable-find "aspell")
+    (use-package ispell
+      :bind ("<f8>" . ispell-word)
+      :init (setq-default ispell-program-name "aspell"
+                          ispell-extra-args '("--sug-mode=ultra" "--lang=en_US" "--personal=~/.emacs.d/dictionary")
+                          ispell-skip-html t
+                          ispell-silently-savep t
+                          ispell-really-aspell t))
 
-       (use-package flyspell
-         :defer t
-         :init (add-hook 'org-mode-hook 'flyspell-mode)
-         ;; :config
-         ;; (progn
-         ;;   (require 'flyspell-ignore-faces)
-         ;;   (put 'org-mode 'flyspell-mode-predicate 'td/flyspell-check-p))
-         ))
-   #+END_SRC
+    (use-package flyspell
+      :defer t
+      :init (add-hook 'org-mode-hook 'flyspell-mode)
+      ;; :config
+      ;; (progn
+      ;;   (require 'flyspell-ignore-faces)
+      ;;   (put 'org-mode 'flyspell-mode-predicate 'td/flyspell-check-p))
+      ))
+#+END_SRC
 
 
 * Look and feel
 
-  I love eye candy <3. I put quite a lot of efforts to make Emacs look
-  the way I liked.
+I love eye candy <3. I put quite a lot of efforts to make Emacs look
+the way I liked.
 
-  #+BEGIN_SRC emacs-lisp
-    (setq inhibit-startup-screen t
-          visible-bell nil
-          ring-bell-function 'ignore
-          scroll-preserve-screen-position t
-          scroll-margin 8)
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (setq inhibit-startup-screen t
+        visible-bell nil
+        ring-bell-function 'ignore
+        scroll-preserve-screen-position t
+        scroll-margin 8)
+#+END_SRC
 
-  Default window configuration: half-left of the screen, no scroll bars, no menu
-  bars, no cursor blinking. And btw, nothing beats the classic Monaco. "Menlo",
-  "Source Code Pro" and "Fira Code" come close, currently I have to use them for
-  bold and ligatures support :(.
+Default window configuration: half-left of the screen, no scroll bars, no menu
+bars, no cursor blinking. And btw, nothing beats the classic Monaco. "Menlo",
+"Source Code Pro" and "Fira Code" come close, currently I have to use them for
+bold and ligatures support :(.
 
-  #+BEGIN_SRC emacs-lisp
-    (setq-default
-     fringes-outside-margins t
-     default-frame-alist
-     '((left-fringe . 8) (right-fringe . 4)
-       (border-width . 0) (internal-border-width . 0)
-       ;(font . "Monaco 14")
-       ;(font . "Menlo 12")
-       (font . "Source Code Pro 14")
-       ;(font . "Fira Code Retina 13")
-       (top . 0) (left . 480)
-       (width . 96) (height . 96)
-       (vertical-scroll-bars . nil)
-       (menu-bar-lines . 0)
-       (tool-bar-lines . 0)))
+#+BEGIN_SRC emacs-lisp
+  (setq-default
+   fringes-outside-margins t
+   default-frame-alist
+   '((left-fringe . 8) (right-fringe . 4)
+     (border-width . 0) (internal-border-width . 0)
+     ;(font . "Monaco 14")
+     ;(font . "Menlo 12")
+     (font . "Source Code Pro 14")
+     ;(font . "Fira Code Retina 13")
+     (top . 0) (left . 480)
+     (width . 96) (height . 96)
+     (vertical-scroll-bars . nil)
+     (menu-bar-lines . 0)
+     (tool-bar-lines . 0)))
 
-    (blink-cursor-mode -1)
-    ;; (setq-default
-    ;;  line-spacing 2
-    ;;  cursor-type '(bar . 4)
-    ;; )
-  #+END_SRC
+  (blink-cursor-mode -1)
+#+END_SRC
 
-  Enable ligatures, only available in railwaycat Mac port.
+Enable ligatures, only available in railwaycat Mac port.
 
-  #+BEGIN_SRC emacs-lisp
-    (ignore-errors
-      (mac-auto-operator-composition-mode))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (ignore-errors
+    (mac-auto-operator-composition-mode))
+#+END_SRC
 
-  Truncate lines:
+Truncate lines:
 
-  #+BEGIN_SRC emacs-lisp
-    (setq-default truncate-lines t)
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (setq-default truncate-lines t)
+#+END_SRC
 
-  Some preferences that I set for all the theme. Per documentation, the custom
-  theme named =user= will always have the highest priority.
+Some preferences that I set for all the theme. Per documentation, the custom
+theme named =user= will always have the highest priority.
 
-  #+BEGIN_SRC emacs-lisp
-    (custom-theme-set-faces
-     'user
-     ;'(vertical-border ((t (:foreground "#000" :background "#000"))))
-     ;'(highlight ((t (:inherit region))))
-     ;'(sp-pair-overlay-face ((t (:inherit region))))
-     ;'(font-lock-string-face ((t (:slant normal))))
-     ;'(font-lock-comment-face ((t (:slant normal))))
-     ;'(font-lock-comment-delimiter-face
-     ;  ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
+#+BEGIN_SRC emacs-lisp
+  (custom-theme-set-faces
+   'user
+   ;'(vertical-border ((t (:foreground "#000" :background "#000"))))
+   ;'(highlight ((t (:inherit region))))
+   ;'(sp-pair-overlay-face ((t (:inherit region))))
+   ;'(font-lock-string-face ((t (:slant normal))))
+   ;'(font-lock-comment-face ((t (:slant normal))))
+   ;'(font-lock-comment-delimiter-face
+   ;  ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
 
-     '(line-number ((t (:height 120))))
-     '(line-number-current-line ((t (:height 120))))
-     ;;; '(fringe ((t (:inherit nil))))
-     ;'(mode-line ((t (:box nil))))
-     ;'(mode-line-inactive ((t (:box nil))))
+   '(line-number ((t (:height 120))))
+   '(line-number-current-line ((t (:height 120))))
+   ;;; '(fringe ((t (:inherit nil))))
+   ;'(mode-line ((t (:box nil))))
+   ;'(mode-line-inactive ((t (:box nil))))
 
-     '(indent-guide-face ((t (:inherit font-lock-comment-face))))
+   '(indent-guide-face ((t (:inherit font-lock-comment-face))))
+   '(nix-attribute-face ((t (:inherit font-lock-builtin-face))))
+   '(web-mode-variable-name-face ((t (:inherit default))))
 
-     ;; '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#81af34"))))
-     ;; '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#ff0000"))))
-     ;; '(diff-hl-change ((t (:inherit nil :background nil :foreground "#deae3e"))))
+   ;; '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#81af34"))))
+   ;; '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#ff0000"))))
+   ;; '(diff-hl-change ((t (:inherit nil :background nil :foreground "#deae3e"))))
 
-     ;; tango-plus
-     ;; '(font-lock-keyword-face ((t (:weight normal))))
-     ;; '(font-lock-string-face ((t (:slant normal))))
-     ;; '(font-lock-constant-face ((t (:slant normal))))
+   ;; tango-plus
+   ;; '(font-lock-keyword-face ((t (:weight normal))))
+   ;; '(font-lock-string-face ((t (:slant normal))))
+   ;; '(font-lock-constant-face ((t (:slant normal))))
 
-     ;; brin
-     ;; '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
-     ;; '(link ((t (:inherit font-lock-function-name-face :underline t))))
-     ;; '(minibuffer-prompt ((t (:inherit font-lock-function-name-face))))
-     ;; '(line-number-current-line ((t (:inherit line-number :foreground "#8993a9" :background "#566076"))))
+   ;; brin
+   ;; '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
+   ;; '(link ((t (:inherit font-lock-function-name-face :underline t))))
+   ;; '(minibuffer-prompt ((t (:inherit font-lock-function-name-face))))
+   ;; '(line-number-current-line ((t (:inherit line-number :foreground "#8993a9" :background "#566076"))))
 
-     ;; nord
-     ;'(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
-     ;'(highlight-numbers-number ((t (:inherit nil :foreground "#B48EAD")))) ; nord15
-     ;; '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#A3BE8C"))))
-     ;; '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#BF616A"))))
-     ;; '(diff-hl-change ((t (:inherit nil :background nil :foreground "#EBCB8B"))))
+   ;; nord
+   ;'(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
+   ;'(highlight-numbers-number ((t (:inherit nil :foreground "#B48EAD")))) ; nord15
+   ;; '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#A3BE8C"))))
+   ;; '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#BF616A"))))
+   ;; '(diff-hl-change ((t (:inherit nil :background nil :foreground "#EBCB8B"))))
 
-     ;; tango
-     )
+   ;; tango
+   )
 
-    (use-package highlight-numbers
-      :ensure t
-      :defer t
-      :init (add-hook 'prog-mode-hook #'highlight-numbers-mode))
-  #+END_SRC
+  (use-package highlight-numbers
+    :ensure t
+    :defer t
+    :init (add-hook 'prog-mode-hook #'highlight-numbers-mode))
+#+END_SRC
 
-  #+BEGIN_SRC emacs-lisp :tangle no
-    (use-package nord-theme
-      :ensure t
-      :init (load-theme 'nord t))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp :tangle no
+  (use-package nord-theme
+    :ensure t
+    :init (load-theme 'nord t))
+#+END_SRC
 
-  #+BEGIN_SRC emacs-lisp
-    (use-package doom-themes
-      :ensure t
-      :init
-      (progn
-        (setq doom-themes-enable-italic nil
-              doom-spacegrey-brighter-modeline t)
-        (load-theme 'doom-spacegrey t)))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package doom-themes
+    :ensure t
+    :init
+    (progn
+      (setq doom-themes-enable-italic nil
+            doom-spacegrey-brighter-modeline t)
+      (load-theme 'doom-spacegrey t)
+      (doom-themes-org-config)))
+#+END_SRC
 
-  I also have an alternate light-theme for backup or use in
-  presentation, which is *base16-github* from [[https://github.com/belak/base16-emacs][base16-themes]] package.
+I also have an alternate light-theme for backup or use in
+presentation, which is *base16-github* from [[https://github.com/belak/base16-emacs][base16-themes]] package.
 
-  #+BEGIN_SRC emacs-lisp :tangle no
-    (use-package base16-theme
-      :ensure t)
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp :tangle no
+  (use-package base16-theme
+    :ensure t)
+#+END_SRC
 
-  I also have very good experience with *Tango Plus*. Its philosophy of not
-  getting in the way is interesting.
+I also have very good experience with *Tango Plus*. Its philosophy of not
+getting in the way is interesting.
 
-  #+BEGIN_SRC emacs-lisp :tangle no
-    (use-package tango-plus-theme
-      :ensure t
-      :init (load-theme 'tango-plus t))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp :tangle no
+  (use-package tango-plus-theme
+    :ensure t
+    :init (load-theme 'tango-plus t))
+#+END_SRC
 
-  Mode line
+Mode line
 
-  #+BEGIN_SRC emacs-lisp
-    (use-package smart-mode-line
-      :ensure t
-      ;:preface (setq-default sml/theme 'respectful)
-      :init (sml/setup))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package smart-mode-line
+    :ensure t
+    ;:preface (setq-default sml/theme 'respectful)
+    :init (sml/setup))
+#+END_SRC
 
-  Show current function name in the mode line:
+Show current function name in the mode line:
 
-  #+BEGIN_SRC emacs-lisp
-    (which-function-mode t)
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (which-function-mode t)
+#+END_SRC
 
-  Line and column numbers, which I find only helpful when tracking
-  down compiler error :(.
+Line and column numbers, which I find only helpful when tracking
+down compiler error :(.
 
-  #+BEGIN_SRC emacs-lisp
-    (column-number-mode t)
-    (line-number-mode t)
+#+BEGIN_SRC emacs-lisp
+  (column-number-mode t)
+  (line-number-mode t)
 
-    (setq-default display-line-numbers-width 3)
-    (add-hook 'prog-mode-hook #'display-line-numbers-mode)
-  #+END_SRC
+  (setq-default display-line-numbers-width 3)
+  (add-hook 'prog-mode-hook #'display-line-numbers-mode)
+#+END_SRC
 
-  The default line continuation indicator is too standout and distracting for me.
+The default line continuation indicator is too standout and distracting for me.
 
-  #+BEGIN_SRC emacs-lisp
-    (define-fringe-bitmap 'halftone
-      [#b01000000
-       #b10000000]
-      nil nil '(top t))
+#+BEGIN_SRC emacs-lisp
+  (define-fringe-bitmap 'halftone
+    [#b01000000
+     #b10000000]
+    nil nil '(top t))
 
-    (setcdr (assq 'continuation fringe-indicator-alist) 'halftone)
-    (setcdr (assq 'truncation fringe-indicator-alist) 'halftone)
-  #+END_SRC
+  (setcdr (assq 'continuation fringe-indicator-alist) 'halftone)
+  (setcdr (assq 'truncation fringe-indicator-alist) 'halftone)
+#+END_SRC
 
-  #+BEGIN_SRC emacs-lisp
-    (use-package indent-guide
-      :ensure t
-      :commands (indent-guide-mode)
-      :diminish indent-guide-mode
-      :init
-      (add-hook 'python-mode-hook #'indent-guide-mode)
-      (add-hook 'yaml-mode-hook #'indent-guide-mode)
-      (add-hook 'purescript-mode-hook #'indent-guide-mode)
-      (add-hook 'haskell-mode-hook #'indent-guide-mode))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package indent-guide
+    :ensure t
+    :commands (indent-guide-mode)
+    :diminish indent-guide-mode
+    :init
+    (add-hook 'python-mode-hook #'indent-guide-mode)
+    (add-hook 'yaml-mode-hook #'indent-guide-mode)
+    (add-hook 'purescript-mode-hook #'indent-guide-mode)
+    (add-hook 'haskell-mode-hook #'indent-guide-mode))
+#+END_SRC
 
-  #+BEGIN_SRC emacs-lisp
-    (use-package rainbow-delimiters
-      :ensure t
-      :commands rainbow-delimiters-mode
-      :init (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
-      :config
-      (progn
-        (setq rainbow-delimiters-max-face-count 1)
+#+BEGIN_SRC emacs-lisp
+  (use-package rainbow-delimiters
+    :ensure t
+    :commands rainbow-delimiters-mode
+    :init (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+    :config
+    (progn
+      (setq rainbow-delimiters-max-face-count 1)
 
-        (custom-theme-set-faces
-         'user
-         '(rainbow-delimiters-unmatched-face ((t (:inherit error :background "#f00")))))))
-  #+END_SRC
+      (custom-theme-set-faces
+       'user
+       '(rainbow-delimiters-unmatched-face ((t (:inherit error :background "#f00")))))))
+#+END_SRC
 
-  Display change marker based on =git=. I usually turn this off because it is
-  kind of distracting, but it is really helpful sometimes.
+Display change marker based on =git=. I usually turn this off because it is
+kind of distracting, but it is really helpful sometimes.
 
-  #+BEGIN_SRC emacs-lisp
-    (use-package diff-hl
-      :defer 1
-      :ensure t
-      :init (add-hook 'after-init-hook #'global-diff-hl-mode)
-      :preface
-      (progn
-        (define-fringe-bitmap 'td/diff-hl-bmp [#b11110000] 1 8 '(top t))
-        (defun td/diff-hl-bmp-fn (type pos) 'td/diff-hl-bmp)
+#+BEGIN_SRC emacs-lisp
+  (use-package diff-hl
+    :defer 1
+    :ensure t
+    :init (add-hook 'after-init-hook #'global-diff-hl-mode)
+    :preface
+    (progn
+      (define-fringe-bitmap 'td/diff-hl-bmp [#b11110000] 1 8 '(top t))
+      (defun td/diff-hl-bmp-fn (type pos) 'td/diff-hl-bmp)
 
-        (setq diff-hl-draw-borders nil
-              diff-hl-side 'right
-              diff-hl-fringe-bmp-function #'td/diff-hl-bmp-fn)
+      (setq diff-hl-draw-borders nil
+            diff-hl-side 'right
+            diff-hl-fringe-bmp-function #'td/diff-hl-bmp-fn)
 
-        (defun diff-hl-overlay-modified (ov after-p beg end &optional len)
-          "Markers disappear and reapear is kind of annoying to me.")
-        ))
-  #+END_SRC
+      (defun diff-hl-overlay-modified (ov after-p beg end &optional len)
+        "Markers disappear and reapear is kind of annoying to me.")
+      ))
+#+END_SRC
 
 
 * Misc
 
-  #+BEGIN_SRC emacs-lisp
-    (use-package aria2
-      :ensure t
-      :defer t
-      :config
-      (setq aria2-add-evil-quirks t
-            aria2-download-directory (expand-file-name "~/Downloads")))
-  #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package aria2
+    :ensure t
+    :defer t
+    :config
+    (setq aria2-add-evil-quirks t
+          aria2-download-directory (expand-file-name "~/Downloads")))
+#+END_SRC
 
-  #+BEGIN_SRC emacs-lisp
-    (defun td/refresh-front-most-tab ()
-      (interactive)
-      (shell-command "osascript -e 'tell application \"Google Chrome\" to reload active tab of window 1'"))
+#+BEGIN_SRC emacs-lisp
+  (defun td/refresh-front-most-tab ()
+    (interactive)
+    (shell-command "osascript -e 'tell application \"Google Chrome\" to reload active tab of window 1'"))
 
-    (bind-key* "C-c b r" #'td/refresh-front-most-tab)
-  #+END_SRC
+  (bind-key* "C-c b r" #'td/refresh-front-most-tab)
+#+END_SRC
 
-  #+BEGIN_SRC emacs-lisp
-    (defun td/cycle-themes ()
-      (interactive)
-      (let* ((current-theme (car custom-enabled-themes))
-             (index (or (-elem-index current-theme (custom-available-themes)) 0))
-             (next-theme (nth (+ 1 index) (custom-available-themes))))
-        (disable-theme current-theme)
-        (load-theme next-theme t)))
+#+BEGIN_SRC emacs-lisp
+  (defun td/cycle-themes ()
+    (interactive)
+    (let* ((current-theme (car custom-enabled-themes))
+           (index (or (-elem-index current-theme (custom-available-themes)) 0))
+           (next-theme (nth (+ 1 index) (custom-available-themes))))
+      (disable-theme current-theme)
+      (load-theme next-theme t)))
 
-    (bind-key "C-c t n" #'td/cycle-themes)
-  #+END_SRC
+  (bind-key "C-c t n" #'td/cycle-themes)
+#+END_SRC
 
 
 * Init file generation
 
-  Where the magic happen! (Note: It not showing up on Github preview)
+Where the magic happen! (Note: It not showing up on Github preview)
 
-  #+BEGIN_SRC text :tangle no
-    # Local Variables:
-    # eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle)) nil t)
-    # End:
-  #+END_SRC
+#+BEGIN_SRC text :tangle no
+  # Local Variables:
+  # eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle)) nil t)
+  # End:
+#+END_SRC
 
 # Local Variables:
 # eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle)) nil t)
