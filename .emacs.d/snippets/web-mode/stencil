@@ -1,0 +1,17 @@
+# -*- mode: snippet -*-
+# name: stencil
+# key: stencil
+# --
+import { Component, Prop, State } from '@stencil/core'
+
+@Component({
+  tag: '${1:tag-name}',
+  styleUrl: '$1.scss'
+})
+export class $2 {
+  render() {
+    return (
+      $0
+    )
+  }
+}
