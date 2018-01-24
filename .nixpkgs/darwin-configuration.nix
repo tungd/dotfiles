@@ -25,8 +25,8 @@
     [ pkgs.ag
       pkgs.antiword
       pkgs.aria2
-      pkgs.aspell
-      pkgs.aspellDicts.en
+      # pkgs.aspell
+      # pkgs.aspellDicts.en
       pkgs.bashCompletion
       pkgs.closurecompiler
       pkgs.curl
@@ -51,8 +51,10 @@
       pkgs.stack
       pkgs.tmux
       pkgs.tree
-      pkgs.watchman
+      # pkgs.watchman
       pkgs.wget
+
+      # (import ./emacs-mac.nix)
 
       pkgs.nix-repl
     ];
