@@ -99,7 +99,12 @@ Less verbose choice:
 ** Server
 
 #+BEGIN_SRC emacs-lisp
-  (add-hook 'after-init-hook #'server-start)
+  (defun td/ensure-server-running ()
+    (require 'server)
+    (unless (server-running-p)
+      (server-start)))
+
+  (add-hook 'after-init-hook #'td/ensure-server-running)
 #+END_SRC
 
 
@@ -919,8 +924,6 @@ easy. There's also a catch-all IDE-like mode called =intero=, by the very
 same folk who runs =stack=.
 
 #+BEGIN_SRC emacs-lisp
-  (use-package lsp-haskell :ensure t)
-
   (defun td/turn-off-evil-auto-indent ()
     (setq-local evil-auto-indent nil))
 
@@ -933,16 +936,34 @@ same folk who runs =stack=.
     :config
     (setq haskell-program-name "stack ghci"))
 
+  (use-package intero
+    :ensure t
+    :init
+    (add-hook 'haskell-mode-hook #'intero-mode))
+#+END_SRC
+
+Dante is very nice in theory, however it's not working well with GHC 8.2 yet.
+
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package dante
     :ensure t
     :after haskell-mode
     :commands 'dante-mode
     :init
     (add-hook 'haskell-mode-hook 'dante-mode)
-    (add-hook 'haskell-mode-hook 'flycheck-mode)
-    (add-hook 'dante-mode-hook
-              '(lambda () (flycheck-add-next-checker
-                           'haskell-dante '(warning . haskell-hlint)))))
+    :config
+    (progn
+      (setq dante-debug '(inputs outputs))
+
+      (add-hook 'dante-mode-hook
+                '(lambda () (flycheck-add-next-checker
+                             'haskell-dante '(warning . haskell-hlint))))))
+#+END_SRC
+
+LSP Haskell is another viable option.
+
+#+BEGIN_SRC emacs-lisp :tangle no
+  (use-package lsp-haskell :ensure t)
 #+END_SRC
 
 ** PureScript
@@ -1224,47 +1245,39 @@ theme named =user= will always have the highest priority.
 #+BEGIN_SRC emacs-lisp
   (custom-theme-set-faces
    'user
-   ;'(vertical-border ((t (:foreground "#000" :background "#000"))))
-   ;'(highlight ((t (:inherit region))))
-   ;'(sp-pair-overlay-face ((t (:inherit region))))
-   ;'(font-lock-string-face ((t (:slant normal))))
-   ;'(font-lock-comment-face ((t (:slant normal))))
-   ;'(font-lock-comment-delimiter-face
-   ;  ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
+   '(vertical-border ((t (:foreground "#000" :background "#000"))))
+   ;;'(highlight ((t (:inherit region))))
+   ;;'(sp-pair-overlay-face ((t (:inherit region))))
+   ;;'(font-lock-string-face ((t (:slant normal))))
+   ;;'(font-lock-comment-face ((t (:slant normal))))
+   ;;'(font-lock-comment-delimiter-face
+   ;;  ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
 
    '(line-number ((t (:height 120))))
    '(line-number-current-line ((t (:height 120))))
-   ;;; '(fringe ((t (:inherit nil))))
-   ;'(mode-line ((t (:box nil))))
-   ;'(mode-line-inactive ((t (:box nil))))
+   ;;'(fringe ((t (:inherit nil))))
+   ;;'(mode-line ((t (:box nil))))
+   ;;'(mode-line-inactive ((t (:box nil))))
 
    '(indent-guide-face ((t (:inherit font-lock-comment-face))))
    '(nix-attribute-face ((t (:inherit font-lock-builtin-face))))
    '(web-mode-variable-name-face ((t (:inherit default))))
 
-   ;; '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#81af34"))))
-   ;; '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#ff0000"))))
-   ;; '(diff-hl-change ((t (:inherit nil :background nil :foreground "#deae3e"))))
+   '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#81af34"))))
+   '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#ff0000"))))
+   '(diff-hl-change ((t (:inherit nil :background nil :foreground "#deae3e"))))
 
    ;; tango-plus
    ;; '(font-lock-keyword-face ((t (:weight normal))))
    ;; '(font-lock-string-face ((t (:slant normal))))
    ;; '(font-lock-constant-face ((t (:slant normal))))
 
-   ;; brin
-   ;; '(font-lock-comment-delimiter-face ((t (:inherit font-lock-comment-face :foreground nil))))
-   ;; '(link ((t (:inherit font-lock-function-name-face :underline t))))
-   ;; '(minibuffer-prompt ((t (:inherit font-lock-function-name-face))))
-   ;; '(line-number-current-line ((t (:inherit line-number :foreground "#8993a9" :background "#566076"))))
-
    ;; nord
-   ;'(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
-   ;'(highlight-numbers-number ((t (:inherit nil :foreground "#B48EAD")))) ; nord15
+   ;;'(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
+   ;;'(highlight-numbers-number ((t (:inherit nil :foreground "#B48EAD")))) ; nord15
    ;; '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#A3BE8C"))))
    ;; '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#BF616A"))))
    ;; '(diff-hl-change ((t (:inherit nil :background nil :foreground "#EBCB8B"))))
-
-   ;; tango
    )
 
   (use-package highlight-numbers
@@ -1286,7 +1299,7 @@ theme named =user= will always have the highest priority.
     (progn
       (setq doom-themes-enable-italic nil
             doom-spacegrey-brighter-modeline t)
-      (load-theme 'doom-spacegrey t)
+      (load-theme 'doom-tomorrow-night t)
       (doom-themes-org-config)))
 #+END_SRC
 
