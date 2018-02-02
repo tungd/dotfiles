@@ -21,53 +21,52 @@
   system.keyboard.remapCapsLockToControl = true;
 
 
-  environment.systemPackages =
-    [ pkgs.ag
-      pkgs.antiword
-      pkgs.aria2
-      # pkgs.aspell
-      # pkgs.aspellDicts.en
-      pkgs.bashCompletion
-      pkgs.closurecompiler
-      pkgs.curl
-      pkgs.gettext
-      pkgs.git-lfs
-      pkgs.gnupg
-      pkgs.hlint
-      pkgs.imagemagick
-      pkgs.jdk
-      pkgs.mosh
-      pkgs.mysql.client
-      pkgs.nixops
-      pkgs.nmap
-      pkgs.nodejs-8_x
-      pkgs.openssl
-      pkgs.optipng
-      pkgs.pinentry_mac
-      pkgs.pkgconfig
-      pkgs.poppler_utils
-      pkgs.postgresql
-      pkgs.sqlite
-      pkgs.stack
-      pkgs.tmux
-      pkgs.tree
-      # pkgs.watchman
-      pkgs.wget
+  environment.systemPackages = with pkgs; [
+    ag
+    antiword
+    aria2
+    # aspell
+    # aspellDicts.en
+    bashCompletion
+    closurecompiler
+    curl
+    gettext
+    git-lfs
+    gnupg
+    hlint
+    imagemagick
+    jdk
+    mosh
+    mysql.client
+    nixops
+    nmap
+    nodejs-8_x
+    openssl
+    optipng
+    pinentry_mac
+    pkgconfig
+    poppler_utils
+    postgresql
+    sqlite
+    stack
+    tmux
+    tree
+    # watchman
+    wget
 
-      # (import ./emacs-mac.nix)
+    # (import ./emacs-mac.nix)
 
-      pkgs.nix-repl
-    ];
+    nix-repl
+  ];
 
-  # programs.bash.enable = true;
   programs.bash.enableCompletion = false;
 
   services.activate-system.enable = true;
   services.nix-daemon.enable = true;
 
+  networking.hostName = "tung-mbp";
+
+  nix.gc.automatic = true;
   nix.maxJobs = 2;
   nix.buildCores = 2;
-  nix.gc.automatic = true;
-
-  networking.hostName = "tung-mbp";
 }

@@ -178,6 +178,7 @@ is that I can make its popup appear at the top of the window.
            ([remap ido-find-file] . counsel-find-file)
            ([remap execute-extended-command] . counsel-M-x)
            ("C-M-'" . counsel-git)
+           ("M-\"" . counsel-git-grep)
            ("M-m" . counsel-M-x)
            ("C-c i" . counsel-imenu)))
 
@@ -620,8 +621,6 @@ be fair, I'd like these mode to support Emacs's standard
         :commands (company-same-mode-buffer-lines)
         :bind ("C-x C-l" . company-same-mode-buffer-lines))
 
-      (use-package company-web :ensure t)
-
       (setq company-minimum-prefix-length 2
             company-require-match nil
             company-idle-delay nil
@@ -631,11 +630,11 @@ be fair, I'd like these mode to support Emacs's standard
             '(company-pseudo-tooltip-unless-just-one-frontend
               company-echo-metadata-frontend)
             company-backends
-            '((company-capf company-dabbrev-code)
+            '((company-capf company-dabbrev-code
               :with
               company-yasnippet
-              company-web
-              company-dict))
+              company-dict
+              company-web-html)))
 
       (bind-keys :map company-active-map
                  ("<tab>" . company-complete-common-or-cycle)
@@ -646,6 +645,10 @@ be fair, I'd like these mode to support Emacs's standard
     :ensure t
     :defer t
     :init (add-hook 'after-init-hook #'company-statistics-mode))
+
+  (use-package company-childframe
+    :ensure t
+    :init (add-hook 'after-init-hook #'company-childframe-mode))
 #+END_SRC
 
 ** Error checking
@@ -935,7 +938,9 @@ same folk who runs =stack=.
     :bind (([remap haskell-mode-format-imports] . haskell-sort-imports))
     :config
     (setq haskell-program-name "stack ghci"))
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package intero
     :ensure t
     :init
@@ -944,7 +949,7 @@ same folk who runs =stack=.
 
 Dante is very nice in theory, however it's not working well with GHC 8.2 yet.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package dante
     :ensure t
     :after haskell-mode
@@ -953,11 +958,11 @@ Dante is very nice in theory, however it's not working well with GHC 8.2 yet.
     (add-hook 'haskell-mode-hook 'dante-mode)
     :config
     (progn
-      (setq dante-debug '(inputs outputs))
+      (defun td/dante-setup-flycheck ()
+        (flycheck-add-next-checker
+         'haskell-dante '(warning . haskell-hlint)))
 
-      (add-hook 'dante-mode-hook
-                '(lambda () (flycheck-add-next-checker
-                             'haskell-dante '(warning . haskell-hlint))))))
+      (add-hook 'dante-mode-hook #'td/dante-setup-flycheck)))
 #+END_SRC
 
 LSP Haskell is another viable option.
@@ -1215,7 +1220,8 @@ bold and ligatures support :(.
      (border-width . 0) (internal-border-width . 0)
      ;(font . "Monaco 14")
      ;(font . "Menlo 12")
-     (font . "Source Code Pro 14")
+     ;; (font . "Source Code Pro 14")
+     (font . "Hasklig 14")
      ;(font . "Fira Code Retina 13")
      (top . 0) (left . 480)
      (width . 96) (height . 96)

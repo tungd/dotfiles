@@ -111,11 +111,11 @@ ve() {
 }
 
 vim() {
-  $HOME/Applications/Emacs.app/Contents/MacOS/bin/emacsclient -c "$@"
+  emacsclient -nw "$@"
 }
 
 e() {
-  $HOME/Applications/Emacs.app/Contents/MacOS/bin/emacsclient -n "$@"
+  emacsclient -n "$@"
 }
 
 # Tools
