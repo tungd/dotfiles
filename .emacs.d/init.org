@@ -209,6 +209,18 @@ Use =historian.el= to sort ivy completion based on frequency - similar to smex.
           '((compilation-mode :align 'below))))
 #+END_SRC
 
+#+BEGIN_SRC emacs-lisp
+  (use-package window-numbering
+    :ensure t
+    :init (add-hook 'after-init-hook #'window-numbering-mode)
+    :config
+    (progn
+      (defun td/window-numbering-get-number-string (orig-fn &rest args)
+        (format "[%s] " (apply orig-fn args)))
+      (advice-add 'window-numbering-get-number-string
+                  :around #'td/window-numbering-get-number-string)))
+#+END_SRC
+
 
 * General Editing
 
@@ -501,19 +513,24 @@ By default Emacs doesn't even have redo!
 #+BEGIN_SRC emacs-lisp
   (use-package align
     :defer t
-    :bind ("C-c =" . align)
+    :bind (("C-c =" . align))
     :config
     (progn
       (add-to-list 'align-rules-list
                    '(js-object-props
+                     (modes . '(js-mode js2-mode web-mode))
                      (regexp . "\\(\\s-*\\):")
-                     (modes . '(js-mode js2-mode))
                      (spacing . 0)))
       (add-to-list 'align-rules-list
-                   '(scss-declaration
+                   '(css-declaration
+                     (modes . '(css-mode))
                      (regexp . "^\\s-*\\w+:\\(\\s-*\\).*;")
-                     (group 1)
-                     (modes . '(scss-mode))))))
+                     (group 1)))
+      (add-to-list 'align-rules-list
+                   '(ruby-hash
+                     (modes . '(ruby-mode))
+                     (regexp . "\\(\\s-*\\)=>")
+                     (spacing . 1)))))
 #+END_SRC
 
 ** Recent files
@@ -613,7 +630,8 @@ be fair, I'd like these mode to support Emacs's standard
   (use-package company
     :ensure t
     :diminish company-mode
-    :bind ("M-/" . company-complete-common-or-cycle)
+    :bind (("M-/" . company-complete-common-or-cycle)
+           ("C-x C-p" . company-files))
     :init (global-company-mode t)
     :config
     (progn
@@ -634,7 +652,8 @@ be fair, I'd like these mode to support Emacs's standard
               :with
               company-yasnippet
               company-dict
-              company-web-html)))
+              company-web-html
+              company-files)))
 
       (bind-keys :map company-active-map
                  ("<tab>" . company-complete-common-or-cycle)
@@ -645,11 +664,8 @@ be fair, I'd like these mode to support Emacs's standard
     :ensure t
     :defer t
     :init (add-hook 'after-init-hook #'company-statistics-mode))
-
-  (use-package company-childframe
-    :ensure t
-    :init (add-hook 'after-init-hook #'company-childframe-mode))
 #+END_SRC
+
 
 ** Error checking
 
@@ -1328,7 +1344,7 @@ getting in the way is interesting.
 
 Mode line
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package smart-mode-line
     :ensure t
     ;:preface (setq-default sml/theme 'respectful)
@@ -1350,6 +1366,7 @@ down compiler error :(.
 
   (setq-default display-line-numbers-width 3)
   (add-hook 'prog-mode-hook #'display-line-numbers-mode)
+  (add-hook 'web-mode-hook #'display-line-numbers-mode)
 #+END_SRC
 
 The default line continuation indicator is too standout and distracting for me.
