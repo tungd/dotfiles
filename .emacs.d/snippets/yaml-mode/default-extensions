@@ -1,0 +1,15 @@
+# -*- mode: snippet -*-
+# name: default-extensions
+# key: default-extensions
+# --
+default-extensions:
+- NoImplicitPrelude
+- OverloadedStrings
+- OverloadedLists
+- ScopedTypeVariables
+- DeriveGeneric
+- GeneralizedNewtypeDeriving
+- NamedFieldPuns
+- LambdaCase
+
+$0
