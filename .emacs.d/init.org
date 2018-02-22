@@ -215,10 +215,9 @@ Use =historian.el= to sort ivy completion based on frequency - similar to smex.
     :init (add-hook 'after-init-hook #'window-numbering-mode)
     :config
     (progn
-      (defun td/window-numbering-get-number-string (orig-fn &rest args)
-        (format "[%s] " (apply orig-fn args)))
-      (advice-add 'window-numbering-get-number-string
-                  :around #'td/window-numbering-get-number-string)))
+      (defun td/window-numbering-get-number-string (number-string)
+        (format "[%s] " number-string))
+      (advice-add 'window-numbering-get-number-string :filter-return #'td/window-numbering-get-number-string)))
 #+END_SRC
 
 
@@ -1344,7 +1343,7 @@ getting in the way is interesting.
 
 Mode line
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package smart-mode-line
     :ensure t
     ;:preface (setq-default sml/theme 'respectful)
