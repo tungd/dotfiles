@@ -5,4 +5,5 @@
 !.emacs.d/authinfo.gpg
 !.emacs.d/vendor
 !.emacs.d/snippets
+!.emacs.d/use-package
 .yas-compiled-snippets.el
