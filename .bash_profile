@@ -99,7 +99,8 @@ alias s='twistd -no web --path=.'
 alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
 alias fixmod='find . -type f -exec chmod 644 {} \; && find . -type d -exec chmod 755 {} \;'
 alias pfreeze='pip freeze > requirements.txt'
-alias sock5=''
+alias sock5='ssh -D 8123 -C -q -N root@tungdao.com'
+alias chrome="$HOME/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
 
 
 notify() {
