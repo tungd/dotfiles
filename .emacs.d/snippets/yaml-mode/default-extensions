@@ -7,9 +7,14 @@ default-extensions:
 - OverloadedStrings
 - OverloadedLists
 - ScopedTypeVariables
-- DeriveGeneric
 - GeneralizedNewtypeDeriving
-- NamedFieldPuns
+- DeriveGeneric
+- DeriveDataTypeable
+- RecordWildCards
 - LambdaCase
+- TypeOperators
+- DataKinds
+- KindSignatures
+- MultiParamTypeClasses
 
 $0
