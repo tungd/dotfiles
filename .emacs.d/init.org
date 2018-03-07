@@ -21,11 +21,11 @@ I'm also trying out some of the start-up optimization tips from Doom.
         auto-window-vscroll nil)
 
   (add-hook 'after-init-hook
-            `(lambda ()
-               (setq file-name-handler-alist file-name-handler-alist-orig
-                     gc-cons-threshold 800000
-                     gc-cons-percentage 0.1)
-               (garbage-collect)) t)
+            (lambda ()
+              (setq file-name-handler-alist file-name-handler-alist-orig
+                    gc-cons-threshold 800000
+                    gc-cons-percentage 0.1)
+              (garbage-collect)) t)
 #+END_SRC
 
 Sometimes I write my own package, or download package from Emacs wiki; they
@@ -46,6 +46,11 @@ Really do the loading:
 
   (package-initialize)
   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+
+  (use-package benchmark-init
+    :ensure t
+    :init (benchmark-init/activate)
+    :hook (after-init . benchmark-init/deactivate))
 
   (use-package diminish :ensure t)
 #+END_SRC
@@ -88,7 +93,7 @@ Less verbose choice:
 #+BEGIN_SRC emacs-lisp
   (use-package better-defaults
     :ensure t
-    :preface
+    :init
     (setq-default show-paren-delay 0))
 
   (setq auto-save-file-name-transforms
@@ -150,7 +155,7 @@ of Emacs but it is still bare bone.
   (use-package projectile
     :ensure t
     :diminish projectile-mode
-    :init (projectile-mode t)
+    :hook (after-init . projectile-mode)
     :config
     (setq projectile-globally-ignored-file-suffixes
           '("jpg" "png" "svg" "psd" "sketch" "afdesign"
@@ -176,7 +181,7 @@ The key bindings are:
 #+BEGIN_SRC emacs-lisp
   (use-package dumb-jump
     :ensure t
-    :init (dumb-jump-mode t))
+    :hook (prog-mode . dumb-jump-mode))
 #+END_SRC
 
 ** Ivy
@@ -200,14 +205,14 @@ is that I can make its popup appear at the top of the window.
 
   (use-package ivy-posframe
     :ensure t
-    :after (ivy)
-    :functions (ivy-posframe-setup ivy-posframe--display)
+    :defer t
     :config
     (eval-and-compile
       (defun ivy-posframe-display-at-frame-top-left (str)
         (ivy-posframe--display str #'posframe-poshandler-window-top-left-corner))
       (ivy-posframe-setup)
-      (setq ivy-display-function #'ivy-posframe-display-at-frame-top-left)))
+      (setq ivy-display-function #'ivy-posframe-display-at-frame-top-left))
+    :hook (ivy-mode . (lambda () (require 'ivy-posframe))))
 
   (use-package counsel
     :ensure t
@@ -220,8 +225,7 @@ is that I can make its popup appear at the top of the window.
            ("C-c i" . counsel-imenu)))
 
   (use-package imenu
-    :config
-    (add-hook 'imenu-after-jump-hook #'recenter-top-bottom))
+    :hook (imenu-after-jump . recenter-top-bottom))
 #+END_SRC
 
 Use =historian.el= to sort ivy completion based on frequency - similar to smex.
@@ -230,7 +234,7 @@ Use =historian.el= to sort ivy completion based on frequency - similar to smex.
   (use-package ivy-historian
     :ensure t
     :defer t
-    :init (add-hook 'after-init-hook 'ivy-historian-mode))
+    :hook (ivy-mode . ivy-historian-mode))
 #+END_SRC
 
 
@@ -249,12 +253,13 @@ Use =historian.el= to sort ivy completion based on frequency - similar to smex.
 #+BEGIN_SRC emacs-lisp
   (use-package window-numbering
     :ensure t
-    :init (add-hook 'after-init-hook #'window-numbering-mode)
+    :hook (after-init . window-numbering-mode)
     :config
     (eval-and-compile
       (defun td/window-numbering-get-number-string (number-string)
         (format "[%s] " number-string))
-      (advice-add 'window-numbering-get-number-string :filter-return #'td/window-numbering-get-number-string)))
+      (advice-add 'window-numbering-get-number-string
+                  :filter-return #'td/window-numbering-get-number-string)))
 #+END_SRC
 
 
@@ -304,7 +309,7 @@ experience it is helpful.
 #+BEGIN_SRC emacs-lisp
   (use-package autorevert
     :diminish auto-revert-mode
-    :init (add-hook 'after-init-hook #'global-auto-revert-mode))
+    :hook (after-init . global-auto-revert-mode))
 #+END_SRC
 
 Automatically save buffers when focus out:
@@ -346,22 +351,24 @@ I was a pretty die-hard Vim fanboy, let's bring back the memory.
 #+BEGIN_SRC emacs-lisp
   (use-package evil
     :ensure t
-    :init (evil-mode t)
+    :defer t
+    :hook (after-init . evil-mode)
+    :bind (:map evil-normal-state-map ("M-." . xref-find-definitions))
     :config
-    (eval-and-compile
-      (setq evil-cross-lines t
-            evil-ex-substitute-global t)
-
-      (bind-keys :map evil-normal-state-map
-                 ("M-." . xref-find-definitions))))
+    (setq evil-cross-lines t
+          evil-ex-substitute-global t))
 
   (use-package evil-surround
     :ensure t
-    :init (global-evil-surround-mode t))
+    :defer t
+    :after evil
+    :hook (evil-mode . global-evil-surround-mode))
 
   (use-package evil-visualstar
     :ensure t
-    :init (global-evil-visualstar-mode))
+    :defer t
+    :after evil
+    :hook (evil-mode . global-evil-visualstar-mode))
 #+END_SRC
 
 ** Search and replace
@@ -373,18 +380,17 @@ means boundary.
   (use-package anzu
     :ensure t
     :diminish anzu-mode
-    :init (global-anzu-mode t)
+    :hook (after-init . global-anzu-mode)
     :bind (([remap query-replace] . anzu-query-replace-regexp)
            ;("C-c C-r" . anzu-query-replace-at-cursor)
            ("M-r" . anzu-replace-at-cursor-thing)
            ("C-M-r" . td/anzu-replace-at-cursor-thing-in-buffer))
     :config
-    (eval-and-compile
-      (defun td/anzu-replace-at-cursor-thing-in-buffer ()
-        "This does not actually query, but it's OK for me."
-        (interactive)
-        (let ((anzu-replace-at-cursor-thing 'buffer))
-          (call-interactively 'anzu-query-replace-at-cursor-thing)))))
+    (defun td/anzu-replace-at-cursor-thing-in-buffer ()
+      "This does not actually query, but it's OK for me."
+      (interactive)
+      (let ((anzu-replace-at-cursor-thing 'buffer))
+        (call-interactively 'anzu-query-replace-at-cursor-thing))))
 #+END_SRC
 
 Also define "buffer-at-point" so that we can do query-replace in the whole
@@ -392,7 +398,8 @@ buffer without having to jump to the beginning.
 
 #+BEGIN_SRC emacs-lisp
   (use-package thingatpt
-    :init
+    :after (anzu)
+    :config
     (eval-and-compile
       (defun td/bounds-of-buffer-at-point ()
         (cons (point-min) (point-max)))
@@ -436,8 +443,7 @@ slow:
 
 #+BEGIN_SRC emacs-lisp
   (use-package so-long
-    :commands so-long-enable
-    :init (so-long-enable))
+    :hook (after-init . so-long-enable))
 #+END_SRC
 
 ** Whitespace
@@ -447,7 +453,7 @@ Cleanup whitespaces automatically on save.
 #+BEGIN_SRC emacs-lisp
   (use-package whitespace
     :commands (whitespace-cleanup)
-    :init (add-hook 'before-save-hook #'whitespace-cleanup))
+    :hook (before-save . whitespace-cleanup))
 #+END_SRC
 
 ** Parenthesis
@@ -470,7 +476,7 @@ NOTE: This package is huge, I'm still learning it.
   (use-package smartparens
     :ensure t
     :diminish smartparens-mode
-    :init (add-hook 'prog-mode-hook #'smartparens-mode)
+    :hook (prog-mode . smartparens-mode)
     :bind (("M-s DEL" . sp-splice-sexp)
            ("M-S" . sp-rewrap-sexp)
            ("M-s <right>" . sp-slurp-hybrid-sexp)
@@ -480,7 +486,6 @@ NOTE: This package is huge, I'm still learning it.
            ("C-M-e" . sp-end-of-sexp)
            ("M-K" . sp-kill-sexp)
            ("M-]" . sp-select-next-thing))
-    :functions (sp-pair)
     :config
     (sp-pair "{" nil
              :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
@@ -512,7 +517,7 @@ By default Emacs doesn't even have redo!
   (use-package undo-tree
     :ensure t
     :diminish undo-tree-mode
-    :init (global-undo-tree-mode t))
+    :hook (after-init . global-undo-tree-mode))
 #+END_SRC
 
 ** Snippets
@@ -521,26 +526,21 @@ By default Emacs doesn't even have redo!
   (use-package yasnippet
     :ensure t
     :diminish yas-minor-mode
-    :commands yas-global-mode
+    :hook (after-init . yas-global-mode)
     :init
-    (eval-and-compile
-      (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
-      (add-hook 'after-init-hook #'yas-global-mode))
+    (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
     :config
     (eval-and-compile
       (setq yas-prompt-functions
             '(yas-ido-prompt yas-completing-prompt yas-no-prompt)
-            ;; Suppress excessive log messages
-            yas-verbosity 1
-            ;; I am a weird user, I use SPACE to expand my
-            ;; snippets, this save me from triggering them accidentally.
-            yas-expand-only-for-last-commands
-            '(self-insert-command org-self-insert-command))
+            yas-verbosity 1)
+
+      ;; I'm an old Emacs hacker. I like the abbrev-way and bind yas-expand to
+      ;; SPC.
+      (define-key yas-minor-mode-map (kbd "SPC") yas-maybe-expand)
 
       (unbind-key "TAB" yas-minor-mode-map)
-      (unbind-key "<tab>" yas-minor-mode-map)
-      ;(bind-key "SPC" 'yas-expand yas-minor-mode-map)
-))
+      (unbind-key "<tab>" yas-minor-mode-map)))
 #+END_SRC
 
 ** TODO Alignment
@@ -650,6 +650,7 @@ By default Emacs doesn't even have redo!
 #+BEGIN_SRC emacs-lisp
   (use-package lsp-mode
     :ensure t
+    :defer t
     :config
     (setq lsp-highlight-symbol-at-point nil))
 #+END_SRC
@@ -666,39 +667,37 @@ be fair, I'd like these mode to support Emacs's standard
     :ensure t
     :diminish company-mode
     :bind (("M-/" . company-complete-common-or-cycle)
-           ("C-x C-p" . company-files))
-    :init (global-company-mode t)
+           ("C-x C-p" . company-files)
+           :map company-active-map
+           ("<tab>" . company-complete-common-or-cycle)
+           ("C-n" . company-select-next-or-abort)
+           ("C-p" . company-select-previous-or-abort))
+    :hook (after-init . global-company-mode)
     :config
-    (eval-and-compile
-      (use-package company-buffer-line
-        :commands (company-same-mode-buffer-lines)
-        :bind ("C-x C-l" . company-same-mode-buffer-lines))
+    (setq company-minimum-prefix-length 2
+          company-require-match nil
+          company-idle-delay nil
+          company-tooltip-align-annotations t
+          company-echo-delay 0
+          company-frontends
+          '(company-pseudo-tooltip-unless-just-one-frontend
+            company-echo-metadata-frontend)
+          company-backends
+          '((company-capf company-dabbrev-code
+                          :with
+                          company-yasnippet
+                                          ;company-dict
+                                          ;company-web-html
+                          company-files))))
 
-      (setq company-minimum-prefix-length 2
-            company-require-match nil
-            company-idle-delay nil
-            company-tooltip-align-annotations t
-            company-echo-delay 0
-            company-frontends
-            '(company-pseudo-tooltip-unless-just-one-frontend
-              company-echo-metadata-frontend)
-            company-backends
-            '((company-capf company-dabbrev-code
-              :with
-              company-yasnippet
-              company-dict
-              company-web-html
-              company-files)))
-
-      (bind-keys :map company-active-map
-                 ("<tab>" . company-complete-common-or-cycle)
-                 ("C-n" . company-select-next-or-abort)
-                 ("C-p" . company-select-previous-or-abort))))
+  (use-package company-buffer-line
+    :commands (company-same-mode-buffer-lines)
+    :bind ("C-x C-l" . company-same-mode-buffer-lines))
 
   (use-package company-statistics
     :ensure t
     :defer t
-    :init (add-hook 'after-init-hook #'company-statistics-mode))
+    :hook (global-company-mode . company-statistics-mode))
 #+END_SRC
 
 
@@ -721,6 +720,7 @@ built-in VC has great support for git but Magit is godsend.
 #+BEGIN_SRC emacs-lisp
   (use-package magit
     :ensure t
+    :defer t
     :config
     (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
 #+END_SRC
@@ -850,14 +850,14 @@ Also, I can't live without Emmet.
 
 #+BEGIN_SRC emacs-lisp
   (use-package css-mode
-    :defer t
+    :mode "\\.css\\'"
     :config
     (setq css-indent-offset 2))
 
   (use-package rainbow-mode
     :ensure t
     :defer t
-    :init (add-hook 'css-mode-hook #'rainbow-mode))
+    :hook (css-mode . rainbow-mode))
 #+END_SRC
 
 ** JavaScript
@@ -899,9 +899,10 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 Well, I'm also on the TypeScript train lately, mostly because of the super
 awesome StencilJS project.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package typescript-mode
     :ensure t
+    :mode "\\.ts\\'"
     :config
     (eval-and-compile
       (setq typescript-indent-level 2)
@@ -909,32 +910,29 @@ awesome StencilJS project.
         (interactive)
         (flycheck-add-mode 'typescript-tslint 'web-mode))
       (add-hook 'flycheck-mode-hook #'td/enable-tslint-web-mode)))
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
   (use-package tide
     :ensure t
+    :defer t
     :diminish t
-    :config
-    (eval-and-compile
-      (defun td/setup-tide-mode ()
-        (interactive)
-        (when (string-equal "tsx" (file-name-extension buffer-file-name))
-          (tide-setup)
-          ;; (flycheck-add-next-checker 'typescript-tide '(t . typescript-tslint) 'append)
-          ;; (tide-hl-identifier-mode +1)
-          ))
-
-      (add-hook 'web-mode-hook #'td/setup-tide-mode)))
+    :preface
+    (defun td/setup-tide-mode ()
+      (interactive)
+      (when (string-equal "tsx" (file-name-extension buffer-file-name))
+        (tide-setup)
+        ;; (flycheck-add-next-checker 'typescript-tide '(t . typescript-tslint) 'append)
+        ;; (tide-hl-identifier-mode +1)
+        ))
+    :hook (web-mode . td/setup-tide-mode))
 #+END_SRC
 
 ** Python
 
 #+BEGIN_SRC emacs-lisp
   (use-package pyvenv
-    :ensure t)
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package pydoc
+    :defer t
     :ensure t)
 #+END_SRC
 
@@ -968,14 +966,13 @@ same folk who runs =stack=.
   (defun td/turn-off-evil-auto-indent ()
     (setq-local evil-auto-indent nil))
 
-  (add-hook 'haskell-mode-hook #'td/turn-off-evil-auto-indent)
-
   (use-package haskell-mode
     :ensure t
-    :mode (("\\.hs$" . haskell-mode))
+    :mode (("\\.hs\\'" . haskell-mode))
     :bind (([remap haskell-mode-format-imports] . haskell-sort-imports))
+    :hook (haskell-mode . td/turn-off-evil-auto-indent)
     :config
-    (setq haskell-program-name "stack ghci"))
+    (setq haskell-program-name "stack repl"))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle no
@@ -1018,16 +1015,14 @@ I started using PureScript for all my frontend works.
 
   (use-package purescript-mode
     :ensure t
-    :mode (("\\.purs$" . purescript-mode))
+    :mode (("\\.purs\\'" . purescript-mode))
+    :hook (purescript-mode . turn-on-purescript-indentation)
     :config
-    (eval-and-compile
-      (defun purescript-doc-current-info ())
+    (defun purescript-doc-current-info ()))
 
-      (add-hook 'purescript-mode-hook #'turn-on-purescript-indentation)
-
-      (use-package psc-ide
-        :ensure t
-        :init (add-hook 'purescript-mode-hook #'psc-ide-mode))))
+  (use-package psc-ide
+    :ensure t
+    :hook (purescript-mode . psc-ide-mode))
 #+END_SRC
 
 ** Go
@@ -1061,12 +1056,12 @@ These are supports for other stuffs that I used:
 #+BEGIN_SRC emacs-lisp
   (use-package markdown-mode
     :ensure t
-    :mode (("\\.md$" . markdown-mode)
-           ("\\.markdown$" . markdown-mode))
-    :init (add-hook 'markdown-mode-hook #'whitespace-turn-off))
+    :mode (("\\.md\\'" . markdown-mode)
+           ("\\.markdown\\'" . markdown-mode))
+    :hook (markdown-mode . whitespace-turn-off))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package nix-mode
     :ensure t
     :mode (("\\.nix$" . nix-mode))
@@ -1193,11 +1188,11 @@ Org Babel for literate programming and API documentation.
 
 #+BEGIN_SRC emacs-lisp
   (use-package ob-http
-    :no-require t
+    :defer t
     :ensure t)
 
   (use-package ob-core
-    :no-require t
+    :defer t
     :config
     (setq org-confirm-babel-evaluate nil))
 
@@ -1491,6 +1486,6 @@ Where the magic happen!
 
 #+BEGIN_SRC text :tangle no
   # Local Variables:
-  # eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle) (byte-compile-file "~/.emacs.d/init.el")) nil t)
+  # eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle) (byte-recompile-file "~/.emacs.d/init.el")) nil t)
   # End:
 #+END_SRC
