@@ -1,7 +1,7 @@
-defaults write ApplePressAndHoldEnabled -bool false
-defaults write InitialKeyRepeat -int 10
-defaults write KeyRepeat -int 1
-defaults write NSUserKeyEquivalents -dict-add 'Emoji & Symbols' '@^s'
+defaults write -g ApplePressAndHoldEnabled -bool false
+defaults write -g InitialKeyRepeat -int 10
+defaults write -g KeyRepeat -int 1
+defaults write -g NSUserKeyEquivalents -dict-add 'Emoji & Symbols' '@^s'
 
 # echo 'pinentry-program /Users/tung/.nix-profile/Applications/pinentry-mac.app/Contents/MacOS/pinentry-mac' >> ~/.gnupg/gpg-agent.conf
 

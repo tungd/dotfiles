@@ -11,21 +11,21 @@ directly.
 I'm also trying out some of the start-up optimization tips from Doom.
 
 #+BEGIN_SRC emacs-lisp
-  (defvar file-name-handler-alist-orig file-name-handler-alist)
+  ;; (defvar file-name-handler-alist-orig file-name-handler-alist)
 
   (setq package-enable-at-startup nil
-        file-name-handler-alist nil
+        ;; file-name-handler-alist nil
         message-log-max 16384
-        gc-cons-threshold 402653184
-        gc-cons-percentage 0.6
+        ;gc-cons-threshold 402653184
+        ;gc-cons-percentage 0.6
         auto-window-vscroll nil)
 
-  (add-hook 'after-init-hook
-            (lambda ()
-              (setq file-name-handler-alist file-name-handler-alist-orig
-                    gc-cons-threshold 800000
-                    gc-cons-percentage 0.1)
-              (garbage-collect)) t)
+  ;; (add-hook 'after-init-hook
+  ;;           (lambda ()
+  ;;             (setq file-name-handler-alist file-name-handler-alist-orig
+  ;;                   gc-cons-threshold 800000
+  ;;                   gc-cons-percentage 0.1)
+  ;;             (garbage-collect)) t)
 #+END_SRC
 
 Sometimes I write my own package, or download package from Emacs wiki; they
@@ -194,7 +194,8 @@ is that I can make its popup appear at the top of the window.
 
   (use-package ivy
     :diminish ivy-mode
-    :hook (after-init . ivy-mode)
+    :hook ((after-init . ivy-mode)
+           (ivy-mode . (lambda () (require 'ivy-popup))))
     :bind (("C-M-o" . ivy-switch-buffer))
     :config
     (setq ivy-format-function 'ivy-format-function-arrow
@@ -202,17 +203,6 @@ is that I can make its popup appear at the top of the window.
           ivy-use-virtual-buffers t
           ivy-height 16
           projectile-completion-system 'ivy))
-
-  (use-package ivy-posframe
-    :ensure t
-    :defer t
-    :config
-    (eval-and-compile
-      (defun ivy-posframe-display-at-frame-top-left (str)
-        (ivy-posframe--display str #'posframe-poshandler-window-top-left-corner))
-      (ivy-posframe-setup)
-      (setq ivy-display-function #'ivy-posframe-display-at-frame-top-left))
-    :hook (ivy-mode . (lambda () (require 'ivy-posframe))))
 
   (use-package counsel
     :ensure t
@@ -226,6 +216,19 @@ is that I can make its popup appear at the top of the window.
 
   (use-package imenu
     :hook (imenu-after-jump . recenter-top-bottom))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle no
+  (use-package ivy-posframe
+    :ensure t
+    :defer t
+    :config
+    (eval-and-compile
+      (defun ivy-posframe-display-at-frame-top-left (str)
+        (ivy-posframe--display str #'posframe-poshandler-window-top-left-corner))
+      (ivy-posframe-setup)
+      (setq ivy-display-function #'ivy-posframe-display-at-frame-top-left))
+    :hook (ivy-mode . (lambda () (require 'ivy-posframe))))
 #+END_SRC
 
 Use =historian.el= to sort ivy completion based on frequency - similar to smex.
@@ -1433,7 +1436,7 @@ kind of distracting, but it is really helpful sometimes.
   (use-package diff-hl
     :defer t
     :ensure t
-    :hook (after-init . global-diff-hl-mode)
+    ;:hook (after-init . global-diff-hl-mode)
     :init
     (eval-and-compile
       (define-fringe-bitmap 'td/diff-hl-bmp [#b11110000] 1 8 '(top t))
