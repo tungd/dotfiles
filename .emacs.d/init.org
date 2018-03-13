@@ -546,7 +546,7 @@ By default Emacs doesn't even have redo!
       (unbind-key "<tab>" yas-minor-mode-map)))
 #+END_SRC
 
-** TODO Alignment
+** Alignment
 
 #+BEGIN_SRC emacs-lisp
   (use-package align
@@ -564,6 +564,16 @@ By default Emacs doesn't even have redo!
                      (modes . '(css-mode))
                      (regexp . "^\\s-*\\w+:\\(\\s-*\\).*;")
                      (group 1)))
+      (add-to-list 'align-rules-list
+                   '(haskell-record-fields
+                     (modes . '(haskell-mode))
+                     (regexp . "\\(\\s-*\\)::")
+                     (spacing . 1)))
+      (add-to-list 'align-rules-list
+                   '(haskell-aeson-fields
+                     (modes . '(haskell-mode))
+                     (regexp . "\\(\\s-*\\).=")
+                     (spacing . 1)))
       (add-to-list 'align-rules-list
                    '(ruby-hash
                      (modes . '(ruby-mode))
@@ -1059,8 +1069,8 @@ These are supports for other stuffs that I used:
 #+BEGIN_SRC emacs-lisp
   (use-package markdown-mode
     :ensure t
-    :mode (("\\.md\\'" . markdown-mode)
-           ("\\.markdown\\'" . markdown-mode))
+    :mode (("\\.md$" . markdown-mode)
+           ("\\.markdown$" . markdown-mode))
     :hook (markdown-mode . whitespace-turn-off))
 #+END_SRC
 

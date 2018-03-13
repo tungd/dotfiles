@@ -269,9 +269,9 @@
 	<key>NSTableView Supports v2 KeyBingingTable</key>
 	<true/>
 	<key>NSWindow Frame SharedPreferences</key>
-	<string>315 375 918 401 0 0 1280 777 </string>
+	<string>315 336 918 401 0 0 1280 777 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
-	<string>191 79 1074 698 0 0 1280 777 </string>
+	<string>0 79 970 698 0 0 1280 777 </string>
 	<key>NSWindow Frame iTerm Window 1</key>
 	<string>343 66 930 680 0 0 1280 777 </string>
 	<key>NSWindow Frame iTerm Window 2</key>
@@ -282,7 +282,7 @@
 			<key>ASCII Anti Aliased</key>
 			<true/>
 			<key>ASCII Ligatures</key>
-			<false/>
+			<true/>
 			<key>Ambiguous Double Width</key>
 			<false/>
 			<key>Ansi 0 Color</key>
@@ -858,7 +858,7 @@
 			<key>Screen</key>
 			<integer>-1</integer>
 			<key>Scrollback Lines</key>
-			<integer>1000</integer>
+			<integer>65536</integer>
 			<key>Selected Text Color</key>
 			<dict>
 				<key>Blue Component</key>
@@ -902,7 +902,7 @@
 			<key>Use Italic Font</key>
 			<true/>
 			<key>Use Non-ASCII Font</key>
-			<false/>
+			<true/>
 			<key>Vertical Spacing</key>
 			<real>1</real>
 			<key>Visual Bell</key>
@@ -971,7 +971,7 @@
 	<key>SUHasLaunchedBefore</key>
 	<true/>
 	<key>SULastCheckTime</key>
-	<date>2018-02-25T11:44:34Z</date>
+	<date>2018-03-13T02:22:57Z</date>
 	<key>SUSendProfileInfo</key>
 	<false/>
 	<key>TabStyle</key>
