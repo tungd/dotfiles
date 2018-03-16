@@ -20,6 +20,8 @@ I'm also trying out some of the start-up optimization tips from Doom.
         ;gc-cons-percentage 0.6
         auto-window-vscroll nil)
 
+  (setq-default bidi-display-reordering nil)
+
   ;; (add-hook 'after-init-hook
   ;;           (lambda ()
   ;;             (setq file-name-handler-alist file-name-handler-alist-orig
