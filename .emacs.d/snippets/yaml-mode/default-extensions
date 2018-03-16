@@ -16,5 +16,7 @@ default-extensions:
 - DataKinds
 - KindSignatures
 - MultiParamTypeClasses
+- FlexibleInstances
+- TypeSynonymInstances
 
 $0
