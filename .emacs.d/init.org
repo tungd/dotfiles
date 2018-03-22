@@ -721,7 +721,8 @@ be fair, I'd like these mode to support Emacs's standard
 #+BEGIN_SRC emacs-lisp
   (use-package flycheck
     :ensure t
-    :commands flycheck-mode
+    :commands (flycheck-mode)
+    :functions (flycheck-add-mode flycheck-add-next-checker)
     :init (add-hook 'prog-mode-hook #'flycheck-mode)
     :config
     (setq-default flycheck-disabled-checkers '(scss emacs-lisp-checkdoc)))
@@ -798,7 +799,8 @@ editing, including PHP, since I rarely write PHP anymore.
             web-mode-script-padding 2
             web-mode-style-padding 2)
 
-      (add-hook 'web-mode-hook #'turn-off-auto-fill)))
+      (add-hook 'web-mode-hook #'turn-off-auto-fill)
+      (flycheck-add-mode 'javascript-eslint 'web-mode)))
 #+END_SRC
 
 Also, I can't live without Emmet.
@@ -888,7 +890,7 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 
   (use-package js
     :mode (("\\.js$" . js-mode)
-           ("\\.jsx$" . js-jsx-mode)
+           ;("\\.jsx$" . js-jsx-mode)
            ("\\.json$" . js-mode)
            ("\\.eslintrc$" . js-mode))
     :config
@@ -917,7 +919,7 @@ awesome StencilJS project.
 #+BEGIN_SRC emacs-lisp :tangle no
   (use-package typescript-mode
     :ensure t
-    :mode "\\.ts\\'"
+    :mode "\\.ts"
     :config
     (eval-and-compile
       (setq typescript-indent-level 2)

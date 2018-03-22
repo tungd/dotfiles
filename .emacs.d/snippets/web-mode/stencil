@@ -6,7 +6,7 @@ import { Component, Prop, State } from '@stencil/core'
 
 @Component({
   tag: '${1:tag-name}',
-  styleUrl: '$1.scss'
+  /* styleUrl: '$1.less' */
 })
 export class $2 {
   render() {
