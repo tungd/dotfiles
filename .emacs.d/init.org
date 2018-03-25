@@ -1072,6 +1072,22 @@ I started using PureScript for all my frontend works.
     :mode (("\\.swift" . swift-mode)))
 #+END_SRC
 
+** Solidity
+
+#+BEGIN_SRC emacs-lisp
+  (use-package company-solidity
+    :ensure t
+    :defer t)
+
+  (use-package solidity-mode
+    :ensure t
+    :mode (("\.sol$" . solidity-mode))
+    :config
+    (eval-and-compile
+      (require 'company-solidity)
+      (add-to-list 'company-backends 'company-solidity)))
+#+END_SRC
+
 ** Misc
 
 These are supports for other stuffs that I used:
