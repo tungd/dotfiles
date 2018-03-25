@@ -800,7 +800,13 @@ editing, including PHP, since I rarely write PHP anymore.
             web-mode-style-padding 2)
 
       (add-hook 'web-mode-hook #'turn-off-auto-fill)
-      (flycheck-add-mode 'javascript-eslint 'web-mode)))
+
+      (defun td/setup-web-mode ()
+        (interactive)
+        (when (string-suffix-p ".jsx" (buffer-file-name))
+          (flycheck-add-mode 'javascript-eslint 'web-mode)))
+
+      (add-hook 'web-mode-hook #'td/setup-web-mode)))
 #+END_SRC
 
 Also, I can't live without Emmet.
