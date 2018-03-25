@@ -78,12 +78,7 @@ $RED\u$END@$YELLOW\H$END in $GREEN\w$END \$(git_prompt_info) \$(env_prompt_info)
 
 export ENV=development
 export LOCAL=$HOME/.local
-export PATH=$LOCAL/bin:$LOCAL/sbin:$PATH
-export GEMOPTS='--no-rdoc --no-ri'
-export GOPATH=$HOME/Projects/go
-export PATH=$GOPATH/bin:$PATH
-export PATH=$HOME/Library/Python/2.7/bin/:$PATH
-export PATH=$HOME/.yarn/bin:$PATH
+
 export PGHOST=127.0.0.1
 export PGPASS=postgres
 export PGPASSWORD=postgres
@@ -144,14 +139,6 @@ if [ -d "/Applications/VMware Fusion.app/Contents/Library" ]; then
   export PATH="/Applications/VMware Fusion.app/Contents/Library":$PATH
 fi
 
-if [ -d "$HOME/Applications/Emacs.app/Contents/MacOS" ]; then
-  export PATH="$HOME/Applications/Emacs.app/Contents/MacOS":$PATH
-fi
-
-export RBENV_ROOT="$HOME/.rbenv"
-export PATH="$RBENV_ROOT/bin:$PATH"
-if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
-
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
@@ -163,3 +150,13 @@ if [[ "$TERM" != "eterm-color" ]]; then
 else
   unset PROMPT_COMMAND
 fi
+
+# path_helper messed up my PATH :(
+
+export PATH=/usr/local/bin:/usr/bin:/usr/sbin:/sbin:/bin
+export PATH=/opt/pkg/sbin:/opt/pkg/bin:$PATH
+export PATH=/usr/local/MacGPG2/bin:$PATH
+export PATH=/Applications/Wireshark.app/Contents/MacOS:$PATH
+export PATH=$HOME/Library/Python/2.7/bin:$PATH
+export PATH=$PYENV_ROOT/bin:$PATH
+export PATH=$HOME/.local/sbin:$HOME/.local/bin:$PATH
