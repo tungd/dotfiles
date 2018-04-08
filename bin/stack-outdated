@@ -19,8 +19,12 @@ projects = glob.iglob(f'{home}/Projects/*/stack.yaml')
 for p in projects:
     with open(p, 'r+') as f:
         config = yaml.load(f)
-        if config['resolver'] < latest_lts:
-            print(f'{config["resolver"]:8} --> {latest_lts:8}: {p}')
+
+        if config['resolver'] >= latest_lts:
+            continue
+
+        print(f'{config["resolver"]:8} --> {latest_lts:8}: {p}')
+
         if update:
             config['resolver'] = latest_lts
             yaml.dump(config, f)
