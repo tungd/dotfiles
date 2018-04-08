@@ -1,3 +1,5 @@
+parserOptions:
+  ecmaVersion: 2018
 globals:
   window: true
   console: true
