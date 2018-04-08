@@ -532,7 +532,10 @@ By default Emacs doesn't even have redo!
     :ensure t
     :diminish undo-tree-mode
     :hook (after-init . global-undo-tree-mode)
-    :config (setq undo-tree-auto-save-history t))
+    :config
+    (setq undo-tree-auto-save-history t
+          undo-tree-history-directory-alist
+          `((".*" . ,(concat user-emacs-directory "undos")))))
 #+END_SRC
 
 ** Snippets
@@ -1285,7 +1288,7 @@ Org Babel for literate programming and API documentation.
 #+END_SRC
 
 
-* Look and feel
+* Appearance
 
 I love eye candy <3. I put quite a lot of efforts to make Emacs look
 the way I liked.
@@ -1345,9 +1348,6 @@ theme named =user= will always have the highest priority.
    ;;'(highlight ((t (:inherit region))))
    ;;'(sp-pair-overlay-face ((t (:inherit region))))
    ;;'(font-lock-string-face ((t (:slant normal))))
-   ;;'(font-lock-comment-face ((t (:slant normal))))
-   ;;'(font-lock-comment-delimiter-face
-   ;;  ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
 
    '(line-number ((t (:height 120))))
    '(line-number-current-line ((t (:height 120 :bold nil))))
@@ -1364,9 +1364,13 @@ theme named =user= will always have the highest priority.
    '(diff-hl-change ((t (:inherit nil :background nil :foreground "#deae3e"))))
 
    ;; tango-plus
-   ;; '(font-lock-keyword-face ((t (:weight normal))))
-   ;; '(font-lock-string-face ((t (:slant normal))))
-   ;; '(font-lock-constant-face ((t (:slant normal))))
+   '(font-lock-keyword-face ((t (:weight normal))))
+   '(font-lock-string-face ((t (:slant normal))))
+   '(font-lock-constant-face ((t (:slant normal))))
+   '(font-lock-comment-face ((t (:slant normal))))
+   '(font-lock-comment-delimiter-face
+     ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
+   ;'(line-number ((t (:inherit font-lock-comment-face :height 120))))
 
    ;; nord
    ;;'(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
@@ -1388,6 +1392,12 @@ theme named =user= will always have the highest priority.
   (use-package nord-theme
     :ensure t
     :init (load-theme 'nord t))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle no
+  (use-package tango-plus-theme
+    :ensure t
+    :init (load-theme 'tango-plus t))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
