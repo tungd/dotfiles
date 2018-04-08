@@ -204,7 +204,8 @@ is that I can make its popup appear at the top of the window.
           ivy-count-format ""
           ivy-use-virtual-buffers t
           ivy-height 16
-          projectile-completion-system 'ivy))
+          projectile-completion-system 'ivy)
+    (require 'counsel))
 
   (use-package counsel
     :ensure t
@@ -1050,11 +1051,13 @@ I started using PureScript for all my frontend works.
 
 ** Go
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package go-mode
     :ensure t
     :mode (("\\.go$" . go-mode)))
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package company-go
     :ensure t
     :init (add-to-list 'company-backends 'company-go))
@@ -1084,7 +1087,6 @@ I started using PureScript for all my frontend works.
     :mode (("\.sol$" . solidity-mode))
     :config
     (eval-and-compile
-      (require 'company-solidity)
       (add-to-list 'company-backends 'company-solidity)))
 #+END_SRC
 
@@ -1308,7 +1310,7 @@ bold and ligatures support :(.
 
 Enable ligatures, only available in railwaycat Mac port.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (mac-auto-operator-composition-mode)
 #+END_SRC
 
@@ -1333,7 +1335,7 @@ theme named =user= will always have the highest priority.
    ;;  ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
 
    '(line-number ((t (:height 120))))
-   '(line-number-current-line ((t (:height 120))))
+   '(line-number-current-line ((t (:height 120 :bold nil))))
    ;;'(fringe ((t (:inherit nil))))
    ;;'(mode-line ((t (:box nil))))
    ;;'(mode-line-inactive ((t (:box nil))))
