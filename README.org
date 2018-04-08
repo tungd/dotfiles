@@ -38,6 +38,36 @@
 
 * Install apps and utilities
 
+** =pkgin=
+
+I don't use Homebrew, it is too fragile and invasive for my taste. I tried Nix
+but it's not ready for prime time yet. Deal breaker for me is a long standing
+issue regarding =watchman= (https://github.com/NixOS/nixpkgs/issues/14309).
+
+In the mean time, my package manager of choice is =pkgsrc=. It is simple, pretty
+similar to =apt= and =yum=, supports package version pining and has all of the
+packages that I need. It's also not updated too frequently like
+Homebrew. Installing it is a little bit more involved, though.
+
+#+BEGIN_SRC sh
+  BOOTSTRAP_TAR="bootstrap-trunk-x86_64-20171103.tar.gz"
+  BOOTSTRAP_SHA="d7bee3a08e6e07818ff445f042c469333c96ac22"
+
+  curl -O https://pkgsrc.joyent.com/packages/Darwin/bootstrap/${BOOTSTRAP_TAR}
+
+  echo "${BOOTSTRAP_SHA}  ${BOOTSTRAP_TAR}" >check-shasum
+  shasum -c check-shasum
+
+  sudo tar -zxpf ${BOOTSTRAP_TAR} -C /
+#+END_SRC
+
+#+BEGIN_SRC sh
+  sudo pkgin update
+  sudo pkgin install ImageMagick aria2 aspell aspell-en curl gettext gnupg gnutls
+  sudo pkgin install mosh mysql-client nmap nodejs openssl postgresql10-client
+  sudo pkgin install socat sqlite3 the_silver_searcher tree watchman wget youtube-dl
+#+END_SRC
+
 ** =pyenv=
 
 #+BEGIN_SRC sh
