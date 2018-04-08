@@ -82,24 +82,17 @@ Less verbose choice:
   (defalias 'yes-or-no-p 'y-or-n-p)
 #+END_SRC
 
-=better-defaults= provide some sane, modern defaults:
+Sane, modern defaults:
 
 - clean minimal UI
-- search by regex by default
 - no unnecessary temporary files (I do keep backup files, but not auto-save
   and lock files)
 
-*NOTE*: I also set the delay right here since =better-defaults= loads
-=show-paren-mode=.
-
 #+BEGIN_SRC emacs-lisp
-  (use-package better-defaults
-    :ensure t
-    :init
-    (setq-default show-paren-delay 0))
-
   (setq auto-save-file-name-transforms
         `((".*" ,temporary-file-directory t))
+        backup-directory-alist
+        `(("." . ,(concat user-emacs-directory "backups")))
         create-lockfiles nil)
 #+END_SRC
 
@@ -145,6 +138,13 @@ Less verbose choice:
 
 
 * Navigation
+
+** File position
+
+#+BEGIN_SRC emacs-lisp
+(use-package saveplace
+  :hook (after-init . save-place-mode))
+#+END_SRC
 
 ** Projects
 
@@ -271,12 +271,18 @@ Use =historian.el= to sort ivy completion based on frequency - similar to smex.
 
 * General Editing
 
+#+BEGIN_SRC emacs-lisp
+(use-package uniquify
+  :config (setq uniquify-buffer-name-style 'forward))
+#+END_SRC
+
 Basic settings:
 
 #+BEGIN_SRC emacs-lisp
   (setq-default
    tab-width 2
    indent-tabs-mode nil
+   require-final-newline t
    reb-re-syntax 'string)
 #+END_SRC
 
@@ -482,7 +488,8 @@ NOTE: This package is huge, I'm still learning it.
   (use-package smartparens
     :ensure t
     :diminish smartparens-mode
-    :hook (prog-mode . smartparens-mode)
+    :hook ((prog-mode . smartparens-mode)
+           (prog-mode . show-smartparens-mode))
     :bind (("M-s DEL" . sp-splice-sexp)
            ("M-S" . sp-rewrap-sexp)
            ("M-s <right>" . sp-slurp-hybrid-sexp)
