@@ -531,7 +531,8 @@ By default Emacs doesn't even have redo!
   (use-package undo-tree
     :ensure t
     :diminish undo-tree-mode
-    :hook (after-init . global-undo-tree-mode))
+    :hook (after-init . global-undo-tree-mode)
+    :config (setq undo-tree-auto-save-history t))
 #+END_SRC
 
 ** Snippets
