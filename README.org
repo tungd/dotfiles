@@ -38,7 +38,7 @@
 
 * Install apps and utilities
 
-** =pkgin=
+** =pkgsrc=
 
 I don't use Homebrew, it is too fragile and invasive for my taste. I tried Nix
 but it's not ready for prime time yet. Deal breaker for me is a long standing
@@ -47,7 +47,7 @@ issue regarding =watchman= (https://github.com/NixOS/nixpkgs/issues/14309).
 In the mean time, my package manager of choice is =pkgsrc=. It is simple, pretty
 similar to =apt= and =yum=, supports package version pining and has all of the
 packages that I need. It's also not updated too frequently like
-Homebrew. Installing it is a little bit more involved, though.
+Homebrew. Installation is a little bit more involved, though.
 
 #+BEGIN_SRC sh
   BOOTSTRAP_TAR="bootstrap-trunk-x86_64-20171103.tar.gz"
