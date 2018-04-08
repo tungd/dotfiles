@@ -500,6 +500,7 @@ NOTE: This package is huge, I'm still learning it.
            ("M-K" . sp-kill-sexp)
            ("M-]" . sp-select-next-thing))
     :config
+    (setq sp-show-pair-delay 0)
     (sp-pair "{" nil
              :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
     (sp-pair "[" nil
