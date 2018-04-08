@@ -140,16 +140,6 @@ if [ -d "/Applications/VMware Fusion.app/Contents/Library" ]; then
 fi
 
 export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
-# if which pipenv > /dev/null; then eval "$(pipenv --completion)"; fi
-
-if [[ "$TERM" != "eterm-color" ]]; then
-  . $LOCAL/vendor/z.sh
-  test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
-else
-  unset PROMPT_COMMAND
-fi
 
 # path_helper messed up my PATH :(
 
@@ -160,3 +150,13 @@ export PATH=/Applications/Wireshark.app/Contents/MacOS:$PATH
 export PATH=$HOME/Library/Python/2.7/bin:$PATH
 export PATH=$PYENV_ROOT/bin:$PATH
 export PATH=$HOME/.local/sbin:$HOME/.local/bin:$PATH
+export PATH=$HOME/Projects/dotfiles/bin:$PATH
+
+if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
+
+if [[ "$TERM" != "eterm-color" ]]; then
+  . $LOCAL/vendor/z.sh
+  test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
+else
+  unset PROMPT_COMMAND
+fi

@@ -1,0 +1,26 @@
+#!/usr/bin/env python
+
+import glob
+import os
+import sys
+
+import yaml
+
+update = len(sys.argv) > 1 and sys.argv[1] == '--update'
+
+home = os.getenv('HOME')
+
+build_plans = glob.iglob(f'{home}/.stack/build-plan/lts-*.yaml')
+latest_build_plan = next(reversed(sorted(build_plans)))
+latest_lts, _ = os.path.splitext(os.path.basename(latest_build_plan))
+
+projects = glob.iglob(f'{home}/Projects/*/stack.yaml')
+
+for p in projects:
+    with open(p, 'r+') as f:
+        config = yaml.load(f)
+        if config['resolver'] < latest_lts:
+            print(f'{config["resolver"]:8} --> {latest_lts:8}: {p}')
+        if update:
+            config['resolver'] = latest_lts
+            yaml.dump(config, f)
