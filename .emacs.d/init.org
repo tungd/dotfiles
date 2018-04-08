@@ -650,6 +650,12 @@ By default Emacs doesn't even have redo!
               eshell-highlight-prompt nil))))
 #+END_SRC
 
+#+BEGIN_SRC emacs-lisp
+  (use-package ag
+    :ensure t
+    :init
+    (defun eshell/ag (args) (ag args (eshell/pwd))))
+#+END_SRC
 
 ** Tramp
 
