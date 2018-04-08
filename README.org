@@ -1,0 +1,86 @@
+#+title: macOS Setup
+
+* Bootstrap
+
+** Install my SSH and GPG keys
+
+** Fix macOS Sierra =ssh-agent= issue
+
+#+BEGIN_SRC sh
+  echo >> ~/.ssh/config <<EOF
+  Host *
+      IdentityFile ~/.ssh/id_rsa
+      AddKeysToAgent yes
+  EOF
+#+END_SRC
+
+** Clone the dotfiles
+
+#+BEGIN_SRC sh
+  mkdir -p ~/Projects
+  git clone git@github.com:tungd/dotfiles-lean.git ~/Projects/dotfiles
+#+END_SRC
+
+** Making aliases
+
+#+BEGIN_SRC sh
+  mkdir -p ~/.local/bin
+  mkdir -p ~/.local/vendor
+
+  ln -s ~/Projects/dotfiles/.bash_profile ~/.bash_profile
+  ln -s ~/Projects/dotfiles/.bashrc ~/.bashrc
+  ln -s ~/Projects/dotfiles/.emacs.d ~/.emacs.d
+  ln -s ~/Projects/dotfiles/.gitconfig ~/.gitconfig
+  ln -s ~/Projects/dotfiles/.npmrc ~/.npmrc
+  ln -s ~/Projects/dotfiles/.eslintrc ~/.eslintrc
+#+END_SRC
+
+
+* Install apps and utilities
+
+** =pyenv=
+
+#+BEGIN_SRC sh
+  git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+#+END_SRC
+
+** =stack=
+
+#+BEGIN_SRC sh
+  curl -sSL https://get.haskellstack.org/ | sh -s - -d ~/.local/bin/
+#+END_SRC
+
+** =z.sh=
+
+=z.sh= (https://github.com/rupa/z) allows me to visit one of the directories I
+worked on recently by typing just a partial path of it.
+
+#+BEGIN_SRC sh
+  curl -L https://raw.githubusercontent.com/rupa/z/master/z.sh > ~/.local/vendor/z.sh
+#+END_SRC
+
+
+* System configuration
+
+** Keyboard configuration
+
+Decrease repeat delay, increase repeat rate and disable Emoji.
+
+#+BEGIN_SRC sh
+  defaults write -g ApplePressAndHoldEnabled -bool false
+  defaults write -g InitialKeyRepeat -int 10
+  defaults write -g KeyRepeat -int 1
+  defaults write -g NSUserKeyEquivalents -dict-add 'Emoji & Symbols' '@^s'
+#+END_SRC
+
+** No shadow on window capture (Cmd-S-4 SPC)
+
+#+BEGIN_SRC sh
+  defaults write com.apple.screencapture disable-shadow -bool true
+#+END_SRC
+
+** Restart the UI Server service to activate the changes
+
+#+BEGIN_SRC sh
+  killall SystemUIServer
+#+END_SRC
