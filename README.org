@@ -7,7 +7,7 @@
 ** Fix macOS Sierra =ssh-agent= issue
 
 #+BEGIN_SRC sh
-  echo >> ~/.ssh/config <<EOF
+  cat >> ~/.ssh/config <<EOF
   Host *
       IdentityFile ~/.ssh/id_rsa
       AddKeysToAgent yes
@@ -78,6 +78,17 @@ Homebrew. Installation is a little bit more involved, though.
 
 #+BEGIN_SRC sh
   curl -sSL https://get.haskellstack.org/ | sh -s - -d ~/.local/bin/
+#+END_SRC
+
+#+BEGIN_SRC sh
+  cat > ~/.stack/config.yaml <<EOF
+  templates:
+    params:
+      author-name: Tung Dao
+      author-email: me@tungdao.com
+      copyright: (c) 2018 Tung Dao
+      github-username: tungd
+  EOF
 #+END_SRC
 
 ** =z.sh=

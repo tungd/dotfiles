@@ -1262,7 +1262,9 @@ Org Babel for literate programming and API documentation.
     (org-babel-do-load-languages
      'org-babel-load-languages
      '((emacs-lisp . t)
-       (http . t))))
+       (http . t)
+       (python . t)
+       (shell . t))))
 #+END_SRC
 
 ** Spell checking

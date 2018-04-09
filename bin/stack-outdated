@@ -27,4 +27,5 @@ for p in projects:
 
         if update:
             config['resolver'] = latest_lts
-            yaml.dump(config, f)
+            f.seek(0)
+            yaml.dump(config, f, default_flow_style=False)
