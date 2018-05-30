@@ -1,5 +1,8 @@
 parserOptions:
   ecmaVersion: 2018
+  ecmaFeatures:
+    jsx: true
+  sourceType: module
 globals:
   window: true
   console: true
