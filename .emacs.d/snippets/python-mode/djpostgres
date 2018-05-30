@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: djpostgres
+# key: djpostgres
+# --
+'default': {
+    'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    'NAME': os.getenv('PGDATABASE', 'postgres'),
+    'USER': os.getenv('PGUSER', 'postgres'),
+    'PASSWORD': os.getenv('PGPASSWORD', 'postgres'),
+    'HOST': os.getenv('PGHOST', 'localhost'),
+}
