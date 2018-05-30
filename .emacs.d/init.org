@@ -272,8 +272,14 @@ Use =historian.el= to sort ivy completion based on frequency - similar to smex.
 * General Editing
 
 #+BEGIN_SRC emacs-lisp
-(use-package uniquify
-  :config (setq uniquify-buffer-name-style 'forward))
+  (use-package uniquify
+    :config (setq uniquify-buffer-name-style 'forward))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ibuffer
+    :defer t
+    :bind ([remap list-buffers] . ibuffer))
 #+END_SRC
 
 Basic settings:
@@ -1096,17 +1102,29 @@ I started using PureScript for all my frontend works.
 ** Solidity
 
 #+BEGIN_SRC emacs-lisp
-  (use-package company-solidity
-    :ensure t
-    :defer t)
-
   (use-package solidity-mode
     :ensure t
-    :mode (("\.sol$" . solidity-mode))
-    :config
-    (eval-and-compile
-      (add-to-list 'company-backends 'company-solidity)))
+    :mode (("\.sol$" . solidity-mode)))
 #+END_SRC
+
+** Docker
+
+I use Docker for almost every project now, it is useful even just for setting up
+consistent development environment across the team. I use =docker= package to
+manage Docker images and containers.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package docker
+    :ensure t
+    :defer t)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package dockerfile-mode
+    :ensure t
+    :mode ("Dockerfile$" . dockerfile-mode))
+#+END_SRC
+
 
 ** Misc
 
@@ -1116,8 +1134,7 @@ These are supports for other stuffs that I used:
   (use-package markdown-mode
     :ensure t
     :mode (("\\.md$" . markdown-mode)
-           ("\\.markdown$" . markdown-mode))
-    :hook (markdown-mode . whitespace-turn-off))
+           ("\\.markdown$" . markdown-mode)))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle no
@@ -1126,12 +1143,6 @@ These are supports for other stuffs that I used:
     :mode (("\\.nix$" . nix-mode))
     :config
     (exec-path-from-shell-copy-env "NIX_REMOTE"))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package dockerfile-mode
-    :ensure t
-    :mode ("Dockerfile$" . dockerfile-mode))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -1372,7 +1383,7 @@ theme named =user= will always have the highest priority.
    '(font-lock-comment-face ((t (:slant normal))))
    '(font-lock-comment-delimiter-face
      ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
-   ;'(line-number ((t (:inherit font-lock-comment-face :height 120))))
+   '(line-number ((t (:inherit font-lock-comment-face :height 120))))
 
    ;; nord
    ;;'(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
@@ -1396,13 +1407,13 @@ theme named =user= will always have the highest priority.
     :init (load-theme 'nord t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package tango-plus-theme
     :ensure t
     :init (load-theme 'tango-plus t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package doom-themes
     :ensure t
     :init
@@ -1435,6 +1446,7 @@ Mode line
 #+BEGIN_SRC emacs-lisp
   (use-package smart-mode-line
     :ensure t
+    :preface (setq sml/theme nil)
     :hook (after-init . sml/setup))
 #+END_SRC
 
