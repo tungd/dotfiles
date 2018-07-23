@@ -1,0 +1,5 @@
+#!/bin/sh
+
+extension="${1##*.}"
+data=$(openssl base64 -in $1 | tr -d '\n')
+echo "data:image/${extension};base64,${data}"
