@@ -111,7 +111,7 @@ Decrease repeat delay, increase repeat rate and disable Emoji.
   defaults write -g ApplePressAndHoldEnabled -bool false
   defaults write -g InitialKeyRepeat -int 10
   defaults write -g KeyRepeat -int 1
-  defaults write -g NSUserKeyEquivalents -dict-add 'Emoji & Symbols' '@^s'
+  defaults write -g NSUserKeyEquivalents -dict-add 'Emoji & Symbols' '@^j'
 #+END_SRC
 
 ** No shadow on window capture (Cmd-S-4 SPC)
