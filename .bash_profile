@@ -153,6 +153,7 @@ export PATH=$PYENV_ROOT/bin:$PATH
 export PATH=$RBENV_ROOT/bin:$PATH
 export PATH=$HOME/.local/sbin:$HOME/.local/bin:$PATH
 export PATH=$HOME/Projects/dotfiles/bin:$PATH
+export PATH=$HOME/Applications/Emacs.app/Contents/MacOS/bin:$PATH
 
 if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
 if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
@@ -166,3 +167,5 @@ if [[ "$TERM" != "eterm-color" ]]; then
 else
   unset PROMPT_COMMAND
 fi
+
+export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
