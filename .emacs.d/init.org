@@ -708,7 +708,7 @@ By default Emacs doesn't even have redo!
       (defun td/lsp-doc-dwim ()
         (interactive)
         (lsp-ui-doc--make-request)
-        (run-at-time "2 sec" nil #'lsp-ui-doc--hide-frame))
+        (run-at-time "4 sec" nil #'lsp-ui-doc--hide-frame))
 
       (bind-key "C-c j" #'td/lsp-doc-dwim)))
 #+END_SRC
