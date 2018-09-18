@@ -688,7 +688,7 @@ By default Emacs doesn't even have redo!
 
 * Programming
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package lsp-mode
     :ensure t
     :defer t
@@ -953,7 +953,8 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
         (interactive)
         (require 'lsp-javascript-typescript)
         (lsp-javascript-typescript-enable))
-      (add-hook 'js-mode-hook #'td/setup-js-mode)))
+      ;; (add-hook 'js-mode-hook #'td/setup-js-mode)
+      ))
 
   (use-package add-node-modules-path
     :ensure t
@@ -1002,14 +1003,14 @@ awesome StencilJS project.
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package lsp-python :ensure t)
+  ;; (use-package lsp-python :ensure t)
 
-  (defun td/setup-python-mode ()
-    (interactive)
-    (require 'lsp-python)
-    (lsp-python-enable))
+  ;; (defun td/setup-python-mode ()
+  ;;   (interactive)
+  ;;   (require 'lsp-python)
+  ;;   (lsp-python-enable))
 
-  (add-hook 'python-mode-hook #'td/setup-python-mode)
+  ;; (add-hook 'python-mode-hook #'td/setup-python-mode)
 
   (use-package py-isort
     :ensure t
@@ -1044,7 +1045,7 @@ same folk who runs =stack=.
 
 Dante is very nice in theory, however it's not working well with GHC 8.2 yet.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package dante
     :ensure t
     :after haskell-mode
@@ -1057,12 +1058,13 @@ Dante is very nice in theory, however it's not working well with GHC 8.2 yet.
         (flycheck-add-next-checker
          'haskell-dante '(warning . haskell-hlint)))
 
-      (add-hook 'dante-mode-hook #'td/dante-setup-flycheck)))
+      ;; (add-hook 'dante-mode-hook #'td/dante-setup-flycheck)
+      ))
 #+END_SRC
 
 I'm using LSP Haskell for now.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package lsp-haskell
     :ensure t
     :hook (haskell-mode . lsp-haskell-enable))
@@ -1336,14 +1338,16 @@ bold and ligatures support :(.
 #+BEGIN_SRC emacs-lisp
   (setq-default
    fringes-outside-margins t
+   ;; line-spacing 4
    default-frame-alist
    '((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
-     ;(font . "Monaco 14")
-     ;(font . "Menlo 12")
+     ;; (font . "Hack 14")
+     ;; (font . "Monaco 14")
+     ;; (font . "Menlo 12")
      ;; (font . "Source Code Pro 14")
-     (font . "Hasklig 14")
-     ;; (font . "Fira Code Retina 14")
+     ;; (font . "Hasklig 14")
+     (font . "Fira Code 14")
      (top . 0) (left . 480)
      (width . 96) (height . 96)
      (vertical-scroll-bars . nil)
@@ -1415,11 +1419,8 @@ theme named =user= will always have the highest priority.
     :hook (prog-mode . highlight-numbers-mode))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package nord-theme
-    :ensure t
-    :init (load-theme 'nord t))
-#+END_SRC
+I also have very good experience with *Tango Plus*. Its philosophy of not
+getting in the way is interesting.
 
 #+BEGIN_SRC emacs-lisp :tangle no
   (use-package tango-plus-theme
@@ -1427,14 +1428,14 @@ theme named =user= will always have the highest priority.
     :init (load-theme 'tango-plus t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package doom-themes
     :ensure t
     :init
     (eval-and-compile
       (setq doom-themes-enable-italic nil
             doom-spacegrey-brighter-modeline t)
-      (load-theme 'doom-nord-light t))
+      (load-theme 'doom-spacegrey t))
     :hook (org-mode . doom-themes-org-config))
 #+END_SRC
 
@@ -1444,15 +1445,6 @@ presentation, which is *base16-github* from [[https://github.com/belak/base16-em
 #+BEGIN_SRC emacs-lisp :tangle no
   (use-package base16-theme
     :ensure t)
-#+END_SRC
-
-I also have very good experience with *Tango Plus*. Its philosophy of not
-getting in the way is interesting.
-
-#+BEGIN_SRC emacs-lisp
-  (use-package tango-plus-theme
-    :ensure t
-    :init (load-theme 'tango-plus t))
 #+END_SRC
 
 Mode line
@@ -1527,14 +1519,14 @@ kind of distracting, but it is really helpful sometimes.
   (use-package diff-hl
     :defer t
     :ensure t
-    ;:hook (after-init . global-diff-hl-mode)
+    :hook (after-init . global-diff-hl-mode)
     :init
     (eval-and-compile
       (define-fringe-bitmap 'td/diff-hl-bmp [#b11110000] 1 8 '(top t))
       (defun td/diff-hl-bmp-fn (type pos) 'td/diff-hl-bmp)
 
       (setq diff-hl-draw-borders nil
-            diff-hl-side 'right
+            ;diff-hl-side 'right
             diff-hl-fringe-bmp-function #'td/diff-hl-bmp-fn)
 
       (defun diff-hl-overlay-modified (ov after-p beg end &optional len)
@@ -1582,7 +1574,7 @@ kind of distracting, but it is really helpful sometimes.
 
 
 * Init file generation
-
+một con vịt
 Where the magic happen!
 
 #+BEGIN_SRC text :tangle no
