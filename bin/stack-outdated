@@ -2,6 +2,7 @@
 
 import fileinput
 import glob
+import http.client
 import logging
 import os
 import sys
@@ -10,9 +11,10 @@ logging.basicConfig(stream=sys.stderr)
 
 home = os.getenv('HOME')
 
-build_plans = glob.iglob(f'{home}/.stack/build-plan/lts-*.yaml')
-latest_build_plan = next(reversed(sorted(build_plans)))
-latest_lts, _ = os.path.splitext(os.path.basename(latest_build_plan))
+h = http.client.HTTPSConnection('www.stackage.org')
+h.request('GET', '/lts')
+latest_lts = h.getresponse().getheader('Location').replace('/', '')
+logging.info('Latest LTS is: {}'.format(latest_lts))
 
 projects = glob.iglob(f'{home}/Projects/*/stack.yaml')
 
