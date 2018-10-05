@@ -38,6 +38,12 @@
 
 * Install apps and utilities
 
+** XCode
+
+#+BEGIN_SRC sh
+  xcode-select --install
+#+END_SRC
+
 ** =pkgsrc=
 
 I don't use Homebrew, it is too fragile and invasive for my taste. I tried Nix

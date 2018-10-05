@@ -102,6 +102,8 @@ Sane, modern defaults:
     :ensure t
     :config
     (exec-path-from-shell-initialize))
+
+  (setenv "LANG" "en_US.UTF-8")
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -1574,7 +1576,7 @@ kind of distracting, but it is really helpful sometimes.
 
 
 * Init file generation
-một con vịt
+
 Where the magic happen!
 
 #+BEGIN_SRC text :tangle no
