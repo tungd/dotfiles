@@ -1,6 +1,7 @@
 [user]
 	name = Tung Dao
 	email = me@tungdao.com
+	signingkey = me@tungdao.com
 [alias]
   cl = clone
   co = checkout
@@ -38,3 +39,5 @@
 [commit]
 	template = /Users/tung/.stCommitMsg
 	gpgsign = true
+[gpg]
+	program = gpg2
