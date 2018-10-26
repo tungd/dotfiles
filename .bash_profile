@@ -154,6 +154,7 @@ export PATH=$RBENV_ROOT/bin:$PATH
 export PATH=$HOME/.local/sbin:$HOME/.local/bin:$PATH
 export PATH=$HOME/Projects/dotfiles/bin:$PATH
 export PATH=$HOME/Applications/Emacs.app/Contents/MacOS/bin:$PATH
+export PATH=$HOME/Applications/Emacs.app/Contents/MacOS/bin-x86_64-10_10:$PATH
 
 if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
 if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi

@@ -46,7 +46,7 @@ Really do the loading:
 
   (require 'bind-key)
 
-  (package-initialize)
+  ;; (package-initialize)
   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
 
   (use-package benchmark-init
@@ -967,7 +967,7 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 Well, I'm also on the TypeScript train lately, mostly because of the super
 awesome StencilJS project.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package typescript-mode
     :ensure t
     :mode "\\.ts"
