@@ -1,7 +1,7 @@
 [user]
-	name = Tung Dao
-	email = me@tungdao.com
-	signingkey = me@tungdao.com
+  name = Tung Dao
+  email = me@tungdao.com
+  signingkey = me@tungdao.com
 [alias]
   cl = clone
   co = checkout
@@ -24,20 +24,13 @@
 [push]
   default = matching
 [filter "lfs"]
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
+  clean = git-lfs clean -- %f
+  smudge = git-lfs smudge -- %f
+  process = git-lfs filter-process
+  required = true
 [core]
-	excludesfile = /Users/tung/.gitignore_global
-[difftool "sourcetree"]
-	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
-	path = 
-[mergetool "sourcetree"]
-	cmd = /Users/tung/Applications/Sourcetree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
-	trustExitCode = true
+  excludesfile = /Users/tung/.gitignore_global
 [commit]
-	template = /Users/tung/.stCommitMsg
-	gpgsign = true
+  gpgsign = true
 [gpg]
-	program = gpg2
+  program = gpg2
