@@ -2,9 +2,11 @@
 # name: component
 # key: component
 # --
-class $1 extends Component {
+class $1 extends React.Component {
 
   render() {
-    $0
+    return (
+      $0
+    )
   }
 }
