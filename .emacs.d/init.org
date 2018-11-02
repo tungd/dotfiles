@@ -835,7 +835,6 @@ editing, including PHP, since I rarely write PHP anymore.
            ("themes/.+\\.php" . web-mode)
            ("\\.hbs" . web-mode)
            ("\\.mustache" . web-mode))
-    :init (add-hook 'web-mode-hook #'emmet-mode)
     :config
     (eval-and-compile
       (setq web-mode-markup-indent-offset 2
@@ -866,11 +865,12 @@ Also, I can't live without Emmet.
       (defun td/emmet-jsx-mode ()
         (interactive)
         (emmet-mode t)
-        (setq-local emmet-expand-jsx-className? t))
+        (when (string-suffix-p "sx" (buffer-file-name))
+          (setq-local emmet-expand-jsx-className? t)))
 
       (add-hook 'sgml-mode-hook #'emmet-mode)
-      (add-hook 'web-mode-hook #'emmet-mode)
       (add-hook 'css-mode-hook #'emmet-mode)
+      (add-hook 'web-mode-hook #'td/emmet-jsx-mode)
       (add-hook 'js2-jsx-mode-hook #'td/emmet-jsx-mode)
       (add-hook 'js-jsx-mode-hook #'td/emmet-jsx-mode))
     :config
@@ -882,8 +882,7 @@ Also, I can't live without Emmet.
       (defun td/hide-emmet-preview-tooltip ()
         (overlay-put emmet-preview-output 'before-string nil))
 
-      (advice-add 'emmet-preview
-                  :after #'td/hide-emmet-preview-tooltip)))
+      (advice-add 'emmet-preview :after #'td/hide-emmet-preview-tooltip)))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -967,7 +966,7 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 Well, I'm also on the TypeScript train lately, mostly because of the super
 awesome StencilJS project.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package typescript-mode
     :ensure t
     :mode "\\.ts"
@@ -1397,13 +1396,13 @@ theme named =user= will always have the highest priority.
    '(diff-hl-change ((t (:inherit nil :background nil :foreground "#deae3e"))))
 
    ;; tango-plus
-   '(font-lock-keyword-face ((t (:weight normal))))
-   '(font-lock-string-face ((t (:slant normal))))
-   '(font-lock-constant-face ((t (:slant normal))))
-   '(font-lock-comment-face ((t (:slant normal))))
-   '(font-lock-comment-delimiter-face
-     ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
-   '(line-number ((t (:inherit font-lock-comment-face :height 120))))
+   ;; '(font-lock-keyword-face ((t (:weight normal))))
+   ;; '(font-lock-string-face ((t (:slant normal))))
+   ;; '(font-lock-constant-face ((t (:slant normal))))
+   ;; '(font-lock-comment-face ((t (:slant normal))))
+   ;; '(font-lock-comment-delimiter-face
+   ;;   ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
+   ;; '(line-number ((t (:inherit font-lock-comment-face :height 120))))
 
    ;; nord
    ;;'(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
@@ -1411,6 +1410,13 @@ theme named =user= will always have the highest priority.
    ;; '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#A3BE8C"))))
    ;; '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#BF616A"))))
    ;; '(diff-hl-change ((t (:inherit nil :background nil :foreground "#EBCB8B"))))
+
+   ;; spacegray
+   '(web-mode-jsx-depth-1-face ((t (:background "#242930"))))
+   '(web-mode-jsx-depth-2-face ((t (:background "#1d2126"))))
+   '(web-mode-jsx-depth-3-face ((t (:background "#16191c"))))
+   '(web-mode-jsx-depth-4-face ((t (:background "#0e1013"))))
+   '(web-mode-jsx-depth-5-face ((t (:background "#070809"))))
    )
 #+END_SRC
 
