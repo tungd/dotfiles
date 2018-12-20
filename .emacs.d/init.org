@@ -46,7 +46,7 @@ Really do the loading:
 
   (require 'bind-key)
 
-  ;; (package-initialize)
+  (package-initialize)
   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
 
   (use-package benchmark-init
@@ -602,7 +602,8 @@ By default Emacs doesn't even have redo!
                    '(ruby-hash
                      (modes . '(ruby-mode))
                      (regexp . "\\(\\s-*\\)=>")
-                     (spacing . 1)))))
+                     (spacing . 1)))
+      ))
 #+END_SRC
 
 ** Recent files
@@ -770,7 +771,9 @@ be fair, I'd like these mode to support Emacs's standard
     :functions (flycheck-add-mode flycheck-add-next-checker)
     :init (add-hook 'prog-mode-hook #'flycheck-mode)
     :config
-    (setq-default flycheck-disabled-checkers '(scss emacs-lisp-checkdoc)))
+    (eval-and-compile
+      (setq-default flycheck-disabled-checkers '(scss emacs-lisp-checkdoc)
+                    flycheck-hlintrc ".hlint.yaml")))
 #+END_SRC
 
 ** Version Control
@@ -842,15 +845,7 @@ editing, including PHP, since I rarely write PHP anymore.
             web-mode-code-indent-offset 2
             web-mode-script-padding 2
             web-mode-style-padding 2)
-
-      (add-hook 'web-mode-hook #'turn-off-auto-fill)
-
-      (defun td/setup-web-mode ()
-        (interactive)
-        (when (string-suffix-p ".jsx" (buffer-file-name))
-          (flycheck-add-mode 'javascript-eslint 'web-mode)))
-
-      (add-hook 'web-mode-hook #'td/setup-web-mode)))
+      (add-hook 'web-mode-hook #'turn-off-auto-fill)))
 #+END_SRC
 
 Also, I can't live without Emmet.
@@ -865,8 +860,8 @@ Also, I can't live without Emmet.
       (defun td/emmet-jsx-mode ()
         (interactive)
         (emmet-mode t)
-        (when (string-suffix-p "sx" (buffer-file-name))
-          (setq-local emmet-expand-jsx-className? t)))
+        (setq-local emmet-expand-jsx-className?
+                    (string-suffix-p "sx" (buffer-file-name))))
 
       (add-hook 'sgml-mode-hook #'emmet-mode)
       (add-hook 'css-mode-hook #'emmet-mode)
@@ -935,12 +930,8 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 =js-mode= a try
 
 #+BEGIN_SRC emacs-lisp
-  (use-package lsp-javascript-typescript
-   :ensure t)
-
   (use-package js
     :mode (("\\.js$" . js-mode)
-           ;("\\.jsx$" . js-jsx-mode)
            ("\\.json$" . js-mode)
            ("\\.eslintrc$" . js-mode))
     :config
@@ -987,11 +978,9 @@ awesome StencilJS project.
     :preface
     (defun td/setup-tide-mode ()
       (interactive)
-      (when (string-equal "tsx" (file-name-extension buffer-file-name))
-        (tide-setup)
-        ;; (flycheck-add-next-checker 'typescript-tide '(t . typescript-tslint) 'append)
-        ;; (tide-hl-identifier-mode +1)
-        ))
+      (when (or (string-equal "tsx" (file-name-extension buffer-file-name))
+                (string-equal "jsx" (file-name-extension buffer-file-name)))
+        (tide-setup)))
     :hook (web-mode . td/setup-tide-mode))
 #+END_SRC
 
@@ -1059,8 +1048,7 @@ Dante is very nice in theory, however it's not working well with GHC 8.2 yet.
         (flycheck-add-next-checker
          'haskell-dante '(warning . haskell-hlint)))
 
-      ;; (add-hook 'dante-mode-hook #'td/dante-setup-flycheck)
-      ))
+      (add-hook 'dante-mode-hook #'td/dante-setup-flycheck)))
 #+END_SRC
 
 I'm using LSP Haskell for now.
@@ -1396,13 +1384,13 @@ theme named =user= will always have the highest priority.
    '(diff-hl-change ((t (:inherit nil :background nil :foreground "#deae3e"))))
 
    ;; tango-plus
-   ;; '(font-lock-keyword-face ((t (:weight normal))))
-   ;; '(font-lock-string-face ((t (:slant normal))))
-   ;; '(font-lock-constant-face ((t (:slant normal))))
-   ;; '(font-lock-comment-face ((t (:slant normal))))
-   ;; '(font-lock-comment-delimiter-face
-   ;;   ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
-   ;; '(line-number ((t (:inherit font-lock-comment-face :height 120))))
+   '(font-lock-keyword-face ((t (:weight normal))))
+   '(font-lock-string-face ((t (:slant normal))))
+   '(font-lock-constant-face ((t (:slant normal))))
+   '(font-lock-comment-face ((t (:slant normal))))
+   '(font-lock-comment-delimiter-face
+     ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
+   '(line-number ((t (:inherit font-lock-comment-face :height 120))))
 
    ;; nord
    ;;'(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
@@ -1412,11 +1400,11 @@ theme named =user= will always have the highest priority.
    ;; '(diff-hl-change ((t (:inherit nil :background nil :foreground "#EBCB8B"))))
 
    ;; spacegray
-   '(web-mode-jsx-depth-1-face ((t (:background "#242930"))))
-   '(web-mode-jsx-depth-2-face ((t (:background "#1d2126"))))
-   '(web-mode-jsx-depth-3-face ((t (:background "#16191c"))))
-   '(web-mode-jsx-depth-4-face ((t (:background "#0e1013"))))
-   '(web-mode-jsx-depth-5-face ((t (:background "#070809"))))
+   ;; '(web-mode-jsx-depth-1-face ((t (:background "#242930"))))
+   ;; '(web-mode-jsx-depth-2-face ((t (:background "#1d2126"))))
+   ;; '(web-mode-jsx-depth-3-face ((t (:background "#16191c"))))
+   ;; '(web-mode-jsx-depth-4-face ((t (:background "#0e1013"))))
+   ;; '(web-mode-jsx-depth-5-face ((t (:background "#070809"))))
    )
 #+END_SRC
 
@@ -1430,13 +1418,13 @@ theme named =user= will always have the highest priority.
 I also have very good experience with *Tango Plus*. Its philosophy of not
 getting in the way is interesting.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package tango-plus-theme
     :ensure t
     :init (load-theme 'tango-plus t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package doom-themes
     :ensure t
     :init
