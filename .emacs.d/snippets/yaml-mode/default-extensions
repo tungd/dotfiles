@@ -5,22 +5,30 @@
 default-extensions:
 - NoImplicitPrelude
 - OverloadedStrings
-- OverloadedLists
+# - OverloadedLists
 - ScopedTypeVariables
-- GeneralizedNewtypeDeriving
+# - GeneralizedNewtypeDeriving
 - DeriveGeneric
 - DeriveDataTypeable
-- RecordWildCards
-- LambdaCase
+- StandaloneDeriving
+- TypeFamilies
 - TypeOperators
 - DataKinds
 - KindSignatures
 - MultiParamTypeClasses
 - FlexibleInstances
+- FlexibleContexts
 - TypeSynonymInstances
+- GADTs
+- NamedFieldPuns
+- TupleSections
+- LambdaCase
+- PackageImports
+- MultiWayIf
+- NumDecimals
 
 ghc-options:
-- -Weverything
+- -Wall
 - -Wno-missing-exported-signatures
 - -Wno-missing-import-lists
 - -Wno-missed-specialisations
