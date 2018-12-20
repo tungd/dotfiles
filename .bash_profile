@@ -176,3 +176,8 @@ fi
 export PATH="$HOME/.cargo/bin:$PATH"
 
 if which bat > /dev/null; then alias cat=bat; fi
+
+# opam configuration
+test -r /Users/tung/.opam/opam-init/init.sh && . /Users/tung/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true
+
+if which kubectl > /dev/null; then source <(kubectl completion bash); fi
