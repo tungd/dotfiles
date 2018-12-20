@@ -76,6 +76,10 @@ export PS1="\[\033[G\]
 $RED\u$END@$YELLOW\H$END in $GREEN\w$END \$(git_prompt_info) \$(env_prompt_info) \$(todo_prompt_info)
 › "
 
+if [[ -r /opt/pkg/share/bash-completion/bash_completion && "${BASH_VERSINFO:-0}" -ge 4 ]]; then
+    . /opt/pkg/share/bash-completion/bash_completion
+fi
+
 export ENV=development
 export LOCAL=$HOME/.local
 
