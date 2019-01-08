@@ -5,6 +5,7 @@
 default-extensions:
 - NoImplicitPrelude
 - OverloadedStrings
+- OverloadedLabels
 # - OverloadedLists
 - ScopedTypeVariables
 # - GeneralizedNewtypeDeriving
@@ -13,6 +14,7 @@ default-extensions:
 - StandaloneDeriving
 - TypeFamilies
 - TypeOperators
+- TypeApplications
 - DataKinds
 - KindSignatures
 - MultiParamTypeClasses
@@ -21,6 +23,7 @@ default-extensions:
 - TypeSynonymInstances
 - GADTs
 - NamedFieldPuns
+- RecordWildCards
 - TupleSections
 - LambdaCase
 - PackageImports
