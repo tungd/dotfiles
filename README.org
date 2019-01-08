@@ -11,8 +11,6 @@
   Host *
       IdentityFile ~/.ssh/id_rsa
       AddKeysToAgent yes
-  Host 172.104.54.197
-      User root
   EOF
 #+END_SRC
 
