@@ -17,8 +17,8 @@
   (buffer-string))
 
 (defun org-babel-execute:graphql (body params)
-  (let* ((graphql-url (cdr (assoc :endpoint params)))
-         (mode (or (cdr (assoc :mode params)) "query")))
+  (let ((graphql-url (cdr (assoc :endpoint params)))
+        (mode (or (cdr (assoc :mode params)) "query")))
     (cond ((string-equal mode "json")
            (graphql--query body))
           ((string-equal mode "query")
