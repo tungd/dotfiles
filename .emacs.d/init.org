@@ -1166,6 +1166,12 @@ These are supports for other stuffs that I used:
            ("^roster$" . yaml-mode)))
 #+END_SRC
 
+#+BEGIN_SRC emacs-lisp
+  (use-package groovy-mode
+    :ensure t
+    :config
+    (setq groovy-indent-offset 2))
+#+END_SRC
 
 * Document and management
 
