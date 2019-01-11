@@ -139,29 +139,23 @@ faviconize() {
   rm $icos
 }
 
-if [ -d "/Applications/VMware Fusion.app/Contents/Library" ]; then
-  export PATH="/Applications/VMware Fusion.app/Contents/Library":$PATH
-fi
-
-export PYENV_ROOT="$HOME/.pyenv"
-export RBENV_ROOT="$HOME/.rbenv"
-
-# path_helper messed up my PATH :(
-
-export PATH=/usr/local/bin:/usr/bin:/usr/sbin:/sbin:/bin
 export PATH=/opt/pkg/sbin:/opt/pkg/bin:$PATH
-export PATH=/usr/local/MacGPG2/bin:$PATH
-export PATH=/Applications/Wireshark.app/Contents/MacOS:$PATH
-export PATH=$HOME/Library/Python/2.7/bin:$PATH
-export PATH=$PYENV_ROOT/bin:$PATH
-export PATH=$RBENV_ROOT/bin:$PATH
-export PATH=$HOME/.local/sbin:$HOME/.local/bin:$PATH
+export PATH=/usr/local/bin:$PATH
 export PATH=$HOME/Projects/dotfiles/bin:$PATH
+export PATH=$HOME/.local/sbin:$HOME/.local/bin:$PATH
+
 export PATH=$HOME/Applications/Emacs.app/Contents/MacOS/bin:$PATH
 export PATH=$HOME/Applications/Emacs.app/Contents/MacOS/bin-x86_64-10_10:$PATH
+# export PATH="/Applications/VMware Fusion.app/Contents/Library":$PATH
+# export PATH=/Applications/Wireshark.app/Contents/MacOS:$PATH
 
-if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
-if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH=$PYENV_ROOT/bin:$PATH
+if which pyenv > /dev/null; then eval "$($PYENV_ROOT/bin/pyenv init -)"; fi
+
+# export RBENV_ROOT="$HOME/.rbenv"
+# export PATH=$RBENV_ROOT/bin:$PATH
+# if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 
 if which go > /dev/null; then eval "$(go env)"; fi
 export PATH=$GOPATH/bin:$PATH
