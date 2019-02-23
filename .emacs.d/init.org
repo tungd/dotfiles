@@ -1173,6 +1173,7 @@ These are supports for other stuffs that I used:
     (setq groovy-indent-offset 2))
 #+END_SRC
 
+
 * Document and management
 
 I use Org for almost everything. Blogging, task management, API documentation,
@@ -1340,9 +1341,9 @@ bold and ligatures support :(.
      ;; (font . "Hack 14")
      ;; (font . "Monaco 14")
      ;; (font . "Menlo 12")
-     ;; (font . "Source Code Pro 14")
+     (font . "Source Code Pro 14")
      ;; (font . "Hasklig 14")
-     (font . "Fira Code 14")
+     ;; (font . "Fira Code 14")
      (top . 0) (left . 480)
      (width . 96) (height . 96)
      (vertical-scroll-bars . nil)
@@ -1390,13 +1391,13 @@ theme named =user= will always have the highest priority.
    '(diff-hl-change ((t (:inherit nil :background nil :foreground "#deae3e"))))
 
    ;; tango-plus
-   '(font-lock-keyword-face ((t (:weight normal))))
-   '(font-lock-string-face ((t (:slant normal))))
-   '(font-lock-constant-face ((t (:slant normal))))
-   '(font-lock-comment-face ((t (:slant normal))))
-   '(font-lock-comment-delimiter-face
-     ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
-   '(line-number ((t (:inherit font-lock-comment-face :height 120))))
+   ;; '(font-lock-keyword-face ((t (:weight normal))))
+   ;; '(font-lock-string-face ((t (:slant normal))))
+   ;; '(font-lock-constant-face ((t (:slant normal))))
+   ;; '(font-lock-comment-face ((t (:slant normal))))
+   ;; '(font-lock-comment-delimiter-face
+   ;;   ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
+   ;; '(line-number ((t (:inherit font-lock-comment-face :height 120))))
 
    ;; nord
    ;;'(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
@@ -1424,20 +1425,20 @@ theme named =user= will always have the highest priority.
 I also have very good experience with *Tango Plus*. Its philosophy of not
 getting in the way is interesting.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package tango-plus-theme
     :ensure t
     :init (load-theme 'tango-plus t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package doom-themes
     :ensure t
     :init
     (eval-and-compile
       (setq doom-themes-enable-italic nil
             doom-spacegrey-brighter-modeline t)
-      (load-theme 'doom-spacegrey t))
+      (load-theme 'doom-nord t))
     :hook (org-mode . doom-themes-org-config))
 #+END_SRC
 
