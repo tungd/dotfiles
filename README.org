@@ -92,7 +92,7 @@ Homebrew. Installation is a little bit more involved, though.
     params:
       author-name: Tung Dao
       author-email: me@tungdao.com
-      copyright: (c) 2018 Tung Dao
+      copyright: (c) 2019 Tung Dao
       github-username: tungd
   EOF
 #+END_SRC
