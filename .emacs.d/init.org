@@ -11,8 +11,6 @@ directly.
 I'm also trying out some of the start-up optimization tips from Doom.
 
 #+BEGIN_SRC emacs-lisp
-  ;; (defvar file-name-handler-alist-orig file-name-handler-alist)
-
   (setq package-enable-at-startup nil
         ;; file-name-handler-alist nil
         message-log-max 16384
@@ -21,13 +19,6 @@ I'm also trying out some of the start-up optimization tips from Doom.
         auto-window-vscroll nil)
 
   (setq-default bidi-display-reordering nil)
-
-  ;; (add-hook 'after-init-hook
-  ;;           (lambda ()
-  ;;             (setq file-name-handler-alist file-name-handler-alist-orig
-  ;;                   gc-cons-threshold 800000
-  ;;                   gc-cons-percentage 0.1)
-  ;;             (garbage-collect)) t)
 #+END_SRC
 
 Sometimes I write my own package, or download package from Emacs wiki; they
@@ -160,7 +151,8 @@ of Emacs but it is still bare bone.
     :ensure t
     :diminish projectile-mode
     :hook (after-init . projectile-mode)
-    :bind (:map projectile-mode-map ("C-c p" . projectile-command-map))
+    :bind (("M-C-'" . projectile-find-file)
+           (:map projectile-mode-map ("C-c p" . projectile-command-map)))
     :config
     (setq projectile-globally-ignored-file-suffixes
           '("jpg" "png" "svg" "psd" "sketch" "afdesign"
@@ -215,7 +207,7 @@ is that I can make its popup appear at the top of the window.
     :bind (([remap find-file] . counsel-find-file)
            ([remap ido-find-file] . counsel-find-file)
            ([remap execute-extended-command] . counsel-M-x)
-           ("C-M-'" . counsel-git)
+           ;("C-M-'" . counsel-git)
            ("M-\"" . counsel-git-grep)
            ("M-m" . counsel-M-x)
            ("C-c i" . counsel-imenu)))
@@ -252,7 +244,7 @@ Use =historian.el= to sort ivy completion based on frequency - similar to smex.
 #+BEGIN_SRC emacs-lisp :tangle no
   (use-package shackle
     :ensure t
-    :init (add-hook 'after-init-hook 'shackle-mode)
+    :hook (after-init . shackle-mode)
     :config
     (setq shackle-default-alignment 'below
           shackle-default-rule
@@ -317,11 +309,6 @@ Editing utilities:
     (crux-with-region-or-point-to-eol kill-ring-save))
 
   (bind-key "C-c C-k" #'kill-this-buffer)
-
-  (use-package comment-dwim-2
-    :ensure t
-    :bind ([remap comment-dwim] . comment-dwim-2)
-    :config (setq comment-style 'multi-line))
 #+END_SRC
 
 Automatically apply external changes: This is debatable, from my own
@@ -557,7 +544,7 @@ By default Emacs doesn't even have redo!
     :init
     (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
     :config
-    (eval-and-compile
+    (progn
       (setq yas-prompt-functions
             '(yas-ido-prompt yas-completing-prompt yas-no-prompt)
             yas-verbosity 1)
@@ -619,6 +606,11 @@ By default Emacs doesn't even have redo!
             ".gz" "~$" "/tmp/" "/ssh:" "/sudo:" "/scp:")))
 #+END_SRC
 
+** Diff
+
+#+BEGIN_SRC emacs-lisp
+  (setq-default ediff-split-window-function #'split-window-horizontally)
+#+END_SRC
 
 * Shell and remote
 
@@ -769,7 +761,7 @@ be fair, I'd like these mode to support Emacs's standard
     :ensure t
     :commands (flycheck-mode)
     :functions (flycheck-add-mode flycheck-add-next-checker)
-    :init (add-hook 'prog-mode-hook #'flycheck-mode)
+    :hook (prog-mode . flycheck-mode)
     :config
     (eval-and-compile
       (setq-default flycheck-disabled-checkers '(scss emacs-lisp-checkdoc)
@@ -817,8 +809,7 @@ re-run the tests.
 #+BEGIN_SRC emacs-lisp :tangle no
   (use-package hideshowvis
     :ensure t
-    :init
-    (add-hook 'hs-minor-mode-hook 'hideshowvis-enable))
+    :hook (hs-minor-mode . hideshowvis-enable))
 #+END_SRC
 
 ** Web Development
@@ -835,39 +826,36 @@ editing, including PHP, since I rarely write PHP anymore.
            ("\\.tpl" . web-mode)
            ("\\.erb" . web-mode)
            ("\\.tag" . web-mode)
-           ("themes/.+\\.php" . web-mode)
+           ("\\.php" . web-mode)
            ("\\.hbs" . web-mode)
            ("\\.mustache" . web-mode))
+    :hook (web-mode . turn-off-auto-fill)
     :config
-    (eval-and-compile
-      (setq web-mode-markup-indent-offset 2
-            web-mode-css-indent-offset 2
-            web-mode-code-indent-offset 2
-            web-mode-script-padding 2
-            web-mode-style-padding 2)
-      (add-hook 'web-mode-hook #'turn-off-auto-fill)))
+    (setq web-mode-markup-indent-offset 2
+          web-mode-css-indent-offset 2
+          web-mode-code-indent-offset 2
+          web-mode-script-padding 2
+          web-mode-style-padding 2))
 #+END_SRC
 
 Also, I can't live without Emmet.
 
 #+BEGIN_SRC emacs-lisp
+  (defun td/emmet-jsx-mode ()
+    (interactive)
+    (emmet-mode t)
+    (setq-local emmet-expand-jsx-className?
+                (string-suffix-p "sx" (buffer-file-name))))
+
   (use-package emmet-mode
     :ensure t
     :diminish emmet-mode
     :commands emmet-mode
-    :init
-    (eval-and-compile
-      (defun td/emmet-jsx-mode ()
-        (interactive)
-        (emmet-mode t)
-        (setq-local emmet-expand-jsx-className?
-                    (string-suffix-p "sx" (buffer-file-name))))
-
-      (add-hook 'sgml-mode-hook #'emmet-mode)
-      (add-hook 'css-mode-hook #'emmet-mode)
-      (add-hook 'web-mode-hook #'td/emmet-jsx-mode)
-      (add-hook 'js2-jsx-mode-hook #'td/emmet-jsx-mode)
-      (add-hook 'js-jsx-mode-hook #'td/emmet-jsx-mode))
+    :hook ((sgml-mode . emmet-mode)
+           (css-mode . emmet-mode)
+           (web-mode . td/emmet-jsx-mode)
+           (js2-jsx-mode . td/emmet-jsx-mode)
+           (js-jsx-mode . td/emmet-jsx-mode))
     :config
     (eval-and-compile
       (setq emmet-indentation 2
@@ -900,7 +888,7 @@ Also, I can't live without Emmet.
 
 ** PHP
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package php-mode
     :ensure t
     :mode (("\\.php" . php-mode))
@@ -951,7 +939,7 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
   (use-package add-node-modules-path
     :ensure t
     :defer t
-    :init (add-hook 'js-mode-hook #'add-node-modules-path))
+    :hook (js-mode . add-node-modules-path))
 #+END_SRC
 
 Well, I'm also on the TypeScript train lately, mostly because of the super
@@ -1010,8 +998,7 @@ awesome StencilJS project.
   (use-package python
     :mode (("\\.py\\'" . python-mode))
     :interpreter ("pipenv run python" . python-mode)
-    :config
-    (add-hook 'before-save-hook 'py-isort-before-save))
+    :hook (before-save . py-isort-before-save))
 #+END_SRC
 
 ** Haskell
@@ -1036,19 +1023,16 @@ same folk who runs =stack=.
 Dante is very nice in theory, however it's not working well with GHC 8.2 yet.
 
 #+BEGIN_SRC emacs-lisp
+  (defun td/dante-setup-flycheck ()
+    (flycheck-add-next-checker
+     'haskell-dante '(warning . haskell-hlint)))
+
   (use-package dante
     :ensure t
     :after haskell-mode
     :commands 'dante-mode
-    :init
-    (add-hook 'haskell-mode-hook 'dante-mode)
-    :config
-    (eval-and-compile
-      (defun td/dante-setup-flycheck ()
-        (flycheck-add-next-checker
-         'haskell-dante '(warning . haskell-hlint)))
-
-      (add-hook 'dante-mode-hook #'td/dante-setup-flycheck)))
+    :hook ((haskell-mode . dante-mode)
+           (dante-mode . td/dante-setup-flycheck)))
 #+END_SRC
 
 I'm using LSP Haskell for now.
@@ -1108,7 +1092,7 @@ I started using PureScript for all my frontend works.
 
   (use-package go-eldoc
     :ensure t
-    :init (add-hook 'go-mode-hook 'go-eldoc-setup))
+    :hook (go-mode . go-eldoc-setup))
 #+END_SRC
 
 ** Swift
@@ -1215,6 +1199,7 @@ Here's my basic Org setup:
   (use-package org
     :ensure t
     :bind (("C-c o c" . org-occur-in-agenda-files))
+    :hook (org-mode . org-indent-mode)
     :config
     (setq org-directory "~/Desktop/"
           org-default-notes-file (expand-file-name "inbox.org" org-directory)
@@ -1231,8 +1216,7 @@ Here's my basic Org setup:
             (sequence "NEXT(n)" "ACTIVE(a)" "WAITING(w)" "LATER(l)" "|" "CANCELLED(c)"))
           org-log-done 'time
 
-          org-src-fontify-natively t)
-    (add-hook 'org-mode-hook #'org-indent-mode))
+          org-src-fontify-natively t))
 #+END_SRC
 
 Agenda overview and filtering. Org provides a bunch of quick overviews:
@@ -1311,15 +1295,16 @@ Org Babel for literate programming and API documentation.
   (when (executable-find "aspell")
     (use-package ispell
       :bind ("<f8>" . ispell-word)
-      :init (setq-default ispell-program-name "aspell"
-                          ispell-extra-args '("--sug-mode=ultra" "--lang=en_US" "--personal=~/.emacs.d/dictionary")
-                          ispell-skip-html t
-                          ispell-silently-savep t
-                          ispell-really-aspell t))
+      :init
+      (setq-default ispell-program-name "aspell"
+                    ispell-extra-args '("--sug-mode=ultra" "--lang=en_US" "--personal=~/.emacs.d/dictionary")
+                    ispell-skip-html t
+                    ispell-silently-savep t
+                    ispell-really-aspell t))
 
     (use-package flyspell
       :defer t
-      :init (add-hook 'org-mode-hook 'flyspell-mode)
+      :hook (org-mode . flyspell-mode)
       ;; :config
       ;; (progn
       ;;   (require 'flyspell-ignore-faces)
@@ -1391,8 +1376,8 @@ theme named =user= will always have the highest priority.
    ;;'(sp-pair-overlay-face ((t (:inherit region))))
    ;;'(font-lock-string-face ((t (:slant normal))))
 
-   '(line-number ((t (:height 120))))
-   '(line-number-current-line ((t (:height 120 :bold nil))))
+   ;;'(line-number ((t (:height 120 :inherit font-lock-comment-face))))
+   ;;'(line-number-current-line ((t (:height 120 :bold nil))))
    ;;'(fringe ((t (:inherit nil))))
    ;;'(mode-line ((t (:box nil))))
    ;;'(mode-line-inactive ((t (:box nil))))
@@ -1406,13 +1391,14 @@ theme named =user= will always have the highest priority.
    '(diff-hl-change ((t (:inherit nil :background nil :foreground "#deae3e"))))
 
    ;; tango-plus
-   ;; '(font-lock-keyword-face ((t (:weight normal))))
-   ;; '(font-lock-string-face ((t (:slant normal))))
-   ;; '(font-lock-constant-face ((t (:slant normal))))
-   ;; '(font-lock-comment-face ((t (:slant normal))))
-   ;; '(font-lock-comment-delimiter-face
-   ;;   ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
-   ;; '(line-number ((t (:inherit font-lock-comment-face :height 120))))
+   '(font-lock-keyword-face ((t (:weight normal))))
+   '(font-lock-string-face ((t (:slant normal))))
+   '(font-lock-constant-face ((t (:slant normal))))
+   '(font-lock-comment-face ((t (:slant normal))))
+   '(font-lock-comment-delimiter-face
+     ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
+   '(line-number ((t (:inherit font-lock-comment-face :height 120))))
+   '(line-number-current-line ((t (:inherit font-lock-comment-face :height 120 :bold t))))
 
    ;; nord
    ;;'(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
@@ -1440,13 +1426,19 @@ theme named =user= will always have the highest priority.
 I also have very good experience with *Tango Plus*. Its philosophy of not
 getting in the way is interesting.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package tango-plus-theme
     :ensure t
     :init (load-theme 'tango-plus t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
+  (use-package soft-morning-theme
+    :ensure t
+    :init (load-theme 'soft-morning t))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package doom-themes
     :ensure t
     :init
@@ -1509,18 +1501,17 @@ The default line continuation indicator is too standout and distracting for me.
     :ensure t
     :commands (indent-guide-mode)
     :diminish indent-guide-mode
-    :init
-    (add-hook 'python-mode-hook #'indent-guide-mode)
-    (add-hook 'yaml-mode-hook #'indent-guide-mode)
-    (add-hook 'purescript-mode-hook #'indent-guide-mode)
-    (add-hook 'haskell-mode-hook #'indent-guide-mode))
+    :hook ((python-mode . indent-guide-mode)
+           (yaml-mode . indent-guide-mode)
+           (purescript-mode . indent-guide-mode)
+           (haskell-mode . indent-guide-mode)))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   (use-package rainbow-delimiters
     :ensure t
     :commands rainbow-delimiters-mode
-    :init (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+    :hook (prog-mode . rainbow-delimiters-mode)
     :config
     (eval-and-compile
       (setq rainbow-delimiters-max-face-count 1)
