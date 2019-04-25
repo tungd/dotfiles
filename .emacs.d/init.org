@@ -1059,17 +1059,32 @@ I'm using LSP Haskell for now.
     :hook (haskell-mode . lsp-haskell-enable))
 #+END_SRC
 
+** Rust
+
+#+BEGIN_SRC emacs-lisp
+  (use-package rust-mode
+    :ensure t
+    :defer t)
+
+  (use-package flycheck-rust
+    :ensure t
+    :hook (flycheck-mode . flycheck-rust-setup))
+
+  (use-package racer
+    :ensure t
+    :hook (rust-mode . racer-mode))
+#+END_SRC
+
 ** PureScript
 
 I started using PureScript for all my frontend works.
 
 #+BEGIN_SRC emacs-lisp
-  (add-hook 'purescript-mode-hook #'td/turn-off-evil-auto-indent)
-
   (use-package purescript-mode
     :ensure t
     :mode (("\\.purs\\'" . purescript-mode))
-    :hook (purescript-mode . turn-on-purescript-indentation)
+    :hook ((purescript-mode . turn-on-purescript-indentation)
+           (purescript-mode . td/turn-off-evil-auto-indent))
     :config
     (defun purescript-doc-current-info ()))
 

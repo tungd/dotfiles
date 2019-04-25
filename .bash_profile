@@ -168,6 +168,9 @@ else
 fi
 
 export PATH="$HOME/.cargo/bin:$PATH"
+if [[ -r $LOCAL/etc/bash_completion.d/rustup.bash-completion && "${BASH_VERSINFO:-0}" -ge 4 ]]; then
+    . $LOCAL/etc/bash_completion.d/rustup.bash-completion
+fi
 
 if which bat > /dev/null; then alias cat=bat; fi
 
