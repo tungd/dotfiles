@@ -88,8 +88,6 @@ export PGPASS=postgres
 export PGPASSWORD=postgres
 export PGUSER=postgres
 
-export BAT_THEME=OneHalfLight
-
 alias g=git
 alias be='bundle exec'
 alias grep='grep --color=auto'
