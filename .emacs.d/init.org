@@ -612,6 +612,7 @@ By default Emacs doesn't even have redo!
   (setq-default ediff-split-window-function #'split-window-horizontally)
 #+END_SRC
 
+
 * Shell and remote
 
 ** EShell
@@ -662,6 +663,14 @@ By default Emacs doesn't even have redo!
     :ensure t
     :init
     (defun eshell/ag (args) (ag args (eshell/pwd))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package with-editor
+    :ensure t
+    :hook ((term-exec . with-editor-export-editor)
+           (shell-mode . with-editor-export-editor)
+           (eshell-mode . with-editor-export-editor)))
 #+END_SRC
 
 ** Tramp
