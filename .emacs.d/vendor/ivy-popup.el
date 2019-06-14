@@ -32,7 +32,5 @@
 
       (fit-window-to-buffer *ivy-popup-window* (+ 2 ivy-height) 2))))
 
-(setq ivy-display-function #'ivy-display-function-window)
-
 (provide 'ivy-popup)
 ;;; ivy-popup.el ends here

@@ -200,14 +200,15 @@ is that I can make its popup appear at the top of the window.
           ivy-use-virtual-buffers t
           ivy-height 16
           projectile-completion-system 'ivy)
-    (require 'counsel))
+    (require 'counsel)
+    (add-to-list 'ivy-display-functions-alist '(t . ivy-display-function-window)))
 
   (use-package counsel
     :ensure t
     :bind (([remap find-file] . counsel-find-file)
            ([remap ido-find-file] . counsel-find-file)
            ([remap execute-extended-command] . counsel-M-x)
-           ;("C-M-'" . counsel-git)
+           ;; ("C-M-'" . counsel-git)
            ("M-\"" . counsel-git-grep)
            ("M-m" . counsel-M-x)
            ("C-c i" . counsel-imenu)))
