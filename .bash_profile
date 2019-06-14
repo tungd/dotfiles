@@ -156,6 +156,9 @@ if which pyenv > /dev/null; then eval "$($PYENV_ROOT/bin/pyenv init -)"; fi
 # export PATH=$RBENV_ROOT/bin:$PATH
 # if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 
+if which doctl > /dev/null; then eval "$(doctl completion bash)"; fi
+if which direnv > /dev/null; then eval "$(direnv hook bash)"; fi
+
 if which go > /dev/null; then eval "$(go env)"; fi
 export PATH=$GOPATH/bin:$PATH
 
