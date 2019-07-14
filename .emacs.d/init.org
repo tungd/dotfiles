@@ -92,9 +92,8 @@ Sane, modern defaults:
     :if (memq window-system '(mac ns))
     :ensure t
     :config
-    (exec-path-from-shell-initialize))
-
-  (setenv "LANG" "en_US.UTF-8")
+    (exec-path-from-shell-initialize)
+    (exec-path-from-shell-copy-env "PATH"))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -1436,7 +1435,7 @@ theme named =user= will always have the highest priority.
 I also have very good experience with *Tango Plus*. Its philosophy of not
 getting in the way is interesting.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package tango-plus-theme
     :ensure t
     :init (load-theme 'tango-plus t))
@@ -1448,7 +1447,7 @@ getting in the way is interesting.
     :init (load-theme 'soft-morning t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package doom-themes
     :ensure t
     :init

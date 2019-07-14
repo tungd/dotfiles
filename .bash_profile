@@ -1,5 +1,5 @@
 export LANG=en_US.UTF-8
-# export LC_ALL=$LANG
+export LC_ALL
 export LC_CTYPE=$LANG
 
 # Colors
