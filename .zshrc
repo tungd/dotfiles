@@ -1,8 +1,11 @@
 stty -ixon
 
+fpath=($HOME/Projects/dotfiles/zsh_functions $fpath)
+
 autoload -Uz compinit
 compinit
-compdef '_git' g
+
+autoload -Uz add-zsh-hook
 
 autoload -Uz colors
 colors
@@ -13,26 +16,11 @@ zstyle ':vcs_info:*' check-for-changes true
 zstyle ':vcs_info:*' get-revision true
 zstyle ':vcs_info:*' stagedstr "%{$fg[green]%}+"
 zstyle ':vcs_info:*' unstagedstr "%{$fg[red]%}+"
-zstyle ':vcs_info:*' formats "%{$fg[green]%}%u%c[%b:%7.7i]%m%{$reset_color%}"
+zstyle ':vcs_info:*' formats "%u%c[%b:%7.7i]%m%{$reset_color%}"
 
-function vcs_prompt_info() {
-  echo "${vcs_info_msg_0_}"
-}
-
-set_prompt () {
-  if [[ $CLICOLOR == 1 ]]; then
-    export PROMPT=$'\n%{$fg[red]%}%n%{$reset_color%}@%{$fg[yellow]%}%m%{$reset_color%} in %{$fg[green]%}%~/%{$reset_color%} $vcs_info_msg_0_\n› '
-    # export RPROMPT="$(vcs_prompt_info)"
-  else
-    export PROMPT=$'\n%n@%m in %~/\n› '
-    # export RPROMPT="$(vcs_prompt_info)"
-  fi
-}
-
-precmd() {
-  vcs_info
-  set_prompt
-}
+autoload promptinit
+promptinit
+prompt tungd
 
 export CLICOLOR=1
 
@@ -56,6 +44,8 @@ setopt hist_reduce_blanks
 setopt prompt_subst
 setopt multios
 
+setopt complete_aliases
+
 zle -N newtab
 
 zmodload -i zsh/complist
@@ -77,8 +67,6 @@ bindkey '\M\b' backward-kill-word
 autoload -U edit-command-line
 zle -N edit-command-line
 bindkey '^X^E' edit-command-line
-
-autoload add-zsh-hook
 
 if [ "$TERM_PROGRAM" = "Apple_Terminal" ] || [ "$TERM_PROGRAM" = "iTerm.app" ]; then
   update_terminal_cwd () {
