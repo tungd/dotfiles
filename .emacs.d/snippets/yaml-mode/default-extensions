@@ -6,6 +6,7 @@ default-extensions:
 - NoImplicitPrelude
 - OverloadedStrings
 - OverloadedLabels
+- DuplicateRecordFields
 # - OverloadedLists
 - ScopedTypeVariables
 # - GeneralizedNewtypeDeriving
@@ -32,8 +33,4 @@ default-extensions:
 
 ghc-options:
 - -Wall
-- -Wno-missing-exported-signatures
-- -Wno-missing-import-lists
-- -Wno-missed-specialisations
-- -Wno-all-missed-specialisations
 $0
