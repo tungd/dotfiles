@@ -111,7 +111,7 @@ export PATH=$HOME/Applications/Emacs.app/Contents/MacOS/bin-x86_64-10_10:$PATH
 
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH=$PYENV_ROOT/bin:$PATH
-# if which pyenv > /dev/null; then eval "$($PYENV_ROOT/bin/pyenv init -)"; fi
+which pyenv > /dev/null && eval "$($PYENV_ROOT/bin/pyenv init -)"
 
 which doctl > /dev/null && eval "$(doctl completion zsh)"
 which direnv > /dev/null && eval "$(direnv hook zsh)"

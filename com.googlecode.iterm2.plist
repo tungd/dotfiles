@@ -288,7 +288,7 @@
 	<key>NSWindow Frame SUUpdateAlert</key>
 	<string>330 288 620 392 0 0 1280 777 </string>
 	<key>NSWindow Frame SharedPreferences</key>
-	<string>186 343 770 429 0 0 1280 777 </string>
+	<string>186 209 937 514 0 0 1280 777 </string>
 	<key>NSWindow Frame UKCrashReporter</key>
 	<string>80 193 592 584 0 0 1280 777 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
@@ -533,7 +533,7 @@
 				<real>1</real>
 			</dict>
 			<key>Custom Command</key>
-			<string>Yes</string>
+			<string>No</string>
 			<key>Custom Directory</key>
 			<string>No</string>
 			<key>Default Bookmark</key>
@@ -876,6 +876,8 @@
 			<integer>2</integer>
 			<key>Prompt Before Closing 2</key>
 			<false/>
+			<key>Reduce Flicker</key>
+			<true/>
 			<key>Right Option Key Sends</key>
 			<integer>0</integer>
 			<key>Rows</key>
@@ -905,6 +907,8 @@
 				<real>0.12700089812278748</real>
 			</dict>
 			<key>Send Code When Idle</key>
+			<false/>
+			<key>Set Local Environment Vars</key>
 			<false/>
 			<key>Shortcut</key>
 			<string></string>
@@ -1650,7 +1654,7 @@
 	<key>SUHasLaunchedBefore</key>
 	<true/>
 	<key>SULastCheckTime</key>
-	<date>2019-05-04T08:10:08Z</date>
+	<date>2019-07-14T07:46:58Z</date>
 	<key>SUSendProfileInfo</key>
 	<false/>
 	<key>TabStyle</key>
@@ -1666,7 +1670,7 @@
 	<key>findMode_iTerm</key>
 	<integer>0</integer>
 	<key>iTerm Version</key>
-	<string>3.2.8</string>
+	<string>3.2.9</string>
 	<key>kCPKSelectionViewPreferredModeKey</key>
 	<integer>0</integer>
 	<key>kCPKSelectionViewShowHSBTextFieldsKey</key>
