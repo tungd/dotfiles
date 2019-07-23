@@ -2,27 +2,19 @@ stty -ixon
 
 fpath=($HOME/Projects/dotfiles/zsh_functions $fpath)
 
-autoload -Uz compinit
-compinit
+export CLICOLOR=1
 
 autoload -Uz add-zsh-hook
+
+autoload -Uz compinit
+compinit
 
 autoload -Uz colors
 colors
 
-autoload -Uz vcs_info
-zstyle ':vcs_info:*' enable git
-zstyle ':vcs_info:*' check-for-changes true
-zstyle ':vcs_info:*' get-revision true
-zstyle ':vcs_info:*' stagedstr "%{$fg[green]%}+"
-zstyle ':vcs_info:*' unstagedstr "%{$fg[red]%}+"
-zstyle ':vcs_info:*' formats "%u%c[%b:%7.7i]%m%{$reset_color%}"
-
 autoload promptinit
 promptinit
 prompt tungd
-
-export CLICOLOR=1
 
 export CDPATH=.:$HOME:~/Projects
 
@@ -44,8 +36,6 @@ setopt hist_reduce_blanks
 setopt prompt_subst
 setopt multios
 
-setopt complete_aliases
-
 zle -N newtab
 
 zmodload -i zsh/complist
@@ -57,8 +47,6 @@ zstyle ':completion:*' insert-tab pending
 
 zstyle ':completion:*:cd:*' tag-order local-directories directory-stack path-directories
 zstyle ':completion:*:*:*:*:*' menu select
-zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#) ([0-9a-z-]#)*=01;34=0=01'
-zstyle ':completion:*:*:*:*:processes' command "ps -u `whoami` -o pid,user,comm -w -w"
 
 bindkey -e
 bindkey '^W' backward-kill-word

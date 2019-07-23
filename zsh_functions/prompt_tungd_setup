@@ -1,3 +1,4 @@
+# -*- mode: shell-script -*-
 prompt_tungd_setup() {
   autoload -Uz colors
   colors
@@ -20,7 +21,7 @@ prompt_tungd_precmd() {
     PROMPT=$'\n%{$fg[red]%}%n%{$reset_color%}@%{$fg[yellow]%}%m%{$reset_color%} in %{$fg[green]%}%~/%{$reset_color%} $vcs_info_msg_0_\n› '
     # export RPROMPT="$(vcs_prompt_info)"
   else
-    export PROMPT=$'\n%n@%m in %~/\n› '
+    PROMPT=$'\n%n@%m in %~/\n› '
     # export RPROMPT="$(vcs_prompt_info)"
   fi
 }
