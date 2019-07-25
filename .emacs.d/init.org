@@ -28,6 +28,12 @@ are stored in the =~/.emacs.d/vendor= directory.
   (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
 #+END_SRC
 
+Fix [[https://www.reddit.com/r/emacs/comments/cdei4p/failed_to_download_gnu_archive_bad_request/][GNU ELPA TLS issue]]:
+
+#+BEGIN_SRC emacs-lisp
+  (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
+#+END_SRC
+
 Really do the loading:
 
 #+BEGIN_SRC emacs-lisp
@@ -38,7 +44,7 @@ Really do the loading:
   (require 'bind-key)
 
   (package-initialize)
-  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 
   (use-package benchmark-init
     :ensure t
@@ -356,7 +362,7 @@ Make the file executable if starting with "shebang":
 
 I was a pretty die-hard Vim fanboy, let's bring back the memory.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package evil
     :ensure t
     :defer t
@@ -564,33 +570,32 @@ By default Emacs doesn't even have redo!
     :defer t
     :bind (("C-c =" . align))
     :config
-    (eval-and-compile
-      (add-to-list 'align-rules-list
-                   '(js-object-props
-                     (modes . '(js-mode js2-mode web-mode))
-                     (regexp . "\\(\\s-*\\):")
-                     (spacing . 0)))
-      (add-to-list 'align-rules-list
-                   '(css-declaration
-                     (modes . '(css-mode))
-                     (regexp . "^\\s-*\\w+:\\(\\s-*\\).*;")
-                     (group 1)))
-      (add-to-list 'align-rules-list
-                   '(haskell-record-fields
-                     (modes . '(haskell-mode))
-                     (regexp . "\\(\\s-*\\)::")
-                     (spacing . 1)))
-      (add-to-list 'align-rules-list
-                   '(haskell-aeson-fields
-                     (modes . '(haskell-mode))
-                     (regexp . "\\(\\s-*\\).=")
-                     (spacing . 1)))
-      (add-to-list 'align-rules-list
-                   '(ruby-hash
-                     (modes . '(ruby-mode))
-                     (regexp . "\\(\\s-*\\)=>")
-                     (spacing . 1)))
-      ))
+    (add-to-list 'align-rules-list
+                 '(js-object-props
+                   (modes . '(js-mode js2-mode web-mode))
+                   (regexp . "\\(\\s-*\\):")
+                   (spacing . 0)))
+    (add-to-list 'align-rules-list
+                 '(css-declaration
+                   (modes . '(css-mode))
+                   (regexp . "^\\s-*\\w+:\\(\\s-*\\).*;")
+                   (group 1)))
+    (add-to-list 'align-rules-list
+                 '(haskell-record-fields
+                   (modes . '(haskell-mode))
+                   (regexp . "\\(\\s-*\\)::")
+                   (spacing . 1)))
+    (add-to-list 'align-rules-list
+                 '(haskell-aeson-fields
+                   (modes . '(haskell-mode))
+                   (regexp . "\\(\\s-*\\).=")
+                   (spacing . 1)))
+    (add-to-list 'align-rules-list
+                 '(ruby-hash
+                   (modes . '(ruby-mode))
+                   (regexp . "\\(\\s-*\\)=>")
+                   (spacing . 1)))
+    )
 #+END_SRC
 
 ** Recent files
@@ -912,7 +917,9 @@ Also, I can't live without Emmet.
     :mode "\\.css\\'"
     :config
     (setq css-indent-offset 2))
+#+END_SRC
 
+#+BEGIN_SRC emacs-lisp
   (use-package rainbow-mode
     :ensure t
     :defer t

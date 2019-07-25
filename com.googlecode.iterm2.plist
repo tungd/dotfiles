@@ -288,7 +288,7 @@
 	<key>NSWindow Frame SUUpdateAlert</key>
 	<string>330 288 620 392 0 0 1280 777 </string>
 	<key>NSWindow Frame SharedPreferences</key>
-	<string>186 209 937 514 0 0 1280 777 </string>
+	<string>186 181 937 514 0 0 1280 777 </string>
 	<key>NSWindow Frame UKCrashReporter</key>
 	<string>80 193 592 584 0 0 1280 777 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
@@ -909,11 +909,11 @@
 			<key>Send Code When Idle</key>
 			<false/>
 			<key>Set Local Environment Vars</key>
-			<false/>
+			<true/>
 			<key>Shortcut</key>
 			<string></string>
 			<key>Silence Bell</key>
-			<false/>
+			<true/>
 			<key>Sync Title</key>
 			<false/>
 			<key>Tags</key>
@@ -1654,7 +1654,7 @@
 	<key>SUHasLaunchedBefore</key>
 	<true/>
 	<key>SULastCheckTime</key>
-	<date>2019-07-14T07:46:58Z</date>
+	<date>2019-07-21T17:49:52Z</date>
 	<key>SUSendProfileInfo</key>
 	<false/>
 	<key>TabStyle</key>
