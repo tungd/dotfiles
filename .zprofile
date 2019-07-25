@@ -2,6 +2,7 @@ stty -ixon
 
 fpath=($HOME/Projects/dotfiles/zsh_functions $fpath)
 
+export LANG=en_US.UTF-8
 export CLICOLOR=1
 
 autoload -Uz add-zsh-hook
