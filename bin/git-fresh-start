@@ -1,0 +1,3 @@
+#!/bin/sh
+git checkout --orphan $1
+git rm --cached -r .

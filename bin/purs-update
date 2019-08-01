@@ -1,7 +1,9 @@
 #!/bin/sh
 
-PURS_VERSION="v0.11.7"
-PSC_PACKAGE_VERSION="v0.2.5"
+PURS_VERSION="v0.13.2"
+PSC_PACKAGE_VERSION="v0.5.1"
+SPAGO_VERSION="0.8.5.0"
+PSCPP_VERSION="2019-07-25"
 
 pushd /tmp
 
@@ -15,5 +17,13 @@ curl -LO https://github.com/purescript/psc-package/releases/download/$PSC_PACKAG
 tar vxzf macos.tar.gz
 cp -v psc-package/psc-package $HOME/.local/bin
 
+curl -LO https://github.com/spacchetti/spago/releases/download/$SPAGO_VERSION/osx.tar.gz
+tar vxzf osx.tar.gz
+cp -v ./spago $HOME/.local/bin
+
+curl -LO https://github.com/andyarvanitis/purescript-native/releases/download/$PSCPP_VERSION/macos-2019-07-25.zip
+unzip macos-2019-07-25.zip
+cp -v ./pscpp $HOME/.local/bin
+cp -v ./psgo $HOME/.local/bin
 
 popd
