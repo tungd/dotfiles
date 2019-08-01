@@ -697,16 +697,16 @@ By default Emacs doesn't even have redo!
 
 * Programming
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package lsp-mode
     :ensure t
-    :defer t
     :config
     (setq lsp-highlight-symbol-at-point nil))
 
+  (use-package company-lsp :ensure t)
+
   (use-package lsp-ui
     :ensure t
-    :defer t
     :hook (lsp-mode . lsp-ui-mode)
     :config
     (progn
@@ -720,6 +720,15 @@ By default Emacs doesn't even have redo!
         (run-at-time "4 sec" nil #'lsp-ui-doc--hide-frame))
 
       (bind-key "C-c j" #'td/lsp-doc-dwim)))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package dap-mode
+    :ensure t
+    :after lsp-mode
+    :config
+    (dap-mode t)
+    (dap-ui-mode t))
 #+END_SRC
 
 ** Auto completion
@@ -1125,6 +1134,18 @@ I started using PureScript for all my frontend works.
   (use-package solidity-mode
     :ensure t
     :mode (("\.sol$" . solidity-mode)))
+#+END_SRC
+
+** Java
+
+#+BEGIN_SRC emacs-lisp
+  (use-package lsp-java
+    :ensure t
+    :after lsp
+    :hook (java-mode . lsp))
+
+  (use-package dap-java
+    :after (lsp-java))
 #+END_SRC
 
 ** Docker
