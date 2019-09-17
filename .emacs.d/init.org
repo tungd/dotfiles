@@ -99,7 +99,8 @@ Sane, modern defaults:
     :ensure t
     :config
     (exec-path-from-shell-initialize)
-    (exec-path-from-shell-copy-env "PATH"))
+    (exec-path-from-shell-copy-env "PATH")
+    (exec-path-from-shell-copy-env "LANG"))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -273,6 +274,12 @@ Use =historian.el= to sort ivy completion based on frequency - similar to smex.
 * General Editing
 
 #+BEGIN_SRC emacs-lisp
+  (use-package comment-dwim-2
+    :ensure t
+    :bind ([remap comment-dwim] . comment-dwim-2))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
   (use-package uniquify
     :config (setq uniquify-buffer-name-style 'forward))
 #+END_SRC
@@ -349,7 +356,7 @@ Create directory for the file if not exists:
 
 Make the file executable if starting with "shebang":
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (defun td/after-save-auto-chmod ()
     (when (and (> (length (buffer-string)) 5)
                (string-equal "#!" (buffer-substring-no-properties 1 4)))
@@ -700,8 +707,13 @@ By default Emacs doesn't even have redo!
 #+BEGIN_SRC emacs-lisp
   (use-package lsp-mode
     :ensure t
+    :hook ((js-mode . lsp)
+           (python-mode . lsp))
     :config
-    (setq lsp-highlight-symbol-at-point nil))
+    (setq lsp-enable-symbol-highlighting nil)
+    (add-to-list 'lsp-file-watch-ignored ".gradle")
+    (add-to-list 'lsp-file-watch-ignored "build")
+    (add-to-list 'lsp-file-watch-ignored "out"))
 
   (use-package company-lsp :ensure t)
 
@@ -779,7 +791,7 @@ be fair, I'd like these mode to support Emacs's standard
 
 ** Error checking
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package flycheck
     :ensure t
     :commands (flycheck-mode)
@@ -789,6 +801,30 @@ be fair, I'd like these mode to support Emacs's standard
     (eval-and-compile
       (setq-default flycheck-disabled-checkers '(scss emacs-lisp-checkdoc)
                     flycheck-hlintrc ".hlint.yaml")))
+#+END_SRC
+
+Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
+
+#+BEGIN_SRC emacs-lisp
+  (eval-after-load 'flymake
+    (progn
+      (defun flymake-proc-create-temp-in-tmp (file-name prefix)
+        (unless (stringp file-name)
+          (error "Invalid file-name"))
+        (or prefix
+            (setq prefix "flymake"))
+        (let* ((ext (file-name-extension file-name))
+               (temp-name (file-truename
+                           (concat "/tmp"
+                                   (file-name-sans-extension file-name)
+                                   "_" prefix
+                                   (and ext (concat "." ext))))))
+          (flymake-log 3 "create-temp-in-tmp: file=%s temp=%s" file-name temp-name)
+          temp-name))
+
+      (advice-add
+       'flymake-proc-create-temp-inplace
+       :override #'flymake-proc-create-temp-in-tmp)))
 #+END_SRC
 
 ** Version Control
@@ -844,7 +880,7 @@ editing, including PHP, since I rarely write PHP anymore.
   (use-package web-mode
     :ensure t
     :mode (("\\.html" . web-mode)
-           ("\\.jsx" . web-mode)
+           ;; ("\\.jsx" . web-mode)
            ("\\.tsx" . web-mode)
            ("\\.tpl" . web-mode)
            ("\\.erb" . web-mode)
@@ -954,12 +990,12 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
           js-enabled-frameworks '(javascript))
     :preface
     (progn
-      (defun td/setup-js-mode ()
-        (interactive)
-        (require 'lsp-javascript-typescript)
-        (lsp-javascript-typescript-enable))
-      ;; (add-hook 'js-mode-hook #'td/setup-js-mode)
-      ))
+      (defun td/fix-jsx-close-tag-indentation ()
+        (when (or (looking-at ">")
+                  (looking-at "/>"))
+          (indent-line-to (- (current-indentation) 2))))
+
+      (advice-add 'js-jsx-indent-line :after #'td/fix-jsx-close-tag-indentation)))
 
   (use-package add-node-modules-path
     :ensure t
@@ -983,7 +1019,7 @@ awesome StencilJS project.
       (add-hook 'flycheck-mode-hook #'td/enable-tslint-web-mode)))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package tide
     :ensure t
     :defer t
@@ -1033,39 +1069,22 @@ easy. There's also a catch-all IDE-like mode called =intero=, by the very
 same folk who runs =stack=.
 
 #+BEGIN_SRC emacs-lisp
-  (defun td/turn-off-evil-auto-indent ()
-    (setq-local evil-auto-indent nil))
-
   (use-package haskell-mode
     :ensure t
     :mode (("\\.hs\\'" . haskell-mode))
     :bind (([remap haskell-mode-format-imports] . haskell-sort-imports))
-    :hook (haskell-mode . td/turn-off-evil-auto-indent)
     :config
-    (setq haskell-program-name "stack repl"))
-#+END_SRC
-
-Dante is very nice in theory, however it's not working well with GHC 8.2 yet.
-
-#+BEGIN_SRC emacs-lisp
-  (defun td/dante-setup-flycheck ()
-    (flycheck-add-next-checker
-     'haskell-dante '(warning . haskell-hlint)))
-
-  (use-package dante
-    :ensure t
-    :after haskell-mode
-    :commands 'dante-mode
-    :hook ((haskell-mode . dante-mode)
-           (dante-mode . td/dante-setup-flycheck)))
+    (setq haskell-program-name "stack repl")
+    (require 'lsp-haskell)
+    (add-hook 'haskell-mode-hook #'lsp))
 #+END_SRC
 
 I'm using LSP Haskell for now.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package lsp-haskell
     :ensure t
-    :hook (haskell-mode . lsp-haskell-enable))
+    :after (haskell-mode))
 #+END_SRC
 
 ** Rust
@@ -1075,9 +1094,9 @@ I'm using LSP Haskell for now.
     :ensure t
     :defer t)
 
-  (use-package flycheck-rust
-    :ensure t
-    :hook (flycheck-mode . flycheck-rust-setup))
+  ;; (use-package flycheck-rust
+  ;;   :ensure t
+  ;;   :hook (flycheck-mode . flycheck-rust-setup))
 
   (use-package racer
     :ensure t
