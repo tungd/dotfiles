@@ -1,4 +1,8 @@
 # -*- mode: shell-script -*-
+virtualenv_info() {
+  [ $VIRTUAL_ENV ] && echo '('`basename $VIRTUAL_ENV`') '
+}
+
 prompt_tungd_setup() {
   autoload -Uz colors
   colors
@@ -19,7 +23,7 @@ prompt_tungd_precmd() {
 
   if [[ $CLICOLOR == 1 ]]; then
     PROMPT=$'\n%{$fg[red]%}%n%{$reset_color%}@%{$fg[yellow]%}%m%{$reset_color%} in %{$fg[green]%}%~/%{$reset_color%} $vcs_info_msg_0_\n› '
-    # export RPROMPT="$(vcs_prompt_info)"
+    RPROMPT="%{$fg[cyan]%}$(virtualenv_info)%{$reset_color%}"
   else
     PROMPT=$'\n%n@%m in %~/\n› '
     # export RPROMPT="$(vcs_prompt_info)"
