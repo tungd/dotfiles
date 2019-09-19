@@ -303,25 +303,30 @@ Basic settings:
 Editing utilities:
 
 #+BEGIN_SRC emacs-lisp
-  (bind-key [remap delete-horizontal-space] #'cycle-spacing)
+  (defun td/visit-eshell-buffer ()
+    (interactive)
+    (crux-start-or-switch-to #'eshell "*eshell*"))
 
   (use-package crux
     :ensure t
-    :commands (crux-sudo-edit
-               crux-switch-to-previous-buffer
-               crux-top-join-line
-               crux-cleanup-buffer-or-region
-               crux-kill-whole-line)
+    :hook (after-init . crux-reopen-as-root-mode)
     :bind (("C-M-]" . crux-switch-to-previous-buffer)
            ("M-J" . crux-top-join-line)
            ("M-=" . crux-cleanup-buffer-or-region)
-           ("C-M-k" . crux-kill-whole-line))
+           ("C-M-k" . crux-kill-whole-line)
+           ("C-c D" . crux-delete-file-and-buffer)
+           ("C-c r" . crux-rename-file-and-buffer)
+           ("C-c C-o" . crux-open-with)
+           ("C-c t" . crux-visit-term-buffer)
+           ("C-c s" . td/visit-eshell-buffer)
+           ([remap kill-line] . crux-smart-kill-line))
     :config
     (crux-with-region-or-buffer indent-region)
     (crux-with-region-or-buffer untabify)
     (crux-with-region-or-point-to-eol kill-ring-save))
 
   (bind-key "C-c C-k" #'kill-this-buffer)
+  (bind-key [remap delete-horizontal-space] #'cycle-spacing)
 #+END_SRC
 
 Automatically apply external changes: This is debatable, from my own
@@ -705,42 +710,13 @@ By default Emacs doesn't even have redo!
 * Programming
 
 #+BEGIN_SRC emacs-lisp
-  (use-package lsp-mode
+  (use-package eglot
     :ensure t
-    :hook ((js-mode . lsp)
-           (python-mode . lsp))
+    :hook (prog-mode . eglot-ensure)
+    :bind (:map eglot-mode-map ("C-c h" . eglot-help-at-point))
     :config
-    (setq lsp-enable-symbol-highlighting nil)
-    (add-to-list 'lsp-file-watch-ignored ".gradle")
-    (add-to-list 'lsp-file-watch-ignored "build")
-    (add-to-list 'lsp-file-watch-ignored "out"))
-
-  (use-package company-lsp :ensure t)
-
-  (use-package lsp-ui
-    :ensure t
-    :hook (lsp-mode . lsp-ui-mode)
-    :config
-    (progn
-      (setq lsp-ui-sideline-enable nil
-            lsp-ui-doc-enable nil
-            lsp-enable-eldoc nil)
-
-      (defun td/lsp-doc-dwim ()
-        (interactive)
-        (lsp-ui-doc--make-request)
-        (run-at-time "4 sec" nil #'lsp-ui-doc--hide-frame))
-
-      (bind-key "C-c j" #'td/lsp-doc-dwim)))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package dap-mode
-    :ensure t
-    :after lsp-mode
-    :config
-    (dap-mode t)
-    (dap-ui-mode t))
+    (setq eglot-ignored-server-capabilites
+          '(:documentHighlightProvider :hoverProvider)))
 #+END_SRC
 
 ** Auto completion
@@ -808,23 +784,12 @@ Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
 #+BEGIN_SRC emacs-lisp
   (eval-after-load 'flymake
     (progn
-      (defun flymake-proc-create-temp-in-tmp (file-name prefix)
-        (unless (stringp file-name)
-          (error "Invalid file-name"))
-        (or prefix
-            (setq prefix "flymake"))
-        (let* ((ext (file-name-extension file-name))
-               (temp-name (file-truename
-                           (concat "/tmp"
-                                   (file-name-sans-extension file-name)
-                                   "_" prefix
-                                   (and ext (concat "." ext))))))
-          (flymake-log 3 "create-temp-in-tmp: file=%s temp=%s" file-name temp-name)
-          temp-name))
+      (defun flymake-proc-create-temp-in-tmp (file-name)
+        (concat temporary-file-directory file-name))
 
       (advice-add
        'flymake-proc-create-temp-inplace
-       :override #'flymake-proc-create-temp-in-tmp)))
+       :filter-return #'flymake-proc-create-temp-in-tmp)))
 #+END_SRC
 
 ** Version Control
@@ -1042,15 +1007,6 @@ awesome StencilJS project.
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  ;; (use-package lsp-python :ensure t)
-
-  ;; (defun td/setup-python-mode ()
-  ;;   (interactive)
-  ;;   (require 'lsp-python)
-  ;;   (lsp-python-enable))
-
-  ;; (add-hook 'python-mode-hook #'td/setup-python-mode)
-
   (use-package py-isort
     :ensure t
     :defer t
@@ -1074,17 +1030,7 @@ same folk who runs =stack=.
     :mode (("\\.hs\\'" . haskell-mode))
     :bind (([remap haskell-mode-format-imports] . haskell-sort-imports))
     :config
-    (setq haskell-program-name "stack repl")
-    (require 'lsp-haskell)
-    (add-hook 'haskell-mode-hook #'lsp))
-#+END_SRC
-
-I'm using LSP Haskell for now.
-
-#+BEGIN_SRC emacs-lisp
-  (use-package lsp-haskell
-    :ensure t
-    :after (haskell-mode))
+    (setq haskell-program-name "stack repl"))
 #+END_SRC
 
 ** Rust
@@ -1093,14 +1039,6 @@ I'm using LSP Haskell for now.
   (use-package rust-mode
     :ensure t
     :defer t)
-
-  ;; (use-package flycheck-rust
-  ;;   :ensure t
-  ;;   :hook (flycheck-mode . flycheck-rust-setup))
-
-  (use-package racer
-    :ensure t
-    :hook (rust-mode . racer-mode))
 #+END_SRC
 
 ** PureScript
@@ -1129,16 +1067,6 @@ I started using PureScript for all my frontend works.
     :mode (("\\.go$" . go-mode)))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package company-go
-    :ensure t
-    :init (add-to-list 'company-backends 'company-go))
-
-  (use-package go-eldoc
-    :ensure t
-    :hook (go-mode . go-eldoc-setup))
-#+END_SRC
-
 ** Swift
 
 #+BEGIN_SRC emacs-lisp
@@ -1156,16 +1084,6 @@ I started using PureScript for all my frontend works.
 #+END_SRC
 
 ** Java
-
-#+BEGIN_SRC emacs-lisp
-  (use-package lsp-java
-    :ensure t
-    :after lsp
-    :hook (java-mode . lsp))
-
-  (use-package dap-java
-    :after (lsp-java))
-#+END_SRC
 
 ** Docker
 
@@ -1638,7 +1556,7 @@ kind of distracting, but it is really helpful sometimes.
       (disable-theme current-theme)
       (load-theme next-theme t)))
 
-  (bind-key "C-c t n" #'td/cycle-themes)
+  (bind-key "C-c C-t n" #'td/cycle-themes)
 #+END_SRC
 
 
