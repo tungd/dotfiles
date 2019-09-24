@@ -6,12 +6,11 @@ default-extensions:
 - NoImplicitPrelude
 - OverloadedStrings
 - OverloadedLabels
-- DuplicateRecordFields
 # - OverloadedLists
 - ScopedTypeVariables
-# - GeneralizedNewtypeDeriving
+- GeneralizedNewtypeDeriving
 - DeriveGeneric
-- DeriveDataTypeable
+- DeriveAnyClass
 - StandaloneDeriving
 - TypeFamilies
 - TypeOperators
@@ -19,18 +18,15 @@ default-extensions:
 - DataKinds
 - KindSignatures
 - MultiParamTypeClasses
-- FlexibleInstances
 - FlexibleContexts
+- FlexibleInstances
+- UndecidableInstances
 - TypeSynonymInstances
 - GADTs
 - NamedFieldPuns
 - RecordWildCards
-- TupleSections
 - LambdaCase
-- PackageImports
-- MultiWayIf
-- NumDecimals
+- ConstraintKinds
 
 ghc-options:
 - -Wall
-$0

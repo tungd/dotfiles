@@ -152,7 +152,7 @@ the same project. When possible I will use the functions provided
 by Emacs, however the project facilities built-in in recent version
 of Emacs but it is still bare bone.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package projectile
     :ensure t
     :diminish projectile-mode
@@ -165,6 +165,12 @@ of Emacs but it is still bare bone.
             "pdf" "doc" "docx" "xls" "xlsx"
             "ttf" "otf" "woff"
             "rar" "zip" "min.js" "min.css" "map")))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package project
+    :bind (("C-M-'" . project-find-file)
+           ("C-c p s" . project-search)))
 #+END_SRC
 
 ** Symbols
@@ -204,8 +210,7 @@ is that I can make its popup appear at the top of the window.
     (setq ivy-format-function 'ivy-format-function-arrow
           ivy-count-format ""
           ivy-use-virtual-buffers t
-          ivy-height 16
-          projectile-completion-system 'ivy)
+          ivy-height 16)
     (require 'counsel)
     (add-to-list 'ivy-display-functions-alist '(t . ivy-display-function-window)))
 
@@ -317,7 +322,7 @@ Editing utilities:
            ("C-c D" . crux-delete-file-and-buffer)
            ("C-c r" . crux-rename-file-and-buffer)
            ("C-c C-o" . crux-open-with)
-           ("C-c t" . crux-visit-term-buffer)
+           ;("C-c t" . crux-visit-term-buffer)
            ("C-c s" . td/visit-eshell-buffer)
            ([remap kill-line] . crux-smart-kill-line))
     :config
@@ -712,7 +717,12 @@ By default Emacs doesn't even have redo!
 #+BEGIN_SRC emacs-lisp
   (use-package eglot
     :ensure t
-    :hook (prog-mode . eglot-ensure)
+    :hook ((js-mode . eglot-ensure)
+           (typescript-mode . eglot-ensure)
+           (python-mode . eglot-ensure)
+           (haskell-mode . eglot-ensure)
+           (java-mode . eglot-ensure)
+           (rust-mode . eglot-ensure))
     :bind (:map eglot-mode-map ("C-c h" . eglot-help-at-point))
     :config
     (setq eglot-ignored-server-capabilites
@@ -800,7 +810,7 @@ built-in VC has great support for git but Magit is godsend.
 #+BEGIN_SRC emacs-lisp
   (use-package magit
     :ensure t
-    :defer t
+    :bind ("C-c p v" . magit-status)
     :config
     (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
 #+END_SRC
@@ -1410,20 +1420,21 @@ getting in the way is interesting.
     :init (load-theme 'tango-plus t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package soft-morning-theme
     :ensure t
     :init (load-theme 'soft-morning t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package doom-themes
     :ensure t
     :init
     (eval-and-compile
       (setq doom-themes-enable-italic nil
-            doom-spacegrey-brighter-modeline t)
-      (load-theme 'doom-spacegrey t))
+            doom-spacegrey-brighter-modeline t
+            doom-vibrant-brighter-modeline t)
+      (load-theme 'doom-vibrant t))
     :hook (org-mode . doom-themes-org-config))
 #+END_SRC
 
@@ -1556,7 +1567,7 @@ kind of distracting, but it is really helpful sometimes.
       (disable-theme current-theme)
       (load-theme next-theme t)))
 
-  (bind-key "C-c C-t n" #'td/cycle-themes)
+  (bind-key "C-c t n" #'td/cycle-themes)
 #+END_SRC
 
 
