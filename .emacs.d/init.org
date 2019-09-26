@@ -170,7 +170,7 @@ of Emacs but it is still bare bone.
 #+BEGIN_SRC emacs-lisp
   (use-package project
     :bind (("C-M-'" . project-find-file)
-           ("C-c p s" . project-search)))
+           ("C-c p s" . ag-project)))
 #+END_SRC
 
 ** Symbols
