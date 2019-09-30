@@ -30,7 +30,7 @@ are stored in the =~/.emacs.d/vendor= directory.
 
 Fix [[https://www.reddit.com/r/emacs/comments/cdei4p/failed_to_download_gnu_archive_bad_request/][GNU ELPA TLS issue]]:
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
 #+END_SRC
 
@@ -43,7 +43,6 @@ Really do the loading:
 
   (require 'bind-key)
 
-  (package-initialize)
   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 
   (use-package benchmark-init
@@ -97,10 +96,9 @@ Sane, modern defaults:
   (use-package exec-path-from-shell
     :if (memq window-system '(mac ns))
     :ensure t
+    :hook (after-init . exec-path-from-shell-initialize)
     :config
-    (exec-path-from-shell-initialize)
-    (exec-path-from-shell-copy-env "PATH")
-    (exec-path-from-shell-copy-env "LANG"))
+    (exec-path-from-shell-copy-envs '("LANG")))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -168,9 +166,18 @@ of Emacs but it is still bare bone.
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
+  (defun td/kill-project-buffers ()
+    (interactive)
+    (let (project (project-current))
+      (cl-loop for buffer in (buffer-list)
+               if (with-current-buffer buffer
+                    (eq project (project-current)))
+               do (kill-buffer buffer))))
+
   (use-package project
     :bind (("C-M-'" . project-find-file)
-           ("C-c p s" . ag-project)))
+           ("C-c p s" . ag-project)
+           ("C-c p k" . td/kill-project-buffers)))
 #+END_SRC
 
 ** Symbols
@@ -722,11 +729,15 @@ By default Emacs doesn't even have redo!
            (python-mode . eglot-ensure)
            (haskell-mode . eglot-ensure)
            (java-mode . eglot-ensure)
-           (rust-mode . eglot-ensure))
+           (rust-mode . eglot-ensure)
+           (tuareg-mode . eglot-ensure))
     :bind (:map eglot-mode-map ("C-c h" . eglot-help-at-point))
     :config
-    (setq eglot-ignored-server-capabilites
-          '(:documentHighlightProvider :hoverProvider)))
+    (setq eglot-sync-connect nil
+          eglot-ignored-server-capabilites
+          '(:documentHighlightProvider :hoverProvider))
+    (add-to-list 'eglot-server-programs
+                 '(tuareg-mode . ("opam exec -- ocamlmerlin-lsp --stdio"))))
 #+END_SRC
 
 ** Auto completion
@@ -760,8 +771,8 @@ be fair, I'd like these mode to support Emacs's standard
           '((company-capf company-dabbrev-code
                           :with
                           company-yasnippet
-                                          ;company-dict
-                                          ;company-web-html
+                          ;company-dict
+                          ;company-web-html
                           company-files))))
 
   (use-package company-buffer-line
@@ -773,7 +784,6 @@ be fair, I'd like these mode to support Emacs's standard
     :defer t
     :hook (global-company-mode . company-statistics-mode))
 #+END_SRC
-
 
 ** Error checking
 
@@ -918,6 +928,13 @@ Also, I can't live without Emmet.
 #+BEGIN_SRC emacs-lisp
   (use-package sgml-mode
     :mode (("\\.svg" . sgml-mode)))
+#+END_SRC
+
+** OCaml
+
+#+BEGIN_SRC emacs-lisp
+  (use-package tuareg
+    :ensure t)
 #+END_SRC
 
 ** PHP
@@ -1420,13 +1437,13 @@ getting in the way is interesting.
     :init (load-theme 'tango-plus t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package soft-morning-theme
     :ensure t
     :init (load-theme 'soft-morning t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package doom-themes
     :ensure t
     :init
@@ -1434,7 +1451,7 @@ getting in the way is interesting.
       (setq doom-themes-enable-italic nil
             doom-spacegrey-brighter-modeline t
             doom-vibrant-brighter-modeline t)
-      (load-theme 'doom-vibrant t))
+      (load-theme 'doom-gruvbox t))
     :hook (org-mode . doom-themes-org-config))
 #+END_SRC
 

@@ -96,6 +96,8 @@ which direnv > /dev/null && eval "$(direnv hook zsh)"
 which go > /dev/null && eval "$(go env)"
 export PATH=$GOPATH/bin:$PATH
 
+which opam > /dev/null && eval "$(opam config env)"
+
 [[ -e $LOCAL/vendor/z.sh ]] && . $LOCAL/vendor/z.sh
 
 which bat > /dev/null && alias cat=bat
