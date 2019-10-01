@@ -11,6 +11,9 @@ directly.
 I'm also trying out some of the start-up optimization tips from Doom.
 
 #+BEGIN_SRC emacs-lisp
+  (eval-when-compile
+    (require 'package))
+
   (setq package-quickstart t
         ;; file-name-handler-alist nil
         message-log-max 16384
@@ -21,34 +24,18 @@ I'm also trying out some of the start-up optimization tips from Doom.
   (setq-default bidi-display-reordering nil)
 #+END_SRC
 
-Sometimes I write my own package, or download package from Emacs wiki; they
-are stored in the =~/.emacs.d/vendor= directory.
-
 #+BEGIN_SRC emacs-lisp
-  (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
-#+END_SRC
-
-Fix [[https://www.reddit.com/r/emacs/comments/cdei4p/failed_to_download_gnu_archive_bad_request/][GNU ELPA TLS issue]]:
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
-#+END_SRC
-
-Really do the loading:
-
-#+BEGIN_SRC emacs-lisp
-  (add-to-list 'load-path (concat user-emacs-directory "use-package/"))
-
-  (eval-when-compile (require 'use-package))
-
-  (require 'bind-key)
-
   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 
-  (use-package benchmark-init
-    :ensure t
-    :init (benchmark-init/activate)
-    :hook (after-init . benchmark-init/deactivate))
+  (eval-when-compile
+    (unless (package-installed-p 'use-package)
+      (package-refresh-contents)
+      (package-install 'use-package))
+    (require 'use-package))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (require 'bind-key)
 
   (use-package diminish :ensure t)
 #+END_SRC
@@ -60,6 +47,12 @@ Use a dedicate custom file.
   (load custom-file 'noerror)
 #+END_SRC
 
+Sometimes I write my own package, or download package from Emacs wiki; they
+are stored in the =~/.emacs.d/vendor= directory.
+
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
+#+END_SRC
 
 * Defaults
 
@@ -1009,20 +1002,6 @@ awesome StencilJS project.
       (add-hook 'flycheck-mode-hook #'td/enable-tslint-web-mode)))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package tide
-    :ensure t
-    :defer t
-    :diminish t
-    :preface
-    (defun td/setup-tide-mode ()
-      (interactive)
-      (when (or (string-equal "tsx" (file-name-extension buffer-file-name))
-                (string-equal "jsx" (file-name-extension buffer-file-name)))
-        (tide-setup)))
-    :hook (web-mode . td/setup-tide-mode))
-#+END_SRC
-
 ** Python
 
 #+BEGIN_SRC emacs-lisp
@@ -1586,6 +1565,6 @@ Where the magic happen!
 
 #+BEGIN_SRC text :tangle no
   # Local Variables:
-  # eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle) (byte-recompile-file "~/.emacs.d/init.el")) nil t)
+  # eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle) (async-byte-compile-file "~/.emacs.d/init.el")) nil t)
   # End:
 #+END_SRC
