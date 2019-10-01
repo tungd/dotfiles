@@ -111,10 +111,6 @@ Sane, modern defaults:
   (savehist-mode t)
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  (setq locate-command "mdfind")
-#+END_SRC
-
 ** Server
 
 #+BEGIN_SRC emacs-lisp
@@ -205,16 +201,21 @@ is that I can make its popup appear at the top of the window.
 
   (use-package ivy
     :diminish ivy-mode
-    :hook ((after-init . ivy-mode)
-           (ivy-mode . (lambda () (require 'ivy-popup))))
+    :hook (after-init . ivy-mode)
     :bind (("C-M-o" . ivy-switch-buffer))
     :config
-    (setq ivy-format-function 'ivy-format-function-arrow
-          ivy-count-format ""
-          ivy-use-virtual-buffers t
-          ivy-height 16)
-    (require 'counsel)
-    (add-to-list 'ivy-display-functions-alist '(t . ivy-display-function-window)))
+    (setq ivy-use-virtual-buffers t
+          ivy-height 16))
+
+  (use-package ivy-posframe
+    :diminish ivy-posframe-mode
+    :hook (after-init . ivy-posframe-mode)
+    :config
+    (setq ivy-posframe-style 'frame-center
+          ivy-posframe-parameters
+          '((background-color . "#000"))
+          ivy-posframe-border-width 8)
+    (set-face-attribute 'ivy-posframe-border nil :background "#fff" :foreground "#fff"))
 
   (use-package counsel
     :ensure t
@@ -482,8 +483,7 @@ exported SVG and minified JS :(. In those cases prevent them from making Emacs
 slow:
 
 #+BEGIN_SRC emacs-lisp
-  (use-package so-long
-    :hook (after-init . so-long-enable))
+  (global-so-long-mode t)
 #+END_SRC
 
 ** Whitespace
@@ -770,12 +770,7 @@ be fair, I'd like these mode to support Emacs's standard
           '(company-pseudo-tooltip-unless-just-one-frontend
             company-echo-metadata-frontend)
           company-backends
-          '((company-capf company-dabbrev-code
-                          :with
-                          company-yasnippet
-                          ;company-dict
-                          ;company-web-html
-                          company-files))))
+          '((company-capf :separate company-dabbrev-code company-yasnippet))))
 
   (use-package company-buffer-line
     :commands (company-same-mode-buffer-lines)
@@ -804,14 +799,18 @@ be fair, I'd like these mode to support Emacs's standard
 Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
 
 #+BEGIN_SRC emacs-lisp
-  (eval-after-load 'flymake
-    (progn
-      (defun flymake-proc-create-temp-in-tmp (file-name)
-        (concat temporary-file-directory file-name))
+  (use-package flymake
+    :defer t
+    :bind (:map flymake-mode-map
+                ("C-c e n" . flymake-goto-next-error)
+                ("C-c e p" . flymake-goto-prev-error))
+    :config
+    (defun flymake-proc-create-temp-in-tmp (file-name)
+      (concat temporary-file-directory file-name))
 
-      (advice-add
-       'flymake-proc-create-temp-inplace
-       :filter-return #'flymake-proc-create-temp-in-tmp)))
+    (advice-add
+     'flymake-proc-create-temp-inplace
+     :filter-return #'flymake-proc-create-temp-in-tmp))
 #+END_SRC
 
 ** Version Control
@@ -1049,7 +1048,7 @@ same folk who runs =stack=.
 
 I started using PureScript for all my frontend works.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package purescript-mode
     :ensure t
     :mode (("\\.purs\\'" . purescript-mode))
@@ -1073,7 +1072,7 @@ I started using PureScript for all my frontend works.
 
 ** Swift
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package swift-mode
     :ensure t
     :mode (("\\.swift" . swift-mode)))
@@ -1527,15 +1526,6 @@ kind of distracting, but it is really helpful sometimes.
     :defer t
     :config
     (setq dired-recursive-deletes 'always))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package aria2
-    :ensure t
-    :defer t
-    :config
-    (setq aria2-add-evil-quirks t
-          aria2-download-directory (expand-file-name "~/Downloads")))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
