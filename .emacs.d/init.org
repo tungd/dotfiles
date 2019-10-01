@@ -11,7 +11,7 @@ directly.
 I'm also trying out some of the start-up optimization tips from Doom.
 
 #+BEGIN_SRC emacs-lisp
-  (setq package-enable-at-startup nil
+  (setq package-quickstart t
         ;; file-name-handler-alist nil
         message-log-max 16384
         ;gc-cons-threshold 402653184
@@ -208,6 +208,8 @@ is that I can make its popup appear at the top of the window.
 #+BEGIN_SRC emacs-lisp
   (ido-mode -1)
 
+  (add-to-list 'completion-styles 'flex)
+
   (use-package ivy
     :diminish ivy-mode
     :hook ((after-init . ivy-mode)
@@ -347,7 +349,9 @@ experience it is helpful.
 #+BEGIN_SRC emacs-lisp
   (use-package autorevert
     :diminish auto-revert-mode
-    :hook (after-init . global-auto-revert-mode))
+    :hook (after-init . global-auto-revert-mode)
+    :config
+    (setq auto-revert-avoid-polling t))
 #+END_SRC
 
 Automatically save buffers when focus out:
@@ -373,15 +377,8 @@ Create directory for the file if not exists:
 
 Make the file executable if starting with "shebang":
 
-#+BEGIN_SRC emacs-lisp :tangle no
-  (defun td/after-save-auto-chmod ()
-    (when (and (> (length (buffer-string)) 5)
-               (string-equal "#!" (buffer-substring-no-properties 1 4)))
-      (shell-command
-       (format "chmod u+x %s"
-               (shell-quote-argument (buffer-file-name))))))
-
-  (add-hook 'after-save-hook #'td/after-save-auto-chmod)
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
 #+END_SRC
 
 I was a pretty die-hard Vim fanboy, let's bring back the memory.
@@ -419,16 +416,8 @@ means boundary.
     :ensure t
     :diminish anzu-mode
     :hook (after-init . global-anzu-mode)
-    :bind (([remap query-replace] . anzu-query-replace-regexp)
-           ;("C-c C-r" . anzu-query-replace-at-cursor)
-           ("M-r" . anzu-replace-at-cursor-thing)
-           ("C-M-r" . td/anzu-replace-at-cursor-thing-in-buffer))
-    :config
-    (defun td/anzu-replace-at-cursor-thing-in-buffer ()
-      "This does not actually query, but it's OK for me."
-      (interactive)
-      (let ((anzu-replace-at-cursor-thing 'buffer))
-        (call-interactively 'anzu-query-replace-at-cursor-thing))))
+    :bind (("M-r" . anzu-query-replace-regexp)
+           ("C-M-r" . anzu-replace-at-cursor-thing)))
 #+END_SRC
 
 Also define "buffer-at-point" so that we can do query-replace in the whole
@@ -451,7 +440,9 @@ I also use ISearch for navigation. In such cases I want to put the cursor at
 the beginning of the match, not the end.
 
 #+BEGIN_SRC emacs-lisp
-  (setq lazy-highlight-initial-delay 0)
+  (setq lazy-highlight-initial-delay 0
+        ;isearch-lazy-count t
+        isearch-lazy-highlight-buffer t)
 
   (defun td/isearch-exit-goto-match-beginning ()
     (interactive)
@@ -460,6 +451,24 @@ the beginning of the match, not the end.
 
   (add-hook 'isearch-mode-end-hook #'td/isearch-exit-goto-match-beginning)
   (advice-add 'isearch-exit :after #'td/isearch-exit-goto-match-beginning)
+
+  (defun td/isearch-delete-dwim ()
+    "Delete the failed portion or last char if succesful search."
+    (interactive)
+    (if (= 0 (length isearch-string))
+        (ding)
+      (setq isearch-string
+            (substring
+             isearch-string 0 (or (isearch-fail-pos) (1- (length isearch-string))))
+            isearch-message
+            (mapconcat 'isearch-text-char-description isearch-string ""))
+      (funcall (or isearch-message-function #'isearch-message) nil t)
+      (if isearch-other-end (goto-char isearch-other-end))
+      (isearch-search)
+      (isearch-push-state)
+      (isearch-update)))
+
+  (bind-key [remap isearch-delete-char] #'td/isearch-delete-dwim isearch-mode-map)
 #+END_SRC
 
 ** Long lines
@@ -898,7 +907,6 @@ Also, I can't live without Emmet.
     :hook ((sgml-mode . emmet-mode)
            (css-mode . emmet-mode)
            (web-mode . td/emmet-jsx-mode)
-           (js2-jsx-mode . td/emmet-jsx-mode)
            (js-jsx-mode . td/emmet-jsx-mode))
     :config
     (eval-and-compile
@@ -972,22 +980,12 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 
 #+BEGIN_SRC emacs-lisp
   (use-package js
-    :mode (("\\.js$" . js-mode)
-           ("\\.json$" . js-mode)
-           ("\\.eslintrc$" . js-mode))
+    :mode (("\\.eslintrc$" . js-mode))
     :config
     (setq js-indent-level 2
           js-indent-first-init 'dynamic
           js-switch-indent-offset 2
-          js-enabled-frameworks '(javascript))
-    :preface
-    (progn
-      (defun td/fix-jsx-close-tag-indentation ()
-        (when (or (looking-at ">")
-                  (looking-at "/>"))
-          (indent-line-to (- (current-indentation) 2))))
-
-      (advice-add 'js-jsx-indent-line :after #'td/fix-jsx-close-tag-indentation)))
+          js-enabled-frameworks '(javascript)))
 
   (use-package add-node-modules-path
     :ensure t
@@ -1293,24 +1291,18 @@ Org Babel for literate programming and API documentation.
 ** Spell checking
 
 #+BEGIN_SRC emacs-lisp
-  (when (executable-find "aspell")
-    (use-package ispell
-      :bind ("<f8>" . ispell-word)
-      :init
-      (setq-default ispell-program-name "aspell"
-                    ispell-extra-args '("--sug-mode=ultra" "--lang=en_US" "--personal=~/.emacs.d/dictionary")
-                    ispell-skip-html t
-                    ispell-silently-savep t
-                    ispell-really-aspell t))
+  (use-package ispell
+    :bind ("<f8>" . ispell-word)
+    :config
+    (setq ispell-program-name "aspell"
+          ispell-extra-args '("--sug-mode=ultra" "--lang=en_US" "--personal=~/.emacs.d/dictionary")
+          ispell-skip-html t
+          ispell-silently-savep t
+          ispell-really-aspell t))
 
-    (use-package flyspell
-      :defer t
-      :hook (org-mode . flyspell-mode)
-      ;; :config
-      ;; (progn
-      ;;   (require 'flyspell-ignore-faces)
-      ;;   (put 'org-mode 'flyspell-mode-predicate 'td/flyspell-check-p))
-      ))
+  (use-package flyspell
+    :defer t
+    :hook (org-mode . flyspell-mode))
 #+END_SRC
 
 
