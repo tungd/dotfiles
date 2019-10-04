@@ -205,6 +205,7 @@ is that I can make its popup appear at the top of the window.
     :bind (("C-M-o" . ivy-switch-buffer))
     :config
     (setq ivy-use-virtual-buffers t
+          ivy-count-format ""
           ivy-height 16))
 
   (use-package ivy-posframe
@@ -213,9 +214,9 @@ is that I can make its popup appear at the top of the window.
     :config
     (setq ivy-posframe-style 'frame-center
           ivy-posframe-parameters
-          '((background-color . "#000"))
-          ivy-posframe-border-width 8)
-    (set-face-attribute 'ivy-posframe-border nil :background "#fff" :foreground "#fff"))
+          '((internal-border-width . 8)
+            (internal-border-color . "#fff")
+            (background-color . "#000"))))
 
   (use-package counsel
     :ensure t
@@ -739,7 +740,7 @@ By default Emacs doesn't even have redo!
           eglot-ignored-server-capabilites
           '(:documentHighlightProvider :hoverProvider))
     (add-to-list 'eglot-server-programs
-                 '(tuareg-mode . ("opam exec -- ocamlmerlin-lsp --stdio"))))
+                 '(tuareg-mode . ("opam" "exec" "--" "ocamlmerlin-lsp" "--stdio"))))
 #+END_SRC
 
 ** Auto completion
@@ -770,7 +771,7 @@ be fair, I'd like these mode to support Emacs's standard
           '(company-pseudo-tooltip-unless-just-one-frontend
             company-echo-metadata-frontend)
           company-backends
-          '((company-capf :separate company-dabbrev-code company-yasnippet))))
+          '((company-capf :with company-dabbrev-code company-yasnippet))))
 
   (use-package company-buffer-line
     :commands (company-same-mode-buffer-lines)
@@ -935,6 +936,19 @@ Also, I can't live without Emmet.
 #+BEGIN_SRC emacs-lisp
   (use-package tuareg
     :ensure t)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package utop
+    :ensure t
+    :diminish utop-minor-mode
+    :commands (utop)
+    :hook (tuareg-mode . utop-minor-mode)
+    :config (setq utop-command "opam config exec -- utop -emacs"))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package dune :ensure t)
 #+END_SRC
 
 ** PHP
@@ -1358,7 +1372,6 @@ theme named =user= will always have the highest priority.
    ;;'(mode-line-inactive ((t (:box nil))))
 
    '(indent-guide-face ((t (:inherit font-lock-comment-face))))
-   '(nix-attribute-face ((t (:inherit font-lock-builtin-face))))
    '(web-mode-variable-name-face ((t (:inherit default))))
 
    '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#81af34"))))
@@ -1555,6 +1568,6 @@ Where the magic happen!
 
 #+BEGIN_SRC text :tangle no
   # Local Variables:
-  # eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle) (async-byte-compile-file "~/.emacs.d/init.el")) nil t)
+  # eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle) (byte-recompile-file "~/.emacs.d/init.el")) nil t)
   # End:
 #+END_SRC
