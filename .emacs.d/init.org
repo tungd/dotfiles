@@ -14,12 +14,7 @@ I'm also trying out some of the start-up optimization tips from Doom.
   (eval-when-compile
     (require 'package))
 
-  (setq package-quickstart t
-        ;; file-name-handler-alist nil
-        message-log-max 16384
-        ;gc-cons-threshold 402653184
-        ;gc-cons-percentage 0.6
-        auto-window-vscroll nil)
+  (setq package-quickstart t)
 
   (setq-default bidi-display-reordering nil)
 #+END_SRC
@@ -157,10 +152,10 @@ of Emacs but it is still bare bone.
 #+BEGIN_SRC emacs-lisp
   (defun td/kill-project-buffers ()
     (interactive)
-    (let (project (project-current))
+    (let ((project (project-current)))
       (cl-loop for buffer in (buffer-list)
                if (with-current-buffer buffer
-                    (eq project (project-current)))
+                    (equal project (project-current)))
                do (kill-buffer buffer))))
 
   (use-package project
@@ -283,6 +278,10 @@ Use =historian.el= to sort ivy completion based on frequency - similar to smex.
 * General Editing
 
 #+BEGIN_SRC emacs-lisp
+  (bind-key [remap zap-to-char] #'zap-up-to-char)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
   (use-package comment-dwim-2
     :ensure t
     :bind ([remap comment-dwim] . comment-dwim-2))
@@ -362,12 +361,12 @@ Automatically save buffers when focus out:
 Create directory for the file if not exists:
 
 #+BEGIN_SRC emacs-lisp
-  (defun td/before-save-make-directories ()
+  (defun td/make-new-directories ()
     (let ((dir (file-name-directory buffer-file-name)))
       (when (and buffer-file-name (not (file-exists-p dir)))
         (make-directory dir t))))
 
-  (add-hook 'before-save-hook #'td/before-save-make-directories)
+  (add-to-list 'find-file-not-found-functions #'td/make-new-directories)
 #+END_SRC
 
 Make the file executable if starting with "shebang":
@@ -887,30 +886,24 @@ editing, including PHP, since I rarely write PHP anymore.
 Also, I can't live without Emmet.
 
 #+BEGIN_SRC emacs-lisp
-  (defun td/emmet-jsx-mode ()
-    (interactive)
-    (emmet-mode t)
-    (setq-local emmet-expand-jsx-className?
-                (string-suffix-p "sx" (buffer-file-name))))
-
   (use-package emmet-mode
     :ensure t
     :diminish emmet-mode
-    :commands emmet-mode
     :hook ((sgml-mode . emmet-mode)
            (css-mode . emmet-mode)
-           (web-mode . td/emmet-jsx-mode)
-           (js-jsx-mode . td/emmet-jsx-mode))
+           (web-mode . emmet-mode)
+           (js-jsx-mode . emmet-mode))
     :config
-    (eval-and-compile
-      (setq emmet-indentation 2
-            emmet-preview-default nil
-            emmet-insert-flash-time 0.1)
+    (setq emmet-indentation 2
+          emmet-preview-default nil
+          emmet-insert-flash-time 0.1)
 
-      (defun td/hide-emmet-preview-tooltip ()
-        (overlay-put emmet-preview-output 'before-string nil))
+    (defun td/emmet-jsx-mode ()
+      (interactive)
+      (when (string-suffix-p "sx" (buffer-file-name))
+        (setq-local emmet-expand-jsx-className? t)))
 
-      (advice-add 'emmet-preview :after #'td/hide-emmet-preview-tooltip)))
+    (add-hook 'emmet-mode-hook #'td/emmet-jsx-mode))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
