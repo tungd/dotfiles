@@ -106,10 +106,6 @@ which kubectl > /dev/null && source <(kubectl completion zsh)
 
 export PATH="$HOME/.cargo/bin:$PATH"
 
-export PATH="$HOME/.poetry/bin:$PATH"
-
-export PATH="$HOME/.nimble/bin:$PATH"
-
 alias g=git
 alias e=emacsclient -n
 

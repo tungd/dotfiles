@@ -15,12 +15,8 @@
   undo = reset --soft HEAD^
   df = diff
   dfc = diff --cached
-[url "git://github.com/"]
+[url "git@github.com:"]
   insteadOf = gh:
-[url "git@bitbucket.org:"]
-  insteadOf = bb:
-[url "git@bitbucket.org:/tungd/"]
-  insteadOf = tungd:
 [push]
   default = matching
 [filter "lfs"]
@@ -28,7 +24,5 @@
   smudge = git-lfs smudge -- %f
   process = git-lfs filter-process
   required = true
-[core]
-  excludesfile = /Users/tung/.gitignore_global
 [commit]
   gpgsign = true

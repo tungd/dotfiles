@@ -106,7 +106,6 @@ worked on recently by typing just a partial path of it.
   curl -L https://raw.githubusercontent.com/rupa/z/master/z.sh > ~/.local/vendor/z.sh
 #+END_SRC
 
-
 * System configuration
 
 ** Keyboard configuration

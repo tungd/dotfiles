@@ -1,6 +1,6 @@
 #+title: Tung Dao's Emacs Setup
 #+startup: overview
-#+property: header-args :tangle yes :results silent
+#+property: header-args :tangle "~/.config/emacs/init.el" :results silent
 
 * Packages and initialization
 
@@ -48,6 +48,7 @@ are stored in the =~/.emacs.d/vendor= directory.
 #+BEGIN_SRC emacs-lisp
   (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
 #+END_SRC
+
 
 * Defaults
 
@@ -1318,8 +1319,8 @@ bold and ligatures support :(.
      (border-width . 0) (internal-border-width . 0)
      ;; (font . "Hack 14")
      ;; (font . "Monaco 14")
-     ;; (font . "Menlo 12")
-     (font . "Source Code Pro 14")
+     (font . "Menlo 16")
+     ;; (font . "Source Code Pro 16")
      ;; (font . "Hasklig 14")
      ;; (font . "Fira Code 14")
      (top . 0) (left . 480)
