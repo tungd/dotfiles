@@ -70,7 +70,10 @@ fi
 
 # test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
-# export ENV=development
+export LD_LIBRARY_PATH=/opt/pkg/lib:$LD_LIBRARY_PATH
+export PATH=/opt/pkg/bin:$PATH
+
+export ENV=development
 export LOCAL=$HOME/.local
 
 export PGHOST=127.0.0.1
@@ -78,17 +81,12 @@ export PGPASS=postgres
 export PGPASSWORD=postgres
 export PGUSER=postgres
 
-export PATH=/opt/pkg/sbin:/opt/pkg/bin:$PATH
-export PATH=/usr/local/bin:$PATH
+export PATH=$HOME/Library/Python/3.7/bin:$PATH
 export PATH=$HOME/Projects/dotfiles/bin:$PATH
 export PATH=$HOME/.local/sbin:$HOME/.local/bin:$PATH
 
 export PATH=$HOME/Applications/Emacs.app/Contents/MacOS/bin:$PATH
 export PATH=$HOME/Applications/Emacs.app/Contents/MacOS/bin-x86_64-10_10:$PATH
-
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH=$PYENV_ROOT/bin:$PATH
-which pyenv > /dev/null && eval "$($PYENV_ROOT/bin/pyenv init -)"
 
 which doctl > /dev/null && eval "$(doctl completion zsh)"
 which direnv > /dev/null && eval "$(direnv hook zsh)"
@@ -96,15 +94,11 @@ which direnv > /dev/null && eval "$(direnv hook zsh)"
 which go > /dev/null && eval "$(go env)"
 export PATH=$GOPATH/bin:$PATH
 
-which opam > /dev/null && eval "$(opam config env)"
-
 [[ -e $LOCAL/vendor/z.sh ]] && . $LOCAL/vendor/z.sh
 
 which bat > /dev/null && alias cat=bat
 
 which kubectl > /dev/null && source <(kubectl completion zsh)
-
-export PATH="$HOME/.cargo/bin:$PATH"
 
 alias g=git
 alias e=emacsclient -n
