@@ -35,7 +35,6 @@
   ln -s ~/Projects/dotfiles/.eslintrc ~/.eslintrc
 #+END_SRC
 
-
 * Install apps and utilities
 
 ** XCode
@@ -76,6 +75,8 @@ Homebrew. Installation is a little bit more involved, though.
 
 ** =pyenv=
 
+Well, I'm no longer using =pipenv=, system package and Poetry is enough for me.
+
 #+BEGIN_SRC sh
   git clone https://github.com/pyenv/pyenv.git ~/.pyenv
 #+END_SRC
@@ -97,6 +98,10 @@ Homebrew. Installation is a little bit more involved, though.
   EOF
 #+END_SRC
 
+** Poetry
+
+TODO
+
 ** =z.sh=
 
 =z.sh= (https://github.com/rupa/z) allows me to visit one of the directories I
@@ -105,6 +110,23 @@ worked on recently by typing just a partial path of it.
 #+BEGIN_SRC sh
   curl -L https://raw.githubusercontent.com/rupa/z/master/z.sh > ~/.local/vendor/z.sh
 #+END_SRC
+
+** =direnv=
+
+Automatically set environment variable per directory.
+
+#+BEGIN_SRC sh
+  curl -L -o ~/.local/bin/direnv https://github.com/direnv/direnv/releases/download/v2.20.0/direnv.darwin-amd64
+#+END_SRC
+
+** =terraform=
+
+Automatically set environment variable per directory.
+
+#+BEGIN_SRC sh
+  curl -L -o ~/.local/bin/direnv https://github.com/direnv/direnv/releases/download/v2.20.0/direnv.darwin-amd64
+#+END_SRC
+
 
 * System configuration
 
