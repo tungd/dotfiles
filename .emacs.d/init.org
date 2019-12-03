@@ -574,16 +574,16 @@ By default Emacs doesn't even have redo!
     :ensure t
     :diminish yas-minor-mode
     :hook (after-init . yas-global-mode)
-    :init
-    (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
     :config
     (progn
       (setq yas-prompt-functions
             '(yas-ido-prompt yas-completing-prompt yas-no-prompt)
             yas-verbosity 1)
 
-      ;; I'm an old Emacs hacker. I like the abbrev-way and bind yas-expand to
-      ;; SPC.
+      (add-to-list 'yas-snippet-dirs "~/Projects/dotfiles/.emacs.d/snippets")
+      (yas-reload-all)
+
+      ;; I'm an old Emacs hacker, I like the abbrev-way and bind yas-expand SPC
       (define-key yas-minor-mode-map (kbd "SPC") yas-maybe-expand)
 
       (unbind-key "TAB" yas-minor-mode-map)
@@ -641,7 +641,9 @@ By default Emacs doesn't even have redo!
 ** Diff
 
 #+BEGIN_SRC emacs-lisp
-  (setq-default ediff-split-window-function #'split-window-horizontally)
+  (setq-default
+   ediff-split-window-function #'split-window-horizontally
+   diff-font-lock-prettify t)
 #+END_SRC
 
 
@@ -717,8 +719,9 @@ By default Emacs doesn't even have redo!
             tramp-default-method "ssh"
             tramp-verbose 2)
 
-      (add-to-list 'auth-sources "~/.emacs.d/authinfo.gpg")
-      (setq ange-ftp-netrc-filename "~/.emacs.d/authinfo.gpg")))
+      (add-to-list 'auth-sources "~/Projects/dotfiles/dotfiles/.emacs.d/authinfo.gpg")
+      (add-to-list 'auth-sources 'macos-keychain-generic t)
+      (setq ange-ftp-netrc-filename "~/Projects/dotfiles/dotfiles/.emacs.d/authinfo.gpg")))
 #+END_SRC
 
 
@@ -927,12 +930,12 @@ Also, I can't live without Emmet.
 
 ** OCaml
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package tuareg
     :ensure t)
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package utop
     :ensure t
     :diminish utop-minor-mode
@@ -1046,7 +1049,7 @@ same folk who runs =stack=.
 
 ** Rust
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package rust-mode
     :ensure t
     :defer t)
@@ -1072,7 +1075,7 @@ I started using PureScript for all my frontend works.
 
 ** Go
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package go-mode
     :ensure t
     :mode (("\\.go$" . go-mode)))
@@ -1080,7 +1083,7 @@ I started using PureScript for all my frontend works.
 
 ** Swift
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package swift-mode
     :ensure t
     :mode (("\\.swift" . swift-mode)))
@@ -1088,7 +1091,7 @@ I started using PureScript for all my frontend works.
 
 ** Solidity
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle-no
   (use-package solidity-mode
     :ensure t
     :mode (("\.sol$" . solidity-mode)))
@@ -1114,6 +1117,21 @@ manage Docker images and containers.
     :mode ("Dockerfile$" . dockerfile-mode))
 #+END_SRC
 
+
+** Terraform
+
+#+begin_src emacs-lisp
+  (use-package terraform-mode
+    :ensure t
+    :mode (("\\.tf" . terraform-mode)))
+
+  (use-package terraform-doc
+    :ensure t)
+
+  (use-package company-terraform
+    :ensure t
+    :hook (terraform-mode . company-terraform-init))
+#+end_src
 
 ** Misc
 
@@ -1201,7 +1219,8 @@ Here's my basic Org setup:
             (sequence "NEXT(n)" "ACTIVE(a)" "WAITING(w)" "LATER(l)" "|" "CANCELLED(c)"))
           org-log-done 'time
 
-          org-src-fontify-natively t))
+          org-src-fontify-natively t)
+    (require 'org-tempo))
 #+END_SRC
 
 Agenda overview and filtering. Org provides a bunch of quick overviews:
@@ -1319,8 +1338,9 @@ bold and ligatures support :(.
      (border-width . 0) (internal-border-width . 0)
      ;; (font . "Hack 14")
      ;; (font . "Monaco 14")
-     (font . "Menlo 16")
-     ;; (font . "Source Code Pro 16")
+     ;; (font . "Menlo 14")
+     (font . "SF Mono 14")
+     ;; (font . "Source Code Pro 14")
      ;; (font . "Hasklig 14")
      ;; (font . "Fira Code 14")
      (top . 0) (left . 480)
@@ -1330,6 +1350,15 @@ bold and ligatures support :(.
      (tool-bar-lines . 0)))
 
   (blink-cursor-mode -1)
+
+  ;(defun td/setup-frame (&optional frame)
+  ;  (interactive)
+  ;  (when window-system
+  ;    (cl-case (x-display-pixel-width)
+  ;      (2048 (set-frame-parameter frame 'font"Source Code Pro 14")))))
+  ;
+  ;(td/setup-frame nil)
+  ;(push 'td/setup-frame after-make-frame-functions)
 #+END_SRC
 
 Enable ligatures, only available in railwaycat Mac port.
@@ -1355,47 +1384,16 @@ theme named =user= will always have the highest priority.
   (custom-theme-set-faces
    'user
    '(vertical-border ((t (:foreground "#000" :background "#000"))))
-   ;;'(highlight ((t (:inherit region))))
-   ;;'(sp-pair-overlay-face ((t (:inherit region))))
-   ;;'(font-lock-string-face ((t (:slant normal))))
-
-   ;;'(line-number ((t (:height 120 :inherit font-lock-comment-face))))
-   ;;'(line-number-current-line ((t (:height 120 :bold nil))))
-   ;;'(fringe ((t (:inherit nil))))
-   ;;'(mode-line ((t (:box nil))))
-   ;;'(mode-line-inactive ((t (:box nil))))
+   `(line-number ((t (:foreground ,(face-attribute font-lock-comment-face :foreground)))))
+   '(org-block-begin-line ((t (:background "#000"))))
+   '(org-block ((t (:background "#000"))))
 
    '(indent-guide-face ((t (:inherit font-lock-comment-face))))
    '(web-mode-variable-name-face ((t (:inherit default))))
 
    '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#81af34"))))
    '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#ff0000"))))
-   '(diff-hl-change ((t (:inherit nil :background nil :foreground "#deae3e"))))
-
-   ;; tango-plus
-   '(font-lock-keyword-face ((t (:weight normal))))
-   '(font-lock-string-face ((t (:slant normal))))
-   '(font-lock-constant-face ((t (:slant normal))))
-   '(font-lock-comment-face ((t (:slant normal))))
-   '(font-lock-comment-delimiter-face
-     ((t (:inherit font-lock-comment-face :foreground nil :slant normal))))
-   '(line-number ((t (:inherit font-lock-comment-face :height 120))))
-   '(line-number-current-line ((t (:inherit font-lock-comment-face :height 120 :bold t))))
-
-   ;; nord
-   ;;'(haskell-operator-face ((t (:inherit font-lock-preprocessor-face :weight normal)))) ; nord10
-   ;;'(highlight-numbers-number ((t (:inherit nil :foreground "#B48EAD")))) ; nord15
-   ;; '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#A3BE8C"))))
-   ;; '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#BF616A"))))
-   ;; '(diff-hl-change ((t (:inherit nil :background nil :foreground "#EBCB8B"))))
-
-   ;; spacegray
-   ;; '(web-mode-jsx-depth-1-face ((t (:background "#242930"))))
-   ;; '(web-mode-jsx-depth-2-face ((t (:background "#1d2126"))))
-   ;; '(web-mode-jsx-depth-3-face ((t (:background "#16191c"))))
-   ;; '(web-mode-jsx-depth-4-face ((t (:background "#0e1013"))))
-   ;; '(web-mode-jsx-depth-5-face ((t (:background "#070809"))))
-   )
+   '(diff-hl-change ((t (:inherit nil :background nil :foreground "#deae3e")))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -1415,6 +1413,12 @@ getting in the way is interesting.
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle no
+  (use-package ujelly-theme
+    :ensure t
+    :init (load-theme 'ujelly t))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package soft-morning-theme
     :ensure t
     :init (load-theme 'soft-morning t))
@@ -1428,7 +1432,7 @@ getting in the way is interesting.
       (setq doom-themes-enable-italic nil
             doom-spacegrey-brighter-modeline t
             doom-vibrant-brighter-modeline t)
-      (load-theme 'doom-gruvbox t))
+      (load-theme 'doom-oceanic-next t))
     :hook (org-mode . doom-themes-org-config))
 #+END_SRC
 
