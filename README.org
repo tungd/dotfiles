@@ -35,6 +35,7 @@
   ln -s ~/Projects/dotfiles/.eslintrc ~/.eslintrc
 #+END_SRC
 
+
 * Install apps and utilities
 
 ** XCode
@@ -69,16 +70,9 @@ Homebrew. Installation is a little bit more involved, though.
 #+BEGIN_SRC sh
   sudo pkgin update
   sudo pkgin install ImageMagick aria2 aspell aspell-en curl gettext gnupg gnutls
-  sudo pkgin install mosh mysql-client nmap nodejs openssl postgresql10-client
+  sudo pkgin install mosh mysql-client nmap nodejs openssl postgresql11-client
   sudo pkgin install socat sqlite3 the_silver_searcher tree watchman wget youtube-dl
-#+END_SRC
-
-** =pyenv=
-
-Well, I'm no longer using =pipenv=, system package and Poetry is enough for me.
-
-#+BEGIN_SRC sh
-  git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+  sudo pkgin install python3.7 py37-pip
 #+END_SRC
 
 ** =stack=
@@ -100,7 +94,9 @@ Well, I'm no longer using =pipenv=, system package and Poetry is enough for me.
 
 ** Poetry
 
-TODO
+#+begin_src sh
+  pip3.7 install --user poetry
+#+end_src
 
 ** =z.sh=
 
@@ -121,10 +117,12 @@ Automatically set environment variable per directory.
 
 ** =terraform=
 
-Automatically set environment variable per directory.
+Declarative infrastructure management
 
 #+BEGIN_SRC sh
-  curl -L -o ~/.local/bin/direnv https://github.com/direnv/direnv/releases/download/v2.20.0/direnv.darwin-amd64
+  curl -L -o /tmp/terraform_0.12.17_darwin_amd64.zip https://releases.hashicorp.com/terraform/0.12.17/terraform_0.12.17_darwin_amd64.zip
+  unzip /tmp/terraform_0.12.17_darwin_amd64.zip
+  mv terraform /tmp
 #+END_SRC
 
 

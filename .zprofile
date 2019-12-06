@@ -84,6 +84,7 @@ export PGUSER=postgres
 export PATH=$HOME/Library/Python/3.7/bin:$PATH
 export PATH=$HOME/Projects/dotfiles/bin:$PATH
 export PATH=$HOME/.local/sbin:$HOME/.local/bin:$PATH
+export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 
 export PATH=$HOME/Applications/Emacs.app/Contents/MacOS/bin:$PATH
 export PATH=$HOME/Applications/Emacs.app/Contents/MacOS/bin-x86_64-10_10:$PATH
