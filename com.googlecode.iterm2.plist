@@ -303,7 +303,7 @@
 	<key>NSWindow Frame SUUpdateAlert</key>
 	<string>714 552 620 392 0 0 2048 1129 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
-	<string>8 102 970 675 0 0 1280 777 </string>
+	<string>0 0 970 640 0 0 1280 777 </string>
 	<key>New Bookmarks</key>
 	<array>
 		<dict>
@@ -870,11 +870,11 @@
 			<key>Name</key>
 			<string>Default</string>
 			<key>Non Ascii Font</key>
-			<string>Menlo-Bold 12</string>
+			<string>SourceCodePro-Medium 14</string>
 			<key>Non-ASCII Anti Aliased</key>
 			<true/>
 			<key>Normal Font</key>
-			<string>Menlo-Regular 14</string>
+			<string>SourceCodePro-Medium 14</string>
 			<key>Option Key Sends</key>
 			<integer>2</integer>
 			<key>Prompt Before Closing 2</key>
@@ -1707,21 +1707,26 @@
 	</array>
 	<key>NoSyncAutoBurialReveal</key>
 	<true/>
+	<key>NoSyncBFPFavorites</key>
+	<array>
+		<string>Source Code Pro</string>
+	</array>
 	<key>NoSyncBFPRecents</key>
 	<array>
 		<string>Menlo</string>
+		<string>Source Code Pro</string>
 	</array>
 	<key>NoSyncFrame_SharedPreferences</key>
 	<dict>
 		<key>screenFrame</key>
-		<string>{{0, 0}, {1280, 800}}</string>
+		<string>{{0, 0}, {2048, 1152}}</string>
 		<key>topLeft</key>
-		<string>{161, 777}</string>
+		<string>{386, 729}</string>
 	</dict>
 	<key>NoSyncInstallationId</key>
 	<string>454F1664-E579-4546-87B3-15E955D34024</string>
 	<key>NoSyncLaunchExperienceControllerRunCount</key>
-	<integer>16</integer>
+	<integer>17</integer>
 	<key>NoSyncNeverRemindPrefsChangesLostForFile</key>
 	<true/>
 	<key>NoSyncNeverRemindPrefsChangesLostForFile_selection</key>
@@ -2480,16 +2485,16 @@
 	</dict>
 	<key>NoSyncSearchHistory2</key>
 	<array>
+		<string>nplusone</string>
+		<string>click_action</string>
+		<string>click_actions</string>
+		<string>push_no</string>
+		<string>psuh_</string>
 		<string>team_id=40</string>
 		<string>team_id=30</string>
 		<string>elasticsearch</string>
 		<string>vpc-li</string>
 		<string>postgres</string>
-		<string>route_table</string>
-		<string>lodash</string>
-		<string>es6</string>
-		<string>Location</string>
-		<string>OPTIONS</string>
 	</array>
 	<key>NoSyncTipOfTheDayEligibilityBeganTime</key>
 	<real>592369150.60283804</real>
@@ -2591,12 +2596,14 @@
 	<key>SUHasLaunchedBefore</key>
 	<true/>
 	<key>SULastCheckTime</key>
-	<date>2019-12-03T17:00:26Z</date>
+	<date>2019-12-13T12:15:32Z</date>
 	<key>SUSendProfileInfo</key>
 	<false/>
 	<key>SUUpdateRelaunchingMarker</key>
 	<false/>
 	<key>SeparateStatusBarsPerPane</key>
+	<false/>
+	<key>ShowFullScreenTabBar</key>
 	<false/>
 	<key>SmartPlacement</key>
 	<true/>
