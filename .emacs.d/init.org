@@ -141,7 +141,7 @@ is a bit meh compared to =projectile=, but I still can live with it.
 
   (use-package project
     :bind (("C-M-'" . project-find-file)
-           ("C-c p s" . ag-project)
+           ("C-c p s" . deadgrep)
            ("C-c p k" . td/kill-project-buffers)))
 #+END_SRC
 
@@ -221,13 +221,14 @@ Use =historian.el= to sort ivy completion based on frequency - similar to smex.
 * Window Management
 
 #+BEGIN_SRC emacs-lisp
-  (use-package shackle
+  (use-package popwin
     :ensure t
-    :hook (after-init . shackle-mode)
+    :hook (after-init . popwin-mode)
     :config
-    (setq shackle-default-alignment 'below
-          shackle-default-rule
-          '((compilation-mode :align 'below))))
+    (push '(compilation-mode :position right :width 0.5 :tail t) popwin:special-display-config)
+    (push '(eshell-mode :position bottom :width 0.5 :tail t) popwin:special-display-config)
+    (push '(help-mode :position right :width 0.5) popwin:special-display-config)
+    (push '(deadgrep-mode :position right :width 0.5) popwin:special-display-config))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -302,7 +303,7 @@ Editing utilities:
     (crux-with-region-or-point-to-eol kill-ring-save))
 
   (bind-key "C-c C-k" #'kill-this-buffer)
-  (bind-key [remap delete-horizontal-space] #'cycle-spacing)
+  (bind-key [remap just-one-space] #'cycle-spacing)
 #+END_SRC
 
 Automatically apply external changes: This is debatable, from my own
@@ -405,14 +406,6 @@ the beginning of the match, not the end.
   (setq lazy-highlight-initial-delay 0
         ;isearch-lazy-count t
         isearch-lazy-highlight-buffer t)
-
-  (defun td/isearch-exit-goto-match-beginning ()
-    (interactive)
-    (when (and isearch-forward isearch-other-end)
-      (goto-char isearch-other-end)))
-
-  (add-hook 'isearch-mode-end-hook #'td/isearch-exit-goto-match-beginning)
-  (advice-add 'isearch-exit :after #'td/isearch-exit-goto-match-beginning)
 
   (defun td/isearch-delete-dwim ()
     "Delete the failed portion or last char if succesful search."
@@ -720,18 +713,16 @@ be fair, I'd like these mode to support Emacs's standard
            ("C-n" . company-select-next-or-abort)
            ("C-p" . company-select-previous-or-abort))
     :hook (after-init . global-company-mode)
-    ;; :config
-    ;; (setq company-minimum-prefix-length 2
-    ;;       company-require-match nil
-    ;;       company-idle-delay nil
-    ;;       company-tooltip-align-annotations t
-    ;;       company-echo-delay 0
-    ;;       company-frontends
-    ;;       '(company-pseudo-tooltip-unless-just-one-frontend
-    ;;         company-echo-metadata-frontend)
-    ;;       company-backends
-    ;;       '((company-capf :with company-dabbrev-code company-yasnippet)))
-    )
+    :config
+    (setq company-minimum-prefix-length 2
+          ;company-require-match nil
+          company-idle-delay nil
+          company-tooltip-align-annotations t
+          company-frontends
+          '(company-pseudo-tooltip-unless-just-one-frontend
+            company-echo-metadata-frontend)
+          company-backends
+          '(company-capf company-dabbrev-code)))
 
   (use-package company-buffer-line
     :commands (company-same-mode-buffer-lines)
@@ -894,7 +885,7 @@ Also, I can't live without Emmet.
 Like most people I used to use =js2-mode= for all my JavaScript editing,
 including JSX. Since I'm no longer write as much JavaScript, and I will use
 =es-lint= for syntax checking anyways, I think I'm going to give the built-in
-=js-mode= a try
+=js-mode= a try.
 
 #+BEGIN_SRC emacs-lisp
   (use-package js
@@ -914,12 +905,7 @@ awesome StencilJS project.
     :ensure t
     :mode "\\.ts"
     :config
-    (eval-and-compile
-      (setq typescript-indent-level 2)
-      (defun td/enable-tslint-web-mode ()
-        (interactive)
-        (flycheck-add-mode 'typescript-tslint 'web-mode))
-      (add-hook 'flycheck-mode-hook #'td/enable-tslint-web-mode)))
+    (setq typescript-indent-level 2))
 #+END_SRC
 
 ** Python
