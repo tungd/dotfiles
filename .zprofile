@@ -109,3 +109,5 @@ alias e=emacsclient -n
 notify() {
   osascript -e "display notification \"$2\" with title \"$1\""
 }
+
+export PATH="$HOME/.cargo/bin:$PATH"

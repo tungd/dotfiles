@@ -91,19 +91,6 @@ Sane, modern defaults:
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (setq ns-command-modifier 'meta
-        ns-option-modifier 'super
-        trash-directory "~/.Trash"
-        delete-by-moving-to-trash t)
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package smex
-    :ensure t
-    :hook (after-init . smex-initialize))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
   (savehist-mode t)
 #+END_SRC
 
@@ -119,6 +106,15 @@ Sane, modern defaults:
 #+END_SRC
 
 
+** MacOS specific stuffs
+
+#+BEGIN_SRC emacs-lisp
+  (setq ns-command-modifier 'meta
+        ns-option-modifier 'super
+        trash-directory "~/.Trash"
+        delete-by-moving-to-trash t)
+#+END_SRC
+
 * Navigation
 
 ** File position
@@ -130,25 +126,9 @@ Sane, modern defaults:
 
 ** Projects
 
-I use =projectile= to switch between projects and between files in
-the same project. When possible I will use the functions provided
-by Emacs, however the project facilities built-in in recent version
-of Emacs but it is still bare bone.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package projectile
-    :ensure t
-    :diminish projectile-mode
-    :hook (after-init . projectile-mode)
-    :bind (("M-C-'" . projectile-find-file)
-           (:map projectile-mode-map ("C-c p" . projectile-command-map)))
-    :config
-    (setq projectile-globally-ignored-file-suffixes
-          '("jpg" "png" "svg" "psd" "sketch" "afdesign"
-            "pdf" "doc" "docx" "xls" "xlsx"
-            "ttf" "otf" "woff"
-            "rar" "zip" "min.js" "min.css" "map")))
-#+END_SRC
+I used to use =projectile=, but the =project.el= built-in to Emacs has
+gone a long way so I'm using that now, as far as I can tell the quality
+is a bit meh compared to =projectile=, but I still can live with it.
 
 #+BEGIN_SRC emacs-lisp
   (defun td/kill-project-buffers ()
@@ -228,19 +208,6 @@ is that I can make its popup appear at the top of the window.
     :hook (imenu-after-jump . recenter-top-bottom))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package ivy-posframe
-    :ensure t
-    :defer t
-    :config
-    (eval-and-compile
-      (defun ivy-posframe-display-at-frame-top-left (str)
-        (ivy-posframe--display str #'posframe-poshandler-window-top-left-corner))
-      (ivy-posframe-setup)
-      (setq ivy-display-function #'ivy-posframe-display-at-frame-top-left))
-    :hook (ivy-mode . (lambda () (require 'ivy-posframe))))
-#+END_SRC
-
 Use =historian.el= to sort ivy completion based on frequency - similar to smex.
 
 #+BEGIN_SRC emacs-lisp
@@ -253,7 +220,7 @@ Use =historian.el= to sort ivy completion based on frequency - similar to smex.
 
 * Window Management
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package shackle
     :ensure t
     :hook (after-init . shackle-mode)
@@ -378,7 +345,7 @@ Make the file executable if starting with "shebang":
 
 I was a pretty die-hard Vim fanboy, let's bring back the memory.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package evil
     :ensure t
     :defer t
@@ -560,11 +527,7 @@ By default Emacs doesn't even have redo!
   (use-package undo-tree
     :ensure t
     :diminish undo-tree-mode
-    :hook (after-init . global-undo-tree-mode)
-    :config
-    (setq undo-tree-auto-save-history t
-          undo-tree-history-directory-alist
-          `((".*" . ,(concat user-emacs-directory "undos")))))
+    :hook (after-init . global-undo-tree-mode))
 #+END_SRC
 
 ** Snippets
@@ -616,13 +579,7 @@ By default Emacs doesn't even have redo!
                  '(haskell-aeson-fields
                    (modes . '(haskell-mode))
                    (regexp . "\\(\\s-*\\).=")
-                   (spacing . 1)))
-    (add-to-list 'align-rules-list
-                 '(ruby-hash
-                   (modes . '(ruby-mode))
-                   (regexp . "\\(\\s-*\\)=>")
-                   (spacing . 1)))
-    )
+                   (spacing . 1))))
 #+END_SRC
 
 ** Recent files
@@ -633,8 +590,7 @@ By default Emacs doesn't even have redo!
     :config
     (setq recentf-max-saved-items 128
           recentf-exclude
-          '("/auto-install/" ".recentf" "/repos/" "/elpa/"
-            "\\.mime-example" "\\.ido.last" "COMMIT_EDITMSG"
+          '(".recentf" "\\.mime-example" "\\.ido.last" "COMMIT_EDITMSG"
             ".gz" "~$" "/tmp/" "/ssh:" "/sudo:" "/scp:")))
 #+END_SRC
 
@@ -764,17 +720,18 @@ be fair, I'd like these mode to support Emacs's standard
            ("C-n" . company-select-next-or-abort)
            ("C-p" . company-select-previous-or-abort))
     :hook (after-init . global-company-mode)
-    :config
-    (setq company-minimum-prefix-length 2
-          company-require-match nil
-          company-idle-delay nil
-          company-tooltip-align-annotations t
-          company-echo-delay 0
-          company-frontends
-          '(company-pseudo-tooltip-unless-just-one-frontend
-            company-echo-metadata-frontend)
-          company-backends
-          '((company-capf :with company-dabbrev-code company-yasnippet))))
+    ;; :config
+    ;; (setq company-minimum-prefix-length 2
+    ;;       company-require-match nil
+    ;;       company-idle-delay nil
+    ;;       company-tooltip-align-annotations t
+    ;;       company-echo-delay 0
+    ;;       company-frontends
+    ;;       '(company-pseudo-tooltip-unless-just-one-frontend
+    ;;         company-echo-metadata-frontend)
+    ;;       company-backends
+    ;;       '((company-capf :with company-dabbrev-code company-yasnippet)))
+    )
 
   (use-package company-buffer-line
     :commands (company-same-mode-buffer-lines)
@@ -787,18 +744,6 @@ be fair, I'd like these mode to support Emacs's standard
 #+END_SRC
 
 ** Error checking
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package flycheck
-    :ensure t
-    :commands (flycheck-mode)
-    :functions (flycheck-add-mode flycheck-add-next-checker)
-    :hook (prog-mode . flycheck-mode)
-    :config
-    (eval-and-compile
-      (setq-default flycheck-disabled-checkers '(scss emacs-lisp-checkdoc)
-                    flycheck-hlintrc ".hlint.yaml")))
-#+END_SRC
 
 Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
 
@@ -850,7 +795,7 @@ re-run the tests.
                     (search-forward "Error" nil t))))
         (run-with-timer 1 nil #'delete-window (get-buffer-window buffer))))
 
-  ;; (add-hook 'compilation-finish-functions #'td/compilation-hide-window-on-finish)
+  (add-hook 'compilation-finish-functions #'td/compilation-hide-window-on-finish)
 #+END_SRC
 
 ** Code folding
@@ -896,7 +841,7 @@ Also, I can't live without Emmet.
     :hook ((sgml-mode . emmet-mode)
            (css-mode . emmet-mode)
            (web-mode . emmet-mode)
-           (js-jsx-mode . emmet-mode))
+           (js-mode . emmet-mode))
     :config
     (setq emmet-indentation 2
           emmet-preview-default nil
@@ -926,36 +871,6 @@ Also, I can't live without Emmet.
 #+BEGIN_SRC emacs-lisp
   (use-package sgml-mode
     :mode (("\\.svg" . sgml-mode)))
-#+END_SRC
-
-** OCaml
-
-#+BEGIN_SRC emacs-lisp
-  (use-package tuareg
-    :ensure t)
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package utop
-    :ensure t
-    :diminish utop-minor-mode
-    :commands (utop)
-    :hook (tuareg-mode . utop-minor-mode)
-    :config (setq utop-command "opam config exec -- utop -emacs"))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package dune :ensure t)
-#+END_SRC
-
-** PHP
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package php-mode
-    :ensure t
-    :mode (("\\.php" . php-mode))
-    :config
-    (setq php-mode-coding-style 'drupal))
 #+END_SRC
 
 ** CSS
@@ -989,17 +904,12 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
           js-indent-first-init 'dynamic
           js-switch-indent-offset 2
           js-enabled-frameworks '(javascript)))
-
-  (use-package add-node-modules-path
-    :ensure t
-    :defer t
-    :hook (js-mode . add-node-modules-path))
 #+END_SRC
 
 Well, I'm also on the TypeScript train lately, mostly because of the super
 awesome StencilJS project.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package typescript-mode
     :ensure t
     :mode "\\.ts"
@@ -1028,8 +938,9 @@ awesome StencilJS project.
 
   (use-package python
     :mode (("\\.py\\'" . python-mode))
-    :interpreter ("pipenv run python" . python-mode)
-    :hook (before-save . py-isort-before-save))
+    :interpreter ("poetry run python" . python-mode)
+    ;; :hook (before-save . py-isort-before-save)
+    )
 #+END_SRC
 
 ** Haskell
@@ -1049,28 +960,10 @@ same folk who runs =stack=.
 
 ** Rust
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package rust-mode
     :ensure t
     :defer t)
-#+END_SRC
-
-** PureScript
-
-I started using PureScript for all my frontend works.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package purescript-mode
-    :ensure t
-    :mode (("\\.purs\\'" . purescript-mode))
-    :hook ((purescript-mode . turn-on-purescript-indentation)
-           (purescript-mode . td/turn-off-evil-auto-indent))
-    :config
-    (defun purescript-doc-current-info ()))
-
-  (use-package psc-ide
-    :ensure t
-    :hook (purescript-mode . psc-ide-mode))
 #+END_SRC
 
 ** Go
@@ -1144,14 +1037,6 @@ These are supports for other stuffs that I used:
            ("\\.markdown$" . markdown-mode)))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package nix-mode
-    :ensure t
-    :mode (("\\.nix$" . nix-mode))
-    :config
-    (exec-path-from-shell-copy-env "NIX_REMOTE"))
-#+END_SRC
-
 #+BEGIN_SRC emacs-lisp
   (use-package nginx-mode
     :ensure t
@@ -1166,13 +1051,6 @@ These are supports for other stuffs that I used:
            ("\\.sls$" . yaml-mode)
            ("^master$" . yaml-mode)
            ("^roster$" . yaml-mode)))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package groovy-mode
-    :ensure t
-    :config
-    (setq groovy-indent-offset 2))
 #+END_SRC
 
 
@@ -1336,6 +1214,7 @@ bold and ligatures support :(.
    default-frame-alist
    '((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
+     (ns-appearance . dark)
      ;; (font . "Hack 14")
      ;; (font . "Monaco 14")
      ;; (font . "Menlo 14")
@@ -1350,15 +1229,6 @@ bold and ligatures support :(.
      (tool-bar-lines . 0)))
 
   (blink-cursor-mode -1)
-
-  ;(defun td/setup-frame (&optional frame)
-  ;  (interactive)
-  ;  (when window-system
-  ;    (cl-case (x-display-pixel-width)
-  ;      (2048 (set-frame-parameter frame 'font"Source Code Pro 14")))))
-  ;
-  ;(td/setup-frame nil)
-  ;(push 'td/setup-frame after-make-frame-functions)
 #+END_SRC
 
 Enable ligatures, only available in railwaycat Mac port.
@@ -1368,7 +1238,7 @@ Enable ligatures, only available in railwaycat Mac port.
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (setq ns-use-native-fullscreen nil)
+  (setq ns-use-native-fullscreen t)
 #+END_SRC
 
 Truncate lines:
@@ -1407,18 +1277,6 @@ getting in the way is interesting.
   (use-package tango-plus-theme
     :ensure t
     :init (load-theme 'tango-plus t))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package ujelly-theme
-    :ensure t
-    :init (load-theme 'ujelly t))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package soft-morning-theme
-    :ensure t
-    :init (load-theme 'soft-morning t))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
