@@ -70,9 +70,6 @@ fi
 
 # test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
-export LD_LIBRARY_PATH=/opt/pkg/lib:$LD_LIBRARY_PATH
-export PATH=/opt/pkg/bin:$PATH
-
 export ENV=development
 export LOCAL=$HOME/.local
 
@@ -81,21 +78,19 @@ export PGPASS=postgres
 export PGPASSWORD=postgres
 export PGUSER=postgres
 
-export PATH=$HOME/Library/Python/3.7/bin:$PATH
-export PATH=$HOME/Projects/dotfiles/bin:$PATH
+export PATH=/opt/local/bin:/opt/local/sbin:$PATH
 export PATH=$HOME/.local/sbin:$HOME/.local/bin:$PATH
+export PATH=$HOME/Library/Python/3.8/bin:$PATH
+export PATH=$HOME/Projects/dotfiles/bin:$PATH
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 
-export PATH=$HOME/Applications/Emacs.app/Contents/MacOS/bin:$PATH
-export PATH=$HOME/Applications/Emacs.app/Contents/MacOS/bin-x86_64-10_10:$PATH
+export PATH=/Applications/Emacs.app/Contents/MacOS/bin:$PATH
 
 which doctl > /dev/null && eval "$(doctl completion zsh)"
 which direnv > /dev/null && eval "$(direnv hook zsh)"
 
 which go > /dev/null && eval "$(go env)"
 export PATH=$GOPATH/bin:$PATH
-
-which opam > /dev/null && eval "$(opam env)"
 
 [[ -e $LOCAL/vendor/z.sh ]] && . $LOCAL/vendor/z.sh
 

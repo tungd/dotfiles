@@ -1,6 +1,6 @@
 [user]
-  name = Tung Dao
-  email = me@tungdao.com
+	name = Tung Dao
+	email = me@tungdao.com
   signingkey = me@tungdao.com
 [alias]
   cl = clone
