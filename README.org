@@ -113,6 +113,7 @@ Automatically set environment variable per directory.
 
 #+BEGIN_SRC sh
   curl -L -o ~/.local/bin/direnv https://github.com/direnv/direnv/releases/download/v2.20.0/direnv.darwin-amd64
+  chmod +x ~/.local/bin/direnv
 #+END_SRC
 
 ** =terraform=
@@ -122,7 +123,7 @@ Declarative infrastructure management
 #+BEGIN_SRC sh
   curl -L -o /tmp/terraform_0.12.17_darwin_amd64.zip https://releases.hashicorp.com/terraform/0.12.17/terraform_0.12.17_darwin_amd64.zip
   unzip /tmp/terraform_0.12.17_darwin_amd64.zip
-  mv terraform /tmp
+  mv terraform ~/.local/bin
 #+END_SRC
 
 
