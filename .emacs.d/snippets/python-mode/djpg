@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: djpostgres
-# key: djpostgres
+# name: djpg
+# key: djpg
 # --
 'default': {
     'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -8,4 +8,5 @@
     'USER': os.getenv('PGUSER', 'postgres'),
     'PASSWORD': os.getenv('PGPASSWORD', 'postgres'),
     'HOST': os.getenv('PGHOST', 'localhost'),
+    'CONN_MAX_AGE': int(os.getenv('CONN_MAX_AGE', '0'))
 }
