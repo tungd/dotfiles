@@ -11,12 +11,15 @@ directly.
 I'm also trying out some of the start-up optimization tips from Doom.
 
 #+BEGIN_SRC emacs-lisp
+  (setq-default bidi-display-reordering nil)
+
+  (setq gc-cons-threshold 100000000
+        read-process-output-max (* 1024 1024))
+
   (eval-when-compile
     (require 'package))
 
   (setq package-quickstart t)
-
-  (setq-default bidi-display-reordering nil)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -114,6 +117,7 @@ Sane, modern defaults:
         trash-directory "~/.Trash"
         delete-by-moving-to-trash t)
 #+END_SRC
+
 
 * Navigation
 
@@ -354,7 +358,8 @@ I was a pretty die-hard Vim fanboy, let's bring back the memory.
     :bind (:map evil-normal-state-map ("M-." . xref-find-definitions))
     :config
     (setq evil-cross-lines t
-          evil-ex-substitute-global t))
+          evil-ex-substitute-global t)
+    (add-to-list 'evil-emacs-state-modes 'deadgrep-mode))
 
   (use-package evil-surround
     :ensure t
@@ -676,7 +681,7 @@ By default Emacs doesn't even have redo!
 
 * Programming
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package eglot
     :ensure t
     :hook ((js-mode . eglot-ensure)
@@ -690,10 +695,37 @@ By default Emacs doesn't even have redo!
     :config
     (setq eglot-sync-connect nil
           eglot-ignored-server-capabilites
-          '(:documentHighlightProvider :hoverProvider))
-    (add-to-list 'eglot-server-programs
-                 '(tuareg-mode . ("opam" "exec" "--" "ocamlmerlin-lsp" "--stdio"))))
+          '(:documentHighlightProvider :hoverProvider)))
 #+END_SRC
+
+#+begin_src emacs-lisp
+  (use-package lsp-mode
+    :ensure t
+    ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+    :init (setq lsp-keymap-prefix "C-l")
+    :hook (;(python-mode . lsp)
+           (js-mode . lsp)
+           (typescript-mode . lsp)
+           (haskell-mode . lsp)
+           (rust-mode . lsp)
+           ;; (lsp-mode . lsp-enable-which-key-integration)
+           )
+    :commands lsp)
+
+  ;; optionally
+  (use-package lsp-ivy
+    :ensure t
+    :commands lsp-ivy-workspace-symbol)
+
+  ;; ;; optionally if you want to use debugger
+  ;; (use-package dap-mode)
+  ;; ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
+
+  ;; ;; optional if you want which-key integration
+  ;; (use-package which-key
+  ;;   :config
+  ;;   (which-key-mode))
+#+end_src
 
 ** Auto completion
 
@@ -761,9 +793,7 @@ built-in VC has great support for git but Magit is godsend.
 #+BEGIN_SRC emacs-lisp
   (use-package magit
     :ensure t
-    :bind ("C-c p v" . magit-status)
-    :config
-    (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
+    :bind ("C-c p v" . magit-status))
 #+END_SRC
 
 ** Compile
@@ -786,7 +816,7 @@ re-run the tests.
                     (search-forward "Error" nil t))))
         (run-with-timer 1 nil #'delete-window (get-buffer-window buffer))))
 
-  (add-hook 'compilation-finish-functions #'td/compilation-hide-window-on-finish)
+  ;(add-hook 'compilation-finish-functions #'td/compilation-hide-window-on-finish)
 #+END_SRC
 
 ** Code folding
@@ -911,9 +941,20 @@ awesome StencilJS project.
 ** Python
 
 #+BEGIN_SRC emacs-lisp
-  (use-package pyvenv
+  (use-package poetry
+    :ensure t
     :defer t
-    :ensure t)
+    ;; :hook (python-mode . poetry-track-virtualenv)
+    :config
+    (eval-and-compile
+      (defun td/poetry-get-virtualenv ()
+        (poetry-ensure-in-project)
+        (let ((buf (poetry-call 'show '("-v") nil nil t)))
+          (with-current-buffer buf
+            (goto-char (point-min))
+            (re-search-forward "virtualenv: " nil t)
+            (buffer-substring-no-properties (point) (line-end-position)))))
+      (advice-add 'poetry-get-virtualenv :override #'td/poetry-get-virtualenv)))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -924,7 +965,6 @@ awesome StencilJS project.
 
   (use-package python
     :mode (("\\.py\\'" . python-mode))
-    :interpreter ("poetry run python" . python-mode)
     ;; :hook (before-save . py-isort-before-save)
     )
 #+END_SRC
@@ -1020,7 +1060,10 @@ These are supports for other stuffs that I used:
   (use-package markdown-mode
     :ensure t
     :mode (("\\.md$" . markdown-mode)
-           ("\\.markdown$" . markdown-mode)))
+           ("\\.markdown$" . markdown-mode))
+    :config
+    ;; Requires 'pip3 install --user markdown'
+    (setq markdown-command "python3 -m markdown -x extra"))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -1205,9 +1248,9 @@ bold and ligatures support :(.
      ;; (font . "Monaco 14")
      ;; (font . "Menlo 14")
      ;; (font . "SF Mono 14")
-     (font . "Source Code Pro 14")
+     ;; (font . "Source Code Pro 14")
      ;; (font . "Hasklig 14")
-     ;; (font . "Fira Code 14")
+     (font . "Fira Code 14")
      (top . 0) (left . 480)
      (width . 96) (height . 96)
      (vertical-scroll-bars . nil)
@@ -1384,7 +1427,7 @@ kind of distracting, but it is really helpful sometimes.
 #+BEGIN_SRC emacs-lisp
   (defun td/refresh-front-most-tab ()
     (interactive)
-    (shell-command "osascript -e 'tell application \"Google Chrome\" to reload active tab of window 1'"))
+    (shell-command "osascript -e 'tell application \"Microsoft Edge\" to reload active tab of window 1'"))
 
   (bind-key* "C-c b r" #'td/refresh-front-most-tab)
 #+END_SRC
