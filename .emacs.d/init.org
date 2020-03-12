@@ -195,8 +195,9 @@ is that I can make its popup appear at the top of the window.
     (setq ivy-posframe-style 'frame-center
           ivy-posframe-parameters
           '((internal-border-width . 8)
-            (internal-border-color . "#fff")
-            (background-color . "#000"))))
+            ;; (internal-border-color . "#fff")
+            ;; (background-color . "#000")
+            )))
 
   (use-package counsel
     :ensure t
@@ -681,29 +682,12 @@ By default Emacs doesn't even have redo!
 
 * Programming
 
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package eglot
-    :ensure t
-    :hook ((js-mode . eglot-ensure)
-           (typescript-mode . eglot-ensure)
-           (python-mode . eglot-ensure)
-           (haskell-mode . eglot-ensure)
-           (java-mode . eglot-ensure)
-           (rust-mode . eglot-ensure)
-           (tuareg-mode . eglot-ensure))
-    :bind (:map eglot-mode-map ("C-c h" . eglot-help-at-point))
-    :config
-    (setq eglot-sync-connect nil
-          eglot-ignored-server-capabilites
-          '(:documentHighlightProvider :hoverProvider)))
-#+END_SRC
-
 #+begin_src emacs-lisp
   (use-package lsp-mode
     :ensure t
     ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
     :init (setq lsp-keymap-prefix "C-l")
-    :hook (;(python-mode . lsp)
+    :hook ((python-mode . lsp)
            (js-mode . lsp)
            (typescript-mode . lsp)
            (haskell-mode . lsp)
@@ -919,23 +903,13 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 
 #+BEGIN_SRC emacs-lisp
   (use-package js
-    :mode (("\\.eslintrc$" . js-mode))
+    :mode (("\\.eslintrc$" . js-mode)
+           ("\\.ts$" . js-mode))
     :config
     (setq js-indent-level 2
           js-indent-first-init 'dynamic
           js-switch-indent-offset 2
           js-enabled-frameworks '(javascript)))
-#+END_SRC
-
-Well, I'm also on the TypeScript train lately, mostly because of the super
-awesome StencilJS project.
-
-#+BEGIN_SRC emacs-lisp
-  (use-package typescript-mode
-    :ensure t
-    :mode "\\.ts"
-    :config
-    (setq typescript-indent-level 2))
 #+END_SRC
 
 ** Python
@@ -1243,7 +1217,7 @@ bold and ligatures support :(.
    default-frame-alist
    '((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
-     (ns-appearance . dark)
+     ;; (ns-appearance . dark)
      ;; (font . "Hack 14")
      ;; (font . "Monaco 14")
      ;; (font . "Menlo 14")
@@ -1283,9 +1257,17 @@ theme named =user= will always have the highest priority.
   (custom-theme-set-faces
    'user
    '(vertical-border ((t (:foreground "#000" :background "#000"))))
+   '(font-lock-comment-face ((t (:slant normal))))
+   '(font-lock-comment-delimiter-face ((t (:slant normal))))
+   '(font-lock-string-face ((t (:slant normal))))
+   '(font-lock-constant-face ((t (:slant normal))))
+
+   '(markdown-inline-code-face ((t (:slant normal))))
 
    '(indent-guide-face ((t (:inherit font-lock-comment-face))))
    '(web-mode-variable-name-face ((t (:inherit default))))
+
+   '(line-number ((t :foreground "#bbb")))
 
    '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#81af34"))))
    '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#ff0000"))))
@@ -1302,13 +1284,13 @@ theme named =user= will always have the highest priority.
 I also have very good experience with *Tango Plus*. Its philosophy of not
 getting in the way is interesting.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package tango-plus-theme
     :ensure t
     :init (load-theme 'tango-plus t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package doom-themes
     :ensure t
     :init
