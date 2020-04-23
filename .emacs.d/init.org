@@ -97,6 +97,17 @@ Sane, modern defaults:
   (savehist-mode t)
 #+END_SRC
 
+#+begin_src emacs-lisp
+  (use-package which-key
+    :ensure t
+    :diminish
+    :hook (after-init . which-key-mode)
+    :config
+    (setq which-key-show-early-on-C-h t)
+    (setq which-key-idle-delay most-positive-fixnum)
+    (setq which-key-idle-secondary-delay 1e-100))
+#+end_src
+
 ** Server
 
 #+BEGIN_SRC emacs-lisp
@@ -134,7 +145,31 @@ I used to use =projectile=, but the =project.el= built-in to Emacs has
 gone a long way so I'm using that now, as far as I can tell the quality
 is a bit meh compared to =projectile=, but I still can live with it.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
+    (use-package projectile
+      :ensure t
+      :hook (after-init . projectile-mode)
+      :bind-keymap* (("C-c p" . projectile-command-map))
+      :config
+      (setq projectile-completion-system 'default
+            projectile-project-search-path
+            '("~/Projects/" "~/Projects/personal" "~/Projects/insight"))
+      (projectile-register-project-type
+       'npm '("package.json")
+       :compile "npm install"
+       :test "npm test"
+       :run "npm start"
+       :test-suffix ".spec"))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package deadgrep
+    :ensure t
+    :defer t
+    :bind (:map projectile-command-map ("C-s" . deadgrep)))
+#+end_src
+
+#+BEGIN_SRC emacs-lisp :tangle no
   (defun td/kill-project-buffers ()
     (interactive)
     (let ((project (project-current)))
@@ -151,79 +186,74 @@ is a bit meh compared to =projectile=, but I still can live with it.
 
 ** Symbols
 
-For jumping to defined symbols (functions, classes, .etc), I use
-=dump-jump=. Mode specific support for this feature is at higher
-priority, when they fail =dump-jump= will be the fallback.
+I used to use =dumb-jumb=, but LSP has gotten good enough and it supported all
+of the languages that I use, so now I use the built-in =xref= and rely on LSP's
+=xref= integration.
 
-The key bindings are:
+Default key bindings is
 
-| Binding | Command                | Description    |
-|---------+------------------------+----------------|
-| =C-M-g= | =dump-jump-go=         | Jump to symbol |
-| =C-M-p= | =dump-jump-back=       | Back           |
-| =C-M-q= | =dump-jump-quick-look= | Quick look     |
+| Binding   | Command                              | Description |
+|-----------+--------------------------------------+-------------|
+| =M-.=     | =xref-find-definitions=              |             |
+| =C-M-p=   | =xref-find-definitions-other-window= |             |
+| =C-M-g=   | =xref-pop-marker-stack=              |             |
 
-#+BEGIN_SRC emacs-lisp
-  (use-package dumb-jump
-    :ensure t
-    :hook (prog-mode . dumb-jump-mode))
-#+END_SRC
+#+begin_src emacs-lisp
+  (use-package xref
+    :bind (("C-M-p" . xref-find-definitions-other-window)
+           ("C-M-g" . xref-pop-marker-stack)))
 
-** Ivy
+  (bind-key* "M-." #'xref-find-definitions)
+#+end_src
 
-Ivy is a nice completion package, however the main reason I use it over =ido=
-is that I can make its popup appear at the top of the window.
 
-#+BEGIN_SRC emacs-lisp
+** Selectrum
+
+Selectrum is one of the many packages that provide vertical completion for Emacs
+command, similar to Ivy or Helm. What set it aside is the fact that it is built
+upon =completing-read=, instead of wrapping it like the others, which make it
+quite minimal but is very very fast.
+
+#+begin_src emacs-lisp
   (ido-mode -1)
 
-  (add-to-list 'completion-styles 'flex)
-
-  (use-package ivy
-    :diminish ivy-mode
-    :hook (after-init . ivy-mode)
-    :bind (("C-M-o" . ivy-switch-buffer))
-    :config
-    (setq ivy-use-virtual-buffers t
-          ivy-count-format ""
-          ivy-height 16))
-
-  (use-package ivy-posframe
-    :diminish ivy-posframe-mode
-    :hook (after-init . ivy-posframe-mode)
-    :config
-    (setq ivy-posframe-style 'frame-center
-          ivy-posframe-parameters
-          '((internal-border-width . 8)
-            ;; (internal-border-color . "#fff")
-            ;; (background-color . "#000")
-            )))
-
-  (use-package counsel
+  (use-package selectrum
     :ensure t
-    :bind (([remap find-file] . counsel-find-file)
-           ([remap ido-find-file] . counsel-find-file)
-           ([remap execute-extended-command] . counsel-M-x)
-           ;; ("C-M-'" . counsel-git)
-           ("M-\"" . counsel-git-grep)
-           ("M-m" . counsel-M-x)
-           ("C-c i" . counsel-imenu)))
+    :hook (after-init . selectrum-mode))
 
-  (use-package imenu
-    :hook (imenu-after-jump . recenter-top-bottom))
-#+END_SRC
-
-Use =historian.el= to sort ivy completion based on frequency - similar to smex.
-
-#+BEGIN_SRC emacs-lisp
-  (use-package ivy-historian
+  (use-package prescient
     :ensure t
-    :defer t
-    :hook (ivy-mode . ivy-historian-mode))
-#+END_SRC
+    :hook (after-init . prescient-persist-mode))
+
+  (use-package selectrum-prescient
+    :ensure t
+    :hook (after-init . selectrum-prescient-mode))
+
+  (defun td/minibuffer-smart-tilde ()
+    (interactive)
+    (if (not (looking-back "/"))
+        (call-interactively 'self-insert-command)
+      (beginning-of-line)
+      (kill-line)
+      (insert "~/")))
+
+  (bind-key "~" #'td/minibuffer-smart-tilde minibuffer-local-map)
+#+end_src
+
+#+begin_src emacs-lisp
+  (bind-key* "M-m" #'execute-extended-command)
+  (bind-key* "C-M-o" #'switch-to-buffer)
+#+end_src
 
 
 * Window Management
+
+Split windows horizontally by default.
+
+#+begin_src emacs-lisp
+  (setq split-width-threshold 90
+        split-height-threshold nil)
+#+end_src
 
 #+BEGIN_SRC emacs-lisp
   (use-package popwin
@@ -305,9 +335,12 @@ Editing utilities:
     :config
     (crux-with-region-or-buffer indent-region)
     (crux-with-region-or-buffer untabify)
-    (crux-with-region-or-point-to-eol kill-ring-save))
+    (crux-with-region-or-point-to-eol kill-ring-save)
+    (setq kill-do-not-save-duplicates t))
 
-  (bind-key "C-c C-k" #'kill-this-buffer)
+  (bind-key* "C-c C-k" #'kill-this-buffer)
+  (bind-key* "M-n" #'next-buffer)
+  (bind-key* "M-p" #'previous-buffer)
   (bind-key [remap just-one-space] #'cycle-spacing)
 #+END_SRC
 
@@ -319,7 +352,8 @@ experience it is helpful.
     :diminish auto-revert-mode
     :hook (after-init . global-auto-revert-mode)
     :config
-    (setq auto-revert-avoid-polling t))
+    (setq auto-revert-avoid-polling t
+          auto-revert-interval 1))
 #+END_SRC
 
 Automatically save buffers when focus out:
@@ -351,7 +385,7 @@ Make the file executable if starting with "shebang":
 
 I was a pretty die-hard Vim fanboy, let's bring back the memory.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package evil
     :ensure t
     :defer t
@@ -377,60 +411,19 @@ I was a pretty die-hard Vim fanboy, let's bring back the memory.
 
 ** Search and replace
 
-Anzu command names are confusing, at-cursor means initial string, while thing
-means boundary.
-
-#+BEGIN_SRC emacs-lisp
-  (use-package anzu
+#+begin_src emacs-lisp
+  (use-package visual-regexp
     :ensure t
-    :diminish anzu-mode
-    :hook (after-init . global-anzu-mode)
-    :bind (("M-r" . anzu-query-replace-regexp)
-           ("C-M-r" . anzu-replace-at-cursor-thing)))
-#+END_SRC
+    :bind (("M-r" . vr/query-replace)
+           ([remap query-replace] . vr/query-replace)
+           ("C-M-r" . vr/mc-mark)))
+#+end_src
 
-Also define "buffer-at-point" so that we can do query-replace in the whole
-buffer without having to jump to the beginning.
-
-#+BEGIN_SRC emacs-lisp
-  (use-package thingatpt
-    :after (anzu)
-    :config
-    (eval-and-compile
-      (defun td/bounds-of-buffer-at-point ()
-        (cons (point-min) (point-max)))
-
-      (put 'buffer 'bounds-of-thing-at-point 'td/bounds-of-buffer-at-point)
-      (put 'buffer 'beginning-op 'beginning-of-buffer)
-      (put 'buffer 'end-op 'end-of-buffer)))
-#+END_SRC
-
-I also use ISearch for navigation. In such cases I want to put the cursor at
-the beginning of the match, not the end.
-
-#+BEGIN_SRC emacs-lisp
-  (setq lazy-highlight-initial-delay 0
-        ;isearch-lazy-count t
-        isearch-lazy-highlight-buffer t)
-
-  (defun td/isearch-delete-dwim ()
-    "Delete the failed portion or last char if succesful search."
-    (interactive)
-    (if (= 0 (length isearch-string))
-        (ding)
-      (setq isearch-string
-            (substring
-             isearch-string 0 (or (isearch-fail-pos) (1- (length isearch-string))))
-            isearch-message
-            (mapconcat 'isearch-text-char-description isearch-string ""))
-      (funcall (or isearch-message-function #'isearch-message) nil t)
-      (if isearch-other-end (goto-char isearch-other-end))
-      (isearch-search)
-      (isearch-push-state)
-      (isearch-update)))
-
-  (bind-key [remap isearch-delete-char] #'td/isearch-delete-dwim isearch-mode-map)
-#+END_SRC
+#+begin_src emacs-lisp
+  (use-package ctrlf
+    :ensure t
+    :hook (after-init . ctrlf-mode))
+#+end_src
 
 ** Long lines
 
@@ -516,6 +509,9 @@ NOTE: This package is huge, I'm still learning it.
     (call-interactively #'end-of-line))
 
   (bind-key "M-C-SPC" #'td/mark-line-dwim)
+
+  (use-package delsel
+    :hook (after-init . delete-selection-mode))
 #+END_SRC
 
 ** Undo
@@ -610,10 +606,26 @@ By default Emacs doesn't even have redo!
   (defun td/with-face (str &rest properties)
     (propertize str 'face properties))
 
+  (use-package eshell-toggle
+    :ensure t
+    :bind (("C-c e s" . eshell-toggle)))
+
+  (use-package eshell-up
+    :ensure t
+    :defer t)
+
+  (use-package eshell-z
+    :ensure t
+    :defer t)
+
   (use-package eshell
     :defer t
     :config
     (eval-and-compile
+      (require 'eshell-up)
+      (require 'eshell-z)
+      (require 'eshell-git-prompt)
+
       (defun td/eshell-pwd ()
         (replace-regexp-in-string
          (regexp-quote (expand-file-name "~"))
@@ -626,9 +638,8 @@ By default Emacs doesn't even have redo!
          (td/with-face user-login-name :foreground "#dc322f")
          (td/with-face (or (getenv "HOST") (system-name)) :foreground "#b58900")
          (td/with-face (td/eshell-pwd) :foreground "#859900")
-         (if (= (user-uid) 0) (td/with-face "#" :foreground "red") "$")))
-
-      (defalias 'eshell/e 'find-file-other-window)
+         (if (= (user-uid) 0) (td/with-face "#" :foreground "red") "$")
+         (eshell-git-prompt-robbyrussell)))
 
       (defun eshell/open (args)
         (interactive)
@@ -639,15 +650,48 @@ By default Emacs doesn't even have redo!
                    (t "xdg-open"))
                  (format " %s" args))))
 
-      (use-package em-prompt
-        :defer t
-        :config
-        (setq eshell-prompt-function #'td/eshell-prompt
-              eshell-prompt-regexp "^[^#$\\n]*[#$] "
-              eshell-highlight-prompt nil))))
+      (setq eshell-prompt-function #'td/eshell-prompt
+            eshell-prompt-regexp "^[^#$\\n]*[#$] "
+            eshell-highlight-prompt nil)))
+
+  (use-package eshell
+    :defer t
+    :config
+    (eval-and-compile
+      (defun td/eshell-pwd ()
+        (replace-regexp-in-string
+         (regexp-quote (expand-file-name "~"))
+         "~"
+         (eshell/pwd)))
+
+      (defun td/eshell-git-prompt ()
+        )
+
+      (defun td/eshell-prompt ()
+        (format
+         "\n%s@%s in %s\n%s "
+         (td/with-face user-login-name :foreground "#dc322f")
+         (td/with-face (or (getenv "HOST") (system-name)) :foreground "#b58900")
+         (td/with-face (td/eshell-pwd) :foreground "#859900")
+         (if (= (user-uid) 0) (td/with-face "#" :foreground "red") "$")
+         ;; (td/eshell-git-prompt)
+         ))
+
+      (defun eshell/open (args)
+        (interactive)
+        (shell-command
+         (concat (cl-case system-type
+                   ((darwin) "open")
+                   ((windows-nt) "start")
+                   (t "xdg-open"))
+                 (format " %s" args))))
+
+      (setq eshell-prompt-function #'td/eshell-prompt
+            eshell-prompt-regexp "^[^#$\\n]*[#$] "
+            eshell-highlight-prompt nil)))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package ag
     :ensure t
     :init
@@ -692,9 +736,11 @@ By default Emacs doesn't even have redo!
            (typescript-mode . lsp)
            (haskell-mode . lsp)
            (rust-mode . lsp)
-           ;; (lsp-mode . lsp-enable-which-key-integration)
-           )
-    :commands lsp)
+           (lsp-mode . lsp-enable-which-key-integration))
+    :commands lsp
+    :config
+    (setq lsp-prefer-capf t
+          lsp-enable-file-watchers nil))
 
   ;; optionally
   (use-package lsp-ivy
@@ -706,9 +752,6 @@ By default Emacs doesn't even have redo!
   ;; ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
 
   ;; ;; optional if you want which-key integration
-  ;; (use-package which-key
-  ;;   :config
-  ;;   (which-key-mode))
 #+end_src
 
 ** Auto completion
@@ -722,7 +765,7 @@ be fair, I'd like these mode to support Emacs's standard
   (use-package company
     :ensure t
     :diminish company-mode
-    :bind (("M-/" . company-complete-common-or-cycle)
+    :bind (("M-/" . company-manual-begin)
            ("C-x C-p" . company-files)
            :map company-active-map
            ("<tab>" . company-complete-common-or-cycle)
@@ -731,23 +774,30 @@ be fair, I'd like these mode to support Emacs's standard
     :hook (after-init . global-company-mode)
     :config
     (setq company-minimum-prefix-length 2
-          ;company-require-match nil
+          company-require-match #'company-explicit-action-p
+          company-show-numbers t
           company-idle-delay nil
           company-tooltip-align-annotations t
           company-frontends
           '(company-pseudo-tooltip-unless-just-one-frontend
             company-echo-metadata-frontend)
           company-backends
-          '(company-capf company-dabbrev-code)))
+          '(company-capf
+            company-files
+            (company-dabbrev-code company-keywords)
+            company-dabbrev)
+          company-dabbrev-other-buffers nil
+          company-dabbrev-char-regexp nil
+          company-dabbrev-downcase nil))
 
   (use-package company-buffer-line
     :commands (company-same-mode-buffer-lines)
     :bind ("C-x C-l" . company-same-mode-buffer-lines))
 
-  (use-package company-statistics
+  (use-package company-prescient
     :ensure t
     :defer t
-    :hook (global-company-mode . company-statistics-mode))
+    :hook (global-company-mode . company-prescient-mode))
 #+END_SRC
 
 ** Error checking
@@ -777,7 +827,8 @@ built-in VC has great support for git but Magit is godsend.
 #+BEGIN_SRC emacs-lisp
   (use-package magit
     :ensure t
-    :bind ("C-c p v" . magit-status))
+    :config
+    (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
 #+END_SRC
 
 ** Compile
@@ -788,19 +839,16 @@ repetitive tasks. For example, I to run unit tests repeatedly, I first run
 re-run the tests.
 
 #+BEGIN_SRC emacs-lisp
-  (setq-default compilation-scroll-output 'first-error)
-  (bind-key "C-c m" #'recompile)
-
-  (defun td/compilation-hide-window-on-finish (buffer string)
-    (if (and (string-match "compilation" (buffer-name buffer))
-             (string-match "finished" string)
-             (not (with-current-buffer buffer
-                    (search-forward "warning" nil t)))
-             (not (with-current-buffer buffer
-                    (search-forward "Error" nil t))))
-        (run-with-timer 1 nil #'delete-window (get-buffer-window buffer))))
-
-  ;(add-hook 'compilation-finish-functions #'td/compilation-hide-window-on-finish)
+  (use-package compile
+    :bind ("C-c m" . recompile)
+    :hook (compilation-filter . td/colorize-compilation-buffer)
+    :config
+    (setq compilation-scroll-output 'first-error)
+    (require 'ansi-color)
+    (defun td/colorize-compilation-buffer ()
+      (toggle-read-only)
+      (ansi-color-apply-on-region compilation-filter-start (point))
+      (toggle-read-only)))
 #+END_SRC
 
 ** Code folding
@@ -821,7 +869,7 @@ editing, including PHP, since I rarely write PHP anymore.
     :ensure t
     :mode (("\\.html" . web-mode)
            ;; ("\\.jsx" . web-mode)
-           ("\\.tsx" . web-mode)
+           ;; ("\\.tsx" . web-mode)
            ("\\.tpl" . web-mode)
            ("\\.erb" . web-mode)
            ("\\.tag" . web-mode)
@@ -904,7 +952,8 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 #+BEGIN_SRC emacs-lisp
   (use-package js
     :mode (("\\.eslintrc$" . js-mode)
-           ("\\.ts$" . js-mode))
+           ("\\.ts$" . js-mode)
+           ("\\.tsx$" . js-mode))
     :config
     (setq js-indent-level 2
           js-indent-first-init 'dynamic
@@ -958,6 +1007,14 @@ same folk who runs =stack=.
     (setq haskell-program-name "stack repl"))
 #+END_SRC
 
+#+BEGIN_SRC emacs-lisp
+  (use-package lsp-haskell
+    :ensure t
+    :config
+    (setq lsp-haskell-process-path-hie "ghcide"
+          lsp-haskell-process-args-hie '()))
+#+END_SRC
+
 ** Rust
 
 #+BEGIN_SRC emacs-lisp
@@ -984,14 +1041,13 @@ same folk who runs =stack=.
 
 ** Solidity
 
-#+BEGIN_SRC emacs-lisp :tangle-no
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package solidity-mode
     :ensure t
     :mode (("\.sol$" . solidity-mode)))
 #+END_SRC
 
 ** Java
-
 ** Docker
 
 I use Docker for almost every project now, it is useful even just for setting up
@@ -1009,7 +1065,6 @@ manage Docker images and containers.
     :ensure t
     :mode ("Dockerfile$" . dockerfile-mode))
 #+END_SRC
-
 
 ** Terraform
 
@@ -1137,17 +1192,6 @@ As stated earlier, I practice GTD. Working projects and new stuffs go to
 =inbox.org= file. Old tasks are archived to =archive.org=. Here's my
 =org-capture= templates to dump stuffs to =inbox/note=
 
-** Archive
-
-I also use =org-board= to have an offline pin-board with org-mode.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package org-board
-    :ensure t
-    :defer t
-    :bind-keymap ("C-c b" . org-board-keymap))
-#+END_SRC
-
 ** Literate programming
 
 Org Babel for literate programming and API documentation.
@@ -1220,11 +1264,11 @@ bold and ligatures support :(.
      ;; (ns-appearance . dark)
      ;; (font . "Hack 14")
      ;; (font . "Monaco 14")
-     ;; (font . "Menlo 14")
+     (font . "Menlo 14")
      ;; (font . "SF Mono 14")
      ;; (font . "Source Code Pro 14")
      ;; (font . "Hasklig 14")
-     (font . "Fira Code 14")
+     ;; (font . "Fira Code 14")
      (top . 0) (left . 480)
      (width . 96) (height . 96)
      (vertical-scroll-bars . nil)
@@ -1267,7 +1311,7 @@ theme named =user= will always have the highest priority.
    '(indent-guide-face ((t (:inherit font-lock-comment-face))))
    '(web-mode-variable-name-face ((t (:inherit default))))
 
-   '(line-number ((t :foreground "#bbb")))
+   '(line-number ((t :inherit font-lock-comment-face)))
 
    '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#81af34"))))
    '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#ff0000"))))
@@ -1284,13 +1328,13 @@ theme named =user= will always have the highest priority.
 I also have very good experience with *Tango Plus*. Its philosophy of not
 getting in the way is interesting.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package tango-plus-theme
     :ensure t
     :init (load-theme 'tango-plus t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package doom-themes
     :ensure t
     :init
@@ -1298,7 +1342,7 @@ getting in the way is interesting.
       (setq doom-themes-enable-italic nil
             doom-spacegrey-brighter-modeline t
             doom-vibrant-brighter-modeline t)
-      (load-theme 'doom-peacock t))
+      (load-theme 'doom-one t))
     :hook (org-mode . doom-themes-org-config))
 #+END_SRC
 
@@ -1425,6 +1469,27 @@ kind of distracting, but it is really helpful sometimes.
 
   (bind-key "C-c t n" #'td/cycle-themes)
 #+END_SRC
+
+
+* Ideas
+
+- Separate Emacs clipboard from system clipboard
+
+#+begin_src emacs-lisp :tangle no
+(radian-defadvice radian--advice-keyboard-quit-minibuffer-first
+    (keyboard-quit)
+  :around #'keyboard-quit
+  "Cause \\[keyboard-quit] to exit the minibuffer, if it is active.
+Normally, \\[keyboard-quit] will just act in the current buffer.
+This advice modifies the behavior so that it will instead exit an
+active minibuffer, even if the minibuffer is not selected."
+  (if-let ((minibuffer (active-minibuffer-window)))
+      (with-current-buffer (window-buffer minibuffer)
+        (minibuffer-keyboard-quit))
+    (funcall keyboard-quit)))
+
+find-file-visit-truename
+#+end_src
 
 
 * Init file generation
