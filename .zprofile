@@ -66,7 +66,10 @@ if [ "$TERM_PROGRAM" = "Apple_Terminal" ] || [ "$TERM_PROGRAM" = "iTerm.app" ]; 
   add-zsh-hook chpwd update_terminal_cwd
 fi
 
-[[ $EMACS = t ]] && unsetopt zle
+if [[ $EMACS = t ]]; then
+  unsetopt zle
+  unset zle_bracketed_paste
+fi
 
 # test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
@@ -106,3 +109,8 @@ notify() {
 }
 
 export PATH="$HOME/.cargo/bin:$PATH"
+
+# Setting PATH for Python 3.8
+# The original version is saved in .zprofile.pysave
+PATH="/Library/Frameworks/Python.framework/Versions/3.8/bin:${PATH}"
+export PATH

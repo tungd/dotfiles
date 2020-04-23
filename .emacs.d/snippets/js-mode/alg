@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: alg
+# key: alg
+# --
+import { Logger } from '@aws-amplify/core'
+
+const logger = new Logger(__filename)
