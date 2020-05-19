@@ -1280,13 +1280,12 @@ bold and ligatures support :(.
    '((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
      ;; (ns-appearance . dark)
-     ;; (font . "Hack 14")
      ;; (font . "Monaco 14")
-     (font . "Menlo 14")
+     ;; (font . "Menlo 14")
      ;; (font . "SF Mono 14")
      ;; (font . "Source Code Pro 14")
-     ;; (font . "Hasklig 14")
      ;; (font . "Fira Code 14")
+     (font . "JetBrains Mono 14")
      (top . 0) (left . 480)
      (width . 96) (height . 96)
      (vertical-scroll-bars . nil)
@@ -1360,7 +1359,7 @@ getting in the way is interesting.
       (setq doom-themes-enable-italic nil
             doom-spacegrey-brighter-modeline t
             doom-vibrant-brighter-modeline t)
-      (load-theme 'doom-one t))
+      (load-theme 'doom-gruvbox t))
     :hook (org-mode . doom-themes-org-config))
 #+END_SRC
 
@@ -1378,7 +1377,6 @@ Mode line
 #+BEGIN_SRC emacs-lisp
   (use-package smart-mode-line
     :ensure t
-    :preface (setq sml/theme nil)
     :hook (after-init . sml/setup))
 #+END_SRC
 
