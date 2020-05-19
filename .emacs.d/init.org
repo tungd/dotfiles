@@ -98,6 +98,8 @@ Sane, modern defaults:
 #+END_SRC
 
 #+begin_src emacs-lisp
+  (setq echo-keystrokes 1e-6)
+
   (use-package which-key
     :ensure t
     :diminish
@@ -146,27 +148,29 @@ gone a long way so I'm using that now, as far as I can tell the quality
 is a bit meh compared to =projectile=, but I still can live with it.
 
 #+begin_src emacs-lisp
-    (use-package projectile
-      :ensure t
-      :hook (after-init . projectile-mode)
-      :bind-keymap* (("C-c p" . projectile-command-map))
-      :config
-      (setq projectile-completion-system 'default
-            projectile-project-search-path
-            '("~/Projects/" "~/Projects/personal" "~/Projects/insight"))
-      (projectile-register-project-type
-       'npm '("package.json")
-       :compile "npm install"
-       :test "npm test"
-       :run "npm start"
-       :test-suffix ".spec"))
+  (use-package projectile
+    :ensure t
+    :hook (after-init . projectile-mode)
+    :bind-keymap* (("C-c p" . projectile-command-map))
+    :bind (("C-M-'" . projectile-find-file)
+           :map projectile-command-map
+           ("s" . deadgrep))
+    :config
+    (setq projectile-completion-system 'default
+          projectile-project-search-path
+          '("~/Projects/" "~/Projects/personal" "~/Projects/insight"))
+    (projectile-register-project-type
+     'npm '("package.json")
+     :compile "npm install"
+     :test "npm test"
+     :run "npm start"
+     :test-suffix ".spec"))
 #+end_src
 
 #+begin_src emacs-lisp
   (use-package deadgrep
     :ensure t
-    :defer t
-    :bind (:map projectile-command-map ("C-s" . deadgrep)))
+    :defer t)
 #+end_src
 
 #+BEGIN_SRC emacs-lisp :tangle no
@@ -238,11 +242,24 @@ quite minimal but is very very fast.
       (insert "~/")))
 
   (bind-key "~" #'td/minibuffer-smart-tilde minibuffer-local-map)
+  (bind-key "<s-backspace>" #'backward-kill-word minibuffer-local-map)
 #+end_src
 
 #+begin_src emacs-lisp
   (bind-key* "M-m" #'execute-extended-command)
   (bind-key* "C-M-o" #'switch-to-buffer)
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package mini-frame
+    :ensure t
+    :hook (after-init . mini-frame-mode)
+    :config
+    (add-to-list 'mini-frame-ignore-commands 'vr/query-replace)
+    (add-to-list 'mini-frame-ignore-commands 'vr/replace)
+    (add-to-list 'mini-frame-ignore-commands 'ctrlf-forward-literal)
+    (add-to-list 'mini-frame-ignore-commands 'yes-or-no-p)
+    (add-to-list 'mini-frame-ignore-commands 'y-or-n-p))
 #+end_src
 
 
@@ -255,7 +272,7 @@ Split windows horizontally by default.
         split-height-threshold nil)
 #+end_src
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package popwin
     :ensure t
     :hook (after-init . popwin-mode)
@@ -339,8 +356,8 @@ Editing utilities:
     (setq kill-do-not-save-duplicates t))
 
   (bind-key* "C-c C-k" #'kill-this-buffer)
-  (bind-key* "M-n" #'next-buffer)
-  (bind-key* "M-p" #'previous-buffer)
+  (bind-key* "s-n" #'next-buffer)
+  (bind-key* "s-p" #'previous-buffer)
   (bind-key [remap just-one-space] #'cycle-spacing)
 #+END_SRC
 
@@ -736,22 +753,15 @@ By default Emacs doesn't even have redo!
            (typescript-mode . lsp)
            (haskell-mode . lsp)
            (rust-mode . lsp)
+           (web-mode . lsp)
            (lsp-mode . lsp-enable-which-key-integration))
     :commands lsp
     :config
     (setq lsp-prefer-capf t
           lsp-enable-file-watchers nil))
 
-  ;; optionally
-  (use-package lsp-ivy
-    :ensure t
-    :commands lsp-ivy-workspace-symbol)
-
-  ;; ;; optionally if you want to use debugger
-  ;; (use-package dap-mode)
-  ;; ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
-
-  ;; ;; optional if you want which-key integration
+  (use-package imenu
+    :bind ("C-c j" . imenu))
 #+end_src
 
 ** Auto completion
@@ -868,21 +878,22 @@ editing, including PHP, since I rarely write PHP anymore.
   (use-package web-mode
     :ensure t
     :mode (("\\.html" . web-mode)
-           ;; ("\\.jsx" . web-mode)
-           ;; ("\\.tsx" . web-mode)
+           ("\\.jsx" . web-mode)
+           ("\\.tsx" . web-mode)
            ("\\.tpl" . web-mode)
            ("\\.erb" . web-mode)
            ("\\.tag" . web-mode)
            ("\\.php" . web-mode)
            ("\\.hbs" . web-mode)
            ("\\.mustache" . web-mode))
-    :hook (web-mode . turn-off-auto-fill)
     :config
     (setq web-mode-markup-indent-offset 2
           web-mode-css-indent-offset 2
           web-mode-code-indent-offset 2
           web-mode-script-padding 2
-          web-mode-style-padding 2))
+          web-mode-style-padding 2
+          web-mode-enable-auto-quoting nil
+          web-mode-enable-comment-annotation t))
 #+END_SRC
 
 Also, I can't live without Emmet.
@@ -951,15 +962,20 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 
 #+BEGIN_SRC emacs-lisp
   (use-package js
-    :mode (("\\.eslintrc$" . js-mode)
-           ("\\.ts$" . js-mode)
-           ("\\.tsx$" . js-mode))
+    :mode (("\\.eslintrc$" . js-mode))
     :config
     (setq js-indent-level 2
           js-indent-first-init 'dynamic
           js-switch-indent-offset 2
           js-enabled-frameworks '(javascript)))
 #+END_SRC
+
+#+begin_src emacs-lisp
+  (use-package typescript-mode
+    :mode (("\\.ts$" . typescript-mode))
+    :config
+    (setq typescript-indent-level 2))
+#+end_src
 
 ** Python
 
@@ -989,7 +1005,8 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
   (use-package python
     :mode (("\\.py\\'" . python-mode))
     ;; :hook (before-save . py-isort-before-save)
-    )
+    :config
+    (setq python-fill-docstring-style 'django))
 #+END_SRC
 
 ** Haskell
@@ -1222,10 +1239,11 @@ Org Babel for literate programming and API documentation.
 
 #+BEGIN_SRC emacs-lisp
   (use-package ispell
-    :bind ("<f8>" . ispell-word)
+    :bind ("s-i" . ispell-word)
     :config
     (setq ispell-program-name "aspell"
-          ispell-extra-args '("--sug-mode=ultra" "--lang=en_US" "--personal=~/.emacs.d/dictionary")
+          ispell-extra-args
+          '("--sug-mode=ultra" "--lang=en_US" "--personal=~/.emacs.d/dictionary")
           ispell-skip-html t
           ispell-silently-savep t
           ispell-really-aspell t))
@@ -1490,6 +1508,8 @@ active minibuffer, even if the minibuffer is not selected."
 
 find-file-visit-truename
 #+end_src
+
+- https://github.com/raxod502/radian/blob/develop/emacs/radian.el#L3210
 
 
 * Init file generation
