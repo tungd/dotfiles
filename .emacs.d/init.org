@@ -13,8 +13,9 @@ I'm also trying out some of the start-up optimization tips from Doom.
 #+BEGIN_SRC emacs-lisp
   (setq-default bidi-display-reordering nil)
 
-  (setq gc-cons-threshold 100000000
-        read-process-output-max (* 1024 1024))
+  (setq gc-cons-threshold 400000000
+        read-process-output-max (* 1024 1024)
+        inhibit-compacting-font-caches t)
 
   (eval-when-compile
     (require 'package))
@@ -35,7 +36,7 @@ I'm also trying out some of the start-up optimization tips from Doom.
 #+BEGIN_SRC emacs-lisp
   (require 'bind-key)
 
-  (use-package diminish :ensure t)
+  (use-package delight :ensure t)
 #+END_SRC
 
 Use a dedicate custom file.
@@ -102,7 +103,7 @@ Sane, modern defaults:
 
   (use-package which-key
     :ensure t
-    :diminish
+    :delight
     :hook (after-init . which-key-mode)
     :config
     (setq which-key-show-early-on-C-h t)
@@ -158,7 +159,10 @@ is a bit meh compared to =projectile=, but I still can live with it.
     :config
     (setq projectile-completion-system 'default
           projectile-project-search-path
-          '("~/Projects/" "~/Projects/personal" "~/Projects/insight"))
+          '("~/Projects/" "~/Projects/personal" "~/Projects/insight")
+          projectile-dynamic-mode-line nil
+          projectile-mode-line-prefix " ")
+
     (projectile-register-project-type
      'npm '("package.json")
      :compile "npm install"
@@ -235,7 +239,7 @@ quite minimal but is very very fast.
 
   (defun td/minibuffer-smart-tilde ()
     (interactive)
-    (if (not (looking-back "/"))
+    (if (not (looking-back "/" 0))
         (call-interactively 'self-insert-command)
       (beginning-of-line)
       (kill-line)
@@ -250,7 +254,7 @@ quite minimal but is very very fast.
   (bind-key* "C-M-o" #'switch-to-buffer)
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package mini-frame
     :ensure t
     :hook (after-init . mini-frame-mode)
@@ -366,7 +370,7 @@ experience it is helpful.
 
 #+BEGIN_SRC emacs-lisp
   (use-package autorevert
-    :diminish auto-revert-mode
+    :delight auto-revert-mode
     :hook (after-init . global-auto-revert-mode)
     :config
     (setq auto-revert-avoid-polling t
@@ -489,29 +493,29 @@ the commands. All key bindings are started with =M-s=.
 
 NOTE: This package is huge, I'm still learning it.
 
-#+BEGIN_SRC emacs-lisp
-  (use-package smartparens
-    :ensure t
-    :diminish smartparens-mode
-    :hook ((prog-mode . smartparens-mode)
-           (prog-mode . show-smartparens-mode))
-    :bind (("M-s DEL" . sp-splice-sexp)
-           ("M-S" . sp-rewrap-sexp)
-           ("M-s <right>" . sp-slurp-hybrid-sexp)
-           ("C-S-f" . sp-slurp-hybrid-sexp)
-           ("M-s <left>" . sp-forward-barf-sexp)
-           ("C-M-a" . sp-beginning-of-sexp)
-           ("C-M-e" . sp-end-of-sexp)
-           ("M-K" . sp-kill-sexp)
-           ("M-]" . sp-select-next-thing))
-    :config
-    (setq sp-show-pair-delay 0)
-    (sp-pair "{" nil
-             :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
-    (sp-pair "[" nil
-             :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
-    (sp-pair "(" nil
-             :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC"))))
+#+BEGIN_SRC emacs-lisp :tangle no
+    (use-package smartparens
+      :ensure t
+      :delight smartparens-mode
+      :hook ((prog-mode . smartparens-mode)
+             (prog-mode . show-smartparens-mode))
+      :bind (("M-s DEL" . sp-splice-sexp)
+             ("M-S" . sp-rewrap-sexp)
+             ("M-s <right>" . sp-slurp-hybrid-sexp)
+             ("C-S-f" . sp-slurp-hybrid-sexp)
+             ("M-s <left>" . sp-forward-barf-sexp)
+             ("C-M-a" . sp-beginning-of-sexp)
+             ("C-M-e" . sp-end-of-sexp)
+             ("M-K" . sp-kill-sexp)
+             ("M-]" . sp-select-next-thing))
+      :config
+      (setq sp-show-pair-delay 0)
+      (sp-pair "{" nil
+               :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
+      (sp-pair "[" nil
+               :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
+      (sp-pair "(" nil
+               :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC"))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -538,7 +542,7 @@ By default Emacs doesn't even have redo!
 #+BEGIN_SRC emacs-lisp
   (use-package undo-tree
     :ensure t
-    :diminish undo-tree-mode
+    :delight undo-tree-mode
     :hook (after-init . global-undo-tree-mode))
 #+END_SRC
 
@@ -547,7 +551,7 @@ By default Emacs doesn't even have redo!
 #+BEGIN_SRC emacs-lisp
   (use-package yasnippet
     :ensure t
-    :diminish yas-minor-mode
+    :delight yas-minor-mode
     :hook (after-init . yas-global-mode)
     :config
     (progn
@@ -651,7 +655,7 @@ By default Emacs doesn't even have redo!
 
       (defun td/eshell-prompt ()
         (format
-         "\n%s@%s in %s\n%s "
+         "\n%s@%s in %s %s\n%s"
          (td/with-face user-login-name :foreground "#dc322f")
          (td/with-face (or (getenv "HOST") (system-name)) :foreground "#b58900")
          (td/with-face (td/eshell-pwd) :foreground "#859900")
@@ -743,7 +747,8 @@ By default Emacs doesn't even have redo!
 
 * Programming
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
+
   (use-package lsp-mode
     :ensure t
     ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
@@ -758,7 +763,8 @@ By default Emacs doesn't even have redo!
     :commands lsp
     :config
     (setq lsp-prefer-capf t
-          lsp-enable-file-watchers nil))
+          lsp-enable-file-watchers nil
+          lsp-enable-symbol-highlighting nil))
 
   (use-package imenu
     :bind ("C-c j" . imenu))
@@ -774,7 +780,7 @@ be fair, I'd like these mode to support Emacs's standard
 #+BEGIN_SRC emacs-lisp
   (use-package company
     :ensure t
-    :diminish company-mode
+    :delight company-mode
     :bind (("M-/" . company-manual-begin)
            ("C-x C-p" . company-files)
            :map company-active-map
@@ -783,20 +789,19 @@ be fair, I'd like these mode to support Emacs's standard
            ("C-p" . company-select-previous-or-abort))
     :hook (after-init . global-company-mode)
     :config
+    (require 'company-dabbrev)
+
     (setq company-minimum-prefix-length 2
           company-require-match #'company-explicit-action-p
           company-show-numbers t
           company-idle-delay nil
           company-tooltip-align-annotations t
-          company-frontends
-          '(company-pseudo-tooltip-unless-just-one-frontend
-            company-echo-metadata-frontend)
           company-backends
           '(company-capf
             company-files
             (company-dabbrev-code company-keywords)
             company-dabbrev)
-          company-dabbrev-other-buffers nil
+          company-dabbrev-other-buffers t
           company-dabbrev-char-regexp nil
           company-dabbrev-downcase nil))
 
@@ -808,6 +813,12 @@ be fair, I'd like these mode to support Emacs's standard
     :ensure t
     :defer t
     :hook (global-company-mode . company-prescient-mode))
+
+  (use-package company-box
+    :ensure t
+    :defer t
+    :delight company-box-mode
+    :hook (company-mode . company-box-mode))
 #+END_SRC
 
 ** Error checking
@@ -815,15 +826,15 @@ be fair, I'd like these mode to support Emacs's standard
 Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
 
 #+BEGIN_SRC emacs-lisp
+  (defun flymake-proc-create-temp-in-tmp (file-name)
+    (concat temporary-file-directory file-name))
+
   (use-package flymake
     :defer t
     :bind (:map flymake-mode-map
                 ("C-c e n" . flymake-goto-next-error)
                 ("C-c e p" . flymake-goto-prev-error))
     :config
-    (defun flymake-proc-create-temp-in-tmp (file-name)
-      (concat temporary-file-directory file-name))
-
     (advice-add
      'flymake-proc-create-temp-inplace
      :filter-return #'flymake-proc-create-temp-in-tmp))
@@ -856,9 +867,9 @@ re-run the tests.
     (setq compilation-scroll-output 'first-error)
     (require 'ansi-color)
     (defun td/colorize-compilation-buffer ()
-      (toggle-read-only)
+      (read-only-mode -1)
       (ansi-color-apply-on-region compilation-filter-start (point))
-      (toggle-read-only)))
+      (read-only-mode t)))
 #+END_SRC
 
 ** Code folding
@@ -899,22 +910,22 @@ editing, including PHP, since I rarely write PHP anymore.
 Also, I can't live without Emmet.
 
 #+BEGIN_SRC emacs-lisp
+  (defun td/emmet-jsx-mode ()
+    (interactive)
+    (when (string-suffix-p "sx" (buffer-file-name))
+      (setq-local emmet-expand-jsx-className? t)))
+
   (use-package emmet-mode
     :ensure t
-    :diminish emmet-mode
+    :delight emmet-mode
     :hook ((sgml-mode . emmet-mode)
-           (css-mode . emmet-mode)
-           (web-mode . emmet-mode)
-           (js-mode . emmet-mode))
+     (css-mode . emmet-mode)
+     (web-mode . emmet-mode)
+     (js-mode . emmet-mode))
     :config
     (setq emmet-indentation 2
-          emmet-preview-default nil
-          emmet-insert-flash-time 0.1)
-
-    (defun td/emmet-jsx-mode ()
-      (interactive)
-      (when (string-suffix-p "sx" (buffer-file-name))
-        (setq-local emmet-expand-jsx-className? t)))
+    emmet-preview-default nil
+    emmet-insert-flash-time 0.1)
 
     (add-hook 'emmet-mode-hook #'td/emmet-jsx-mode))
 #+END_SRC
@@ -979,7 +990,7 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 
 ** Python
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package poetry
     :ensure t
     :defer t
@@ -1281,11 +1292,11 @@ bold and ligatures support :(.
      (border-width . 0) (internal-border-width . 0)
      ;; (ns-appearance . dark)
      ;; (font . "Monaco 14")
-     ;; (font . "Menlo 14")
+     (font . "Menlo 14")
      ;; (font . "SF Mono 14")
      ;; (font . "Source Code Pro 14")
      ;; (font . "Fira Code 14")
-     (font . "JetBrains Mono 14")
+     ;; (font . "JetBrains Mono 14")
      (top . 0) (left . 480)
      (width . 96) (height . 96)
      (vertical-scroll-bars . nil)
@@ -1345,13 +1356,13 @@ theme named =user= will always have the highest priority.
 I also have very good experience with *Tango Plus*. Its philosophy of not
 getting in the way is interesting.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package tango-plus-theme
     :ensure t
     :init (load-theme 'tango-plus t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp  :tangle no
   (use-package doom-themes
     :ensure t
     :init
@@ -1374,15 +1385,30 @@ presentation, which is *base16-github* from [[https://github.com/belak/base16-em
 
 Mode line
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
+  (use-package doom-modeline
+    :ensure t
+    :hook (after-init . doom-modeline-mode)
+    :config
+    (setq doom-modeline-height 1))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package smart-mode-line
     :ensure t
     :hook (after-init . sml/setup))
 #+END_SRC
 
+#+begin_src emacs-lisp :tangle no
+  (use-package mini-modeline
+    :ensure t
+    :delight mini-modeline-mode
+    :hook (after-init . mini-modeline-mode))
+#+end_src
+
 Show current function name in the mode line:
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (which-function-mode t)
 #+END_SRC
 
@@ -1410,11 +1436,21 @@ The default line continuation indicator is too standout and distracting for me.
   (setcdr (assq 'truncation fringe-indicator-alist) 'halftone)
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp :tangle no
+  (use-package highlight-indentation
+    :ensure t
+    :delight highlight-indentation-current-column-mode
+    :hook ((python-mode . highlight-indentation-current-column-mode)
+           (yaml-mode . highlight-indentation-current-column-mode)
+           (purescript-mode . highlight-indentation-current-column-mode)
+           (haskell-mode . highlight-indentation-current-column-mode)))
+#+end_src
+
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package indent-guide
     :ensure t
     :commands (indent-guide-mode)
-    :diminish indent-guide-mode
+    :delight indent-guide-mode
     :hook ((python-mode . indent-guide-mode)
            (yaml-mode . indent-guide-mode)
            (purescript-mode . indent-guide-mode)

@@ -44,35 +44,26 @@
   xcode-select --install
 #+END_SRC
 
-** =pkgsrc=
+** =macports=
 
 I don't use Homebrew, it is too fragile and invasive for my taste. I tried Nix
 but it's not ready for prime time yet. Deal breaker for me is a long standing
 issue regarding =watchman= (https://github.com/NixOS/nixpkgs/issues/14309).
 
-In the mean time, my package manager of choice is =pkgsrc=. It is simple, pretty
+I tried =pkgsrc=, it was great but the number of packages are so limited, and
+updates were so infrequent. I now settled down with MacPorts. It is simple, pretty
 similar to =apt= and =yum=, supports package version pining and has all of the
 packages that I need. It's also not updated too frequently like
 Homebrew. Installation is a little bit more involved, though.
 
 #+BEGIN_SRC sh
-  BOOTSTRAP_TAR="bootstrap-trunk-x86_64-20171103.tar.gz"
-  BOOTSTRAP_SHA="d7bee3a08e6e07818ff445f042c469333c96ac22"
+  # the general stuffs
+  sudo port install aria2 aspell aspell-dict-en automake autoconf openssl
+  sudo port install watchman sqlite3 ripgrep tree libxml2 lcms2
+  sudo port install nodejs14 npm6 yarn python3.8 py38-pip postgresql11 terraform-0.12
 
-  curl -O https://pkgsrc.joyent.com/packages/Darwin/bootstrap/${BOOTSTRAP_TAR}
-
-  echo "${BOOTSTRAP_SHA}  ${BOOTSTRAP_TAR}" >check-shasum
-  shasum -c check-shasum
-
-  sudo tar -zxpf ${BOOTSTRAP_TAR} -C /
-#+END_SRC
-
-#+BEGIN_SRC sh
-  sudo pkgin update
-  sudo pkgin install ImageMagick aria2 aspell aspell-en curl gettext gnupg gnutls
-  sudo pkgin install mosh mysql-client nmap nodejs openssl postgresql11-client
-  sudo pkgin install socat sqlite3 the_silver_searcher tree watchman wget youtube-dl
-  sudo pkgin install python3.7 py37-pip
+  # for building Emacs
+  sudo port install texinfo gnutls jansson
 #+END_SRC
 
 ** =stack=

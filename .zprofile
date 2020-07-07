@@ -87,7 +87,7 @@ export PATH=$HOME/Library/Python/3.8/bin:$PATH
 export PATH=$HOME/Projects/dotfiles/bin:$PATH
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 
-export PATH=/Applications/Emacs.app/Contents/MacOS/bin:$PATH
+export PATH=$HOME/Applications/Emacs.app/Contents/MacOS/bin:$PATH
 
 which doctl > /dev/null && eval "$(doctl completion zsh)"
 which direnv > /dev/null && eval "$(direnv hook zsh)"
