@@ -2,6 +2,13 @@
 #+startup: overview
 #+property: header-args :tangle "~/.config/emacs/init.el" :results silent
 
+So, as an effort to improve the responsiveness, I'm going to reboot my Emacs
+configuration. Hope it is better this time.
+
+The idea is that I'm going to add things in, bit by bit, just enough to get it
+going. This way I will be able to nail down the packages that cause issue, and
+look for alternatives.
+
 * Packages and initialization
 
 All the packages I used are from [[https://melpa.org][MELPA]]. However, I
@@ -11,12 +18,6 @@ directly.
 I'm also trying out some of the start-up optimization tips from Doom.
 
 #+BEGIN_SRC emacs-lisp
-  (setq-default bidi-display-reordering nil)
-
-  (setq gc-cons-threshold 400000000
-        read-process-output-max (* 1024 1024)
-        inhibit-compacting-font-caches t)
-
   (eval-when-compile
     (require 'package))
 
@@ -34,8 +35,7 @@ I'm also trying out some of the start-up optimization tips from Doom.
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (require 'bind-key)
-
+  (use-package bind-key)
   (use-package delight :ensure t)
 #+END_SRC
 
@@ -137,7 +137,7 @@ Sane, modern defaults:
 
 ** File position
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
 (use-package saveplace
   :hook (after-init . save-place-mode))
 #+END_SRC
@@ -206,14 +206,13 @@ Default key bindings is
 | =C-M-p=   | =xref-find-definitions-other-window= |             |
 | =C-M-g=   | =xref-pop-marker-stack=              |             |
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package xref
     :bind (("C-M-p" . xref-find-definitions-other-window)
            ("C-M-g" . xref-pop-marker-stack)))
 
   (bind-key* "M-." #'xref-find-definitions)
 #+end_src
-
 
 ** Selectrum
 
@@ -368,7 +367,7 @@ Editing utilities:
 Automatically apply external changes: This is debatable, from my own
 experience it is helpful.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package autorevert
     :delight auto-revert-mode
     :hook (after-init . global-auto-revert-mode)
@@ -402,32 +401,6 @@ Make the file executable if starting with "shebang":
 
 #+BEGIN_SRC emacs-lisp
   (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
-#+END_SRC
-
-I was a pretty die-hard Vim fanboy, let's bring back the memory.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package evil
-    :ensure t
-    :defer t
-    :hook (after-init . evil-mode)
-    :bind (:map evil-normal-state-map ("M-." . xref-find-definitions))
-    :config
-    (setq evil-cross-lines t
-          evil-ex-substitute-global t)
-    (add-to-list 'evil-emacs-state-modes 'deadgrep-mode))
-
-  (use-package evil-surround
-    :ensure t
-    :defer t
-    :after evil
-    :hook (evil-mode . global-evil-surround-mode))
-
-  (use-package evil-visualstar
-    :ensure t
-    :defer t
-    :after evil
-    :hook (evil-mode . global-evil-visualstar-mode))
 #+END_SRC
 
 ** Search and replace
@@ -493,7 +466,7 @@ the commands. All key bindings are started with =M-s=.
 
 NOTE: This package is huge, I'm still learning it.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
     (use-package smartparens
       :ensure t
       :delight smartparens-mode
@@ -600,7 +573,7 @@ By default Emacs doesn't even have redo!
 
 ** Recent files
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package recentf
     :defer t
     :config
@@ -747,24 +720,29 @@ By default Emacs doesn't even have redo!
 
 * Programming
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
+  (setq-default bidi-display-reordering nil)
+
+  (setq gc-cons-threshold 400000000
+        read-process-output-max (* 1024 1024)
+        inhibit-compacting-font-caches t)
 
   (use-package lsp-mode
     :ensure t
-    ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-    :init (setq lsp-keymap-prefix "C-l")
     :hook ((python-mode . lsp)
            (js-mode . lsp)
            (typescript-mode . lsp)
            (haskell-mode . lsp)
            (rust-mode . lsp)
            (web-mode . lsp)
+           (go-mode . lsp)
            (lsp-mode . lsp-enable-which-key-integration))
     :commands lsp
-    :config
-    (setq lsp-prefer-capf t
-          lsp-enable-file-watchers nil
-          lsp-enable-symbol-highlighting nil))
+    :custom
+    (lsp-keymap-prefix "C-l")
+    (lsp-prefer-capf t)
+    (lsp-enable-file-watchers nil)
+    (lsp-signature-auto-activate nil))
 
   (use-package imenu
     :bind ("C-c j" . imenu))
@@ -825,7 +803,7 @@ be fair, I'd like these mode to support Emacs's standard
 
 Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (defun flymake-proc-create-temp-in-tmp (file-name)
     (concat temporary-file-directory file-name))
 
@@ -990,21 +968,11 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 
 ** Python
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package poetry
     :ensure t
     :defer t
-    ;; :hook (python-mode . poetry-track-virtualenv)
-    :config
-    (eval-and-compile
-      (defun td/poetry-get-virtualenv ()
-        (poetry-ensure-in-project)
-        (let ((buf (poetry-call 'show '("-v") nil nil t)))
-          (with-current-buffer buf
-            (goto-char (point-min))
-            (re-search-forward "virtualenv: " nil t)
-            (buffer-substring-no-properties (point) (line-end-position)))))
-      (advice-add 'poetry-get-virtualenv :override #'td/poetry-get-virtualenv)))
+    :hook (after-init . poetry-tracking-mode))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -1053,7 +1021,7 @@ same folk who runs =stack=.
 
 ** Go
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package go-mode
     :ensure t
     :mode (("\\.go$" . go-mode)))
@@ -1300,7 +1268,6 @@ bold and ligatures support :(.
      (top . 0) (left . 480)
      (width . 96) (height . 96)
      (vertical-scroll-bars . nil)
-     (menu-bar-lines . 0)
      (tool-bar-lines . 0)))
 
   (blink-cursor-mode -1)
@@ -1447,17 +1414,6 @@ The default line continuation indicator is too standout and distracting for me.
 #+end_src
 
 #+BEGIN_SRC emacs-lisp :tangle no
-  (use-package indent-guide
-    :ensure t
-    :commands (indent-guide-mode)
-    :delight indent-guide-mode
-    :hook ((python-mode . indent-guide-mode)
-           (yaml-mode . indent-guide-mode)
-           (purescript-mode . indent-guide-mode)
-           (haskell-mode . indent-guide-mode)))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
   (use-package rainbow-delimiters
     :ensure t
     :commands rainbow-delimiters-mode
@@ -1474,7 +1430,7 @@ The default line continuation indicator is too standout and distracting for me.
 Display change marker based on =git=. I usually turn this off because it is
 kind of distracting, but it is really helpful sometimes.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package diff-hl
     :defer t
     :ensure t
@@ -1527,20 +1483,15 @@ kind of distracting, but it is really helpful sometimes.
 
 - Separate Emacs clipboard from system clipboard
 
-#+begin_src emacs-lisp :tangle no
-(radian-defadvice radian--advice-keyboard-quit-minibuffer-first
-    (keyboard-quit)
-  :around #'keyboard-quit
-  "Cause \\[keyboard-quit] to exit the minibuffer, if it is active.
-Normally, \\[keyboard-quit] will just act in the current buffer.
-This advice modifies the behavior so that it will instead exit an
-active minibuffer, even if the minibuffer is not selected."
-  (if-let ((minibuffer (active-minibuffer-window)))
-      (with-current-buffer (window-buffer minibuffer)
-        (minibuffer-keyboard-quit))
-    (funcall keyboard-quit)))
+#+begin_src emacs-lisp
+  (defun td/keyboard-quit-dwim ()
+    (interactive)
+    (if-let ((minibuffer (active-minibuffer-window)))
+        (with-current-buffer (window-buffer minibuffer)
+          (minibuffer-keyboard-quit))
+      (funcall 'keyboard-quit)))
 
-find-file-visit-truename
+  (bind-key [remap keyboard-quit] #'td/keyboard-quit-dwim)
 #+end_src
 
 - https://github.com/raxod502/radian/blob/develop/emacs/radian.el#L3210
