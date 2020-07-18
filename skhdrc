@@ -86,6 +86,7 @@ alt - k : yabai -m query --windows --space \
     | xargs -I{} yabai -m window --focus {}
 
 shift + alt - space : yabai -m window --toggle float
+shift + alt - f     : yabai -m window --grid 1:1:0:0:1:1
 
 shift + alt - r : launchctl stop yabai && launctl start yabai
 

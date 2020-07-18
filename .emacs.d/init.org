@@ -742,7 +742,8 @@ By default Emacs doesn't even have redo!
     (lsp-keymap-prefix "C-l")
     (lsp-prefer-capf t)
     (lsp-enable-file-watchers nil)
-    (lsp-signature-auto-activate nil))
+    (lsp-signature-auto-activate nil)
+    (lsp-modeline-code-actions-enable nil))
 
   (use-package imenu
     :bind ("C-c j" . imenu))
@@ -803,7 +804,7 @@ be fair, I'd like these mode to support Emacs's standard
 
 Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (defun flymake-proc-create-temp-in-tmp (file-name)
     (concat temporary-file-directory file-name))
 
@@ -1260,11 +1261,11 @@ bold and ligatures support :(.
      (border-width . 0) (internal-border-width . 0)
      ;; (ns-appearance . dark)
      ;; (font . "Monaco 14")
-     (font . "Menlo 14")
+     ;; (font . "Menlo 14")
      ;; (font . "SF Mono 14")
      ;; (font . "Source Code Pro 14")
      ;; (font . "Fira Code 14")
-     ;; (font . "JetBrains Mono 14")
+     (font . "JetBrains Mono 14")
      (top . 0) (left . 480)
      (width . 96) (height . 96)
      (vertical-scroll-bars . nil)
