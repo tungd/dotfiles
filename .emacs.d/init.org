@@ -962,6 +962,7 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 
 #+begin_src emacs-lisp
   (use-package typescript-mode
+    :ensure t
     :mode (("\\.ts$" . typescript-mode))
     :config
     (setq typescript-indent-level 2))
@@ -1108,6 +1109,12 @@ These are supports for other stuffs that I used:
            ("^roster$" . yaml-mode)))
 #+END_SRC
 
+#+BEGIN_SRC emacs-lisp
+  (use-package feature-mode
+    :ensure t
+    :mode (("\\.feature$" . markdown-mode)))
+#+END_SRC
+
 
 * Document and management
 
@@ -1142,18 +1149,16 @@ Here's my basic Org setup:
           org-agenda-files (list org-directory)
           org-agenda-skip-unavailable-files t
           org-hide-leading-stars t
+          org-clock-persist 'history
           org-refile-targets (list '("~/Desktop/archive.org" . (:level . 1)))
 
           org-startup-with-inline-images t
 
           org-todo-keywords
-          '((sequence "[ ](t)" "[-](p)" "[?](m)" "|" "[X](d)")
-            (sequence "TODO(T)" "|" "DONE(D)")
-            (sequence "NEXT(n)" "ACTIVE(a)" "WAITING(w)" "LATER(l)" "|" "CANCELLED(c)"))
-          org-log-done 'time
+          '((sequence "TODO(t@)" "WAITING(w@)" "|" "DONE(d@/!)" "CANCELLED(c@)"))
 
           org-src-fontify-natively t)
-    (require 'org-tempo))
+    (org-clock-persistence-insinuate))
 #+END_SRC
 
 Agenda overview and filtering. Org provides a bunch of quick overviews:
