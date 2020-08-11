@@ -4,7 +4,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(kotlin-mode feature-mode company-box company-prescient typescript-mode mini-modeline go-mode vterm popup-complete which-key completions-frame poetry fancy-dabbrev smartparens selectrum-prescient prescient selectrum deadgrep projectile eshell-git-prompt tango-plus-theme highlight-numbers ob-http yaml-mode nginx-mode company-terraform terraform-doc terraform-mode dockerfile-mode docker rust-mode lsp-haskell haskell-mode py-isort rainbow-mode emmet-mode web-mode magit with-editor eshell-z eshell-up eshell-toggle yasnippet undo-tree expand-region ctrlf visual-regexp crux comment-dwim-2 window-numbering exec-path-from-shell use-package delight))
+   '(clojure-inf clojure clojure-mode inf-clojure kotlin-mode feature-mode company-box company-prescient typescript-mode mini-modeline vterm popup-complete which-key completions-frame poetry fancy-dabbrev smartparens selectrum-prescient prescient selectrum deadgrep eshell-git-prompt tango-plus-theme highlight-numbers ob-http yaml-mode nginx-mode company-terraform terraform-doc terraform-mode dockerfile-mode docker rust-mode lsp-haskell haskell-mode py-isort rainbow-mode emmet-mode web-mode magit with-editor eshell-z eshell-up eshell-toggle yasnippet undo-tree expand-region ctrlf visual-regexp crux comment-dwim-2 window-numbering exec-path-from-shell use-package delight))
  '(safe-local-variable-values
    '((eval add-hook 'after-save-hook
            (lambda nil

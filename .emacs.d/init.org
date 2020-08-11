@@ -111,6 +111,17 @@ Sane, modern defaults:
     (setq which-key-idle-secondary-delay 1e-100))
 #+end_src
 
+#+begin_src emacs-lisp
+  (defun td/keyboard-quit-dwim ()
+    (interactive)
+    (if-let ((minibuffer (active-minibuffer-window)))
+        (with-current-buffer (window-buffer minibuffer)
+          (minibuffer-keyboard-quit))
+      (funcall 'keyboard-quit)))
+
+  (bind-key [remap keyboard-quit] #'td/keyboard-quit-dwim)
+#+end_src
+
 ** Server
 
 #+BEGIN_SRC emacs-lisp
@@ -137,60 +148,27 @@ Sane, modern defaults:
 
 ** File position
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
 (use-package saveplace
   :hook (after-init . save-place-mode))
 #+END_SRC
 
 ** Projects
 
-I used to use =projectile=, but the =project.el= built-in to Emacs has
-gone a long way so I'm using that now, as far as I can tell the quality
-is a bit meh compared to =projectile=, but I still can live with it.
+Emacs built-in =project.el= has gone a long way so I'm using that now. There are
+still some missing features coming from =projectile=, but I can live with that.
 
-#+begin_src emacs-lisp
-  (use-package projectile
-    :ensure t
-    :hook (after-init . projectile-mode)
-    :bind-keymap* (("C-c p" . projectile-command-map))
-    :bind (("C-M-'" . projectile-find-file)
-           :map projectile-command-map
-           ("s" . deadgrep))
-    :config
-    (setq projectile-completion-system 'default
-          projectile-project-search-path
-          '("~/Projects/" "~/Projects/personal" "~/Projects/insight")
-          projectile-dynamic-mode-line nil
-          projectile-mode-line-prefix " ")
-
-    (projectile-register-project-type
-     'npm '("package.json")
-     :compile "npm install"
-     :test "npm test"
-     :run "npm start"
-     :test-suffix ".spec"))
-#+end_src
+#+BEGIN_SRC emacs-lisp
+  (use-package project
+    :bind ("C-M-'" . project-find-file))
+#+END_SRC
 
 #+begin_src emacs-lisp
   (use-package deadgrep
     :ensure t
-    :defer t)
+    :defer t
+    :bind ("C-x p s" . deadgrep))
 #+end_src
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (defun td/kill-project-buffers ()
-    (interactive)
-    (let ((project (project-current)))
-      (cl-loop for buffer in (buffer-list)
-               if (with-current-buffer buffer
-                    (equal project (project-current)))
-               do (kill-buffer buffer))))
-
-  (use-package project
-    :bind (("C-M-'" . project-find-file)
-           ("C-c p s" . deadgrep)
-           ("C-c p k" . td/kill-project-buffers)))
-#+END_SRC
 
 ** Symbols
 
@@ -206,7 +184,7 @@ Default key bindings is
 | =C-M-p=   | =xref-find-definitions-other-window= |             |
 | =C-M-g=   | =xref-pop-marker-stack=              |             |
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package xref
     :bind (("C-M-p" . xref-find-definitions-other-window)
            ("C-M-g" . xref-pop-marker-stack)))
@@ -274,17 +252,6 @@ Split windows horizontally by default.
   (setq split-width-threshold 90
         split-height-threshold nil)
 #+end_src
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package popwin
-    :ensure t
-    :hook (after-init . popwin-mode)
-    :config
-    (push '(compilation-mode :position right :width 0.5 :tail t) popwin:special-display-config)
-    (push '(eshell-mode :position bottom :width 0.5 :tail t) popwin:special-display-config)
-    (push '(help-mode :position right :width 0.5) popwin:special-display-config)
-    (push '(deadgrep-mode :position right :width 0.5) popwin:special-display-config))
-#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   (use-package window-numbering
@@ -424,6 +391,8 @@ Make the file executable if starting with "shebang":
 Long lines are annoying. Auto wrap all texts at 80.
 
 #+BEGIN_SRC emacs-lisp
+  (delight 'auto-fill-function "" t)
+
   (setq-default
    comment-auto-fill-only-comments t
    fill-column 80)
@@ -527,19 +496,15 @@ By default Emacs doesn't even have redo!
     :delight yas-minor-mode
     :hook (after-init . yas-global-mode)
     :config
-    (progn
-      (setq yas-prompt-functions
-            '(yas-ido-prompt yas-completing-prompt yas-no-prompt)
-            yas-verbosity 1)
+    (setq yas-prompt-functions
+          '(yas-ido-prompt yas-completing-prompt yas-no-prompt)
+          yas-verbosity 1)
 
-      (add-to-list 'yas-snippet-dirs "~/Projects/dotfiles/.emacs.d/snippets")
-      (yas-reload-all)
+    ;; I'm an old Emacs hacker, I like the abbrev-way and bind yas-expand SPC
+    (define-key yas-minor-mode-map (kbd "SPC") yas-maybe-expand)
 
-      ;; I'm an old Emacs hacker, I like the abbrev-way and bind yas-expand SPC
-      (define-key yas-minor-mode-map (kbd "SPC") yas-maybe-expand)
-
-      (unbind-key "TAB" yas-minor-mode-map)
-      (unbind-key "<tab>" yas-minor-mode-map)))
+    (unbind-key "TAB" yas-minor-mode-map)
+    (unbind-key "<tab>" yas-minor-mode-map))
 #+END_SRC
 
 ** Alignment
@@ -569,18 +534,6 @@ By default Emacs doesn't even have redo!
                    (modes . '(haskell-mode))
                    (regexp . "\\(\\s-*\\).=")
                    (spacing . 1))))
-#+END_SRC
-
-** Recent files
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package recentf
-    :defer t
-    :config
-    (setq recentf-max-saved-items 128
-          recentf-exclude
-          '(".recentf" "\\.mime-example" "\\.ido.last" "COMMIT_EDITMSG"
-            ".gz" "~$" "/tmp/" "/ssh:" "/sudo:" "/scp:")))
 #+END_SRC
 
 ** Diff
@@ -827,6 +780,7 @@ built-in VC has great support for git but Magit is godsend.
 #+BEGIN_SRC emacs-lisp
   (use-package magit
     :ensure t
+    :bind ([remap project-vc-dir] . magit)
     :config
     (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
 #+END_SRC
@@ -1023,7 +977,7 @@ same folk who runs =stack=.
 
 ** Go
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package go-mode
     :ensure t
     :mode (("\\.go$" . go-mode)))
@@ -1046,6 +1000,17 @@ same folk who runs =stack=.
 #+END_SRC
 
 ** Java
+** Clojure
+
+#+begin_src emacs-lisp
+  (use-package clojure-mode
+    :ensure t)
+
+  (use-package inf-clojure
+    :ensure t
+    :hook (clojure-mode . inf-clojure-minor-mode))
+#+end_src
+
 ** Docker
 
 I use Docker for almost every project now, it is useful even just for setting up
@@ -1143,6 +1108,7 @@ Here's my basic Org setup:
     ;:ensure t
     :bind (("C-c o c" . org-occur-in-agenda-files))
     :hook (org-mode . org-indent-mode)
+    :delight org-indent-mode
     :config
     (setq org-directory "~/Desktop/"
           org-default-notes-file (expand-file-name "inbox.org" org-directory)
@@ -1235,6 +1201,7 @@ Org Babel for literate programming and API documentation.
 
   (use-package flyspell
     :defer t
+    :delight flyspell-mode
     :hook (org-mode . flyspell-mode))
 #+END_SRC
 
@@ -1385,6 +1352,10 @@ Show current function name in the mode line:
   (which-function-mode t)
 #+END_SRC
 
+#+BEGIN_SRC emacs-lisp
+  (global-eldoc-mode -1)
+#+END_SRC
+
 Line and column numbers, which I find only helpful when tracking
 down compiler error :(.
 
@@ -1488,18 +1459,6 @@ kind of distracting, but it is really helpful sometimes.
 * Ideas
 
 - Separate Emacs clipboard from system clipboard
-
-#+begin_src emacs-lisp
-  (defun td/keyboard-quit-dwim ()
-    (interactive)
-    (if-let ((minibuffer (active-minibuffer-window)))
-        (with-current-buffer (window-buffer minibuffer)
-          (minibuffer-keyboard-quit))
-      (funcall 'keyboard-quit)))
-
-  (bind-key [remap keyboard-quit] #'td/keyboard-quit-dwim)
-#+end_src
-
 - https://github.com/raxod502/radian/blob/develop/emacs/radian.el#L3210
 
 
