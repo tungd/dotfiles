@@ -32,7 +32,3 @@ configure {}
 destroot {
   xinstall -m 775 ${worksrcpath}/bin/${name} ${destroot}${prefix}/bin/${name}
 }
-
-startupitem.create      yes
-startupitem.name        yabai
-startupitem.executable  "${prefix}/bin/yabai"

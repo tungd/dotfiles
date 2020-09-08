@@ -6,7 +6,7 @@
     <string>yabai</string>
     <key>ProgramArguments</key>
     <array>
-      <string>/Users/tung/.local/bin/yabai</string>
+      <string>/opt/local/bin/yabai</string>
     </array>
     <key>EnvironmentVariables</key>
     <dict>

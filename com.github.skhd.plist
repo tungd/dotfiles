@@ -6,7 +6,7 @@
     <string>skhd</string>
     <key>ProgramArguments</key>
     <array>
-      <string>/Users/tung/.local/bin/skhd</string>
+      <string>/opt/local/bin/skhd</string>
     </array>
     <key>EnvironmentVariables</key>
     <dict>
