@@ -311,7 +311,7 @@
 	<key>NSWindow Frame SUUpdateAlert</key>
 	<string>714 552 620 392 0 0 2048 1129 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
-	<string>0 137 970 640 0 0 1280 777 </string>
+	<string>0 0 2048 1129 0 0 2048 1129 </string>
 	<key>New Bookmarks</key>
 	<array>
 		<dict>
@@ -901,6 +901,8 @@
 			<integer>65536</integer>
 			<key>Scrollback With Status Bar</key>
 			<true/>
+			<key>Scrollback in Alternate Screen</key>
+			<false/>
 			<key>Selected Text Color</key>
 			<dict>
 				<key>Blue Component</key>
@@ -1714,23 +1716,25 @@
 	<array>
 		<string>3.3.7</string>
 		<string>3.3.8</string>
+		<string>3.3.9</string>
 	</array>
 	<key>NoSyncBFPRecents</key>
 	<array>
+		<string>JetBrains Mono</string>
 		<string>Menlo</string>
 		<string>Fira Code</string>
 	</array>
 	<key>NoSyncFrame_SharedPreferences</key>
 	<dict>
 		<key>screenFrame</key>
-		<string>{{0, 0}, {2560, 1440}}</string>
+		<string>{{0, 0}, {1280, 800}}</string>
 		<key>topLeft</key>
-		<string>{958, 1135}</string>
+		<string>{209, 644}</string>
 	</dict>
 	<key>NoSyncInstallationId</key>
 	<string>78102039-1434-46EA-AC30-4954D0DCDA1E</string>
 	<key>NoSyncLaunchExperienceControllerRunCount</key>
-	<integer>12</integer>
+	<integer>37</integer>
 	<key>NoSyncNeverRemindPrefsChangesLostForFile</key>
 	<true/>
 	<key>NoSyncNeverRemindPrefsChangesLostForFile_selection</key>
@@ -2547,7 +2551,7 @@
 	<key>SUHasLaunchedBefore</key>
 	<true/>
 	<key>SULastCheckTime</key>
-	<date>2020-03-26T11:28:36Z</date>
+	<date>2020-08-02T15:18:51Z</date>
 	<key>SUSendProfileInfo</key>
 	<false/>
 	<key>SUUpdateRelaunchingMarker</key>
@@ -2577,7 +2581,7 @@
 	<key>findMode_iTerm</key>
 	<integer>0</integer>
 	<key>iTerm Version</key>
-	<string>3.3.8</string>
+	<string>3.3.9</string>
 	<key>kCPKSelectionViewPreferredModeKey</key>
 	<integer>0</integer>
 	<key>kCPKSelectionViewShowHSBTextFieldsKey</key>
