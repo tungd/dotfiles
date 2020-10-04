@@ -46,15 +46,15 @@ yabai -m rule --add app="^Mail$" manage=off
 # #1 is the free space
 
 # Emacs + iTerm #2
-yabai -m rule --add app="^Emacs$" space=2
-yabai -m rule --add app="^iTerm2$" space=2
+yabai -m rule --add app="^Emacs$"
+yabai -m rule --add app="^iTerm2$"
 
 # Safari #3
-yabai -m rule --add app="^Safari$" space=3
+yabai -m rule --add app="^Safari$"
 
 # Commnucation apps go to the last space
-yabai -m rule --add app="^Messenger$" space=4
-yabai -m rule --add app="^Slack$" space=4
-yabai -m rule --add app="^Mail$" space=4
+yabai -m rule --add app="^Messenger$"
+yabai -m rule --add app="^Slack$"
+yabai -m rule --add app="^Mail$"
 
 echo "yabai configuration loaded.."
