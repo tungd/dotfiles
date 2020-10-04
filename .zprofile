@@ -109,3 +109,5 @@ notify() {
 }
 
 export PATH="$HOME/.nimble/bin:$PATH"
+
+export PATH="$HOME/.poetry/bin:$PATH"

@@ -86,7 +86,7 @@ Homebrew. Installation is a little bit more involved, though.
 ** Poetry
 
 #+begin_src sh
-  pip3.7 install --user poetry
+  curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3.8 -
 #+end_src
 
 ** =z.sh=
