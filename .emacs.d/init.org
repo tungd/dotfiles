@@ -17,6 +17,12 @@ directly.
 
 I'm also trying out some of the start-up optimization tips from Doom.
 
+But so the biggest save is coming from 'native-comp'
+
+#+begin_src emacs-lisp
+  (setq comp-speed 2)
+#+end_src
+
 #+BEGIN_SRC emacs-lisp
   (eval-when-compile
     (require 'package))
@@ -746,11 +752,11 @@ be fair, I'd like these mode to support Emacs's standard
     :defer t
     :hook (global-company-mode . company-prescient-mode))
 
-  (use-package company-box
-    :ensure t
-    :defer t
-    :delight company-box-mode
-    :hook (company-mode . company-box-mode))
+  ;; (use-package company-box
+  ;;   :ensure t
+  ;;   :defer t
+  ;;   :delight company-box-mode
+  ;;   :hook (company-mode . company-box-mode))
 #+END_SRC
 
 ** Error checking
@@ -1233,20 +1239,26 @@ bold and ligatures support :(.
    '((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
      ;; (ns-appearance . dark)
-     ;; (font . "Monaco 14")
+     (font . "Monaco 13")
      ;; (font . "Menlo 14")
      ;; (font . "SF Mono 14")
      ;; (font . "Source Code Pro 14")
      ;; (font . "Fira Code 14")
      ;; (font . "JetBrains Mono 14")
-     (font . "Cascadia Mono 14")
+     ;; (font . "Cascadia Mono 14")
      (top . 0) (left . 480)
      (width . 96) (height . 96)
      (vertical-scroll-bars . nil)
      (tool-bar-lines . 0)))
 
   (blink-cursor-mode -1)
+  (setq line-spacing 0.2)
 #+END_SRC
+
+#+begin_src emacs-lisp
+  (use-package hl-line
+    :hook (prog-mode . hl-line-mode))
+#+end_src
 
 Enable ligatures, only available in railwaycat Mac port.
 
@@ -1304,7 +1316,7 @@ getting in the way is interesting.
     :init (load-theme 'tango-plus t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package doom-themes
     :ensure t
     :init
@@ -1322,6 +1334,18 @@ presentation, which is *base16-github* from [[https://github.com/belak/base16-em
     :ensure t
     :config (load-theme 'base16-phd t))
 #+END_SRC
+
+#+begin_src emacs-lisp :tangle no
+  (use-package cloud-theme
+    :ensure t
+    :config (load-theme 'cloud t))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package mustang-theme
+    :ensure t
+    :config (load-theme 'mustang t))
+#+end_src
 
 Mode line
 

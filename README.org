@@ -142,3 +142,119 @@ Decrease repeat delay, increase repeat rate and disable Emoji.
 #+BEGIN_SRC sh
   killall SystemUIServer
 #+END_SRC
+
+* Installing Emacs with native compilation
+
+There is a recent development in Emacs that enables compilation of Emacs Lisp
+into native machine code and load dynamically, bringing substantial speed
+improvement. It is pretty stable and is intended be include with Emacs 28 release.
+
+Unfortunately, the installation process is still not straight forward as it
+should be. On top of that, most, if not all, of the tutorials on the Internet
+was using Homebrew, mentions of Macports was non-existent. Following is my
+experience installing it on my macOS Catalina 10.15.7.
+
+Fortunately, the GCC10 comes with Macports was updated to include the feature
+required for Emacs's native compilation (GCC JIT feature) since Sep 2020. All we
+need to do is install ~gcc10~ through Macports.
+
+Another thing is that the ~install~ utility on macOS doesn't support the ~-D~
+option used by the Emacs install script, so we will need to install the
+~coreutils~ package, which contains the GNU implementation of ~install~, which
+does support ~-D~.
+
+#+begin_src sh
+  sudo port install coreutils gcc10
+#+end_src
+
+There are many different ways to build standalone Emacs.app on macOS, the
+easiest being the ~build-emacs-for-macos~ script provided by ~jimeh~, which is
+also being used to built the binaries on https://emacsformacosx.com.
+
+#+begin_src sh
+  git clone git@github.com:jimeh/build-emacs-for-macos.git
+  cd build-emacs-for-macos
+#+end_src
+
+The script, however, is using Homebrew. We will need to patch it to be
+compatible with Macports. Following is the patch.
+
+#+begin_src diff
+  diff --git a/build-emacs-for-macos b/build-emacs-for-macos
+  index 7f34a2d..622a428 100755
+  --- a/build-emacs-for-macos
+  +++ b/build-emacs-for-macos
+  @@ -123,7 +123,7 @@ class Build
+     end
+
+     def gcc_dir
+  -    @gcc_dir ||= `brew --prefix gcc`.chomp
+  +    "/opt/local"
+     end
+
+     def extra_libs
+  @@ -213,8 +213,8 @@ class Build
+
+     def gcc_library_paths
+       @gcc_library_paths ||= Dir[
+  -      "#{gcc_dir}/lib/gcc/*",
+  -      "#{gcc_dir}/lib/gcc/*/gcc/*apple-darwin*/*"
+  +      "#{gcc_dir}/lib/gcc10",
+  +      "#{gcc_dir}/lib/gcc10/gcc/*apple-darwin*/*"
+       ].sort_by { |p| [p.size, p] }
+     end
+
+  @@ -253,7 +253,7 @@ class Build
+           apply_native_comp_env_setup_patch(source)
+
+           ENV['CFLAGS'] = [
+  -          "-I#{gcc_dir}/include",
+  +          "-I#{gcc_dir}/include/gcc10",
+             '-O2',
+             '-march=native'
+           ].compact.join(' ')
+  @@ -270,21 +270,7 @@ class Build
+         end
+
+         ENV['CC'] = 'clang'
+  -      ENV['PKG_CONFIG_PATH'] = [
+  -        "#{brew_dir}/lib/pkgconfig",
+  -        "#{brew_dir}/share/pkgconfig",
+  -        "#{brew_dir}/opt/expat/lib/pkgconfig",
+  -        "#{brew_dir}/opt/libxml2/lib/pkgconfig",
+  -        "#{brew_dir}/opt/ncurses/lib/pkgconfig",
+  -        "#{brew_dir}/opt/zlib/lib/pkgconfig",
+  -        "#{brew_dir}/Homebrew/Library/Homebrew/os/mac/pkgconfig/#{OS.version}",
+  -        ENV['PKG_CONFIG_PATH']
+  -      ].compact.join(':')
+
+         ENV['PATH'] = [
+  -        "#{brew_dir}/opt/make/libexec/gnubin",
+  -        "#{brew_dir}/opt/coreutils/libexec/gnubin",
+  -        "#{brew_dir}/opt/gnu-sed/libexec/gnubin",
+  -        "#{brew_dir}/bin",
+  -        "#{brew_dir}/opt/texinfo/bin",
+  +        "/opt/local/libexec/gnubin",
+           ENV['PATH']
+         ].compact.join(':')
+#+end_src
+
+What we are doing here is that:
+
+- Replace the path to GCC to the correct one installed by Macports
+- Removing references to ~brew_dir~. It was needed for Homebrew since each of
+  the libraries was installed into a different root, breaking ~pkgconfig~, which
+  was used to discovery the dependencies. ~pkgconfig~ works nicely with
+  Macports, so this isn't needed.
+- Similarly, modify the ~PATH~ environment variable with the GNU ~coreutils~,
+  prioritizing GNU ~install~ utility over the one comes with macOS.
+
+And that's it. I can now run:
+
+#+begin_src sh
+  ./build-emacs-for-macos --git-sha dc0cf16c7a60f36aafcf9b56513a855cefa7e1ad feature/native-comp
+#+end_src
+
+and enjoy the result. Here you can see, the benefit of using this script over
+installing from source is that we can easily specify the branch/commit and the
+features we want to build with.
