@@ -813,10 +813,16 @@ re-run the tests.
 
 ** Code folding
 
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package hideshowvis
+#+BEGIN_SRC emacs-lisp
+  (use-package hideshow
+    :hook (prog-mode . hs-minor-mode))
+
+  ;(use-package hideshowvis
+  ;  :hook (hs-minor-mode . hideshowvis-enable))
+
+  (use-package hideshow-org
     :ensure t
-    :hook (hs-minor-mode . hideshowvis-enable))
+    :hook (hs-minor-mode . hs-org/minor-mode))
 #+END_SRC
 
 ** Web Development
@@ -1008,7 +1014,7 @@ same folk who runs =stack=.
 ** Java
 ** Clojure
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package clojure-mode
     :ensure t)
 
@@ -1239,7 +1245,7 @@ bold and ligatures support :(.
    '((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
      ;; (ns-appearance . dark)
-     (font . "Monaco 13")
+     (font . "Monaco 14")
      ;; (font . "Menlo 14")
      ;; (font . "SF Mono 14")
      ;; (font . "Source Code Pro 14")
@@ -1316,13 +1322,13 @@ getting in the way is interesting.
     :init (load-theme 'tango-plus t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package doom-themes
     :ensure t
     :init
     (eval-and-compile
       (setq doom-themes-enable-italic nil)
-      (load-theme 'doom-opera t))
+      (load-theme 'doom-gruvbox t))
     :hook (org-mode . doom-themes-org-config))
 #+END_SRC
 
@@ -1341,7 +1347,7 @@ presentation, which is *base16-github* from [[https://github.com/belak/base16-em
     :config (load-theme 'cloud t))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package mustang-theme
     :ensure t
     :config (load-theme 'mustang t))
