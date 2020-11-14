@@ -553,6 +553,11 @@ By default Emacs doesn't even have redo!
 
 * Shell and remote
 
+#+begin_src emacs-lisp
+  (use-package comint
+    :bind* ("C-c C-l" . comint-clear-buffer))
+#+end_src
+
 ** EShell
 
 #+BEGIN_SRC emacs-lisp
@@ -561,7 +566,7 @@ By default Emacs doesn't even have redo!
 
   (use-package eshell-toggle
     :ensure t
-    :bind (("C-c e s" . eshell-toggle)))
+    :bind* (("C-c C-s" . eshell-toggle)))
 
   (use-package eshell-up
     :ensure t
@@ -692,7 +697,6 @@ By default Emacs doesn't even have redo!
            (js-mode . lsp)
            (typescript-mode . lsp)
            (haskell-mode . lsp)
-           (rust-mode . lsp)
            (web-mode . lsp)
            (go-mode . lsp)
            (lsp-mode . lsp-enable-which-key-integration))
@@ -937,10 +941,11 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 ** Python
 
 #+BEGIN_SRC emacs-lisp
-  (use-package poetry
+  (use-package lsp-pyright
     :ensure t
-    :defer t
-    :hook (after-init . poetry-tracking-mode))
+    :hook (python-mode . (lambda ()
+                            (require 'lsp-pyright)
+                            (lsp))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -977,14 +982,6 @@ same folk who runs =stack=.
     :config
     (setq lsp-haskell-process-path-hie "hls"
           lsp-haskell-process-args-hie '()))
-#+END_SRC
-
-** Rust
-
-#+BEGIN_SRC emacs-lisp
-  (use-package rust-mode
-    :ensure t
-    :defer t)
 #+END_SRC
 
 ** Go

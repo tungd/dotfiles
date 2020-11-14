@@ -108,6 +108,4 @@ notify() {
   osascript -e "display notification \"$2\" with title \"$1\""
 }
 
-export PATH="$HOME/.nimble/bin:$PATH"
-
 export PATH="$HOME/.poetry/bin:$PATH"
