@@ -170,10 +170,10 @@ still some missing features coming from =projectile=, but I can live with that.
 #+END_SRC
 
 #+begin_src emacs-lisp
-  (use-package deadgrep
+  (use-package ag
     :ensure t
     :defer t
-    :bind ("C-x p s" . deadgrep))
+    :bind ("C-x p s" . ag-project))
 #+end_src
 
 ** Symbols
@@ -442,28 +442,33 @@ the commands. All key bindings are started with =M-s=.
 NOTE: This package is huge, I'm still learning it.
 
 #+BEGIN_SRC emacs-lisp
-    (use-package smartparens
-      :ensure t
-      :delight smartparens-mode
-      :hook ((prog-mode . smartparens-mode)
-             (prog-mode . show-smartparens-mode))
-      :bind (("M-s DEL" . sp-splice-sexp)
-             ("M-S" . sp-rewrap-sexp)
-             ("M-s <right>" . sp-slurp-hybrid-sexp)
-             ("C-S-f" . sp-slurp-hybrid-sexp)
-             ("M-s <left>" . sp-forward-barf-sexp)
-             ("C-M-a" . sp-beginning-of-sexp)
-             ("C-M-e" . sp-end-of-sexp)
-             ("M-K" . sp-kill-sexp)
-             ("M-]" . sp-select-next-thing))
-      :config
-      (setq sp-show-pair-delay 0)
-      (sp-pair "{" nil
-               :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
-      (sp-pair "[" nil
-               :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
-      (sp-pair "(" nil
-               :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC"))))
+  (use-package smartparens
+    :ensure t
+    :delight smartparens-mode
+    :hook ((prog-mode . smartparens-mode)
+           ;; (prog-mode . show-smartparens-mode)
+           )
+    :bind (("M-s DEL" . sp-splice-sexp)
+           ("M-S" . sp-rewrap-sexp)
+           ("M-s <right>" . sp-slurp-hybrid-sexp)
+           ("C-S-f" . sp-slurp-hybrid-sexp)
+           ("M-s <left>" . sp-forward-barf-sexp)
+           ("C-M-a" . sp-beginning-of-sexp)
+           ("C-M-e" . sp-end-of-sexp)
+           ("M-K" . sp-kill-sexp)
+           ("M-]" . sp-select-next-thing))
+    :config
+    (setq sp-show-pair-delay 0)
+    (sp-pair "{" nil
+             :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
+    (sp-pair "[" nil
+             :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
+    (sp-pair "(" nil
+             :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC"))))
+
+  (use-package paren
+    :hook (after-init . show-paren-mode)
+    :custom (show-paren-delay 0))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp

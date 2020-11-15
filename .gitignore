@@ -1,10 +1,9 @@
 .DS_Store
-.emacs.d/*
+emacs/*
 *.elc
-!.emacs.d/init.org
-!.emacs.d/custom.el
-!.emacs.d/authinfo.gpg
-!.emacs.d/vendor
-!.emacs.d/snippets
-!.emacs.d/use-package
+!emacs/init.org
+!emacs/custom.el
+!emacs/authinfo.gpg
+!emacs/vendor
+!emacs/snippets
 .yas-compiled-snippets.el
