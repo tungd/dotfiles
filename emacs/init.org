@@ -823,11 +823,20 @@ re-run the tests.
 ** Code folding
 
 #+BEGIN_SRC emacs-lisp
-  (use-package hideshow
-    :hook (prog-mode . hs-minor-mode))
+  (define-fringe-bitmap 'hideshow-fringe-marker [255] nil 16 '(top t))
 
-  ;(use-package hideshowvis
-  ;  :hook (hs-minor-mode . hideshowvis-enable))
+  (defun td/hideshow-set-up-overlay (ov)
+    (when (eq 'code (overlay-get ov 'hs))
+      (overlay-put
+       ov 'before-string (propertize "|" 'display '(left-fringe hideshow-fringe-marker)))
+      (overlay-put
+       ov 'display (propertize " …" 'face 'font-lock-comment-face))))
+
+  (use-package hideshow
+    :hook (prog-mode . hs-minor-mode)
+    :config
+    (setq hs-hide-comments-when-hiding-all nil
+          hs-set-up-overlay #'td/hideshow-set-up-overlay))
 
   (use-package hideshow-org
     :ensure t
