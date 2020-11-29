@@ -991,11 +991,7 @@ same folk who runs =stack=.
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package lsp-haskell
-    :ensure t
-    :config
-    (setq lsp-haskell-process-path-hie "hls"
-          lsp-haskell-process-args-hie '()))
+  (use-package lsp-haskell :ensure t)
 #+END_SRC
 
 ** Go
@@ -1192,6 +1188,10 @@ Org Babel for literate programming and API documentation.
     :defer t
     :ensure t)
 
+  (use-package ob-graphql
+    :defer t
+    :ensure t)
+
   (use-package ob-core
     :defer t
     :config
@@ -1205,6 +1205,7 @@ Org Babel for literate programming and API documentation.
      'org-babel-load-languages
      '((emacs-lisp . t)
        (http . t)
+       (graphql . t)
        (python . t)
        (shell . t)
        (sql . t))))
@@ -1339,7 +1340,7 @@ getting in the way is interesting.
     :init
     (eval-and-compile
       (setq doom-themes-enable-italic nil)
-      (load-theme 'doom-gruvbox t))
+      (load-theme 'doom-peacock t))
     :hook (org-mode . doom-themes-org-config))
 #+END_SRC
 
@@ -1479,9 +1480,9 @@ kind of distracting, but it is really helpful sometimes.
 #+BEGIN_SRC emacs-lisp
   (defun td/refresh-front-most-tab ()
     (interactive)
-    (shell-command "osascript -e 'tell application \"Microsoft Edge\" to reload active tab of window 1'"))
+    (shell-command "osascript -e 'tell application \"Microsoft Edge Dev\" to reload active tab of window 1'"))
 
-  (bind-key* "C-c b r" #'td/refresh-front-most-tab)
+  (bind-key* "C-M-r" #'td/refresh-front-most-tab)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
