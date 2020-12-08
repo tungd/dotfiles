@@ -1340,8 +1340,9 @@ getting in the way is interesting.
     :init
     (eval-and-compile
       (setq doom-themes-enable-italic nil)
-      (load-theme 'doom-peacock t))
-    :hook (org-mode . doom-themes-org-config))
+      (load-theme 'doom-snazzy t))
+    :hook ((org-mode . doom-themes-org-config)
+           (org-mode . doom-themes-visual-bell-config)))
 #+END_SRC
 
 I also have an alternate light-theme for backup or use in
@@ -1395,7 +1396,8 @@ Show current function name in the mode line:
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (global-eldoc-mode -1)
+  (global-eldoc-mode 1)
+  (bind-key "C-c l" #'eldoc-print-current-symbol-info)
 #+END_SRC
 
 Line and column numbers, which I find only helpful when tracking
