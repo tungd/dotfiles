@@ -41,8 +41,16 @@ class Service(object):
         self.logger = logging.getLogger(self.name)
 
     async def start(self):
+        process = await asyncio.create_subprocess_exec(
+            'vctl', 'pull', self.spec['image'],
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        await process.wait()
+
         args = self._start_args() if await self._exists() else self._run_args()
         self.logger.debug('args: %s', args)
+
         process = await asyncio.create_subprocess_exec(
             'vctl', *args,
             stdout=asyncio.subprocess.PIPE,
@@ -81,6 +89,8 @@ class Service(object):
             line = await stream.readline()
             if line:
                 self.logger.info(line.decode('utf-8').strip())
+            else:
+                break
 
     def stop(self):
         self.logger.debug('vctl stop %s', self.name)
