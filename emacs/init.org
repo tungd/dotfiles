@@ -118,6 +118,8 @@ Sane, modern defaults:
 #+end_src
 
 #+begin_src emacs-lisp
+  (setq enable-recursive-minibuffers t)
+
   (defun td/keyboard-quit-dwim ()
     (interactive)
     (if-let ((minibuffer (active-minibuffer-window)))
@@ -233,8 +235,23 @@ quite minimal but is very very fast.
 #+end_src
 
 #+begin_src emacs-lisp
+  (use-package consult
+    :ensure t
+    :bind (("C-M-l" . consult-line)
+           ("C-M-j" . consult-buffer)
+           ("C-M-o" . consult-bookmark)
+           ("C-M-y" . consult-yank)
+           ("C-M-t" . consult-theme))
+    :hook (after-init . consult-preview-mode))
+
+  (use-package consult-selectrum
+    :ensure t)
+
+  (bind-key* "C-M-t" #'consult-theme)
+#+end_src
+
+#+begin_src emacs-lisp
   (bind-key* "M-m" #'execute-extended-command)
-  (bind-key* "C-M-o" #'switch-to-buffer)
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
@@ -1502,6 +1519,7 @@ kind of distracting, but it is really helpful sometimes.
 
 * Ideas
 
+** Misc.
 - Separate Emacs clipboard from system clipboard
 - https://github.com/raxod502/radian/blob/develop/emacs/radian.el#L3210
 
