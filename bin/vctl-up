@@ -39,14 +39,10 @@ class Service(object):
         self.name = name
         self.spec = spec
         self.logger = logging.getLogger(self.name)
+        self.images = []
 
     async def start(self):
-        process = await asyncio.create_subprocess_exec(
-            'vctl', 'pull', self.spec['image'],
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        await process.wait()
+        await self._pull(self.spec['image'])
 
         args = self._start_args() if await self._exists() else self._run_args()
         self.logger.debug('args: %s', args)
@@ -83,6 +79,27 @@ class Service(object):
             for line in output.splitlines()
         ])
         return self.name in containers
+
+    async def _pull(self, image):
+        if len(self.images) == 0:
+            process = await asyncio.create_subprocess_exec(
+                'vctl', 'images', stdout=asyncio.subprocess.PIPE
+            )
+            output = await process.stdout.read()
+            self.images = set([
+                line.decode('utf-8').split(' ')[0]
+                for line in output.splitlines()
+            ])
+
+        if image in self.images:
+            return
+
+        process = await asyncio.create_subprocess_exec(
+            'vctl', 'pull', self.spec['image'],
+            # stdout=asyncio.subprocess.PIPE,
+            # stderr=asyncio.subprocess.PIPE
+        )
+        await process.wait()
 
     async def _pipe(self, stream):
         while True:
