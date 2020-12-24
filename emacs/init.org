@@ -728,7 +728,8 @@ By default Emacs doesn't even have redo!
     (lsp-prefer-capf t)
     (lsp-enable-file-watchers nil)
     (lsp-signature-auto-activate nil)
-    (lsp-modeline-code-actions-enable nil))
+    (lsp-modeline-code-actions-enable nil)
+    (lsp-headerline-breadcrumb-enable nil))
 
   (use-package imenu
     :bind ("C-c j" . imenu))
