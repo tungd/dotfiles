@@ -1081,6 +1081,21 @@ manage Docker images and containers.
     :hook (terraform-mode . company-terraform-init))
 #+end_src
 
+** SQL
+
+#+begin_src emacs-lisp
+  (use-package sqlformat
+    :ensure t)
+
+  (use-package sql
+    :custom
+    (sql-postgres-login-params
+     '((user :default "postgres")
+       (database :default "postgres")
+       (server :default "localhost")
+       (port))))
+#+end_src
+
 ** Misc
 
 These are supports for other stuffs that I used:
