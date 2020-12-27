@@ -393,6 +393,14 @@ Make the file executable if starting with "shebang":
   (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
 #+END_SRC
 
+Separate the kill-ring from system clipboard.
+
+#+begin_src emacs-lisp
+  (use-package simpleclip
+    :ensure t
+    :hook (after-init . simpleclip-mode))
+#+end_src
+
 ** Search and replace
 
 #+begin_src emacs-lisp
@@ -1536,7 +1544,6 @@ kind of distracting, but it is really helpful sometimes.
 * Ideas
 
 ** Misc.
-- Separate Emacs clipboard from system clipboard
 - https://github.com/raxod502/radian/blob/develop/emacs/radian.el#L3210
 
 
