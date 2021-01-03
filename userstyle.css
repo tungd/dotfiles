@@ -1,0 +1,4 @@
+/** Fixes Youtube page scroll issue in Safari */
+ytd-app {
+  overflow: unset;
+}

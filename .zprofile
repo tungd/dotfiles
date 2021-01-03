@@ -110,3 +110,5 @@ notify() {
 }
 
 export PATH="$HOME/.poetry/bin:$PATH"
+
+export PATH="$HOME/.cabal/bin:$PATH"

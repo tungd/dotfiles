@@ -1012,12 +1012,16 @@ same folk who runs =stack=.
     :ensure t
     :mode (("\\.hs\\'" . haskell-mode))
     :bind (([remap haskell-mode-format-imports] . haskell-sort-imports))
-    :config
-    (setq haskell-program-name "stack repl"))
+    :custom
+    (haskell-program-name "stack repl"))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package lsp-haskell :ensure t)
+  (use-package lsp-haskell
+    :ensure t
+    :custom
+    (lsp-haskell-server-path "~/.cabal/bin/ghcide")
+    (lsp-haskell-server-args '()))
 #+END_SRC
 
 ** Go
@@ -1297,12 +1301,12 @@ bold and ligatures support :(.
    default-frame-alist
    '((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
-     ;; (ns-appearance . dark)
-     (font . "Monaco 14")
+     (ns-appearance . dark)
+     ;; (font . "Monaco 14")
      ;; (font . "Menlo 14")
      ;; (font . "SF Mono 14")
      ;; (font . "Source Code Pro 14")
-     ;; (font . "Fira Code 14")
+     (font . "Fira Code 14")
      ;; (font . "JetBrains Mono 14")
      ;; (font . "Cascadia Mono 14")
      (top . 0) (left . 480)
@@ -1375,7 +1379,7 @@ getting in the way is interesting.
     :init (load-theme 'tango-plus t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package doom-themes
     :ensure t
     :init
@@ -1401,7 +1405,7 @@ presentation, which is *base16-github* from [[https://github.com/belak/base16-em
     :config (load-theme 'cloud t))
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package mustang-theme
     :ensure t
     :config (load-theme 'mustang t))
