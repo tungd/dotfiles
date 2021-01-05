@@ -1019,9 +1019,10 @@ same folk who runs =stack=.
 #+BEGIN_SRC emacs-lisp
   (use-package lsp-haskell
     :ensure t
-    :custom
-    (lsp-haskell-server-path "~/.cabal/bin/ghcide")
-    (lsp-haskell-server-args '()))
+    ;; :custom
+    ;; (lsp-haskell-server-path "~/.cabal/bin/ghcide")
+    ;; (lsp-haskell-server-args '())
+    )
 #+END_SRC
 
 ** Go
@@ -1185,7 +1186,7 @@ Here's my basic Org setup:
           org-startup-with-inline-images t
 
           org-todo-keywords
-          '((sequence "TODO(t@)" "WAITING(w@)" "|" "DONE(d@/!)" "CANCELLED(c@)"))
+          '((sequence "TODO(t@)" "WAITING(w@)" "|" "DONE(d@/!)" "CANCELED(c@)"))
 
           org-src-fontify-natively t)
     (org-clock-persistence-insinuate))
@@ -1379,13 +1380,13 @@ getting in the way is interesting.
     :init (load-theme 'tango-plus t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package doom-themes
     :ensure t
     :init
     (eval-and-compile
       (setq doom-themes-enable-italic nil)
-      (load-theme 'doom-snazzy t))
+      (load-theme 'doom-spacegrey t))
     :hook ((org-mode . doom-themes-org-config)
            (org-mode . doom-themes-visual-bell-config)))
 #+END_SRC
@@ -1398,18 +1399,6 @@ presentation, which is *base16-github* from [[https://github.com/belak/base16-em
     :ensure t
     :config (load-theme 'base16-phd t))
 #+END_SRC
-
-#+begin_src emacs-lisp :tangle no
-  (use-package cloud-theme
-    :ensure t
-    :config (load-theme 'cloud t))
-#+end_src
-
-#+begin_src emacs-lisp
-  (use-package mustang-theme
-    :ensure t
-    :config (load-theme 'mustang t))
-#+end_src
 
 Mode line
 
