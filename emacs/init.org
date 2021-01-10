@@ -288,6 +288,13 @@ Split windows horizontally by default.
                   :filter-return #'td/window-numbering-get-number-string)))
 #+END_SRC
 
+#+begin_src emacs-lisp
+  (use-package shackle
+    :hook (after-init . shackle-mode)
+    :custom
+    (shackle-rules `((compilation-mode :noselect t :size 0.2 :align 'below))))
+#+end_src
+
 
 * General Editing
 
