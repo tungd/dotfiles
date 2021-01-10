@@ -1032,6 +1032,13 @@ same folk who runs =stack=.
     )
 #+END_SRC
 
+** OCaml
+
+#+begin_src emacs-lisp
+  (use-package tuareg
+    :ensure t)
+#+end_src
+
 ** Go
 
 #+BEGIN_SRC emacs-lisp :tangle no
@@ -1113,7 +1120,7 @@ manage Docker images and containers.
      '((user :default "postgres")
        (database :default "postgres")
        (server :default "localhost")
-       (port))))
+       (port :default 5432))))
 #+end_src
 
 ** Misc
@@ -1401,7 +1408,7 @@ getting in the way is interesting.
     :init
     (eval-and-compile
       (setq doom-themes-enable-italic nil)
-      (load-theme 'doom-spacegrey t))
+      (load-theme 'doom-opera-light t))
     :hook ((org-mode . doom-themes-org-config)
            (org-mode . doom-themes-visual-bell-config)))
 #+END_SRC
