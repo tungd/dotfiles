@@ -272,8 +272,8 @@ quite minimal but is very very fast.
 Split windows horizontally by default.
 
 #+begin_src emacs-lisp
-  (setq split-width-threshold 90
-        split-height-threshold nil)
+  (setq split-width-threshold 120
+        split-height-threshold 0)
 #+end_src
 
 #+BEGIN_SRC emacs-lisp
@@ -288,11 +288,33 @@ Split windows horizontally by default.
                   :filter-return #'td/window-numbering-get-number-string)))
 #+END_SRC
 
+I use =shackle= to manage popup windows. It was pulled from MELPA so I have it
+installed in =vendor=. Currently I only one rule that make =compilation-mode=
+windows pop under the current window and don't select it. In the future, I might
+want to change this to be dynamic based on the result of the compilation, using
+the =:custom= action.
+
 #+begin_src emacs-lisp
   (use-package shackle
     :hook (after-init . shackle-mode)
     :custom
-    (shackle-rules `((compilation-mode :noselect t :size 0.2 :align 'below))))
+    (shackle-rules `((compilation-mode :noselect t :size 0.2 :align 'below)
+                     (ag-mode :size 0.4 :align 'below))))
+#+end_src
+
+Temporary "focus" on a buffer by maximizing it in the current frame.
+
+#+begin_src emacs-lisp
+  (defun td/toggle-maximize-buffer ()
+    "Maximize buffer"
+    (interactive)
+    (if (= 1 (length (window-list)))
+        (jump-to-register '_)
+      (progn
+        (window-configuration-to-register '_)
+        (delete-other-windows))))
+
+  (bind-key* "C-c RET" #'td/toggle-maximize-buffer)
 #+end_src
 
 
@@ -1034,8 +1056,51 @@ same folk who runs =stack=.
 
 ** OCaml
 
+I'm a Python veteran. When I have the opportunity to, I tried to use
+Haskell. Recently I have been looking into OCaml, it seems like a very good,
+practical choice.
+
+The following are the issues I have working in Python and Haskell, they are the
+reason I'm considering OCaml as my main language. Hopefully I'll get a better
+experience with OCaml. Besides the fact that OCaml is strongly-typed and can be
+used for both the web and server, following are my bad experiences with either
+Python or Haskell:
+
+1. Python:
+   - No good package manager: poetry used to be the silver bullet, combining
+     =pyenv= and =pipenv=, while also fixing their issues. For what it's worth,
+     Poetry is miles better than the previous solutions, yet it still suffers
+     from problems that are unbearable for me.
+   - The lack of types. That alone is a serious drawback for me. Sure I can add
+     type annotations and use mypy, but unless libraries are also shipped with
+     type definitions, those provides very limited guarantee, which defeats the
+     purpose of having types in the first place.
+   - Library breaking changes: cryptonite changed and broke my code producing
+     APNS push packages. It can't be detected until it's shipped to production,
+     so it's really bad.
+
+ 2. Haskell
+   - Stack breaks.
+   - The compiler is slow, and there's no good story regarding cross-compile. My
+     guess is that the runtime is so sophisticated that it has to be linked to
+     at least libc, hence making producing static binaries much harder.
+   - Lack of production oriented library/framework. It's kind of like with
+     Clojure, the libraries are there and they are excellent, but there is no
+     standard bundle requiring a lot of wiring setting up a project. OCaml has Sihl.
+   - I was told that OCaml is worse than Haskell regarding libraries, but in my
+     experience that is not true. OCaml might have less libraries, but they are
+     much more comprehensive and well-maintained. A lot of the libraries in the
+     Haskell world seems to be a one-off experiment, or an one-time job then
+     abandoned at best. (I'm talking about iCalendar, and there are many other cases).
+
 #+begin_src emacs-lisp
   (use-package tuareg
+    :ensure t)
+
+  (use-package reason-mode
+    :ensure t)
+
+  (use-package dune
     :ensure t)
 #+end_src
 
@@ -1256,7 +1321,10 @@ As stated earlier, I practice GTD. Working projects and new stuffs go to
         (file+headline "~/Desktop/inbox.org" "Inbox"))
        ("l" "TIL" entry
         (file+olp+datetree "~/Desktop/inbox.org" "TIL")
-        :jump-to-captured t))))
+        :jump-to-captured)
+       ("b" "Blog" entry
+        (file+olp+datetree "~/Desktop/inbox.org" "Blog")
+        :jump-to-captured))))
 #+end_src
 
 ** Literate programming
