@@ -239,15 +239,16 @@ quite minimal but is very very fast.
     :ensure t
     :bind (("C-M-l" . consult-line)
            ("C-M-j" . consult-buffer)
-           ("C-M-o" . consult-bookmark)
-           ("C-M-y" . consult-yank)
-           ("C-M-t" . consult-theme))
-    :hook (after-init . consult-preview-mode))
+           ("M-g b" . consult-bookmark)
+           ("M-g y" . consult-yank)
+           ("M-g t" . consult-theme)
+           ("M-g e" . consult-error)
+           ("M-g m" . consult-mode-command)
+           ([remap switch-to-buffer] . consult-buffer)
+           ([remap goto-line] . consult-goto-line)))
 
   (use-package consult-selectrum
     :ensure t)
-
-  (bind-key* "C-M-t" #'consult-theme)
 #+end_src
 
 #+begin_src emacs-lisp
@@ -800,7 +801,6 @@ be fair, I'd like these mode to support Emacs's standard
           company-tooltip-align-annotations t
           company-backends
           '(company-capf
-            company-files
             (company-dabbrev-code company-keywords)
             company-dabbrev)
           company-dabbrev-other-buffers t
@@ -889,9 +889,9 @@ re-run the tests.
 
   (use-package hideshow
     :hook (prog-mode . hs-minor-mode)
-    :config
-    (setq hs-hide-comments-when-hiding-all nil
-          hs-set-up-overlay #'td/hideshow-set-up-overlay))
+    :custom
+    (hs-hide-comments-when-hiding-all nil)
+    (hs-set-up-overlay #'td/hideshow-set-up-overlay))
 
   (use-package hideshow-org
     :ensure t
@@ -1249,9 +1249,7 @@ Here's my basic Org setup:
 
 #+BEGIN_SRC emacs-lisp
   (use-package org
-    :hook ((org-mode . org-indent-mode)
-           (
-            ))
+    :hook ((org-mode . org-indent-mode))
     :delight org-indent-mode
     :custom
     (org-directory "~/Desktop/")
