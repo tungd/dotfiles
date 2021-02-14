@@ -134,3 +134,9 @@ Decrease repeat delay, increase repeat rate and disable Emoji.
 #+BEGIN_SRC sh
   killall SystemUIServer
 #+END_SRC
+
+
+#+begin_src xml
+  <key>LIBRARY_PATH</key>
+  <string>/opt/local/lib/gcc10:/opt/local/lib/gcc10/gcc/x86_64-apple-darwin20/10.2.0:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib</string>
+#+end_src
