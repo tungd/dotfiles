@@ -317,7 +317,7 @@ Temporary "focus" on a buffer by maximizing it in the current frame.
         (window-configuration-to-register '_)
         (delete-other-windows))))
 
-  (bind-key* "C-c RET" #'td/toggle-maximize-buffer)
+  (bind-key* [remap delete-other-windows] #'td/toggle-maximize-buffer)
 #+end_src
 
 
@@ -770,6 +770,7 @@ By default Emacs doesn't even have redo!
     (lsp-keymap-prefix "C-l")
     (lsp-prefer-capf t)
     (lsp-enable-file-watchers nil)
+    (lsp-enable-indentation nil)
     (lsp-signature-auto-activate nil)
     (lsp-modeline-code-actions-enable nil)
     (lsp-headerline-breadcrumb-enable nil))
@@ -921,14 +922,14 @@ editing, including PHP, since I rarely write PHP anymore.
            ("\\.php" . web-mode)
            ("\\.hbs" . web-mode)
            ("\\.mustache" . web-mode))
-    :config
-    (setq web-mode-markup-indent-offset 2
-          web-mode-css-indent-offset 2
-          web-mode-code-indent-offset 2
-          web-mode-script-padding 2
-          web-mode-style-padding 2
-          web-mode-enable-auto-quoting nil
-          web-mode-enable-comment-annotation t))
+    :custom
+    (web-mode-markup-indent-offset 2)
+    (web-mode-css-indent-offset 2)
+    (web-mode-code-indent-offset 2)
+    (web-mode-script-padding 2)
+    (web-mode-style-padding 2)
+    (web-mode-enable-auto-quoting nil)
+    (web-mode-enable-comment-annotation t))
 #+END_SRC
 
 Also, I can't live without Emmet.
