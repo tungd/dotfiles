@@ -115,3 +115,5 @@ export PATH="$HOME/.cabal/bin:$PATH"
 
 # opam configuration
 test -r $HOME/.opam/opam-init/init.zsh && . $HOME/.opam/opam-init/init.zsh > /dev/null 2> /dev/null || true
+
+[[ -e $HOME/.ghcup/env ]] && source $HOME/.ghcup/env
