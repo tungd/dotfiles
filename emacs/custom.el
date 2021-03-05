@@ -49,13 +49,14 @@
  '(org-todo-keywords
    '((sequence "TODO(t@)" "WAITING(w@)" "|" "DONE(d@/!)" "CANCELED(c@)")) nil nil "Customized with use-package org")
  '(package-selected-packages
-   '(fsharp-mode dune reason-mode shackle tuareg cmake-mode simpleclip sqlformat csv-mode consult-selectrum consult poetry ob-graphql rainbow-delimiters ag yasnippet yaml-mode window-numbering which-key web-mode visual-regexp use-package undo-tree typescript-mode terraform-doc tango-plus-theme smartparens selectrum-prescient rainbow-mode py-isort ob-http nginx-mode magit lsp-pyright lsp-haskell inf-clojure highlight-numbers hideshow-org golden-ratio feature-mode expand-region exec-path-from-shell eshell-z eshell-up eshell-toggle eshell-git-prompt emmet-mode doom-themes dockerfile-mode docker delight ctrlf crux company-terraform company-prescient comment-dwim-2))
+   '(wgrep-ag inf-elixir ob-elixir elixir-mode fsharp-mode dune reason-mode shackle tuareg cmake-mode simpleclip sqlformat csv-mode consult-selectrum consult poetry ob-graphql rainbow-delimiters ag yasnippet yaml-mode window-numbering which-key web-mode visual-regexp use-package undo-tree typescript-mode terraform-doc tango-plus-theme smartparens selectrum-prescient rainbow-mode py-isort ob-http nginx-mode magit lsp-pyright lsp-haskell inf-clojure highlight-numbers hideshow-org golden-ratio feature-mode expand-region exec-path-from-shell eshell-z eshell-up eshell-toggle eshell-git-prompt emmet-mode doom-themes dockerfile-mode docker delight ctrlf crux company-terraform company-prescient comment-dwim-2))
  '(pdf-view-midnight-colors (cons "#d4d4d4" "#1e1e1e"))
  '(recentf-max-saved-items 128 nil nil "Customized with use-package recentf")
  '(rustic-ansi-faces
    ["#1e1e1e" "#D16969" "#579C4C" "#D7BA7D" "#339CDB" "#C586C0" "#85DDFF" "#d4d4d4"])
  '(safe-local-variable-values
-   '((python-shell-interpreter-args . "run outsight/manage.py shell")
+   '((python-shell-interpreter . "/opt/local/bin/python3")
+     (python-shell-interpreter-args . "run outsight/manage.py shell")
      (poetry-virtualenv-path . "/Users/tung/Library/Caches/pypoetry/virtualenvs/platform-server-1YmhWo8P-py3.8")
      (python-shell-interpreter-args quote
                                     ("run" "outsight/manage.py" "shell"))
