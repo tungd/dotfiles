@@ -66,27 +66,17 @@ Homebrew. Installation is a little bit more involved, though.
   sudo port install emacs-devel-app +nativecomp -rsvg
 #+END_SRC
 
-** =stack=
+** ASDF
 
-#+BEGIN_SRC sh
-  curl -sSL https://get.haskellstack.org/ | sh -s - -d ~/.local/bin/
-#+END_SRC
-
-#+BEGIN_SRC sh
-  cat > ~/.stack/config.yaml <<EOF
-  templates:
-    params:
-      author-name: Tung Dao
-      author-email: me@tungdao.com
-      copyright: (c) 2021 Tung Dao
-      github-username: tungd
-  EOF
-#+END_SRC
+#+begin_src sh
+  git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.8.0
+#+end_src
 
 ** Poetry
 
 #+begin_src sh
-  curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3.8 -
+  asdf plugin add poetry
+  asdf install poetry latest
 #+end_src
 
 ** =z.sh=

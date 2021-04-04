@@ -83,24 +83,12 @@ export PGUSER=postgres
 
 export PATH=/opt/local/bin:/opt/local/sbin:$PATH
 export PATH=$HOME/.local/sbin:$HOME/.local/bin:$PATH
-export PATH=$HOME/Library/Python/3.8/bin:$PATH
 export PATH=$HOME/Projects/dotfiles/bin:$PATH
-export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 
-export PATH=$HOME/Applications/Emacs.app/Contents/MacOS/bin:$PATH
-export PATH=/Applications/MacPorts/Emacs.app/Contents/MacOS/bin/:$PATH
-
-which doctl > /dev/null && eval "$(doctl completion zsh)"
-which direnv > /dev/null && eval "$(direnv hook zsh)"
-
-which go > /dev/null && eval "$(go env)"
-export PATH=$GOPATH/bin:$PATH
+# export PATH=$HOME/Applications/Emacs.app/Contents/MacOS/bin:$PATH
+# export PATH=/Applications/MacPorts/Emacs.app/Contents/MacOS/bin/:$PATH
 
 [[ -e $LOCAL/vendor/z.sh ]] && . $LOCAL/vendor/z.sh
-
-which bat > /dev/null && alias cat=bat
-
-which kubectl > /dev/null && source <(kubectl completion zsh)
 
 alias g=git
 alias e=emacsclient -n
@@ -109,11 +97,4 @@ notify() {
   osascript -e "display notification \"$2\" with title \"$1\""
 }
 
-export PATH="$HOME/.poetry/bin:$PATH"
-
-export PATH="$HOME/.cabal/bin:$PATH"
-
-# opam configuration
-test -r $HOME/.opam/opam-init/init.zsh && . $HOME/.opam/opam-init/init.zsh > /dev/null 2> /dev/null || true
-
-[[ -e $HOME/.ghcup/env ]] && source $HOME/.ghcup/env
+. $HOME/.asdf/asdf.sh
