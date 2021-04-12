@@ -165,16 +165,26 @@ Sane, modern defaults:
 Emacs built-in =project.el= has gone a long way so I'm using that now. There are
 still some missing features coming from =projectile=, but I can live with that.
 
-#+BEGIN_SRC emacs-lisp
-  (use-package project
-    :bind ("C-M-'" . project-find-file))
+#+BEGIN_SRC emacs-lisp :tangle no
+  (use-package projectile
+    :ensure t
+    :hook (after-init . projectile-mode)
+    :bind (("C-M-'" . projectile-find-file)
+           :map projectile-mode-map
+           ("C-c p" . projectile-command-map)))
 #+END_SRC
+
+#+begin_src emacs-lisp
+  (use-package project
+    :commands (project-find-file)
+    :bind (("C-M-'" . project-find-file)))
+#+end_src
 
 #+begin_src emacs-lisp
   (use-package ag
     :ensure t
     :defer t
-    :bind ("C-x p s" . ag-project))
+    :bind* ("C-x p s" . ag-project))
 #+end_src
 
 ** Symbols
@@ -196,7 +206,7 @@ Default key bindings is
     :bind (("C-M-p" . xref-find-definitions-other-window)
            ("C-M-g" . xref-pop-marker-stack)))
 
-  (bind-key* "M-." #'xref-find-definitions)
+  (bind-key* "C-M-." #'xref-find-definitions)
 #+end_src
 
 ** Selectrum
@@ -244,7 +254,9 @@ quite minimal but is very very fast.
            ("M-g e" . consult-flymake)
            ("M-g m" . consult-mode-command)
            ;([remap switch-to-buffer] . consult-buffer)
-           ([remap goto-line] . consult-goto-line)))
+           ([remap goto-line] . consult-goto-line))
+    :config
+    (add-to-list 'consult-buffer-filter "*EGLOT"))
 
   (use-package recentf
     :hook (after-init . recentf-mode)
@@ -300,9 +312,11 @@ the =:custom= action.
   (use-package shackle
     :hook (after-init . shackle-mode)
     :custom
-    (shackle-rules `((compilation-mode :noselect t :size 0.2 :align 'below)
-                     (ag-mode :size 0.4 :align 'below)
-                     (inferior-haskell-mode :size 0.2 :align 'below))))
+    (shackle-default-size 0.4)
+    (shackle-default-alignment 'below)
+    (shackle-rules `((compilation-mode :noselect t :size 0.2)
+                     (ag-mode :select t)
+                     ("*eldoc*" :noselect t))))
 #+end_src
 
 Temporary "focus" on a buffer by maximizing it in the current frame.
@@ -433,6 +447,20 @@ Separate the kill-ring from system clipboard.
     :hook (after-init . simpleclip-mode))
 #+end_src
 
+#+begin_src emacs-lisp
+  (use-package evil
+    :ensure t
+    :hook (after-init . evil-mode)
+    :custom
+    (evil-cross-lines t)
+    (evil-ex-substitute-global t)
+    (evil-undo-system 'undo-fu))
+
+  (use-package evil-surround
+    :ensure t
+    :hook (evil-mode . global-evil-surround-mode))
+#+end_src
+
 ** Search and replace
 
 #+begin_src emacs-lisp
@@ -549,7 +577,7 @@ NOTE: This package is huge, I'm still learning it.
 
 By default Emacs doesn't even have redo!
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package undo-tree
     :ensure t
     :delight undo-tree-mode
@@ -747,7 +775,7 @@ By default Emacs doesn't even have redo!
 
 * Programming
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (setq-default bidi-display-reordering nil)
 
   (setq gc-cons-threshold 400000000
@@ -777,6 +805,19 @@ By default Emacs doesn't even have redo!
 
   (use-package imenu
     :bind ("C-c j" . imenu))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package eglot
+    :ensure t
+    :hook ((python-mode . eglot-ensure)
+           (js-mode . eglot-ensure)
+           (typescript-mode . eglot-ensure)
+           (web-mode . eglot-ensure)
+           (haskell-mode . eglot-ensure)
+           (tuareg-mode . eglot-ensure))
+    :config
+    (add-to-list 'eglot-server-programs '(web-mode "typescript-language-server" "--stdio")))
 #+end_src
 
 ** Auto completion
@@ -1016,7 +1057,7 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 
 ** Python
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package lsp-pyright
     :ensure t
     :hook (python-mode . (lambda ()
@@ -1052,7 +1093,7 @@ same folk who runs =stack=.
     (haskell-program-name "stack repl"))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package lsp-haskell
     :ensure t
     ;; :custom
@@ -1429,7 +1470,7 @@ bold and ligatures support :(.
 
 Enable ligatures, only available in railwaycat Mac port.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (mac-auto-operator-composition-mode)
 #+END_SRC
 
@@ -1533,7 +1574,7 @@ Show current function name in the mode line:
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (global-eldoc-mode 1)
+  (global-eldoc-mode -1)
   (bind-key "C-c l" #'eldoc-print-current-symbol-info)
 #+END_SRC
 
