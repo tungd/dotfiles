@@ -53,8 +53,8 @@ class Service(object):
             stderr=asyncio.subprocess.PIPE
         )
         await asyncio.wait([
-            self._pipe(process.stdout),
-            self._pipe(process.stderr)
+            asyncio.create_task(self._pipe(process.stdout)),
+            asyncio.create_task(self._pipe(process.stderr))
         ])
 
     def _start_args(self):
