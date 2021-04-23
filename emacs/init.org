@@ -66,7 +66,8 @@ Personal information that some package use:
 #+BEGIN_SRC emacs-lisp
   (setq user-full-name "Tung Dao"
         user-mail-address "me@tungdao.com"
-        default-input-method 'vietnamese-telex)
+        default-input-method 'vietnamese-telex
+        initial-buffer-choice "~/Desktop/inbox.org")
   (defvar personal-keybindings nil)
 #+END_SRC
 
@@ -217,19 +218,20 @@ upon =completing-read=, instead of wrapping it like the others, which make it
 quite minimal but is very very fast.
 
 #+begin_src emacs-lisp
+  (use-package orderless
+    :ensure t
+    :custom
+    (completion-styles '(orderless))
+    (completion-category-defaults nil)
+    (completion-category-overrides '((file (styles . (partial-completion))))))
+
+  (use-package vertico
+    :ensure t
+    :hook (after-init . vertico-mode))
+#+end_src
+
+#+begin_src emacs-lisp
   (ido-mode -1)
-
-  (use-package selectrum
-    :ensure t
-    :hook (after-init . selectrum-mode))
-
-  (use-package prescient
-    :ensure t
-    :hook (after-init . prescient-persist-mode))
-
-  (use-package selectrum-prescient
-    :ensure t
-    :hook (after-init . selectrum-prescient-mode))
 
   (defun td/minibuffer-smart-tilde ()
     (interactive)
@@ -243,6 +245,12 @@ quite minimal but is very very fast.
   (bind-key "<s-backspace>" #'backward-kill-word minibuffer-local-map)
 #+end_src
 
+#+begin_src emacs-lisp :tangle no
+  (use-package selectrum
+    :ensure t
+    :hook (after-init . selectrum-mode))
+#+end_src
+
 #+begin_src emacs-lisp
   (use-package consult
     :ensure t
@@ -254,32 +262,19 @@ quite minimal but is very very fast.
            ("M-g e" . consult-flymake)
            ("M-g m" . consult-mode-command)
            ;([remap switch-to-buffer] . consult-buffer)
-           ([remap goto-line] . consult-goto-line))
-    :config
-    (add-to-list 'consult-buffer-filter "*EGLOT"))
+           ([remap goto-line] . consult-goto-line)))
 
   (use-package recentf
     :hook (after-init . recentf-mode)
     :custom
-    (recentf-max-saved-items 128))
+    (recentf-max-saved-items 128)
+    :config
+    (add-to-list 'recentf-exclude "/\\elpa\\'"))
 #+end_src
 
 #+begin_src emacs-lisp
   (bind-key* "M-m" #'execute-extended-command)
 #+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (use-package mini-frame
-    :ensure t
-    :hook (after-init . mini-frame-mode)
-    :config
-    (add-to-list 'mini-frame-ignore-commands 'vr/query-replace)
-    (add-to-list 'mini-frame-ignore-commands 'vr/replace)
-    (add-to-list 'mini-frame-ignore-commands 'ctrlf-forward-literal)
-    (add-to-list 'mini-frame-ignore-commands 'yes-or-no-p)
-    (add-to-list 'mini-frame-ignore-commands 'y-or-n-p))
-#+end_src
-
 
 * Window Management
 
@@ -290,7 +285,7 @@ Split windows horizontally by default.
         split-height-threshold 0)
 #+end_src
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package window-numbering
     :ensure t
     :hook (after-init . window-numbering-mode)
@@ -301,6 +296,12 @@ Split windows horizontally by default.
       (advice-add 'window-numbering-get-number-string
                   :filter-return #'td/window-numbering-get-number-string)))
 #+END_SRC
+
+#+begin_src emacs-lisp
+  (use-package ace-window
+    :ensure t
+    :bind* ("M-o" . ace-window))
+#+end_src
 
 I use =shackle= to manage popup windows. It was pulled from MELPA so I have it
 installed in =vendor=. Currently I only one rule that make =compilation-mode=
@@ -454,7 +455,9 @@ Separate the kill-ring from system clipboard.
     :custom
     (evil-cross-lines t)
     (evil-ex-substitute-global t)
-    (evil-undo-system 'undo-fu))
+    (evil-undo-system 'undo-fu)
+    :config
+    (add-to-list 'evil-emacs-state-modes 'xref--xref-buffer-mode))
 
   (use-package evil-surround
     :ensure t
@@ -775,7 +778,7 @@ By default Emacs doesn't even have redo!
 
 * Programming
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (setq-default bidi-display-reordering nil)
 
   (setq gc-cons-threshold 400000000
@@ -789,9 +792,7 @@ By default Emacs doesn't even have redo!
            (typescript-mode . lsp)
            (haskell-mode . lsp)
            (web-mode . lsp)
-           (go-mode . lsp)
            (tuareg-mode . lsp)
-           (fsharp-mode . lsp)
            (lsp-mode . lsp-enable-which-key-integration))
     :commands lsp
     :custom
@@ -807,19 +808,6 @@ By default Emacs doesn't even have redo!
     :bind ("C-c j" . imenu))
 #+end_src
 
-#+begin_src emacs-lisp
-  (use-package eglot
-    :ensure t
-    :hook ((python-mode . eglot-ensure)
-           (js-mode . eglot-ensure)
-           (typescript-mode . eglot-ensure)
-           (web-mode . eglot-ensure)
-           (haskell-mode . eglot-ensure)
-           (tuareg-mode . eglot-ensure))
-    :config
-    (add-to-list 'eglot-server-programs '(web-mode "typescript-language-server" "--stdio")))
-#+end_src
-
 ** Auto completion
 
 I use auto completion sparingly. Mostly because many of the programing
@@ -827,7 +815,7 @@ language support package use =company= for some of their functionalities. To
 be fair, I'd like these mode to support Emacs's standard
 =completion-at-point-functions= interface.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package company
     :ensure t
     :delight company-mode
@@ -857,18 +845,14 @@ be fair, I'd like these mode to support Emacs's standard
   (use-package company-buffer-line
     :commands (company-same-mode-buffer-lines)
     :bind ("C-x C-l" . company-same-mode-buffer-lines))
-
-  (use-package company-prescient
-    :ensure t
-    :defer t
-    :hook (global-company-mode . company-prescient-mode))
-
-  ;; (use-package company-box
-  ;;   :ensure t
-  ;;   :defer t
-  ;;   :delight company-box-mode
-  ;;   :hook (company-mode . company-box-mode))
 #+END_SRC
+
+#+begin_src emacs-lisp
+  (use-package corfu
+    :ensure t
+    :hook ((prog-mode . corfu-mode)
+           (eshell-mode . corfu-mode)))
+#+end_src
 
 ** Error checking
 
