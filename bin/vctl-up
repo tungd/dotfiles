@@ -22,14 +22,23 @@ import signal
 import subprocess
 import logging
 import asyncio
+import random
 
 from pathlib import Path
 
 import yaml
 
 
+COLORS = [
+    '\x1b[31m',
+    '\x1b[33m',
+    '\x1b[32m',
+    '\x1b[35m',
+]
+
+
 logging.basicConfig(
-    format='%(levelname).1s %(name)s: %(message)s',
+    format='%(color)s%(levelname).1s %(name)s\x1b[0m: %(message)s',
     stream=sys.stdout, level=logging.INFO
 )
 
@@ -39,13 +48,14 @@ class Service(object):
         self.name = name
         self.spec = spec
         self.logger = logging.getLogger(self.name)
+        self.log_extra = {'color': random.choice(COLORS)}
         self.images = []
 
     async def start(self):
         await self._pull(self.spec['image'])
 
         args = self._start_args() if await self._exists() else self._run_args()
-        self.logger.debug('args: %s', args)
+        self.logger.debug('args: %s', args, extra=self.log_extra)
 
         process = await asyncio.create_subprocess_exec(
             'vctl', *args,
@@ -105,12 +115,13 @@ class Service(object):
         while True:
             line = await stream.readline()
             if line:
-                self.logger.info(line.decode('utf-8').strip())
+                self.logger.info(
+                    line.decode('utf-8').strip(), extra=self.log_extra)
             else:
                 break
 
     def stop(self):
-        self.logger.debug('vctl stop %s', self.name)
+        self.logger.debug('vctl stop %s', self.name, extra=self.log_extra)
         subprocess.run(['vctl', 'stop', self.name], capture_output=True)
 
 
