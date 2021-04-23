@@ -71,8 +71,6 @@ if [[ $EMACS = t ]]; then
   unset zle_bracketed_paste
 fi
 
-# test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
-
 export ENV=development
 export LOCAL=$HOME/.local
 
@@ -85,9 +83,6 @@ export PATH=/opt/local/bin:/opt/local/sbin:$PATH
 export PATH=$HOME/.local/sbin:$HOME/.local/bin:$PATH
 export PATH=$HOME/Projects/dotfiles/bin:$PATH
 
-# export PATH=$HOME/Applications/Emacs.app/Contents/MacOS/bin:$PATH
-# export PATH=/Applications/MacPorts/Emacs.app/Contents/MacOS/bin/:$PATH
-
 [[ -e $LOCAL/vendor/z.sh ]] && . $LOCAL/vendor/z.sh
 
 alias g=git
@@ -97,4 +92,9 @@ notify() {
   osascript -e "display notification \"$2\" with title \"$1\""
 }
 
-. $HOME/.asdf/asdf.sh
+# opam configuration
+test -r $HOME/.opam/opam-init/init.zsh && . $HOME/.opam/opam-init/init.zsh > /dev/null 2> /dev/null || true
+
+export PATH=$HOME/.poetry/bin:$PATH
+
+export PATH=$HOME/Library/Python/3.9/bin:$PATH
