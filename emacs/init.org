@@ -66,8 +66,7 @@ Personal information that some package use:
 #+BEGIN_SRC emacs-lisp
   (setq user-full-name "Tung Dao"
         user-mail-address "me@tungdao.com"
-        default-input-method 'vietnamese-telex
-        initial-buffer-choice "~/Desktop/inbox.org")
+        default-input-method 'vietnamese-telex)
   (defvar personal-keybindings nil)
 #+END_SRC
 
@@ -102,6 +101,10 @@ Sane, modern defaults:
 
 #+BEGIN_SRC emacs-lisp
   (savehist-mode t)
+
+  (use-package prescient
+    :ensure t
+    :hook (after-init . prescient-persist-mode))
 #+END_SRC
 
 #+begin_src emacs-lisp
@@ -168,8 +171,7 @@ still some missing features coming from =projectile=, but I can live with that.
 
 #+begin_src emacs-lisp
   (use-package project
-    :ensure t
-    :commands (project-find-file)
+    :commands (project-find-file project-root project-current)
     :bind (("C-M-'" . project-find-file)))
 #+end_src
 
@@ -209,7 +211,7 @@ command, similar to Ivy or Helm. What set it aside is the fact that it is built
 upon =completing-read=, instead of wrapping it like the others, which make it
 quite minimal but is very very fast.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package orderless
     :ensure t
     :custom
@@ -237,13 +239,21 @@ quite minimal but is very very fast.
   (bind-key "<s-backspace>" #'backward-kill-word minibuffer-local-map)
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package selectrum
     :ensure t
     :hook (after-init . selectrum-mode))
+
+  (use-package selectrum-prescient
+    :ensure t
+    :hook (after-init . selectrum-prescient-mode))
 #+end_src
 
 #+begin_src emacs-lisp
+  (defun td/project-current-root ()
+    (when-let ((p (project-current)))
+      (project-root p)))
+
   (use-package consult
     :ensure t
     :bind (("C-M-l" . consult-line)
@@ -254,14 +264,18 @@ quite minimal but is very very fast.
            ("M-g e" . consult-flymake)
            ("M-g m" . consult-mode-command)
            ;([remap switch-to-buffer] . consult-buffer)
-           ([remap goto-line] . consult-goto-line)))
+           ([remap goto-line] . consult-goto-line))
+    :custom
+    (xref-show-xrefs-function #'consult-xref)
+    (xref-show-definitions-function #'consult-xref)
+    (consult-project-root-function #'td/project-current-root))
 
   (use-package recentf
     :hook (after-init . recentf-mode)
     :custom
     (recentf-max-saved-items 128)
     :config
-    (add-to-list 'recentf-exclude "/\\elpa\\'"))
+    (add-to-list 'recentf-exclude "elpa/.*"))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -293,7 +307,8 @@ Split windows horizontally by default.
 #+begin_src emacs-lisp
   (use-package ace-window
     :ensure t
-    :bind* ("M-o" . ace-window))
+    :bind* (("M-o" . ace-window)
+            ("C-M-o" . ace-delete-window)))
 #+end_src
 
 I use =shackle= to manage popup windows. It was pulled from MELPA so I have it
@@ -302,7 +317,7 @@ windows pop under the current window and don't select it. In the future, I might
 want to change this to be dynamic based on the result of the compilation, using
 the =:custom= action.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package shackle
     :hook (after-init . shackle-mode)
     :custom
@@ -311,6 +326,17 @@ the =:custom= action.
     (shackle-rules `((compilation-mode :noselect t :size 0.2)
                      (ag-mode :select t)
                      ("*eldoc*" :noselect t))))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package golden-ratio
+    :ensure t
+    :hook (after-init . golden-ratio-mode)
+    :delight golden-ratio-mode
+    :config
+    ;; Compatibility with ace-window
+    (eval-after-load 'ace-window
+      (advice-add 'ace-select-window :after #'golden-ratio)))
 #+end_src
 
 Temporary "focus" on a buffer by maximizing it in the current frame.
@@ -448,7 +474,7 @@ Separate the kill-ring from system clipboard.
     :custom
     (evil-cross-lines t)
     (evil-ex-substitute-global t)
-    (evil-undo-system 'undo-fu)
+    (evil-undo-system 'undo-redo)
     :config
     (add-to-list 'evil-emacs-state-modes 'xref--xref-buffer-mode))
 
@@ -774,8 +800,8 @@ By default Emacs doesn't even have redo!
 #+begin_src emacs-lisp
   (setq-default bidi-display-reordering nil)
 
-  (setq gc-cons-threshold 400000000
-        read-process-output-max (* 1024 1024)
+  (setq gc-cons-threshold 800000000
+        read-process-output-max (* 8 1024 1024)
         inhibit-compacting-font-caches t)
 
   (use-package lsp-mode
@@ -836,6 +862,10 @@ be fair, I'd like these mode to support Emacs's standard
   (use-package company-buffer-line
     :commands (company-same-mode-buffer-lines)
     :bind ("C-x C-l" . company-same-mode-buffer-lines))
+
+  (use-package company-prescient
+    :ensure t
+    :hook (after-init . company-prescient-mode))
 #+END_SRC
 
 #+begin_src emacs-lisp :tangle no
@@ -966,13 +996,14 @@ Also, I can't live without Emmet.
     :ensure t
     :delight emmet-mode
     :hook ((sgml-mode . emmet-mode)
-     (css-mode . emmet-mode)
-     (web-mode . emmet-mode)
-     (js-mode . emmet-mode))
+           (css-mode . emmet-mode)
+           (reason-mode . emmet-mode)
+           (web-mode . emmet-mode)
+           (js-mode . emmet-mode))
     :config
     (setq emmet-indentation 2
-    emmet-preview-default nil
-    emmet-insert-flash-time 0.1)
+          emmet-preview-default nil
+          emmet-insert-flash-time 0.1)
 
     (add-hook 'emmet-mode-hook #'td/emmet-jsx-mode))
 #+END_SRC
@@ -1038,12 +1069,14 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 
 ** Python
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
+  (defun td/lsp-pyright ()
+    (require 'lsp-pyright)
+    (lsp))
+
   (use-package lsp-pyright
     :ensure t
-    :hook (python-mode . (lambda ()
-                            (require 'lsp-pyright)
-                            (lsp))))
+    :hook (python-mode . #'td/lsp-pyright))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -1428,7 +1461,7 @@ bold and ligatures support :(.
      ;; (font . "Menlo 14")
      ;; (font . "SF Mono 14")
      ;; (font . "Source Code Pro 14")
-     (font . "Fira Mono 14")
+     (font . "Fira Mono 16")
      ;; (font . "JetBrains Mono 14")
      ;; (font . "Cascadia Mono 14")
      (top . 0) (left . 480)
@@ -1437,7 +1470,7 @@ bold and ligatures support :(.
      (tool-bar-lines . 0)))
 
   (blink-cursor-mode -1)
-  (setq line-spacing 0.2)
+  (load-theme 'deeper-blue)
 #+END_SRC
 
 #+begin_src emacs-lisp
@@ -1455,6 +1488,14 @@ Enable ligatures, only available in railwaycat Mac port.
 #+BEGIN_SRC emacs-lisp
   (setq ns-use-native-fullscreen t)
 #+END_SRC
+
+#+begin_src emacs-lisp
+  (use-package smart-mode-line
+    :ensure t
+    :hook (after-init . sml/setup)
+    :custom
+    (sml/theme 'dark))
+#+end_src
 
 Truncate lines:
 
@@ -1474,12 +1515,15 @@ theme named =user= will always have the highest priority.
    '(font-lock-string-face ((t (:slant normal))))
    '(font-lock-constant-face ((t (:slant normal))))
 
+   '(fringe ((t (:background nil))))
+   '(line-number ((t :foreground nil :inherit font-lock-comment-face)))
+
+   '(hl-line ((t :foreground nil :background "#323850")))
+
    '(markdown-inline-code-face ((t (:slant normal))))
 
    '(indent-guide-face ((t (:inherit font-lock-comment-face))))
    '(web-mode-variable-name-face ((t (:inherit default))))
-
-   '(line-number ((t :foreground nil :inherit font-lock-comment-face)))
 
    '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#81af34"))))
    '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#ff0000"))))
@@ -1496,7 +1540,7 @@ theme named =user= will always have the highest priority.
 I also have very good experience with *Tango Plus*. Its philosophy of not
 getting in the way is interesting.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package tango-plus-theme
     :ensure t
     :init (load-theme 'tango-plus t))

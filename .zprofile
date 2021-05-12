@@ -97,4 +97,6 @@ test -r $HOME/.opam/opam-init/init.zsh && . $HOME/.opam/opam-init/init.zsh > /de
 
 export PATH=$HOME/.poetry/bin:$PATH
 
+export PATH=$HOME/.yarn/bin:$PATH
+
 export PATH=$HOME/Library/Python/3.9/bin:$PATH
