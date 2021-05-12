@@ -2,7 +2,7 @@
 # name: apache2
 # key: apache2
 # --
-Copyright 2018 Tung Dao
+Copyright `(format-time-string "%Y")` Tung Dao
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
 this file except in compliance with the License. You may obtain a copy of the
