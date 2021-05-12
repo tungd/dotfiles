@@ -166,17 +166,9 @@ Sane, modern defaults:
 Emacs built-in =project.el= has gone a long way so I'm using that now. There are
 still some missing features coming from =projectile=, but I can live with that.
 
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package projectile
-    :ensure t
-    :hook (after-init . projectile-mode)
-    :bind (("C-M-'" . projectile-find-file)
-           :map projectile-mode-map
-           ("C-c p" . projectile-command-map)))
-#+END_SRC
-
 #+begin_src emacs-lisp
   (use-package project
+    :ensure t
     :commands (project-find-file)
     :bind (("C-M-'" . project-find-file)))
 #+end_src
@@ -275,6 +267,7 @@ quite minimal but is very very fast.
 #+begin_src emacs-lisp
   (bind-key* "M-m" #'execute-extended-command)
 #+end_src
+
 
 * Window Management
 
@@ -442,7 +435,7 @@ Make the file executable if starting with "shebang":
 
 Separate the kill-ring from system clipboard.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package simpleclip
     :ensure t
     :hook (after-init . simpleclip-mode))
@@ -815,7 +808,7 @@ language support package use =company= for some of their functionalities. To
 be fair, I'd like these mode to support Emacs's standard
 =completion-at-point-functions= interface.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package company
     :ensure t
     :delight company-mode
@@ -835,9 +828,7 @@ be fair, I'd like these mode to support Emacs's standard
           company-idle-delay nil
           company-tooltip-align-annotations t
           company-backends
-          '(company-capf
-            (company-dabbrev-code company-keywords)
-            company-dabbrev)
+          '(company-capf company-dabbrev-code company-dabbrev company-keywords)
           company-dabbrev-other-buffers t
           company-dabbrev-char-regexp nil
           company-dabbrev-downcase nil))
@@ -847,11 +838,17 @@ be fair, I'd like these mode to support Emacs's standard
     :bind ("C-x C-l" . company-same-mode-buffer-lines))
 #+END_SRC
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package corfu
     :ensure t
     :hook ((prog-mode . corfu-mode)
-           (eshell-mode . corfu-mode)))
+           (web-mode . corfu-mode)
+           (eshell-mode . corfu-mode))
+    :bind* (:map corfu-map ("C-M-h" . corfu-show-documentation)))
+
+  (use-package dabbrev
+    :bind (("M-/" . dabbrev-expand)
+           ("C-M-/" . completion-at-point)))
 #+end_src
 
 ** Error checking
@@ -908,7 +905,7 @@ re-run the tests.
 
 ** Code folding
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (define-fringe-bitmap 'hideshow-fringe-marker [255] nil 16 '(top t))
 
   (defun td/hideshow-set-up-overlay (ov)
@@ -1207,10 +1204,6 @@ manage Docker images and containers.
 
   (use-package terraform-doc
     :ensure t)
-
-  (use-package company-terraform
-    :ensure t
-    :hook (terraform-mode . company-terraform-init))
 #+end_src
 
 ** SQL
@@ -1455,7 +1448,8 @@ bold and ligatures support :(.
 Enable ligatures, only available in railwaycat Mac port.
 
 #+BEGIN_SRC emacs-lisp
-  (mac-auto-operator-composition-mode)
+  (when (fboundp 'mac-auto-operator-composition-mode)
+    (mac-auto-operator-composition-mode))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -1502,13 +1496,13 @@ theme named =user= will always have the highest priority.
 I also have very good experience with *Tango Plus*. Its philosophy of not
 getting in the way is interesting.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package tango-plus-theme
     :ensure t
     :init (load-theme 'tango-plus t))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package doom-themes
     :ensure t
     :init
@@ -1519,47 +1513,9 @@ getting in the way is interesting.
            (org-mode . doom-themes-visual-bell-config)))
 #+END_SRC
 
-I also have an alternate light-theme for backup or use in
-presentation, which is *base16-github* from [[https://github.com/belak/base16-emacs][base16-themes]] package.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package base16-theme
-    :ensure t
-    :config (load-theme 'base16-phd t))
-#+END_SRC
-
-Mode line
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package doom-modeline
-    :ensure t
-    :hook (after-init . doom-modeline-mode)
-    :config
-    (setq doom-modeline-height 1))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package smart-mode-line
-    :ensure t
-    :hook (after-init . sml/setup))
-#+END_SRC
-
-#+begin_src emacs-lisp :tangle no
-  (use-package mini-modeline
-    :ensure t
-    :delight mini-modeline-mode
-    :hook (after-init . mini-modeline-mode))
-#+end_src
-
-Show current function name in the mode line:
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (which-function-mode t)
-#+END_SRC
-
 #+BEGIN_SRC emacs-lisp
   (global-eldoc-mode -1)
-  (bind-key "C-c l" #'eldoc-print-current-symbol-info)
+  (bind-key "C-c l" (lambda () (interactive) (eldoc-print-current-symbol-info)))
 #+END_SRC
 
 Line and column numbers, which I find only helpful when tracking
