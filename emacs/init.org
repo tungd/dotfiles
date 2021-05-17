@@ -261,14 +261,18 @@ quite minimal but is very very fast.
            ("M-g b" . consult-bookmark)
            ("M-g y" . consult-yank)
            ("M-g t" . consult-theme)
-           ("M-g e" . consult-flymake)
            ("M-g m" . consult-mode-command)
-           ;([remap switch-to-buffer] . consult-buffer)
+           ;;([remap switch-to-buffer] . consult-buffer)
            ([remap goto-line] . consult-goto-line))
     :custom
     (xref-show-xrefs-function #'consult-xref)
     (xref-show-definitions-function #'consult-xref)
-    (consult-project-root-function #'td/project-current-root))
+    (consult-project-root-function #'td/project-current-root)
+    :config
+    (eval-after-load 'flycheck
+      (progn
+        (require 'consult-flycheck)
+        (bind-key "M-g e" #'consult-flycheck))))
 
   (use-package recentf
     :hook (after-init . recentf-mode)
@@ -885,7 +889,7 @@ be fair, I'd like these mode to support Emacs's standard
 
 Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (defun flymake-proc-create-temp-in-tmp (file-name)
     (concat temporary-file-directory file-name))
 
@@ -899,6 +903,12 @@ Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
      'flymake-proc-create-temp-inplace
      :filter-return #'flymake-proc-create-temp-in-tmp))
 #+END_SRC
+
+#+begin_src emacs-lisp
+  (use-package flycheck
+    :ensure t
+    :hook (after-init . global-flycheck-mode))
+#+end_src
 
 ** Version Control
 
@@ -1166,50 +1176,7 @@ Python or Haskell:
     :ensure t)
 #+end_src
 
-** FSharp
-
-#+begin_src emacs-lisp
-  (use-package fsharp-mode
-    :ensure t
-    :mode (("\\.fsproj" . nxml-mode)))
-#+end_src
-
-** Go
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package go-mode
-    :ensure t
-    :mode (("\\.go$" . go-mode)))
-#+END_SRC
-
-** Swift
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package swift-mode
-    :ensure t
-    :mode (("\\.swift" . swift-mode)))
-#+END_SRC
-
-** Solidity
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package solidity-mode
-    :ensure t
-    :mode (("\.sol$" . solidity-mode)))
-#+END_SRC
-
 ** Java
-** Clojure
-
-#+begin_src emacs-lisp
-  (use-package clojure-mode
-    :ensure t)
-
-  (use-package inf-clojure
-    :ensure t
-    :hook (clojure-mode . inf-clojure-minor-mode))
-#+end_src
-
 ** Docker
 
 I use Docker for almost every project now, it is useful even just for setting up
@@ -1537,26 +1504,6 @@ theme named =user= will always have the highest priority.
     :hook (prog-mode . highlight-numbers-mode))
 #+END_SRC
 
-I also have very good experience with *Tango Plus*. Its philosophy of not
-getting in the way is interesting.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package tango-plus-theme
-    :ensure t
-    :init (load-theme 'tango-plus t))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package doom-themes
-    :ensure t
-    :init
-    (eval-and-compile
-      (setq doom-themes-enable-italic nil)
-      (load-theme 'doom-peacock t))
-    :hook ((org-mode . doom-themes-org-config)
-           (org-mode . doom-themes-visual-bell-config)))
-#+END_SRC
-
 #+BEGIN_SRC emacs-lisp
   (global-eldoc-mode -1)
   (bind-key "C-c l" (lambda () (interactive) (eldoc-print-current-symbol-info)))
@@ -1631,6 +1578,12 @@ kind of distracting, but it is really helpful sometimes.
         "Markers disappear and reapear is kind of annoying to me.")))
 #+END_SRC
 
+#+begin_src emacs-lisp
+  (use-package mini-frame
+    :ensure t
+    :hook (after-init . mini-frame-mode))
+#+end_src
+
 
 * Misc
 
@@ -1647,18 +1600,6 @@ kind of distracting, but it is really helpful sometimes.
     (shell-command "osascript -e 'tell application \"Microsoft Edge Dev\" to reload active tab of window 1'"))
 
   (bind-key* "C-M-r" #'td/refresh-front-most-tab)
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (defun td/cycle-themes ()
-    (interactive)
-    (let* ((current-theme (car custom-enabled-themes))
-           (index (or (-elem-index current-theme (custom-available-themes)) 0))
-           (next-theme (nth (+ 1 index) (custom-available-themes))))
-      (disable-theme current-theme)
-      (load-theme next-theme t)))
-
-  (bind-key "C-c t n" #'td/cycle-themes)
 #+END_SRC
 
 
