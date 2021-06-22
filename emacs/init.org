@@ -181,7 +181,7 @@ still some missing features coming from =projectile=, but I can live with that.
 
 #+begin_src emacs-lisp
   (use-package project
-    :commands (project-find-file project-root project-current)
+    :commands (project-find-file project-current)
     :bind (("C-M-'" . project-find-file)))
 #+end_src
 
@@ -269,7 +269,7 @@ quite minimal but is very very fast.
     :bind (("C-M-l" . consult-line)
            ("C-M-j" . consult-buffer)
            ("M-g b" . consult-bookmark)
-           ("M-g y" . consult-yank)
+           ("M-g y" . consult-yank-from-kill-ring)
            ("M-g t" . consult-theme)
            ("M-g m" . consult-mode-command)
            ;;([remap switch-to-buffer] . consult-buffer)
@@ -318,8 +318,8 @@ Split windows horizontally by default.
 #+begin_src emacs-lisp
   (use-package ace-window
     :ensure t
-    :bind* (("M-o" . ace-window)
-            ("C-M-o" . ace-delete-window)))
+    :bind* (("M-j" . ace-window)
+            ("M-J" . ace-delete-window)))
 #+end_src
 
 I use =shackle= to manage popup windows. It was pulled from MELPA so I have it
@@ -409,7 +409,7 @@ Editing utilities:
   (use-package crux
     :ensure t
     :hook (after-init . crux-reopen-as-root-mode)
-    :bind (("C-M-]" . crux-switch-to-previous-buffer)
+    :bind (("M-]" . crux-switch-to-previous-buffer)
            ("M-J" . crux-top-join-line)
            ("M-=" . crux-cleanup-buffer-or-region)
            ("C-M-k" . crux-kill-whole-line)
@@ -675,12 +675,11 @@ By default Emacs doesn't even have redo!
 ** EShell
 
 #+BEGIN_SRC emacs-lisp
-  (defun td/with-face (str &rest properties)
-    (propertize str 'face properties))
-
   (use-package eshell-toggle
     :ensure t
-    :bind* (("C-c C-s" . eshell-toggle)))
+    :bind* (("C-c C-s" . eshell-toggle))
+    :custom
+    (eshell-toggle-use-git-root t))
 
   (use-package eshell-up
     :ensure t
@@ -706,49 +705,16 @@ By default Emacs doesn't even have redo!
 
       (defun td/eshell-prompt ()
         (format
-         "\n%s@%s in %s %s\n"
-         (td/with-face user-login-name :foreground "#dc322f")
-         (td/with-face (or (getenv "HOST") (system-name)) :foreground "#b58900")
-         (td/with-face (td/eshell-pwd) :foreground "#859900")
-         (if (= (user-uid) 0) (td/with-face "#" :foreground "red") "$")
+         "\n%s@%s in %s\n%s "
+         (propertize user-login-name 'face '(:foreground "#dc322f"))
+         (propertize (or (getenv "HOST") (system-name)) 'face '(:foreground "#b58900"))
+         (propertize (td/eshell-pwd) 'face '(:foreground "#859900"))
+         (if (= (user-uid) 0)
+             (propertize "#" 'face '(:foreground "red")) "$")
          ;;(eshell-git-prompt-robbyrussell)
          ))
 
-      (defun eshell/open (args)
-        (interactive)
-        (shell-command
-         (concat (cl-case system-type
-                   ((darwin) "open")
-                   ((windows-nt) "start")
-                   (t "xdg-open"))
-                 (format " %s" args))))
-
-      (setq eshell-prompt-function #'td/eshell-prompt
-            eshell-prompt-regexp "^[^#$\\n]*[#$] "
-            eshell-highlight-prompt nil)))
-
-  (use-package eshell
-    :defer t
-    :config
-    (eval-and-compile
-      (defun td/eshell-pwd ()
-        (replace-regexp-in-string
-         (regexp-quote (expand-file-name "~"))
-         "~"
-         (eshell/pwd)))
-
-      (defun td/eshell-git-prompt ()
-        )
-
-      (defun td/eshell-prompt ()
-        (format
-         "\n%s@%s in %s\n%s "
-         (td/with-face user-login-name :foreground "#dc322f")
-         (td/with-face (or (getenv "HOST") (system-name)) :foreground "#b58900")
-         (td/with-face (td/eshell-pwd) :foreground "#859900")
-         (if (= (user-uid) 0) (td/with-face "#" :foreground "red") "$")
-         ;; (td/eshell-git-prompt)
-         ))
+      (defalias 'eshell/e 'find-file)
 
       (defun eshell/open (args)
         (interactive)
@@ -758,6 +724,9 @@ By default Emacs doesn't even have redo!
                    ((windows-nt) "start")
                    (t "xdg-open"))
                  (format " %s" args))))
+
+      (require 'eshell-dotenv)
+      (add-hook 'eshell-directory-change-hook #'eshell-dotenv-update 100)
 
       (setq eshell-prompt-function #'td/eshell-prompt
             eshell-prompt-regexp "^[^#$\\n]*[#$] "
@@ -917,7 +886,9 @@ Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
 #+begin_src emacs-lisp
   (use-package flycheck
     :ensure t
-    :hook (after-init . global-flycheck-mode))
+    :hook (after-init . global-flycheck-mode)
+    :custom
+    (flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
 #+end_src
 
 ** Version Control
@@ -928,9 +899,9 @@ built-in VC has great support for git but Magit is godsend.
 #+BEGIN_SRC emacs-lisp
   (use-package magit
     :ensure t
-    :bind ([remap project-vc-dir] . magit)
-    :config
-    (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
+    :bind ("C-x p v" . magit)
+    :custom
+    (magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1))
 #+END_SRC
 
 ** Compile
@@ -1186,6 +1157,10 @@ Python or Haskell:
 
   (use-package dune
     :ensure t)
+
+  (use-package lsp-ocaml
+    :custom
+    (lsp-ocaml-lang-server-command '("ocamllsp", "--stdio")))
 #+end_src
 
 ** Java
@@ -1437,14 +1412,15 @@ bold and ligatures support :(.
      (border-width . 0) (internal-border-width . 0)
      (ns-appearance . dark)
      ;; (font . "Monaco 14")
-     (font . "Menlo 14")
+     ;; (font . "Menlo 14")
      ;; (font . "SF Mono 14")
      ;; (font . "Source Code Pro 14")
-     ;; (font . "JetBrains Mono 14")
+     (font . "JetBrains Mono 14")
      ;; (font . "Cascadia Mono 14")
      ;; (font . "Fira Mono 14")
      (top . 0) (left . 480)
-     (width . 96) (height . 96)
+     ;; (width . 96) (height . 96)
+     (fullscreen . maximized)
      (vertical-scroll-bars . nil)
      (tool-bar-lines . 0)))
 
@@ -1600,7 +1576,7 @@ kind of distracting, but it is really helpful sometimes.
     (add-hook 'after-make-frame-functions #'td/adapt-font-size)
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package mini-frame
     :ensure t
     :hook (after-init . mini-frame-mode))
