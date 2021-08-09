@@ -85,8 +85,11 @@ Homebrew. Installation is a little bit more involved, though.
 worked on recently by typing just a partial path of it.
 
 #+BEGIN_SRC sh
+  mkdir -p ~/.local/vendor
   curl -L https://raw.githubusercontent.com/rupa/z/master/z.sh > ~/.local/vendor/z.sh
 #+END_SRC
+
+#+RESULTS:
 
 ** =direnv=
 

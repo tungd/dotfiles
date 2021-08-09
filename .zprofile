@@ -57,14 +57,14 @@ autoload -U edit-command-line
 zle -N edit-command-line
 bindkey '^X^E' edit-command-line
 
-if [ "$TERM_PROGRAM" = "Apple_Terminal" ] || [ "$TERM_PROGRAM" = "iTerm.app" ]; then
-  update_terminal_cwd () {
-    local PWD_URL="file://$HOST${PWD// /%20}"
-    printf '\e]7;%s\a' "$PWD_URL"
-  }
-  update_terminal_cwd
-  add-zsh-hook chpwd update_terminal_cwd
-fi
+# if [ "$TERM_PROGRAM" = "Apple_Terminal" ] || [ "$TERM_PROGRAM" = "iTerm.app" ]; then
+#   update_terminal_cwd () {
+#     local PWD_URL="file://$HOST${PWD// /%20}"
+#     printf '\e]7;%s\a' "$PWD_URL"
+#   }
+#   update_terminal_cwd
+#   add-zsh-hook chpwd update_terminal_cwd
+# fi
 
 if [[ $EMACS = t ]]; then
   unsetopt zle
@@ -92,6 +92,11 @@ notify() {
   osascript -e "display notification \"$2\" with title \"$1\""
 }
 
+fixmod() {
+    find $1 -type f -exec chmod 644 {} \;
+    find $1 -type d -exec chmod 755 {} \;
+}
+
 # opam configuration
 test -r $HOME/.opam/opam-init/init.zsh && . $HOME/.opam/opam-init/init.zsh > /dev/null 2> /dev/null || true
 
@@ -100,3 +105,5 @@ export PATH=$HOME/.poetry/bin:$PATH
 export PATH=$HOME/.yarn/bin:$PATH
 
 export PATH=$HOME/Library/Python/3.9/bin:$PATH
+
+export NOMAD_ADDR=http://192.168.192.159:4646

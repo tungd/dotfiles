@@ -95,8 +95,7 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 #+begin_src emacs-lisp
   (setq-default bidi-display-reordering nil)
 
-  (setq gc-cons-threshold (* 100 1024 1024)
-        read-process-output-max (* 8 1024 1024)
+  (setq read-process-output-max (* 8 1024 1024)
         inhibit-compacting-font-caches t)
 #+end_src
 
@@ -179,17 +178,20 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 Emacs built-in =project.el= has gone a long way so I'm using that now. There are
 still some missing features coming from =projectile=, but I can live with that.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package project
     :commands (project-find-file project-current)
     :bind (("C-M-'" . project-find-file)))
 #+end_src
 
 #+begin_src emacs-lisp
-  (use-package ag
+  (use-package projectile
     :ensure t
-    :defer t
-    :bind* ("C-x p s" . ag-project))
+    :hook (after-init . projectile-mode)
+    :commands (projectile-find-file)
+    :bind (:map projectile-mode-map
+           ("C-M-'" . projectile-find-file)
+           ("C-x p" . projectile-command-map)))
 #+end_src
 
 ** Symbols
@@ -221,19 +223,6 @@ command, similar to Ivy or Helm. What set it aside is the fact that it is built
 upon =completing-read=, instead of wrapping it like the others, which make it
 quite minimal but is very very fast.
 
-#+begin_src emacs-lisp :tangle no
-  (use-package orderless
-    :ensure t
-    :custom
-    (completion-styles '(orderless))
-    (completion-category-defaults nil)
-    (completion-category-overrides '((file (styles . (partial-completion))))))
-
-  (use-package vertico
-    :ensure t
-    :hook (after-init . vertico-mode))
-#+end_src
-
 #+begin_src emacs-lisp
   (ido-mode -1)
 
@@ -260,10 +249,6 @@ quite minimal but is very very fast.
 #+end_src
 
 #+begin_src emacs-lisp
-  (defun td/project-current-root ()
-    (when-let ((p (project-current)))
-      (car (project-roots p))))
-
   (use-package consult
     :ensure t
     :bind (("C-M-l" . consult-line)
@@ -272,12 +257,14 @@ quite minimal but is very very fast.
            ("M-g y" . consult-yank-from-kill-ring)
            ("M-g t" . consult-theme)
            ("M-g m" . consult-mode-command)
+           ("C-x p s" . consult-ripgrep)
+           ([remap isearch-forward] . consult-isearch)
            ;;([remap switch-to-buffer] . consult-buffer)
            ([remap goto-line] . consult-goto-line))
     :custom
     (consult-preview-key (kbd "M-p"))
     (consult-narrow-key (kbd "<"))
-    (consult-project-root-function #'td/project-current-root)
+    (consult-project-root-function #'vc-root-dir)
     (xref-show-xrefs-function #'consult-xref)
     (xref-show-definitions-function #'consult-xref))
 
@@ -286,7 +273,9 @@ quite minimal but is very very fast.
     :custom
     (recentf-max-saved-items 128)
     :config
-    (add-to-list 'recentf-exclude "elpa/.*"))
+    (add-to-list 'recentf-exclude "elpa/.*")
+    (add-to-list 'recentf-exclude "__init__.py")
+    (add-to-list 'recentf-exclude "node_modules/.*"))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -303,40 +292,11 @@ Split windows horizontally by default.
         split-height-threshold 0)
 #+end_src
 
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package window-numbering
-    :ensure t
-    :hook (after-init . window-numbering-mode)
-    :config
-    (eval-and-compile
-      (defun td/window-numbering-get-number-string (number-string)
-        (format "[%s] " number-string))
-      (advice-add 'window-numbering-get-number-string
-                  :filter-return #'td/window-numbering-get-number-string)))
-#+END_SRC
-
 #+begin_src emacs-lisp
   (use-package ace-window
     :ensure t
     :bind* (("M-j" . ace-window)
             ("M-J" . ace-delete-window)))
-#+end_src
-
-I use =shackle= to manage popup windows. It was pulled from MELPA so I have it
-installed in =vendor=. Currently I only one rule that make =compilation-mode=
-windows pop under the current window and don't select it. In the future, I might
-want to change this to be dynamic based on the result of the compilation, using
-the =:custom= action.
-
-#+begin_src emacs-lisp :tangle no
-  (use-package shackle
-    :hook (after-init . shackle-mode)
-    :custom
-    (shackle-default-size 0.4)
-    (shackle-default-alignment 'below)
-    (shackle-rules `((compilation-mode :noselect t :size 0.2)
-                     (ag-mode :select t)
-                     ("*eldoc*" :noselect t))))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -380,7 +340,8 @@ Temporary "focus" on a buffer by maximizing it in the current frame.
 
 #+BEGIN_SRC emacs-lisp
   (use-package uniquify
-    :config (setq uniquify-buffer-name-style 'forward))
+    :custom
+    (uniquify-buffer-name-style 'forward))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -402,22 +363,16 @@ Basic settings:
 Editing utilities:
 
 #+BEGIN_SRC emacs-lisp
-  (defun td/visit-eshell-buffer ()
-    (interactive)
-    (crux-start-or-switch-to #'eshell "*eshell*"))
-
   (use-package crux
     :ensure t
     :hook (after-init . crux-reopen-as-root-mode)
-    :bind (("M-]" . crux-switch-to-previous-buffer)
+    :bind (("M-C-]" . crux-switch-to-previous-buffer)
            ("M-J" . crux-top-join-line)
            ("M-=" . crux-cleanup-buffer-or-region)
            ("C-M-k" . crux-kill-whole-line)
            ("C-c D" . crux-delete-file-and-buffer)
            ("C-c r" . crux-rename-file-and-buffer)
            ("C-c C-o" . crux-open-with)
-           ;("C-c t" . crux-visit-term-buffer)
-           ("C-c s" . td/visit-eshell-buffer)
            ([remap kill-line] . crux-smart-kill-line))
     :config
     (crux-with-region-or-buffer indent-region)
@@ -429,18 +384,6 @@ Editing utilities:
   (bind-key* "s-n" #'next-buffer)
   (bind-key* "s-p" #'previous-buffer)
   (bind-key [remap just-one-space] #'cycle-spacing)
-#+END_SRC
-
-Automatically apply external changes: This is debatable, from my own
-experience it is helpful.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package autorevert
-    :delight auto-revert-mode
-    :hook (after-init . global-auto-revert-mode)
-    :config
-    (setq auto-revert-avoid-polling t
-          auto-revert-interval 2))
 #+END_SRC
 
 Create directory for the file if not exists:
@@ -460,14 +403,6 @@ Make the file executable if starting with "shebang":
   (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
 #+END_SRC
 
-Separate the kill-ring from system clipboard.
-
-#+begin_src emacs-lisp :tangle no
-  (use-package simpleclip
-    :ensure t
-    :hook (after-init . simpleclip-mode))
-#+end_src
-
 #+begin_src emacs-lisp
   (use-package evil
     :ensure t
@@ -475,7 +410,7 @@ Separate the kill-ring from system clipboard.
     :custom
     (evil-cross-lines t)
     (evil-ex-substitute-global t)
-    (evil-undo-system 'undo-redo))
+    (evil-undo-system 'undo-fu))
 
   (use-package evil-surround
     :ensure t
@@ -484,7 +419,7 @@ Separate the kill-ring from system clipboard.
 
 ** Search and replace
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package visual-regexp
     :ensure t
     :bind (("M-r" . vr/query-replace)
@@ -492,7 +427,7 @@ Separate the kill-ring from system clipboard.
            ("C-M-r" . vr/mc-mark)))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package ctrlf
     :ensure t
     :hook (after-init . ctrlf-mode))
@@ -510,7 +445,6 @@ Long lines are annoying. Auto wrap all texts at 80.
    fill-column 80)
 
   (add-hook 'text-mode-hook #'turn-on-auto-fill)
-  (add-hook 'prog-mode-hook #'turn-on-auto-fill)
 #+END_SRC
 
 Sometimes long lines are inevitable though, as I do have to manually edit
@@ -579,7 +513,7 @@ NOTE: This package is huge, I'm still learning it.
     :hook (after-init . electric-pair-mode))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package expand-region
     :ensure t
     :bind ("M--" . er/expand-region))
@@ -594,17 +528,6 @@ NOTE: This package is huge, I'm still learning it.
 
   (use-package delsel
     :hook (after-init . delete-selection-mode))
-#+END_SRC
-
-** Undo
-
-By default Emacs doesn't even have redo!
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package undo-tree
-    :ensure t
-    :delight undo-tree-mode
-    :hook (after-init . global-undo-tree-mode))
 #+END_SRC
 
 ** Snippets
@@ -630,7 +553,6 @@ By default Emacs doesn't even have redo!
 
 #+BEGIN_SRC emacs-lisp
   (use-package align
-    :defer t
     :bind (("C-c =" . align))
     :config
     (add-to-list 'align-rules-list
@@ -659,9 +581,10 @@ By default Emacs doesn't even have redo!
 
 #+BEGIN_SRC emacs-lisp
   (use-package ediff
-    :config
-    (setq ediff-window-setup-function #'ediff-setup-windows-plain)
-    (setq ediff-split-window-function #'split-window-horizontally))
+    :defer t
+    :custom
+    (ediff-window-setup-function 'ediff-setup-windows-plain)
+    (ediff-split-window-function 'split-window-horizontally))
 #+END_SRC
 
 
@@ -725,8 +648,8 @@ By default Emacs doesn't even have redo!
                    (t "xdg-open"))
                  (format " %s" args))))
 
-      (require 'eshell-dotenv)
-      (add-hook 'eshell-directory-change-hook #'eshell-dotenv-update 100)
+      ;; (require 'eshell-dotenv)
+      ;; (add-hook 'eshell-directory-change-hook #'eshell-dotenv-update 100)
 
       (setq eshell-prompt-function #'td/eshell-prompt
             eshell-prompt-regexp "^[^#$\\n]*[#$] "
@@ -734,13 +657,6 @@ By default Emacs doesn't even have redo!
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle no
-  (use-package ag
-    :ensure t
-    :init
-    (defun eshell/ag (args) (ag args (eshell/pwd))))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
   (use-package with-editor
     :ensure t
     :hook ((term-exec . with-editor-export-editor)
@@ -756,14 +672,27 @@ By default Emacs doesn't even have redo!
     :config
     (eval-and-compile
       (setq password-cache-expiry nil
-            tramp-debug-buffer t
-            tramp-default-method "ssh"
-            tramp-verbose 2)
+            ;; tramp-debug-buffer t
+            tramp-default-method "scp"
+            tramp-verbose 1)
 
       (add-to-list 'auth-sources "~/Projects/dotfiles/dotfiles/.emacs.d/authinfo.gpg")
       (add-to-list 'auth-sources 'macos-keychain-generic t)
       (setq ange-ftp-netrc-filename "~/Projects/dotfiles/dotfiles/.emacs.d/authinfo.gpg")))
 #+END_SRC
+
+Some speedup for Tramp:
+
+#+begin_src emacs-lisp
+  (use-package vc
+    :custom
+    (vc-ignore-dir-regexp
+        (format "\\(%s\\)\\|\\(%s\\)"
+                vc-ignore-dir-regexp
+                tramp-file-name-regexp))
+    (vc-follow-symlinks t)
+    (vc-handled-backends '(Git)))
+#+end_src
 
 
 * Programming
@@ -798,16 +727,6 @@ By default Emacs doesn't even have redo!
     :ensure t
     :bind (("M-g e" . consult-lsp-diagnostics)
            ("M-g i" . consult-lsp-symbols)))
-#+end_src
-
-#+begin_src emacs-lisp
-  (use-package eldoc
-    :config
-    (setq eldoc-documentation-function
-          (lambda ()
-            (when (eql last-command-event 32)
-              (let (eldoc-documentation-function)
-                (eldoc-print-current-symbol-info))))))
 #+end_src
 
 ** Auto completion
@@ -850,19 +769,6 @@ be fair, I'd like these mode to support Emacs's standard
     :ensure t
     :hook (after-init . company-prescient-mode))
 #+END_SRC
-
-#+begin_src emacs-lisp :tangle no
-  (use-package corfu
-    :ensure t
-    :hook ((prog-mode . corfu-mode)
-           (web-mode . corfu-mode)
-           (eshell-mode . corfu-mode))
-    :bind* (:map corfu-map ("C-M-h" . corfu-show-documentation)))
-
-  (use-package dabbrev
-    :bind (("M-/" . dabbrev-expand)
-           ("C-M-/" . completion-at-point)))
-#+end_src
 
 ** Error checking
 
@@ -1268,6 +1174,11 @@ Here's my basic Org setup:
 - Enable GTD todo keyword sequence and time logging
 
 #+BEGIN_SRC emacs-lisp
+  (use-package ob-async
+    :ensure t
+    :config
+    (require 'ob-async))
+
   (use-package org
     :hook ((org-mode . org-indent-mode))
     :delight org-indent-mode
@@ -1574,12 +1485,6 @@ kind of distracting, but it is really helpful sometimes.
 
     (add-function :after after-focus-change-function #'td/adapt-font-size)
     (add-hook 'after-make-frame-functions #'td/adapt-font-size)
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (use-package mini-frame
-    :ensure t
-    :hook (after-init . mini-frame-mode))
 #+end_src
 
 
