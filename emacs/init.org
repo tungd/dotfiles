@@ -257,17 +257,20 @@ quite minimal but is very very fast.
            ("M-g y" . consult-yank-from-kill-ring)
            ("M-g t" . consult-theme)
            ("M-g m" . consult-mode-command)
-           ("C-x p s" . consult-ripgrep)
-           ([remap isearch-forward] . consult-isearch)
-           ;;([remap switch-to-buffer] . consult-buffer)
-           ([remap goto-line] . consult-goto-line))
+           ([remap goto-line] . consult-goto-line)
+           ([remap switch-to-buffer] . consult-buffer)
+           ;; ([remap isearch-forward] . consult-isearch)
+           )
+    :bind* (("C-x p s" . consult-ripgrep))
     :custom
     (consult-preview-key (kbd "M-p"))
     (consult-narrow-key (kbd "<"))
     (consult-project-root-function #'vc-root-dir)
     (xref-show-xrefs-function #'consult-xref)
     (xref-show-definitions-function #'consult-xref))
+#+end_src
 
+#+begin_src emacs-lisp
   (use-package recentf
     :hook (after-init . recentf-mode)
     :custom
@@ -299,7 +302,7 @@ Split windows horizontally by default.
             ("M-J" . ace-delete-window)))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package golden-ratio
     :ensure t
     :hook (after-init . golden-ratio-mode)
@@ -410,7 +413,7 @@ Make the file executable if starting with "shebang":
     :custom
     (evil-cross-lines t)
     (evil-ex-substitute-global t)
-    (evil-undo-system 'undo-fu))
+    (evil-undo-system 'undo-redo))
 
   (use-package evil-surround
     :ensure t
@@ -427,7 +430,7 @@ Make the file executable if starting with "shebang":
            ("C-M-r" . vr/mc-mark)))
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package ctrlf
     :ensure t
     :hook (after-init . ctrlf-mode))
@@ -698,6 +701,32 @@ Some speedup for Tramp:
 * Programming
 
 #+begin_src emacs-lisp
+  (use-package eglot
+    :ensure t
+    :hook ((web-mode . eglot)
+           (tuareg-mode . eglot)
+           (js-mode . eglot)
+           (js-jsx-mode . eglot)
+           (typescript-mode . eglot)
+           (reason-mode .eglot))
+    :config
+    (add-to-list 'eglot-server-programs '(web-mode . ("typescript-language-server" "--stdio"))))
+#+end_src
+
+#+begin_src emacs-lisp
+  (defun td/eldoc-select-doc-buffer (_doc interactive)
+    (when interactive
+    (run-at-time 0.1 nil #'pop-to-buffer "*eldoc*")))
+
+  (use-package eldoc
+    :bind ("C-h C-h" . eldoc-print-current-symbol-info)
+    :config
+    (global-eldoc-mode -1)
+    (setq eldoc-display-functions '(eldoc-display-in-buffer))
+    (advice-add 'eldoc-display-in-buffer :after #'td/eldoc-select-doc-buffer))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
   (defun td/maybe-enable-lsp ()
     (interactive)
     (when (string-suffix-p "sx" (buffer-file-name))
@@ -774,7 +803,7 @@ be fair, I'd like these mode to support Emacs's standard
 
 Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (defun flymake-proc-create-temp-in-tmp (file-name)
     (concat temporary-file-directory file-name))
 
@@ -789,7 +818,7 @@ Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
      :filter-return #'flymake-proc-create-temp-in-tmp))
 #+END_SRC
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package flycheck
     :ensure t
     :hook (after-init . global-flycheck-mode)
@@ -968,7 +997,7 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 
 ** Python
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (defun td/lsp-python ()
     (require 'lsp-python-ms)
     (lsp))
@@ -1063,7 +1092,9 @@ Python or Haskell:
 
   (use-package dune
     :ensure t)
+#+end_src
 
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package lsp-ocaml
     :custom
     (lsp-ocaml-lang-server-command '("ocamllsp", "--stdio")))

@@ -262,7 +262,7 @@ end alfred_script</string>
 			<dict>
 				<key>paths</key>
 				<array>
-					<string>/Applications/MacPorts/EmacsMac.app</string>
+					<string>/Applications/MacPorts/Emacs.app</string>
 				</array>
 				<key>toggle</key>
 				<false/>

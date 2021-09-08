@@ -15,7 +15,7 @@
  '(mini-frame-show-paramters '((top . 0) (width . 90) (left . 0)))
  '(objed-cursor-color "#e1c1ee")
  '(package-selected-packages
-   '(projectile undo-fu dts-mode cmake-mode kconfig-mode csv-mode org ob-async elixir-mode lua-mode swift-mode consult-lsp kaolin-themes doom-themes lsp-python-ms consult-flycheck mini-frame flycheck github-theme smart-mode-line yasnippet yaml-mode which-key web-mode use-package typescript-mode tuareg terraform-mode terraform-doc tango-plus-theme sqlformat selectrum-prescient reason-mode rainbow-mode py-isort ob-http ob-graphql nginx-mode magit highlight-numbers haskell-mode golden-ratio feature-mode exec-path-from-shell evil-surround eshell-z eshell-up eshell-toggle emmet-mode dune dockerfile-mode docker delight crux consult company-prescient comment-dwim-2 ace-window))
+   '(markdown-mode consult-eglot company-ctags ctags-update ctrlf projectile undo-fu dts-mode cmake-mode kconfig-mode csv-mode org ob-async elixir-mode lua-mode swift-mode kaolin-themes doom-themes consult-flycheck mini-frame flycheck github-theme smart-mode-line yasnippet yaml-mode which-key web-mode use-package typescript-mode tuareg terraform-mode terraform-doc tango-plus-theme sqlformat selectrum-prescient reason-mode rainbow-mode py-isort ob-http ob-graphql nginx-mode magit highlight-numbers haskell-mode golden-ratio feature-mode exec-path-from-shell evil-surround eshell-z eshell-up eshell-toggle emmet-mode dune dockerfile-mode docker delight crux consult company-prescient comment-dwim-2 ace-window))
  '(pdf-view-midnight-colors (cons "#c6c6c6" "#282b33"))
  '(rustic-ansi-faces
    ["#282b33" "#e1c1ee" "#5b94ab" "#cfcf9c" "#819cd6" "#a6c1e0" "#7289bc" "#c6c6c6"])

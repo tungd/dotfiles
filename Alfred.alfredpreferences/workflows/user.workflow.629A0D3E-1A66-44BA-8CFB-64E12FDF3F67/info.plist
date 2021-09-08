@@ -118,7 +118,7 @@
 	<key>description</key>
 	<string>Yabai hotkeys</string>
 	<key>disabled</key>
-	<false/>
+	<true/>
 	<key>name</key>
 	<string>Yabai</string>
 	<key>objects</key>
