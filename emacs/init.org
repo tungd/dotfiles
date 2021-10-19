@@ -433,7 +433,10 @@ Make the file executable if starting with "shebang":
 #+begin_src emacs-lisp
   (use-package ctrlf
     :ensure t
-    :hook (after-init . ctrlf-mode))
+    :hook (after-init . ctrlf-mode)
+    :custom
+    (ctrlf-default-search-style 'regexp)
+    (ctrlf-alternate-search-style 'literal))
 #+end_src
 
 ** Long lines
@@ -516,7 +519,7 @@ NOTE: This package is huge, I'm still learning it.
     :hook (after-init . electric-pair-mode))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package expand-region
     :ensure t
     :bind ("M--" . er/expand-region))
@@ -703,12 +706,14 @@ Some speedup for Tramp:
 #+begin_src emacs-lisp
   (use-package eglot
     :ensure t
-    :hook ((web-mode . eglot)
-           (tuareg-mode . eglot)
-           (js-mode . eglot)
-           (js-jsx-mode . eglot)
-           (typescript-mode . eglot)
-           (reason-mode .eglot))
+    :bind (("C-c C-r" . eglot-rename)
+           ("C-c C-i" . eglot-code-action-organize-import))
+    :hook ((web-mode . eglot-ensure)
+           (tuareg-mode . eglot-ensure)
+           (js-mode . eglot-ensure)
+           (js-jsx-mode . eglot-ensure)
+           (typescript-mode . eglot-ensure)
+           (reason-mode . eglot-ensure))
     :config
     (add-to-list 'eglot-server-programs '(web-mode . ("typescript-language-server" "--stdio"))))
 #+end_src
@@ -1100,6 +1105,13 @@ Python or Haskell:
     (lsp-ocaml-lang-server-command '("ocamllsp", "--stdio")))
 #+end_src
 
+** Carp
+
+#+begin_src emacs-lisp
+  (use-package carp-mode
+    :mode ("\\.carp$" . carp-mode))
+#+end_src
+
 ** Java
 ** Docker
 
@@ -1360,9 +1372,8 @@ bold and ligatures support :(.
      (font . "JetBrains Mono 14")
      ;; (font . "Cascadia Mono 14")
      ;; (font . "Fira Mono 14")
-     (top . 0) (left . 480)
-     ;; (width . 96) (height . 96)
-     (fullscreen . maximized)
+     (top . 0) (left . 720)
+     (width . 128) (height . 96)
      (vertical-scroll-bars . nil)
      (tool-bar-lines . 0)))
 
