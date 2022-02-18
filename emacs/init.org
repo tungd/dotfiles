@@ -513,7 +513,9 @@ NOTE: This package is huge, I'm still learning it.
 #+BEGIN_SRC emacs-lisp
   (use-package paren
     :hook (after-init . show-paren-mode)
-    :custom (show-paren-delay 0))
+    :custom
+    (show-paren-delay 0)
+    (show-paren-context-when-offscreen t))
 
   (use-package elec-pair
     :hook (after-init . electric-pair-mode))
@@ -1423,6 +1425,8 @@ theme named =user= will always have the highest priority.
    '(font-lock-string-face ((t (:slant normal))))
    '(font-lock-constant-face ((t (:slant normal))))
 
+   '(org-block ((t (:inherit default))))
+
    '(fringe ((t (:background nil))))
    '(line-number ((t :foreground nil :inherit font-lock-comment-face)))
 
@@ -1431,11 +1435,7 @@ theme named =user= will always have the highest priority.
    '(markdown-inline-code-face ((t (:slant normal))))
 
    '(indent-guide-face ((t (:inherit font-lock-comment-face))))
-   '(web-mode-variable-name-face ((t (:inherit default))))
-
-   '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#81af34"))))
-   '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#ff0000"))))
-   '(diff-hl-change ((t (:inherit nil :background nil :foreground "#deae3e")))))
+   '(web-mode-variable-name-face ((t (:inherit default)))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -1496,22 +1496,28 @@ The default line continuation indicator is too standout and distracting for me.
 Display change marker based on =git=. I usually turn this off because it is
 kind of distracting, but it is really helpful sometimes.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
+  (define-fringe-bitmap 'td/diff-hl-bmp [#b11110000] 1 8 '(top t))
+
+  (defun td/diff-hl-fringe-bmp (_type _pos) 'td/diff-hl-bmp)
+
+  (defun td/diff-hl-overlay-modified (ov after-p beg end &optional len)
+    "No-op. Markers disappear and reapear is kind of annoying to me.")
+
   (use-package diff-hl
-    :defer t
     :ensure t
     :hook (after-init . global-diff-hl-mode)
-    :init
-    (eval-and-compile
-      (define-fringe-bitmap 'td/diff-hl-bmp [#b11110000] 1 8 '(top t))
-      (defun td/diff-hl-bmp-fn (type pos) 'td/diff-hl-bmp)
+    :custom
+    (diff-hl-draw-borders nil)
+    (diff-hl-fringe-bmp-function #'td/diff-hl-fringe-bmp)
+    :config
+    (custom-theme-set-faces
+     'user
+     '(diff-hl-insert ((t (:inherit nil :background nil :foreground "#81af34"))))
+     '(diff-hl-delete ((t (:inherit nil :background nil :foreground "#ff0000"))))
+     '(diff-hl-change ((t (:inherit nil :background nil :foreground "#deae3e")))))
 
-      (setq diff-hl-draw-borders nil
-            ;diff-hl-side 'right
-            diff-hl-fringe-bmp-function #'td/diff-hl-bmp-fn)
-
-      (defun diff-hl-overlay-modified (ov after-p beg end &optional len)
-        "Markers disappear and reapear is kind of annoying to me.")))
+    (advice-add 'diff-hl-overlay-modified :override #'td/diff-hl-overlay-modified))
 #+END_SRC
 
 #+begin_src emacs-lisp

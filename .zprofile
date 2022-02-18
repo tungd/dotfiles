@@ -104,6 +104,13 @@ export PATH=$HOME/.poetry/bin:$PATH
 
 export PATH=$HOME/.yarn/bin:$PATH
 
+export PATH=$HOME/.cargo/bin:$PATH
+
 export PATH=$HOME/Library/Python/3.9/bin:$PATH
 
 export NOMAD_ADDR=http://192.168.192.159:4646
+
+export CARP_DIR=$HOME/.local/Carp/
+
+export PNPM_HOME="/Users/tung/Library/pnpm"
+export PATH="$PNPM_HOME:$PATH"
