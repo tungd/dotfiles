@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: lambda
+# key: async ()
+# --
+async () => {
+  $0
+}

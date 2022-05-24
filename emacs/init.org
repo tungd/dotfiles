@@ -249,6 +249,12 @@ quite minimal but is very very fast.
 #+end_src
 
 #+begin_src emacs-lisp
+  (use-package mini-frame
+    :ensure t
+    :hook (after-init . mini-frame-mode))
+#+end_src
+
+#+begin_src emacs-lisp
   (use-package consult
     :ensure t
     :bind (("C-M-l" . consult-line)
@@ -261,7 +267,7 @@ quite minimal but is very very fast.
            ([remap switch-to-buffer] . consult-buffer)
            ;; ([remap isearch-forward] . consult-isearch)
            )
-    :bind* (("C-x p s" . consult-ripgrep))
+    ;; :bind* (("C-x p s" . consult-ripgrep))
     :custom
     (consult-preview-key (kbd "M-p"))
     (consult-narrow-key (kbd "<"))
@@ -706,6 +712,10 @@ Some speedup for Tramp:
 * Programming
 
 #+begin_src emacs-lisp
+  (defun td/eglot-maybe-tsx (interactive)
+    (when (eq "tsx" (file-name-extension (buffer-file-name)))
+      '("typescript-language-server" "--stdio")))
+
   (use-package eglot
     :ensure t
     :bind (("C-c C-r" . eglot-rename)
@@ -717,7 +727,7 @@ Some speedup for Tramp:
            (typescript-mode . eglot-ensure)
            (reason-mode . eglot-ensure))
     :config
-    (add-to-list 'eglot-server-programs '(web-mode . ("typescript-language-server" "--stdio"))))
+    (add-to-list 'eglot-server-programs `(web-mode . ,#'td/eglot-maybe-tsx)))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1368,10 +1378,10 @@ bold and ligatures support :(.
      (border-width . 0) (internal-border-width . 0)
      (ns-appearance . dark)
      ;; (font . "Monaco 14")
-     ;; (font . "Menlo 14")
+     (font . "Menlo 14")
      ;; (font . "SF Mono 14")
      ;; (font . "Source Code Pro 14")
-     (font . "JetBrains Mono 15")
+     ;; (font . "JetBrains Mono 15")
      ;; (font . "Cascadia Mono 14")
      ;; (font . "Fira Mono 14")
      ;; (top . 0) (left . 720)
@@ -1381,12 +1391,18 @@ bold and ligatures support :(.
      (tool-bar-lines . 0)))
 
   (blink-cursor-mode -1)
-  (load-theme 'deeper-blue)
+  ;(load-theme 'deeper-blue)
 #+END_SRC
 
 #+begin_src emacs-lisp
+  (use-package twilight-anti-bright-theme
+    :ensure t
+    :config (load-theme 'twilight-anti-bright))
+#+end_src
+
+#+begin_src emacs-lisp
   (use-package hl-line
-    :hook (prog-mode . hl-line-mode))
+    :hook (after-init . global-hl-line-mode))
 #+end_src
 
 Enable ligatures, only available in railwaycat Mac port.

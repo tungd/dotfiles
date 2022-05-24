@@ -60,6 +60,19 @@
 				<false/>
 			</dict>
 		</array>
+		<key>463B3D32-6EE1-4457-BCF4-D3D181A6A0FA</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>36F11C7E-857F-445D-932B-9A98F2ADD4A1</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
 		<key>6BCAC995-0EFD-4415-A51B-F7C6C4171BE9</key>
 		<array>
 			<dict>
@@ -136,6 +149,54 @@
 	<string>Launchpad</string>
 	<key>objects</key>
 	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>paths</key>
+				<array>
+					<string>/Applications/IntelliJ IDEA CE.app</string>
+				</array>
+				<key>toggle</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.launchfiles</string>
+			<key>uid</key>
+			<string>36F11C7E-857F-445D-932B-9A98F2ADD4A1</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>action</key>
+				<integer>0</integer>
+				<key>argument</key>
+				<integer>0</integer>
+				<key>focusedappvariable</key>
+				<false/>
+				<key>focusedappvariablename</key>
+				<string></string>
+				<key>hotkey</key>
+				<integer>34</integer>
+				<key>hotmod</key>
+				<integer>1310720</integer>
+				<key>hotstring</key>
+				<string>I</string>
+				<key>leftcursor</key>
+				<false/>
+				<key>modsmode</key>
+				<integer>0</integer>
+				<key>relatedAppsMode</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.hotkey</string>
+			<key>uid</key>
+			<string>463B3D32-6EE1-4457-BCF4-D3D181A6A0FA</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
 		<dict>
 			<key>config</key>
 			<dict>
@@ -440,11 +501,11 @@ end alfred_script</string>
 				<key>focusedappvariablename</key>
 				<string></string>
 				<key>hotkey</key>
-				<integer>35</integer>
+				<integer>0</integer>
 				<key>hotmod</key>
-				<integer>1310720</integer>
+				<integer>0</integer>
 				<key>hotstring</key>
-				<string>P</string>
+				<string></string>
 				<key>leftcursor</key>
 				<false/>
 				<key>modsmode</key>
@@ -557,6 +618,13 @@ end alfred_script</string>
 			<key>ypos</key>
 			<integer>205</integer>
 		</dict>
+		<key>36F11C7E-857F-445D-932B-9A98F2ADD4A1</key>
+		<dict>
+			<key>xpos</key>
+			<integer>680</integer>
+			<key>ypos</key>
+			<integer>45</integer>
+		</dict>
 		<key>3DEC19CE-AEF0-46EF-9DBA-86AFE21880BA</key>
 		<dict>
 			<key>xpos</key>
@@ -577,6 +645,13 @@ end alfred_script</string>
 			<integer>60</integer>
 			<key>ypos</key>
 			<integer>490</integer>
+		</dict>
+		<key>463B3D32-6EE1-4457-BCF4-D3D181A6A0FA</key>
+		<dict>
+			<key>xpos</key>
+			<integer>445</integer>
+			<key>ypos</key>
+			<integer>45</integer>
 		</dict>
 		<key>6BCAC995-0EFD-4415-A51B-F7C6C4171BE9</key>
 		<dict>

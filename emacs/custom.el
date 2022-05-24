@@ -6,7 +6,7 @@
  '(ansi-color-names-vector
    ["#282b33" "#e1c1ee" "#5b94ab" "#cfcf9c" "#819cd6" "#a6c1e0" "#7289bc" "#c6c6c6"])
  '(custom-safe-themes
-   '("1623aa627fecd5877246f48199b8e2856647c99c6acdab506173f9bb8b0a41ac" "1d78d6d05d98ad5b95205670fe6022d15dabf8d131fe087752cc55df03d88595" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "c74e83f8aa4c78a121b52146eadb792c9facc5b1f02c917e3dbb454fca931223" "a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" default))
+   '("3f3c48d3835286245137ad2fffbe43c634fef7f33500b008ec3cecc3672e7e3b" "a62f0662e6aa7b05d0b4493a8e245ab31492765561b08192df61c9d1c7e1ddee" "5a04c3d580e08f5fc8b3ead2ed66e2f0e5d93643542eec414f0836b971806ba9" "dc8ad8b5833ae06e373cc3d64be28e67e6c3d084ea5f0e9e77225b3badbec661" "d678ec420b0ede7ace7adb0fa9f448329e132de2f868b20773e282eb29fb1498" "16ab866312f1bd47d1304b303145f339eac46bbc8d655c9bfa423b957aa23cc9" "6df412e59dbfe7f72f24319b9ee4513e40bb0e44384fc93a2c77399e641348f6" "d2e0c53dbc47b35815315fae5f352afd2c56fa8e69752090990563200daae434" "36ca8f60565af20ef4f30783aa16a26d96c02df7b4e54e9900a5138fb33808da" "c4063322b5011829f7fdd7509979b5823e8eea2abf1fe5572ec4b7af1dd78519" "9b54ba84f245a59af31f90bc78ed1240fca2f5a93f667ed54bbf6c6d71f664ac" "1623aa627fecd5877246f48199b8e2856647c99c6acdab506173f9bb8b0a41ac" "1d78d6d05d98ad5b95205670fe6022d15dabf8d131fe087752cc55df03d88595" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "c74e83f8aa4c78a121b52146eadb792c9facc5b1f02c917e3dbb454fca931223" "a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" default))
  '(fci-rule-color "#888395")
  '(flycheck-keymap-prefix (kbd "C-c e"))
  '(jdee-db-active-breakpoint-face-colors (cons "#222228" "#819cd6"))
@@ -15,7 +15,7 @@
  '(mini-frame-show-paramters '((top . 0) (width . 90) (left . 0)))
  '(objed-cursor-color "#e1c1ee")
  '(package-selected-packages
-   '(diff-hl cfn-mode flycheck-cfn kotlin-mode go-mode company-solidity solidity-mode multi-vterm vterm capnp-mode eglot clojure-mode expand-region markdown-mode consult-eglot company-ctags ctags-update ctrlf projectile undo-fu dts-mode cmake-mode kconfig-mode csv-mode org ob-async elixir-mode lua-mode swift-mode kaolin-themes doom-themes consult-flycheck mini-frame flycheck github-theme smart-mode-line yasnippet yaml-mode which-key web-mode use-package typescript-mode tuareg terraform-mode terraform-doc tango-plus-theme sqlformat selectrum-prescient reason-mode rainbow-mode py-isort ob-http ob-graphql nginx-mode magit highlight-numbers haskell-mode golden-ratio feature-mode exec-path-from-shell evil-surround eshell-z eshell-up eshell-toggle emmet-mode dune dockerfile-mode docker delight crux consult company-prescient comment-dwim-2 ace-window))
+   '(twilight-anti-bright-theme aria2 ob-kotlin ripgrep diff-hl cfn-mode flycheck-cfn kotlin-mode go-mode company-solidity solidity-mode multi-vterm vterm capnp-mode eglot clojure-mode expand-region markdown-mode consult-eglot company-ctags ctags-update ctrlf projectile undo-fu dts-mode cmake-mode kconfig-mode csv-mode org ob-async elixir-mode lua-mode swift-mode kaolin-themes consult-flycheck mini-frame flycheck github-theme smart-mode-line yasnippet yaml-mode which-key web-mode use-package typescript-mode tuareg terraform-mode terraform-doc tango-plus-theme sqlformat selectrum-prescient reason-mode rainbow-mode py-isort ob-http ob-graphql nginx-mode magit highlight-numbers haskell-mode golden-ratio feature-mode exec-path-from-shell evil-surround eshell-z eshell-up eshell-toggle emmet-mode dune dockerfile-mode docker delight crux consult company-prescient comment-dwim-2 ace-window))
  '(pdf-view-midnight-colors (cons "#c6c6c6" "#282b33"))
  '(rustic-ansi-faces
    ["#282b33" "#e1c1ee" "#5b94ab" "#cfcf9c" "#819cd6" "#a6c1e0" "#7289bc" "#c6c6c6"])
@@ -67,5 +67,6 @@
  '(indent-guide-face ((t (:inherit font-lock-comment-face))))
  '(line-number ((t :foreground nil :inherit font-lock-comment-face)))
  '(markdown-inline-code-face ((t (:slant normal))))
+ '(org-block ((t (:inherit default))))
  '(vertical-border ((t (:foreground "#000" :background "#000"))))
  '(web-mode-variable-name-face ((t (:inherit default)))))

@@ -2,7 +2,7 @@ stty -ixon
 
 fpath=($HOME/Projects/dotfiles/zsh_functions $fpath)
 
-export LANG=en_US.UTF-8
+# export LANG=en_US.UTF-8
 export CLICOLOR=1
 
 autoload -Uz add-zsh-hook
@@ -98,6 +98,8 @@ fixmod() {
 }
 
 # opam configuration
+export NOMAD_ADDR=http://100.74.70.61:4646
+
 test -r $HOME/.opam/opam-init/init.zsh && . $HOME/.opam/opam-init/init.zsh > /dev/null 2> /dev/null || true
 
 export PATH=$HOME/.poetry/bin:$PATH
@@ -108,9 +110,8 @@ export PATH=$HOME/.cargo/bin:$PATH
 
 export PATH=$HOME/Library/Python/3.9/bin:$PATH
 
-export NOMAD_ADDR=http://192.168.192.159:4646
-
-export CARP_DIR=$HOME/.local/Carp/
-
 export PNPM_HOME="/Users/tung/Library/pnpm"
+
 export PATH="$PNPM_HOME:$PATH"
+
+export PATH="${PATH}:${HOME}/.krew/bin"
