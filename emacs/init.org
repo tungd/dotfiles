@@ -714,20 +714,23 @@ Some speedup for Tramp:
 #+begin_src emacs-lisp
   (defun td/eglot-maybe-tsx (interactive)
     (when (eq "tsx" (file-name-extension (buffer-file-name)))
-      '("typescript-language-server" "--stdio")))
+      (eglot-ensure)))
 
   (use-package eglot
     :ensure t
     :bind (("C-c C-r" . eglot-rename)
            ("C-c C-i" . eglot-code-action-organize-import))
-    :hook ((web-mode . eglot-ensure)
+    :hook ((web-mode . td/eglot-maybe-tsx)
            (tuareg-mode . eglot-ensure)
            (js-mode . eglot-ensure)
            (js-jsx-mode . eglot-ensure)
            (typescript-mode . eglot-ensure)
            (reason-mode . eglot-ensure))
     :config
-    (add-to-list 'eglot-server-programs `(web-mode . ,#'td/eglot-maybe-tsx)))
+    (add-to-list 'eglot-server-programs '(web-mode . ("typescript-language-server" "--stdio")))
+    :custom
+    (eglot-autoshutdown t)
+    (eglot-events-buffer-size 0))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -782,7 +785,7 @@ language support package use =company= for some of their functionalities. To
 be fair, I'd like these mode to support Emacs's standard
 =completion-at-point-functions= interface.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package company
     :ensure t
     :delight company-mode
@@ -834,14 +837,6 @@ Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
      'flymake-proc-create-temp-inplace
      :filter-return #'flymake-proc-create-temp-in-tmp))
 #+END_SRC
-
-#+begin_src emacs-lisp :tangle no
-  (use-package flycheck
-    :ensure t
-    :hook (after-init . global-flycheck-mode)
-    :custom
-    (flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
-#+end_src
 
 ** Version Control
 
@@ -1395,9 +1390,9 @@ bold and ligatures support :(.
 #+END_SRC
 
 #+begin_src emacs-lisp
-  (use-package twilight-anti-bright-theme
+  (use-package darcula-theme
     :ensure t
-    :config (load-theme 'twilight-anti-bright))
+    :config (load-theme 'darcula))
 #+end_src
 
 #+begin_src emacs-lisp
