@@ -248,7 +248,7 @@ quite minimal but is very very fast.
     :hook (after-init . selectrum-prescient-mode))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package mini-frame
     :ensure t
     :hook (after-init . mini-frame-mode))
@@ -724,13 +724,15 @@ Some speedup for Tramp:
            (tuareg-mode . eglot-ensure)
            (js-mode . eglot-ensure)
            (js-jsx-mode . eglot-ensure)
+           (kotlin-mode . eglot-ensure)
            (typescript-mode . eglot-ensure)
            (reason-mode . eglot-ensure))
     :config
     (add-to-list 'eglot-server-programs '(web-mode . ("typescript-language-server" "--stdio")))
-    :custom
-    (eglot-autoshutdown t)
-    (eglot-events-buffer-size 0))
+    ;; :custom
+    ;; (eglot-autoshutdown t)
+    ;; (eglot-events-buffer-size 0)
+    )
 #+end_src
 
 #+begin_src emacs-lisp
@@ -785,7 +787,7 @@ language support package use =company= for some of their functionalities. To
 be fair, I'd like these mode to support Emacs's standard
 =completion-at-point-functions= interface.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp
   (use-package company
     :ensure t
     :delight company-mode
