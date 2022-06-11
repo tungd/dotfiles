@@ -1231,8 +1231,15 @@ Here's my basic Org setup:
     :config
     (require 'ob-async))
 
+  (defun td/org-electric-pair ()
+    (setq-local
+     electric-pair-inhibit-predicate
+     `(lambda (c)
+        (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c)))))
+
   (use-package org
-    :hook ((org-mode . org-indent-mode))
+    :hook ((org-mode . org-indent-mode)
+           (org-mode . td/org-electric-pair))
     :delight org-indent-mode
     :custom
     (org-directory "~/Desktop/")
@@ -1251,13 +1258,13 @@ Here's my basic Org setup:
     (org-clock-persistence-insinuate)
 
     (org-babel-do-load-languages
-       'org-babel-load-languages
-       '((emacs-lisp . t)
-         (http . t)
-         (graphql . t)
-         (python . t)
-         (shell . t)
-         (sql . t))))
+     'org-babel-load-languages
+     '((emacs-lisp . t)
+       (http . t)
+       (graphql . t)
+       (python . t)
+       (shell . t)
+       (sql . t))))
 #+END_SRC
 
 Agenda overview and filtering. Org provides a bunch of quick overviews:
