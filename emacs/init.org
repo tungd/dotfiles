@@ -1401,15 +1401,6 @@ bold and ligatures support :(.
    `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
      (ns-appearance . dark)
-     ;; (font . "Monaco 14")
-     (font . "Menlo 14")
-     ;; (font . "SF Mono 14")
-     ;; (font . "Source Code Pro 14")
-     ;; (font . "JetBrains Mono 15")
-     ;; (font . "Cascadia Mono 14")
-     ;; (font . "Fira Mono 14")
-     ;; (top . 0) (left . 720)
-     ;; (width . 128) (height . 96)
      (fullscreen . maximized)
      (vertical-scroll-bars . nil)
      (tool-bar-lines . 0)))
@@ -1490,7 +1481,7 @@ theme named =user= will always have the highest priority.
    '(web-mode-variable-name-face ((t (:inherit default)))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package highlight-numbers
     :ensure t
     :defer t
