@@ -73,7 +73,7 @@ Personal information that some package use:
 Less verbose choice:
 
 #+BEGIN_SRC emacs-lisp
-  (defalias 'yes-or-no-p 'y-or-n-p)
+  (setq use-short-answers t)
 #+END_SRC
 
 Sane, modern defaults:
@@ -93,9 +93,12 @@ Sane, modern defaults:
 Performance stuffs, I'm not sure how relevant these are, since I've moved to =nativecomp=.
 
 #+begin_src emacs-lisp
-  (setq-default bidi-display-reordering nil)
+  (setq-default
+   bidi-display-reordering nil
+   bidi-paragraph-direction 'left-to-right
+   bidi-inhibit-bpa t)
 
-  (setq read-process-output-max (* 8 1024 1024)
+  (setq read-process-output-max (* 16 1024 1024)
         inhibit-compacting-font-caches t)
 #+end_src
 
@@ -358,6 +361,10 @@ Temporary "focus" on a buffer by maximizing it in the current frame.
     :defer t
     :bind ([remap list-buffers] . ibuffer))
 #+END_SRC
+
+#+begin_src emacs-lisp
+  (setq kill-do-not-save-duplicates t)
+#+end_src
 
 Basic settings:
 
@@ -712,20 +719,25 @@ Some speedup for Tramp:
 * Programming
 
 #+begin_src emacs-lisp
-  (defun td/eglot-maybe-tsx (interactive)
-    (when (eq "tsx" (file-name-extension (buffer-file-name)))
-      (eglot-ensure)))
+  ;; I'm not using project.el, but this is required for eglot to work correctly with monorepo
+  (defun td/projectile-project-find-function (dir)
+    (let ((root (projectile-project-root dir)))
+      (and root (cons 'transient root))))
+
+  (use-package project
+    :config
+    (add-to-list 'project-find-functions 'td/projectile-project-find-function))
 
   (use-package eglot
     :ensure t
     :bind (("C-c C-r" . eglot-rename)
            ("C-c C-i" . eglot-code-action-organize-import))
-    :hook ((web-mode . td/eglot-maybe-tsx)
-           (tuareg-mode . eglot-ensure)
+    :hook ((tuareg-mode . eglot-ensure)
            (js-mode . eglot-ensure)
            (js-jsx-mode . eglot-ensure)
            (kotlin-mode . eglot-ensure)
            (typescript-mode . eglot-ensure)
+           (typescript-tsx-mode . eglot-ensure)
            (reason-mode . eglot-ensure))
     :config
     (add-to-list 'eglot-server-programs '(web-mode . ("typescript-language-server" "--stdio")))
@@ -908,7 +920,7 @@ editing, including PHP, since I rarely write PHP anymore.
     :ensure t
     :mode (("\\.html" . web-mode)
            ("\\.jsx" . web-mode)
-           ("\\.tsx" . web-mode)
+           ;("\\.tsx" . web-mode)
            ("\\.tpl" . web-mode)
            ("\\.erb" . web-mode)
            ("\\.tag" . web-mode)
@@ -1004,9 +1016,14 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 #+begin_src emacs-lisp
   (use-package typescript-mode
     :ensure t
-    :mode (("\\.ts$" . typescript-mode))
+    :mode (("\\.ts$" . typescript-mode)
+           ("\\.tsx$" . typescript-tsx-mode))
     :config
-    (setq typescript-indent-level 2))
+    (define-derived-mode typescript-tsx-mode typescript-mode
+      "TypeScript TSX")
+    (add-to-list 'tree-sitter-major-mode-language-alist '(typescriptreact-mode . tsx))
+    :custom
+    (typescript-indent-level 2))
 #+end_src
 
 ** Python
@@ -1365,7 +1382,10 @@ the way I liked.
         visible-bell nil
         ring-bell-function 'ignore
         scroll-preserve-screen-position t
-        scroll-margin 8)
+        scroll-margin 8
+        scroll-conservatively 101
+        auto-window-vscroll nil
+        fast-but-imprecise-scrolling t)
 #+END_SRC
 
 Default window configuration: half-left of the screen, no scroll bars, no menu
@@ -1402,6 +1422,17 @@ bold and ligatures support :(.
   (use-package darcula-theme
     :ensure t
     :config (load-theme 'darcula))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package tree-sitter
+    :ensure t
+    :hook ((after-init . global-tree-sitter-mode)
+           (tree-sitter-after-on . tree-sitter-hl-mode)))
+
+  (use-package tree-sitter-langs
+    :ensure t
+    :after tree-sitter)
 #+end_src
 
 #+begin_src emacs-lisp
