@@ -1144,6 +1144,16 @@ Python or Haskell:
 #+end_src
 
 ** Java
+
+** Kotlin
+
+#+begin_src emacs-lisp
+  (use-package kotlin-mode
+    :ensure t
+    :mode (("\\.kt\\'" . kotlin-mode)
+           ("\\.kts\\'" . kotlin-mode)))
+#+end_src
+
 ** Docker
 
 I use Docker for almost every project now, it is useful even just for setting up
@@ -1406,7 +1416,6 @@ bold and ligatures support :(.
    `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
      (ns-appearance . dark)
-     (fullscreen . maximized)
      (vertical-scroll-bars . nil)
      (tool-bar-lines . 0)))
 
@@ -1571,8 +1580,8 @@ kind of distracting, but it is really helpful sometimes.
 #+begin_src emacs-lisp
     (defun td/adapt-font-size (&optional frame)
       (let* ((attrs (frame-monitor-attributes frame))
-             (size (alist-get 'mm-size attrs))
-             (geometry (alist-get 'geometry attrs))
+             (geometry (alist-get 'geometry attrs)) ;; x y w h
+             (size (alist-get 'mm-size attrs)) ;; w h
              (ppi (/ (caddr geometry) (/ (car size) 25.4))))
         ;;(message "PPI: %s" ppi)
         (if (> ppi 120)
