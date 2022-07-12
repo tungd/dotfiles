@@ -183,20 +183,10 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 Emacs built-in =project.el= has gone a long way so I'm using that now. There are
 still some missing features coming from =projectile=, but I can live with that.
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package project
     :commands (project-find-file project-current)
     :bind (("C-M-'" . project-find-file)))
-#+end_src
-
-#+begin_src emacs-lisp
-  (use-package projectile
-    :ensure t
-    :hook (after-init . projectile-mode)
-    :commands (projectile-find-file)
-    :bind (:map projectile-mode-map
-           ("C-M-'" . projectile-find-file)
-           ("C-x p" . projectile-command-map)))
 #+end_src
 
 ** Symbols
@@ -268,6 +258,7 @@ quite minimal but is very very fast.
            ("M-g y" . consult-yank-from-kill-ring)
            ("M-g t" . consult-theme)
            ("M-g m" . consult-mode-command)
+           ("M-g e" . consult-flymake)
            ([remap goto-line] . consult-goto-line)
            ([remap switch-to-buffer] . consult-buffer)
            ;; ([remap isearch-forward] . consult-isearch)
@@ -445,7 +436,7 @@ Make the file executable if starting with "shebang":
            ("C-M-r" . vr/mc-mark)))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package ctrlf
     :ensure t
     :hook (after-init . ctrlf-mode)
@@ -722,14 +713,6 @@ Some speedup for Tramp:
 
 #+begin_src emacs-lisp
   ;; I'm not using project.el, but this is required for eglot to work correctly with monorepo
-  (defun td/projectile-project-find-function (dir)
-    (let ((root (projectile-project-root dir)))
-      (and root (cons 'transient root))))
-
-  (use-package project
-    :config
-    (add-to-list 'project-find-functions 'td/projectile-project-find-function))
-
   (use-package eglot
     :ensure t
     :bind (("C-c C-r" . eglot-rename)
