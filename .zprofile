@@ -84,6 +84,8 @@ export PATH=$HOME/.local/sbin:$HOME/.local/bin:$PATH
 export PATH=$HOME/Projects/dotfiles/bin:$PATH
 
 [[ -e $LOCAL/vendor/z.sh ]] && . $LOCAL/vendor/z.sh
+[[ $+commands[direnv] ]] && eval "$(direnv hook zsh)"
+
 
 alias g=git
 alias e=emacsclient -n
@@ -108,10 +110,13 @@ export PATH=$HOME/.yarn/bin:$PATH
 
 export PATH=$HOME/.cargo/bin:$PATH
 
-export PATH=$HOME/Library/Python/3.9/bin:$PATH
+export PATH=$HOME/Library/Python/3.8/bin:$PATH
 
 export PNPM_HOME="/Users/tung/Library/pnpm"
 
 export PATH="$PNPM_HOME:$PATH"
 
 export PATH="${PATH}:${HOME}/.krew/bin"
+
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
