@@ -25,7 +25,6 @@
 
 #+BEGIN_SRC sh
   mkdir -p ~/.local/bin
-  mkdir -p ~/.local/vendor
 
   ln -s ~/Projects/dotfiles/.bash_profile ~/.bash_profile
   ln -s ~/Projects/dotfiles/.bashrc ~/.bashrc
@@ -58,50 +57,14 @@ Homebrew. Installation is a little bit more involved, though.
 
 #+BEGIN_SRC sh
   # the general stuffs
-  sudo port install aspell aspell-dict-en automake autoconf openssl htop terraform-0.13
+  sudo port install aspell aspell-dict-en automake autoconf openssl htop
+  sudo port install kubectl-1.24 terraform-1.2
   sudo port install watchman sqlite3 ripgrep tree libxml2 lcms2
-  sudo port install nodejs14 npm6 yarn python3.8 py38-pip py38-awscli postgresql12
+  sudo port install nodejs18 npm8 yarn python3.10 py310-pip py310-awscli postgresql14
   sudo port install texinfo gnutls jansson
-  sudo port install pinentry-mac
-  sudo port install emacs-devel-app +nativecomp -rsvg
+  sudo port install z direnv
+  sudo port install emacs-app-devel
 #+END_SRC
-
-** ASDF
-
-#+begin_src sh
-  git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.8.0
-#+end_src
-
-** Poetry
-
-#+begin_src sh
-  asdf plugin add poetry
-  asdf install poetry latest
-#+end_src
-
-** =z.sh=
-
-=z.sh= (https://github.com/rupa/z) allows me to visit one of the directories I
-worked on recently by typing just a partial path of it.
-
-#+BEGIN_SRC sh
-  mkdir -p ~/.local/vendor
-  curl -L https://raw.githubusercontent.com/rupa/z/master/z.sh > ~/.local/vendor/z.sh
-#+END_SRC
-
-#+RESULTS:
-
-** =direnv=
-
-Automatically set environment variable per directory. This is also available
-through MacPorts but requires the whole Go installation so I'd still prefer
-downloading the binary.
-
-#+BEGIN_SRC sh
-  curl -L -o ~/.local/bin/direnv https://github.com/direnv/direnv/releases/download/v2.20.0/direnv.darwin-amd64
-  chmod +x ~/.local/bin/direnv
-#+END_SRC
-
 
 * System configuration
 
