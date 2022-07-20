@@ -83,7 +83,7 @@ export PATH=/opt/local/bin:/opt/local/sbin:$PATH
 export PATH=$HOME/.local/sbin:$HOME/.local/bin:$PATH
 export PATH=$HOME/Projects/dotfiles/bin:$PATH
 
-[[ -e $LOCAL/vendor/z.sh ]] && . $LOCAL/vendor/z.sh
+[[ -e /opt/local/etc/profile.d/z.sh ]] && . /opt/local/etc/profile.d/z.sh
 [[ $+commands[direnv] ]] && eval "$(direnv hook zsh)"
 
 
@@ -99,12 +99,12 @@ fixmod() {
     find $1 -type d -exec chmod 755 {} \;
 }
 
-# opam configuration
 export NOMAD_ADDR=http://100.74.70.61:4646
 
+# opam configuration
 test -r $HOME/.opam/opam-init/init.zsh && . $HOME/.opam/opam-init/init.zsh > /dev/null 2> /dev/null || true
 
-export PATH=$HOME/.poetry/bin:$PATH
+# export PATH=$HOME/.poetry/bin:$PATH
 
 export PATH=$HOME/.yarn/bin:$PATH
 
@@ -113,10 +113,7 @@ export PATH=$HOME/.cargo/bin:$PATH
 export PATH=$HOME/Library/Python/3.8/bin:$PATH
 
 export PNPM_HOME="/Users/tung/Library/pnpm"
-
 export PATH="$PNPM_HOME:$PATH"
-
-export PATH="${PATH}:${HOME}/.krew/bin"
 
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
