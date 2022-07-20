@@ -66,6 +66,15 @@ Homebrew. Installation is a little bit more involved, though.
   sudo port install emacs-app-devel
 #+END_SRC
 
+** AWS Session Manager plugin
+
+#+begin_src sh
+  cd /tmp
+  curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/mac/sessionmanager-bundle.zip" -o "sessionmanager-bundle.zip"
+  unzip sessionmanager-bundle.zip
+  ./sessionmanager-bundle/install -i ~/.local/lib/aws-ssm -b ~/.local/bin/session-manager-plugin
+#+end_src
+
 * System configuration
 
 ** Keyboard configuration
