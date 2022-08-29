@@ -17,38 +17,37 @@ directly.
 
 I'm also trying out some of the start-up optimization tips from Doom.
 
-But so the biggest save is coming from 'native-comp'
-
-#+begin_src emacs-lisp
-  (setq comp-speed 2)
-#+end_src
+So far the biggest save is coming from 'native-comp'
 
 #+BEGIN_SRC emacs-lisp
+  (require 'package)
+
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+
   (eval-when-compile
-    (require 'package))
+    (unless (package-installed-p 'use-package)
+      (package-refresh-contents)
+      (package-install 'use-package))
+
+    (require 'use-package))
 
   (setq package-quickstart t)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-
-  (unless (package-installed-p 'use-package)
-    (package-refresh-contents)
-    (package-install 'use-package))
-  (require 'use-package)
+  (use-package package
+    :defer t
+    :config
+    (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package bind-key)
+  (use-package bind-key
+    :ensure t
+    :functions (override-global-mode)
+    :config (override-global-mode t))
+
   (use-package delight :ensure t)
-#+END_SRC
-
-Use a dedicate custom file.
-
-#+BEGIN_SRC emacs-lisp
-  (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-  (load custom-file 'noerror)
 #+END_SRC
 
 Sometimes I write my own package, or download package from Emacs wiki; they
@@ -104,8 +103,9 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 
 #+BEGIN_SRC emacs-lisp
   (use-package exec-path-from-shell
-    :if (memq window-system '(mac ns))
     :ensure t
+    :if (memq window-system '(mac ns))
+    :functions exec-path-from-shell-copy-envs
     :hook (after-init . exec-path-from-shell-initialize)
     :config
     (exec-path-from-shell-copy-envs '("LANG")))
@@ -206,7 +206,7 @@ Default key bindings is
 #+begin_src emacs-lisp
   (use-package xref
     :bind (("C-M-p" . xref-find-definitions-other-window)
-           ("C-M-g" . xref-pop-marker-stack)))
+           ("C-M-g" . xref-go-back)))
 
   (bind-key* "C-M-." #'xref-find-definitions)
 #+end_src
@@ -302,17 +302,6 @@ Split windows horizontally by default.
     :ensure t
     :bind* (("M-j" . ace-window)
             ("M-J" . ace-delete-window)))
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (use-package golden-ratio
-    :ensure t
-    :hook (after-init . golden-ratio-mode)
-    :delight golden-ratio-mode
-    :config
-    ;; Compatibility with ace-window
-    (eval-after-load 'ace-window
-      (advice-add 'ace-select-window :after #'golden-ratio)))
 #+end_src
 
 Temporary "focus" on a buffer by maximizing it in the current frame.
@@ -461,9 +450,10 @@ Long lines are annoying. Auto wrap all texts at 80.
 
 Sometimes long lines are inevitable though, as I do have to manually edit
 exported SVG and minified JS :(. In those cases prevent them from making Emacs
-slow:
+slow. J/k, this has been fixed and Emacs has no problem handling these files
+now.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (global-so-long-mode t)
 #+END_SRC
 
@@ -606,7 +596,7 @@ NOTE: This package is huge, I'm still learning it.
 
 #+begin_src emacs-lisp
   (use-package comint
-    :bind* ("C-c C-l" . comint-clear-buffer))
+    :bind ("C-c C-l" . comint-clear-buffer))
 #+end_src
 
 ** EShell
@@ -620,54 +610,42 @@ NOTE: This package is huge, I'm still learning it.
 
   (use-package eshell-up
     :ensure t
-    :defer t)
+    :functions eshell-up
+    :defer t
+    :config
+    (defalias 'eshell/up 'eshell-up))
 
   (use-package eshell-z
     :ensure t
+    :functions eshell/z
     :defer t)
+
+  (defun td/eshell-pwd ()
+    (replace-regexp-in-string
+     (regexp-quote (expand-file-name "~"))
+     "~"
+     (eshell/pwd)))
+
+  (defun td/eshell-prompt ()
+    (format
+     "\n%s@%s in %s\n%s "
+     (propertize user-login-name 'face '(:foreground "#dc322f"))
+     (propertize (or (getenv "HOST") (system-name)) 'face '(:foreground "#b58900"))
+     (propertize (td/eshell-pwd) 'face '(:foreground "#859900"))
+     (if (= (user-uid) 0)
+         (propertize "#" 'face '(:foreground "red")) "$")))
 
   (use-package eshell
     :defer t
+    :functions (eshell/pwd)
+    :custom
+    (eshell-prompt-function #'td/eshell-prompt)
+    (eshell-prompt-regexp "^[^#$\\n]*[#$] ")
+    (eshell-highlight-prompt nil)
     :config
-    (eval-and-compile
-      (require 'eshell-up)
-      (require 'eshell-z)
-      ;;(require 'eshell-git-prompt)
-
-      (defun td/eshell-pwd ()
-        (replace-regexp-in-string
-         (regexp-quote (expand-file-name "~"))
-         "~"
-         (eshell/pwd)))
-
-      (defun td/eshell-prompt ()
-        (format
-         "\n%s@%s in %s\n%s "
-         (propertize user-login-name 'face '(:foreground "#dc322f"))
-         (propertize (or (getenv "HOST") (system-name)) 'face '(:foreground "#b58900"))
-         (propertize (td/eshell-pwd) 'face '(:foreground "#859900"))
-         (if (= (user-uid) 0)
-             (propertize "#" 'face '(:foreground "red")) "$")
-         ;;(eshell-git-prompt-robbyrussell)
-         ))
-
-      (defalias 'eshell/e 'find-file)
-
-      (defun eshell/open (args)
-        (interactive)
-        (shell-command
-         (concat (cl-case system-type
-                   ((darwin) "open")
-                   ((windows-nt) "start")
-                   (t "xdg-open"))
-                 (format " %s" args))))
-
-      ;; (require 'eshell-dotenv)
-      ;; (add-hook 'eshell-directory-change-hook #'eshell-dotenv-update 100)
-
-      (setq eshell-prompt-function #'td/eshell-prompt
-            eshell-prompt-regexp "^[^#$\\n]*[#$] "
-            eshell-highlight-prompt nil)))
+    (defalias 'eshell/e #'find-file)
+    (with-eval-after-load "crux"
+      (defalias 'eshell/open #'crux-open-with)))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle no
@@ -711,8 +689,9 @@ Some speedup for Tramp:
 
 * Programming
 
+Eglot, as the main LSP interface.
+
 #+begin_src emacs-lisp
-  ;; I'm not using project.el, but this is required for eglot to work correctly with monorepo
   (use-package eglot
     :ensure t
     :bind (("C-c C-r" . eglot-rename)
@@ -725,11 +704,17 @@ Some speedup for Tramp:
            (typescript-tsx-mode . eglot-ensure)
            (reason-mode . eglot-ensure))
     :config
-    (add-to-list 'eglot-server-programs '(web-mode . ("typescript-language-server" "--stdio")))
-    ;; :custom
-    ;; (eglot-autoshutdown t)
-    ;; (eglot-events-buffer-size 0)
-    )
+    (add-to-list 'eglot-server-programs '(web-mode . ("typescript-language-server" "--stdio"))))
+#+end_src
+
+Dumb-jump, as fallback for languages that their LSP server doesn't work well,
+and/or languages where I need to browse the code but don't necessarily want to
+install on my local computer.
+
+#+begin_src emacs-lisp
+  (use-package dumb-jump
+    :ensure t
+    :init (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -777,6 +762,18 @@ Some speedup for Tramp:
            ("M-g i" . consult-lsp-symbols)))
 #+end_src
 
+#+begin_src emacs-lisp
+  (use-package tree-sitter
+    :ensure t
+    :defines tree-sitter-major-mode-language-alist
+    :hook ((after-init . global-tree-sitter-mode)
+           (tree-sitter-after-on . tree-sitter-hl-mode)))
+
+  (use-package tree-sitter-langs
+    :ensure t
+    :after tree-sitter)
+#+end_src
+
 ** Auto completion
 
 I use auto completion sparingly, using Corfu.
@@ -804,6 +801,7 @@ I use auto completion sparingly, using Corfu.
 
   (use-package cape
     :ensure t
+    :functions cape-file cape-wrap-silent cape-wrap-purify
     :config
     (add-to-list 'completion-at-point-functions #'cape-file)
     ;; (add-to-list 'completion-at-point-functions #'cape-dabbrev)
@@ -861,18 +859,19 @@ repetitive tasks. For example, I to run unit tests repeatedly, I first run
 re-run the tests.
 
 #+BEGIN_SRC emacs-lisp
+  (require 'ansi-color)
+
+  (defun td/colorize-compilation-buffer ()
+    (read-only-mode -1)
+    (ansi-color-apply-on-region compilation-filter-start (point))
+    (read-only-mode t))
+
   (use-package compile
     :bind ("C-c m" . recompile)
     :hook (compilation-filter . td/colorize-compilation-buffer)
     :custom
     (compilation-ask-about-save nil)
-    (compilation-scroll-output 'first-error)
-    :config
-    (require 'ansi-color)
-    (defun td/colorize-compilation-buffer ()
-      (read-only-mode -1)
-      (ansi-color-apply-on-region compilation-filter-start (point))
-      (read-only-mode t)))
+    (compilation-scroll-output 'first-error))
 #+END_SRC
 
 ** Code folding
@@ -908,9 +907,10 @@ editing, including PHP, since I rarely write PHP anymore.
     :ensure t
     :mode (("\\.html" . web-mode)
            ("\\.jsx" . web-mode)
-           ;("\\.tsx" . web-mode)
+           ("\\.astro" . web-mode)
            ("\\.tpl" . web-mode)
            ("\\.erb" . web-mode)
+           ("\\.ejs" . web-mode)
            ("\\.tag" . web-mode)
            ("\\.eml" . web-mode)
            ("\\.php" . web-mode)
@@ -1009,7 +1009,8 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
     :config
     (define-derived-mode typescript-tsx-mode typescript-mode
       "TypeScript TSX")
-    (add-to-list 'tree-sitter-major-mode-language-alist '(typescriptreact-mode . tsx))
+    (with-eval-after-load "tree-sitter"
+      (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-tsx-mode . tsx)))
     :custom
     (typescript-indent-level 2))
 #+end_src
@@ -1117,13 +1118,6 @@ Python or Haskell:
   (use-package lsp-ocaml
     :custom
     (lsp-ocaml-lang-server-command '("ocamllsp", "--stdio")))
-#+end_src
-
-** Carp
-
-#+begin_src emacs-lisp
-  (use-package carp-mode
-    :mode ("\\.carp$" . carp-mode))
 #+end_src
 
 ** Java
@@ -1246,6 +1240,10 @@ Here's my basic Org setup:
     :config
     (require 'ob-async))
 
+  (use-package ob-plantuml
+    :config
+    (setq org-plantuml-jar-path "/opt/local/share/java/plantuml.jar"))
+
   (defun td/org-electric-pair ()
     (setq-local
      electric-pair-inhibit-predicate
@@ -1257,13 +1255,13 @@ Here's my basic Org setup:
            (org-mode . td/org-electric-pair))
     :delight org-indent-mode
     :custom
-    (org-directory "~/Desktop/")
+    (org-directory "~/Documents/Journal")
     (org-default-notes-file (expand-file-name "inbox.org" org-directory))
     (org-agenda-files `(,org-directory))
     (org-agenda-skip-unavailable-files t)
     (org-hide-leading-stars t)
     (org-clock-persist 'history)
-    (org-refile-targets '(("~/Desktop/archive.org" . (:level . 1))))
+    ;; (org-refile-targets '(("~/Desktop/archive.org" . (:level . 1))))
     (org-startup-with-inline-images t)
     (org-todo-keywords
      '((sequence "TODO(t@)" "WAITING(w@)" "|" "DONE(d@/!)" "CANCELED(c@)")))
@@ -1276,6 +1274,7 @@ Here's my basic Org setup:
      'org-babel-load-languages
      '((emacs-lisp . t)
        (http . t)
+       (plantuml . t)
        (graphql . t)
        (python . t)
        (shell . t)
@@ -1403,25 +1402,8 @@ bold and ligatures support :(.
      (tool-bar-lines . 0)))
 
   (blink-cursor-mode -1)
-  ;(load-theme 'deeper-blue)
+  (load-theme 'deeper-blue)
 #+END_SRC
-
-#+begin_src emacs-lisp
-  (use-package darcula-theme
-    :ensure t
-    :config (load-theme 'darcula))
-#+end_src
-
-#+begin_src emacs-lisp
-  (use-package tree-sitter
-    :ensure t
-    :hook ((after-init . global-tree-sitter-mode)
-           (tree-sitter-after-on . tree-sitter-hl-mode)))
-
-  (use-package tree-sitter-langs
-    :ensure t
-    :after tree-sitter)
-#+end_src
 
 #+begin_src emacs-lisp
   (use-package hl-line
@@ -1588,7 +1570,7 @@ kind of distracting, but it is really helpful sometimes.
 #+BEGIN_SRC emacs-lisp
   (defun td/refresh-front-most-tab ()
     (interactive)
-    (shell-command "osascript -e 'tell application \"Microsoft Edge Dev\" to reload active tab of window 1'"))
+    (shell-command "osascript -e 'tell application \"Microsoft Edge\" to reload active tab of window 1'"))
 
   (bind-key* "C-M-r" #'td/refresh-front-most-tab)
 #+END_SRC

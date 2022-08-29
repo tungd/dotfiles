@@ -397,7 +397,7 @@ end alfred_script</string>
 			<dict>
 				<key>paths</key>
 				<array>
-					<string>/Applications/MacPorts/EmacsMac.app</string>
+					<string>/Applications/MacPorts/Emacs.app</string>
 				</array>
 				<key>toggle</key>
 				<true/>
@@ -608,6 +608,23 @@ end alfred_script</string>
 		<dict>
 			<key>config</key>
 			<dict>
+				<key>applescript</key>
+				<string>on alfred_script(q)
+  choose color
+end alfred_script</string>
+				<key>cachescript</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.applescript</string>
+			<key>uid</key>
+			<string>A127EB99-8550-4EEA-9FAB-0323CB5FD886</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
 				<key>action</key>
 				<integer>0</integer>
 				<key>argument</key>
@@ -635,23 +652,6 @@ end alfred_script</string>
 			<string>82D27BCC-C703-4C17-B847-127B410FAEA3</string>
 			<key>version</key>
 			<integer>2</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>applescript</key>
-				<string>on alfred_script(q)
-  choose color
-end alfred_script</string>
-				<key>cachescript</key>
-				<true/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.applescript</string>
-			<key>uid</key>
-			<string>A127EB99-8550-4EEA-9FAB-0323CB5FD886</string>
-			<key>version</key>
-			<integer>1</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -709,158 +709,160 @@ end alfred_script</string>
 		<key>01C1D6EF-0129-4586-A74D-6359CF0B7E32</key>
 		<dict>
 			<key>xpos</key>
-			<integer>65</integer>
+			<real>65</real>
 			<key>ypos</key>
-			<integer>915</integer>
+			<real>915</real>
 		</dict>
 		<key>0AC07B18-FCEF-4ECD-B1B1-675457326916</key>
 		<dict>
 			<key>xpos</key>
-			<integer>295</integer>
+			<real>295</real>
 			<key>ypos</key>
-			<integer>915</integer>
+			<real>915</real>
 		</dict>
 		<key>105F2545-A2FA-4133-8868-0C03EAA2C878</key>
 		<dict>
 			<key>xpos</key>
-			<integer>900</integer>
+			<real>900</real>
 			<key>ypos</key>
-			<integer>205</integer>
+			<real>205</real>
 		</dict>
 		<key>2073698F-9CA8-4836-972D-FDA687C0A51E</key>
 		<dict>
 			<key>xpos</key>
-			<integer>680</integer>
+			<real>680</real>
 			<key>ypos</key>
-			<integer>205</integer>
+			<real>205</real>
 		</dict>
 		<key>309738F2-8C4A-4B20-9DA6-AA986803EDF1</key>
 		<dict>
 			<key>xpos</key>
-			<integer>900</integer>
+			<real>900</real>
 			<key>ypos</key>
-			<integer>205</integer>
+			<real>205</real>
 		</dict>
 		<key>36F11C7E-857F-445D-932B-9A98F2ADD4A1</key>
 		<dict>
 			<key>xpos</key>
-			<integer>680</integer>
+			<real>680</real>
 			<key>ypos</key>
-			<integer>45</integer>
+			<real>45</real>
 		</dict>
 		<key>3DEC19CE-AEF0-46EF-9DBA-86AFE21880BA</key>
 		<dict>
 			<key>xpos</key>
-			<integer>290</integer>
+			<real>290</real>
 			<key>ypos</key>
-			<integer>350</integer>
+			<real>350</real>
 		</dict>
 		<key>409F9945-B519-4756-951B-2BD9ED8CC55D</key>
 		<dict>
 			<key>xpos</key>
-			<integer>60</integer>
+			<real>60</real>
 			<key>ypos</key>
-			<integer>350</integer>
+			<real>350</real>
 		</dict>
 		<key>4100138C-4EEA-45E6-A38F-C14EE4B268CC</key>
 		<dict>
 			<key>xpos</key>
-			<integer>450</integer>
+			<real>450</real>
 			<key>ypos</key>
-			<integer>350</integer>
+			<real>350</real>
 		</dict>
 		<key>4333102E-2D7F-4E6E-A3FB-62F64166A345</key>
 		<dict>
 			<key>xpos</key>
-			<integer>60</integer>
+			<real>60</real>
 			<key>ypos</key>
-			<integer>490</integer>
+			<real>490</real>
 		</dict>
 		<key>463B3D32-6EE1-4457-BCF4-D3D181A6A0FA</key>
 		<dict>
 			<key>xpos</key>
-			<integer>445</integer>
+			<real>445</real>
 			<key>ypos</key>
-			<integer>45</integer>
+			<real>45</real>
 		</dict>
 		<key>4DCC5EE4-D928-477B-A366-126AD9EBC990</key>
 		<dict>
 			<key>xpos</key>
-			<integer>905</integer>
+			<real>905</real>
 			<key>ypos</key>
-			<integer>350</integer>
+			<real>350</real>
 		</dict>
 		<key>6BCAC995-0EFD-4415-A51B-F7C6C4171BE9</key>
 		<dict>
 			<key>xpos</key>
-			<integer>60</integer>
+			<real>60</real>
 			<key>ypos</key>
-			<integer>205</integer>
+			<real>205</real>
 		</dict>
 		<key>79D15212-5A57-4634-BCDB-60F2075626D2</key>
 		<dict>
 			<key>xpos</key>
-			<integer>290</integer>
+			<real>290</real>
 			<key>ypos</key>
-			<integer>490</integer>
+			<real>490</real>
 		</dict>
 		<key>82D27BCC-C703-4C17-B847-127B410FAEA3</key>
 		<dict>
 			<key>xpos</key>
-			<integer>60</integer>
+			<real>60</real>
 			<key>ypos</key>
-			<integer>765</integer>
+			<real>765</real>
 		</dict>
 		<key>98B10780-C34B-4C55-9162-0BDE7330C14A</key>
 		<dict>
 			<key>xpos</key>
-			<integer>445</integer>
+			<real>445</real>
 			<key>ypos</key>
-			<integer>205</integer>
+			<real>205</real>
 		</dict>
 		<key>A127EB99-8550-4EEA-9FAB-0323CB5FD886</key>
 		<dict>
 			<key>xpos</key>
-			<integer>290</integer>
+			<real>290</real>
 			<key>ypos</key>
-			<integer>765</integer>
+			<real>765</real>
 		</dict>
 		<key>D077FC15-6667-4926-B637-766BDE556088</key>
 		<dict>
 			<key>xpos</key>
-			<integer>680</integer>
+			<real>680</real>
 			<key>ypos</key>
-			<integer>350</integer>
+			<real>350</real>
 		</dict>
 		<key>D0D170CF-42DF-4377-8032-B69D1C04AE97</key>
 		<dict>
 			<key>xpos</key>
-			<integer>60</integer>
+			<real>60</real>
 			<key>ypos</key>
-			<integer>50</integer>
+			<real>50</real>
 		</dict>
 		<key>D81D621C-C59A-4065-B485-084A4C08A579</key>
 		<dict>
 			<key>xpos</key>
-			<integer>60</integer>
+			<real>60</real>
 			<key>ypos</key>
-			<integer>625</integer>
+			<real>625</real>
 		</dict>
 		<key>F0562F04-928E-4797-B0A1-046CCB737779</key>
 		<dict>
 			<key>xpos</key>
-			<integer>290</integer>
+			<real>290</real>
 			<key>ypos</key>
-			<integer>205</integer>
+			<real>205</real>
 		</dict>
 		<key>F51AFF16-38A4-4E7D-ABC7-7F31B762FE32</key>
 		<dict>
 			<key>xpos</key>
-			<integer>290</integer>
+			<real>290</real>
 			<key>ypos</key>
-			<integer>50</integer>
+			<real>50</real>
 		</dict>
 	</dict>
+	<key>userconfigurationconfig</key>
+	<array/>
 	<key>webaddress</key>
 	<string></string>
 </dict>
