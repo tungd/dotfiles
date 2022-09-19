@@ -1046,7 +1046,7 @@ I'm also a Haskell beginner :). Setting up Haskell with Emacs is relatively
 easy. There's also a catch-all IDE-like mode called =intero=, by the very
 same folk who runs =stack=.
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (use-package haskell-mode
     :ensure t
     :mode (("\\.hs\\'" . haskell-mode))
@@ -1402,20 +1402,13 @@ bold and ligatures support :(.
      (tool-bar-lines . 0)))
 
   (blink-cursor-mode -1)
-  (load-theme 'deeper-blue)
+  (load-theme 'deeper-blue t)
 #+END_SRC
 
 #+begin_src emacs-lisp
   (use-package hl-line
     :hook (after-init . global-hl-line-mode))
 #+end_src
-
-Enable ligatures, only available in railwaycat Mac port.
-
-#+BEGIN_SRC emacs-lisp
-  (when (fboundp 'mac-auto-operator-composition-mode)
-    (mac-auto-operator-composition-mode))
-#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   (setq ns-use-native-fullscreen t)
