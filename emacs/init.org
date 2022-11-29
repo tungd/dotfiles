@@ -41,6 +41,11 @@ So far the biggest save is coming from 'native-comp'
     (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t))
 #+END_SRC
 
+#+begin_src emacs-lisp
+  (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+  (load custom-file 'noerror)
+#+end_src
+
 #+BEGIN_SRC emacs-lisp
   (use-package bind-key
     :ensure t
@@ -113,10 +118,6 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 
 #+BEGIN_SRC emacs-lisp
   (savehist-mode t)
-
-  (use-package prescient
-    :ensure t
-    :hook (after-init . prescient-persist-mode))
 #+END_SRC
 
 #+begin_src emacs-lisp
@@ -185,8 +186,7 @@ still some missing features coming from =projectile=, but I can live with that.
 
 #+begin_src emacs-lisp
   (use-package project
-    :commands (project-find-file project-current)
-    :bind (("C-M-'" . project-find-file)))
+    :commands (project-find-file project-current))
 #+end_src
 
 ** Symbols
@@ -247,9 +247,7 @@ Vertico is the next in line for vertical completion.
            ("M-g m" . consult-mode-command)
            ("M-g e" . consult-flymake)
            ([remap goto-line] . consult-goto-line)
-           ([remap switch-to-buffer] . consult-buffer)
-           ;; ([remap isearch-forward] . consult-isearch)
-           )
+           ([remap switch-to-buffer] . consult-buffer))
     ;; :bind* (("C-x p s" . consult-ripgrep))
     :custom
     (consult-preview-key (kbd "M-p"))
@@ -272,6 +270,18 @@ Vertico is the next in line for vertical completion.
 
 #+begin_src emacs-lisp
   (bind-key* "M-m" #'execute-extended-command)
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package orderless
+    :ensure t
+    :init
+    ;; Configure a custom style dispatcher (see the Consult wiki)
+    ;; (setq orderless-style-dispatchers '(+orderless-dispatch)
+    ;;       orderless-component-separator #'orderless-escapable-split-on-space)
+    (setq completion-styles '(orderless basic)
+          completion-category-defaults nil
+          completion-category-overrides '((file (styles partial-completion)))))
 #+end_src
 
 
@@ -781,10 +791,6 @@ I use auto completion sparingly, using Corfu.
       (bind-keys :map evil-insert-state-map
                  ([remap evil-complete-next] . corfu-next)
                  ([remap evil-complete-previous] . corfu-previous))))
-
-  (use-package corfu-doc
-    :ensure t
-    :hook (corfu-mode . corfu-doc-mode))
 
   (use-package cape
     :ensure t
