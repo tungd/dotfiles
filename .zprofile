@@ -117,3 +117,6 @@ export PATH="$PNPM_HOME:$PATH"
 
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+export PATH=/Users/tung/.tiup/bin:$PATH
+export PATH=/Users/tung/.platformio/penv/bin:$PATH
