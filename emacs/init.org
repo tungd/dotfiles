@@ -693,15 +693,10 @@ Eglot, as the main LSP interface.
     :ensure t
     :bind (("C-c C-r" . eglot-rename)
            ("C-c C-i" . eglot-code-action-organize-import))
-    :hook ((tuareg-mode . eglot-ensure)
-           (js-mode . eglot-ensure)
-           (js-jsx-mode . eglot-ensure)
-           (kotlin-mode . eglot-ensure)
-           (typescript-mode . eglot-ensure)
-           (typescript-tsx-mode . eglot-ensure)
-           (reason-mode . eglot-ensure))
+    :hook ((kotlin-mode . eglot-ensure)
+           (typescript-ts-mode . eglot-ensure))
     :config
-    (add-to-list 'eglot-server-programs '(web-mode . ("typescript-language-server" "--stdio"))))
+    (add-to-list 'eglot-server-programs '(typescript-ts-mode . ("typescript-language-server" "--stdio"))))
 #+end_src
 
 Dumb-jump, as fallback for languages that their LSP server doesn't work well,
@@ -727,48 +722,12 @@ install on my local computer.
     (advice-add 'eldoc-display-in-buffer :after #'td/eldoc-select-doc-buffer))
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
-  (defun td/maybe-enable-lsp ()
-    (interactive)
-    (when (string-suffix-p "sx" (buffer-file-name))
-      (lsp)))
-
-  (use-package lsp-mode
-    :ensure t
-    :hook ((python-mode . lsp)
-           (js-mode . lsp)
-           (typescript-mode . lsp)
-           (haskell-mode . lsp)
-           (web-mode . td/maybe-enable-lsp)
-           (tuareg-mode . lsp)
-           (reason-mode . lsp)
-           (lsp-mode . lsp-enable-which-key-integration))
-    :commands lsp
-    :custom
-    (lsp-keymap-prefix "C-l")
-    (lsp-prefer-capf t)
-    (lsp-enable-file-watchers nil)
-    (lsp-enable-indentation nil)
-    (lsp-signature-auto-activate nil)
-    (lsp-modeline-code-actions-enable nil)
-    (lsp-headerline-breadcrumb-enable nil))
-
-  (use-package consult-lsp
-    :ensure t
-    :bind (("M-g e" . consult-lsp-diagnostics)
-           ("M-g i" . consult-lsp-symbols)))
-#+end_src
+Native Tree-sitter support since Emacs 29
 
 #+begin_src emacs-lisp
-  (use-package tree-sitter
-    :ensure t
-    :defines tree-sitter-major-mode-language-alist
-    :hook ((after-init . global-tree-sitter-mode)
-           (tree-sitter-after-on . tree-sitter-hl-mode)))
-
-  (use-package tree-sitter-langs
-    :ensure t
-    :after tree-sitter)
+  (use-package treesit
+    :config
+    (add-to-list 'treesit-extra-load-path "/opt/local/lib"))
 #+end_src
 
 ** Auto completion
@@ -986,27 +945,13 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 
 #+BEGIN_SRC emacs-lisp
   (use-package js
-    :mode (("\\.eslintrc$" . js-mode))
+    :mode (("\\.eslintrc$" . js-ts-mode))
     :config
     (setq js-indent-level 2
           js-indent-first-init 'dynamic
           js-switch-indent-offset 2
           js-enabled-frameworks '(javascript)))
 #+END_SRC
-
-#+begin_src emacs-lisp
-  (use-package typescript-mode
-    :ensure t
-    :mode (("\\.ts$" . typescript-mode)
-           ("\\.tsx$" . typescript-tsx-mode))
-    :config
-    (define-derived-mode typescript-tsx-mode typescript-mode
-      "TypeScript TSX")
-    (with-eval-after-load "tree-sitter"
-      (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-tsx-mode . tsx)))
-    :custom
-    (typescript-indent-level 2))
-#+end_src
 
 ** Python
 
