@@ -99,6 +99,10 @@ fixmod() {
     find $1 -type d -exec chmod 755 {} \;
 }
 
+myip() {
+    dig +short txt ch whoami.cloudflare @1.0.0.1;
+}
+
 export NOMAD_ADDR=http://100.74.70.61:4646
 
 # opam configuration
@@ -119,4 +123,3 @@ export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
 export PATH=/Users/tung/.tiup/bin:$PATH
-export PATH=/Users/tung/.platformio/penv/bin:$PATH

@@ -250,7 +250,6 @@ Vertico is the next in line for vertical completion.
            ([remap switch-to-buffer] . consult-buffer))
     ;; :bind* (("C-x p s" . consult-ripgrep))
     :custom
-    (consult-preview-key (kbd "M-p"))
     (consult-narrow-key (kbd "<"))
     (consult-project-root-function #'vc-root-dir)
     (xref-show-xrefs-function #'consult-xref)
@@ -316,17 +315,25 @@ Temporary "focus" on a buffer by maximizing it in the current frame.
   (bind-key* [remap delete-other-windows] #'td/toggle-maximize-buffer)
 #+end_src
 
+Buffer location customization
+
+#+begin_src emacs-lisp
+  (use-package window
+    :config
+    (add-to-list 'display-buffer-alist
+                 '("^\\*eldoc for" display-buffer-at-bottom
+                   (window-height . 4)))
+    (add-to-list 'display-buffer-alist
+                 '("^\\*compilation" display-buffer-at-bottom
+                   (window-height . 4)))
+    )
+#+end_src
+
 
 * General Editing
 
 #+BEGIN_SRC emacs-lisp
   (bind-key [remap zap-to-char] #'zap-up-to-char)
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package comment-dwim-2
-    :ensure t
-    :bind ([remap comment-dwim] . comment-dwim-2))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -690,23 +697,21 @@ Eglot, as the main LSP interface.
 
 #+begin_src emacs-lisp
   (use-package eglot
-    :ensure t
+    :preface
+    (defun td/eglot-eldoc ()
+      (setq eldoc-documentation-strategy
+            'eldoc-documentation-compose-eagerly))
+    :hook ((kotlin-ts-mode . eglot-ensure)
+           (typescript-ts-mode . eglot-ensure)
+           (tsx-ts-mode . eglot-ensure)
+           (gleam-ts-mode . eglot-ensure)
+           (eglot-managed-mode . td/eglot-eldoc))
     :bind (("C-c C-r" . eglot-rename)
            ("C-c C-i" . eglot-code-action-organize-import))
-    :hook ((kotlin-mode . eglot-ensure)
-           (typescript-ts-mode . eglot-ensure))
     :config
-    (add-to-list 'eglot-server-programs '(typescript-ts-mode . ("typescript-language-server" "--stdio"))))
-#+end_src
-
-Dumb-jump, as fallback for languages that their LSP server doesn't work well,
-and/or languages where I need to browse the code but don't necessarily want to
-install on my local computer.
-
-#+begin_src emacs-lisp
-  (use-package dumb-jump
-    :ensure t
-    :init (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
+    (add-to-list 'eglot-server-programs '(typescript-ts-mode . ("typescript-language-server" "--stdio")))
+    (add-to-list 'eglot-server-programs '(tsx-ts-mode . ("typescript-language-server" "--stdio")))
+    (add-to-list 'eglot-server-programs '(gleam-ts-mode . ("gleam" "lsp"))))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -718,8 +723,10 @@ install on my local computer.
     :bind ("C-h C-h" . eldoc-print-current-symbol-info)
     :config
     (global-eldoc-mode -1)
-    (setq eldoc-display-functions '(eldoc-display-in-buffer))
-    (advice-add 'eldoc-display-in-buffer :after #'td/eldoc-select-doc-buffer))
+    (advice-add 'eldoc-display-in-buffer :after #'td/eldoc-select-doc-buffer)
+    :custom
+    (eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
+    (eldoc-display-functions '(eldoc-display-in-buffer)))
 #+end_src
 
 Native Tree-sitter support since Emacs 29
@@ -727,6 +734,7 @@ Native Tree-sitter support since Emacs 29
 #+begin_src emacs-lisp
   (use-package treesit
     :config
+    (add-to-list 'treesit-extra-load-path "~/.local/lib")
     (add-to-list 'treesit-extra-load-path "/opt/local/lib"))
 #+end_src
 
@@ -893,7 +901,9 @@ Also, I can't live without Emmet.
            (css-mode . emmet-mode)
            (reason-mode . emmet-mode)
            (web-mode . emmet-mode)
-           (js-mode . emmet-mode))
+           (js-mode . emmet-mode)
+           (js-ts-mode . emmet-mode)
+           (tsx-ts-mode . emmet-mode))
     :config
     (setq emmet-indentation 2
           emmet-preview-default nil
@@ -1052,21 +1062,15 @@ Python or Haskell:
     :ensure t)
 #+end_src
 
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package lsp-ocaml
-    :custom
-    (lsp-ocaml-lang-server-command '("ocamllsp", "--stdio")))
-#+end_src
-
 ** Java
 
 ** Kotlin
 
 #+begin_src emacs-lisp
-  (use-package kotlin-mode
+  (use-package kotlin-ts-mode
     :ensure t
-    :mode (("\\.kt\\'" . kotlin-mode)
-           ("\\.kts\\'" . kotlin-mode)))
+    :mode (("\\.kt\\'" . kotlin-ts-mode)
+           ("\\.kts\\'" . kotlin-ts-mode)))
 #+end_src
 
 ** Docker
@@ -1128,21 +1132,17 @@ These are supports for other stuffs that I used:
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package yaml-mode
-    :ensure t
-    :mode (("\\.yml$" . yaml-mode)
-           ("\\.yaml$" . yaml-mode)
-           ("\\.sls$" . yaml-mode)
-           ("^master$" . yaml-mode)
-           ("^roster$" . yaml-mode)))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
   (use-package feature-mode
     :ensure t
     :mode (("\\.feature$" . markdown-mode)))
 #+END_SRC
 
+** Gleam
+
+#+begin_src emacs-lisp
+  (use-package gleam-ts-mode
+    :mode (("\\.gleam\\'" . gleam-ts-mode)))
+#+end_src
 
 * Document and management
 
@@ -1330,13 +1330,20 @@ bold and ligatures support :(.
    `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
      (ns-appearance . dark)
-     (font . "Monaco 15")
+     (font . "Monaco 14")
      (vertical-scroll-bars . nil)
-     (tool-bar-lines . 0)))
+     ;(tool-bar-lines . 0)
+     ))
 
   (blink-cursor-mode -1)
-  (load-theme 'deeper-blue t)
+  ;(load-theme 'deeper-blue t)
 #+END_SRC
+
+#+begin_src emacs-lisp
+  (use-package doom-themes
+    :ensure t
+    :init (load-theme 'doom-peacock t))
+#+end_src
 
 #+begin_src emacs-lisp
   (use-package hl-line
@@ -1346,14 +1353,6 @@ bold and ligatures support :(.
 #+BEGIN_SRC emacs-lisp
   (setq ns-use-native-fullscreen t)
 #+END_SRC
-
-#+begin_src emacs-lisp
-  (use-package smart-mode-line
-    :ensure t
-    :hook (after-init . sml/setup)
-    :custom
-    (sml/theme 'dark))
-#+end_src
 
 Truncate lines:
 
@@ -1376,7 +1375,8 @@ theme named =user= will always have the highest priority.
    '(org-block ((t (:inherit default))))
 
    '(fringe ((t (:background unspecified))))
-   '(line-number ((t :foreground unspecified :inherit font-lock-comment-face)))
+   '(line-number ((t :slant normal)))
+   '(line-number-current-line ((t :slant normal)))
 
    '(hl-line ((t :foreground unspecified :background "#323850")))
 
@@ -1416,16 +1416,6 @@ The default line continuation indicator is too standout and distracting for me.
   (setcdr (assq 'continuation fringe-indicator-alist) 'halftone)
   (setcdr (assq 'truncation fringe-indicator-alist) 'halftone)
 #+END_SRC
-
-#+begin_src emacs-lisp :tangle no
-  (use-package highlight-indentation
-    :ensure t
-    :delight highlight-indentation-current-column-mode
-    :hook ((python-mode . highlight-indentation-current-column-mode)
-           (yaml-mode . highlight-indentation-current-column-mode)
-           (purescript-mode . highlight-indentation-current-column-mode)
-           (haskell-mode . highlight-indentation-current-column-mode)))
-#+end_src
 
 #+BEGIN_SRC emacs-lisp :tangle no
   (use-package rainbow-delimiters
@@ -1467,21 +1457,6 @@ kind of distracting, but it is really helpful sometimes.
 
     (advice-add 'diff-hl-overlay-modified :override #'td/diff-hl-overlay-modified))
 #+END_SRC
-
-#+begin_src emacs-lisp :tangle no
-    (defun td/adapt-font-size (&optional frame)
-      (let* ((attrs (frame-monitor-attributes frame))
-             (geometry (alist-get 'geometry attrs)) ;; x y w h
-             (size (alist-get 'mm-size attrs)) ;; w h
-             (ppi (/ (caddr geometry) (/ (car size) 25.4))))
-        ;;(message "PPI: %s" ppi)
-        (if (> ppi 120)
-            (set-face-attribute 'default frame :height 150)
-          (set-face-attribute 'default frame :height 140))))
-
-    (add-function :after after-focus-change-function #'td/adapt-font-size)
-    (add-hook 'after-make-frame-functions #'td/adapt-font-size)
-#+end_src
 
 * Misc
 
