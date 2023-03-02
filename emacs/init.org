@@ -245,15 +245,17 @@ Vertico is the next in line for vertical completion.
            ("M-g y" . consult-yank-from-kill-ring)
            ("M-g t" . consult-theme)
            ("M-g m" . consult-mode-command)
-           ("M-g e" . consult-flymake)
+           ("M-g r" . consult-ripgrep)
            ([remap goto-line] . consult-goto-line)
            ([remap switch-to-buffer] . consult-buffer))
-    ;; :bind* (("C-x p s" . consult-ripgrep))
     :custom
     (consult-narrow-key (kbd "<"))
     (consult-project-root-function #'vc-root-dir)
     (xref-show-xrefs-function #'consult-xref)
     (xref-show-definitions-function #'consult-xref))
+
+  (use-package consult-flymake
+    :bind ("M-g e" . consult-flymake))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -278,7 +280,7 @@ Vertico is the next in line for vertical completion.
     ;; Configure a custom style dispatcher (see the Consult wiki)
     ;; (setq orderless-style-dispatchers '(+orderless-dispatch)
     ;;       orderless-component-separator #'orderless-escapable-split-on-space)
-    (setq completion-styles '(orderless basic)
+    (setq completion-styles '(orderless flex basic)
           completion-category-defaults nil
           completion-category-overrides '((file (styles partial-completion)))))
 #+end_src
@@ -405,7 +407,7 @@ Make the file executable if starting with "shebang":
   (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
 #+END_SRC
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package evil
     :ensure t
     :hook (after-init . evil-mode)
@@ -421,7 +423,7 @@ Make the file executable if starting with "shebang":
 
 ** Search and replace
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package visual-regexp
     :ensure t
     :bind (("M-r" . vr/query-replace)
@@ -429,7 +431,7 @@ Make the file executable if starting with "shebang":
            ("C-M-r" . vr/mc-mark)))
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package ctrlf
     :ensure t
     :hook (after-init . ctrlf-mode)
@@ -444,6 +446,7 @@ Long lines are annoying. Auto wrap all texts at 80.
 
 #+BEGIN_SRC emacs-lisp
   (delight 'auto-fill-function "" t)
+  (delight 'auto-revert-mode "" t)
 
   (setq-default
    comment-auto-fill-only-comments t
@@ -711,7 +714,9 @@ Eglot, as the main LSP interface.
     :config
     (add-to-list 'eglot-server-programs '(typescript-ts-mode . ("typescript-language-server" "--stdio")))
     (add-to-list 'eglot-server-programs '(tsx-ts-mode . ("typescript-language-server" "--stdio")))
-    (add-to-list 'eglot-server-programs '(gleam-ts-mode . ("gleam" "lsp"))))
+    (add-to-list 'eglot-server-programs '(gleam-ts-mode . ("gleam" "lsp")))
+    :custom
+    (eglot-autoshutdown t))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -721,6 +726,7 @@ Eglot, as the main LSP interface.
 
   (use-package eldoc
     :bind ("C-h C-h" . eldoc-print-current-symbol-info)
+    :delight eldoc-mode
     :config
     (global-eldoc-mode -1)
     (advice-add 'eldoc-display-in-buffer :after #'td/eldoc-select-doc-buffer)
@@ -1080,9 +1086,14 @@ consistent development environment across the team. I use =docker= package to
 manage Docker images and containers.
 
 #+BEGIN_SRC emacs-lisp
-  (use-package dockerfile-mode
-    :ensure t
-    :mode ("Dockerfile$" . dockerfile-mode))
+  (use-package docker
+    :ensure t)
+
+  (use-package dockerfile-ts-mode
+    :mode ("Dockerfile$" . dockerfile-ts-mode))
+
+  (use-package kubel
+    :ensure t)
 #+END_SRC
 
 ** Terraform
