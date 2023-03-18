@@ -247,7 +247,8 @@ Vertico is the next in line for vertical completion.
            ("M-g m" . consult-mode-command)
            ("M-g r" . consult-ripgrep)
            ([remap goto-line] . consult-goto-line)
-           ([remap switch-to-buffer] . consult-buffer))
+           ([remap switch-to-buffer] . consult-buffer)
+           ([remap imenu] . consult-imenu))
     :custom
     (consult-narrow-key (kbd "<"))
     (consult-project-root-function #'vc-root-dir)
@@ -407,20 +408,6 @@ Make the file executable if starting with "shebang":
   (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
 #+END_SRC
 
-#+begin_src emacs-lisp :tangle no
-  (use-package evil
-    :ensure t
-    :hook (after-init . evil-mode)
-    :custom
-    (evil-cross-lines t)
-    (evil-ex-substitute-global t)
-    (evil-undo-system 'undo-redo))
-
-  (use-package evil-surround
-    :ensure t
-    :hook (evil-mode . global-evil-surround-mode))
-#+end_src
-
 ** Search and replace
 
 #+begin_src emacs-lisp
@@ -429,15 +416,6 @@ Make the file executable if starting with "shebang":
     :bind (("M-r" . vr/query-replace)
            ([remap query-replace] . vr/query-replace)
            ("C-M-r" . vr/mc-mark)))
-#+end_src
-
-#+begin_src emacs-lisp
-  (use-package ctrlf
-    :ensure t
-    :hook (after-init . ctrlf-mode)
-    :custom
-    (ctrlf-default-search-style 'regexp)
-    (ctrlf-alternate-search-style 'literal))
 #+end_src
 
 ** Long lines
@@ -453,15 +431,6 @@ Long lines are annoying. Auto wrap all texts at 80.
    fill-column 80)
 
   (add-hook 'text-mode-hook #'turn-on-auto-fill)
-#+END_SRC
-
-Sometimes long lines are inevitable though, as I do have to manually edit
-exported SVG and minified JS :(. In those cases prevent them from making Emacs
-slow. J/k, this has been fixed and Emacs has no problem handling these files
-now.
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (global-so-long-mode t)
 #+END_SRC
 
 ** Whitespace
@@ -525,9 +494,14 @@ NOTE: This package is huge, I'm still learning it.
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package expand-region
-    :ensure t
-    :bind ("M--" . er/expand-region))
+  (use-package combobulate
+    :hook ((python-ts-mode . combobulate-mode)
+           (js-ts-mode . combobulate-mode)
+           (css-ts-mode . combobulate-mode)
+           (yaml-ts-mode . combobulate-mode)
+           (tsx-ts-mode . combobulate-mode))
+    :config
+    :load-path "~/.config/emacs/vendor/combobulate")
 
   (defun td/mark-line-dwim ()
     (interactive)
@@ -742,6 +716,9 @@ Native Tree-sitter support since Emacs 29
     :config
     (add-to-list 'treesit-extra-load-path "~/.local/lib")
     (add-to-list 'treesit-extra-load-path "/opt/local/lib"))
+
+  (use-package typescript-ts-mode
+    :mode ("\\.ts\\'" . tsx-ts-mode))
 #+end_src
 
 ** Auto completion
@@ -758,12 +735,7 @@ I use auto completion sparingly, using Corfu.
                  ("C-p" . corfu-previous))
     :custom
     (corfu-cycle t)
-    (corfu-echo-documentation 0.1)
-    :config
-    (with-eval-after-load "evil"
-      (bind-keys :map evil-insert-state-map
-                 ([remap evil-complete-next] . corfu-next)
-                 ([remap evil-complete-previous] . corfu-previous))))
+    (corfu-echo-documentation 0.1))
 
   (use-package cape
     :ensure t
@@ -872,7 +844,6 @@ editing, including PHP, since I rarely write PHP anymore.
   (use-package web-mode
     :ensure t
     :mode (("\\.html" . web-mode)
-           ("\\.jsx" . web-mode)
            ("\\.astro" . web-mode)
            ("\\.tpl" . web-mode)
            ("\\.erb" . web-mode)
