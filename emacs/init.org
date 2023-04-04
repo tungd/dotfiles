@@ -693,7 +693,6 @@ Eglot, as the main LSP interface.
     :config
     (add-to-list 'eglot-server-programs '(typescript-ts-mode . ("typescript-language-server" "--stdio")))
     (add-to-list 'eglot-server-programs '(tsx-ts-mode . ("typescript-language-server" "--stdio")))
-    (add-to-list 'eglot-server-programs '(gleam-ts-mode . ("gleam" "lsp")))
     :custom
     (eglot-autoshutdown t))
 #+end_src
@@ -922,24 +921,9 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 
 ** Python
 
-#+BEGIN_SRC emacs-lisp :tangle no
-  (defun td/lsp-python ()
-    (require 'lsp-python-ms)
-    (lsp))
-
-  (use-package lsp-python-ms
-    :ensure t
-    :hook (python-mode . td/lsp-python))
-#+END_SRC
-
 #+BEGIN_SRC emacs-lisp
-  (use-package py-isort
-    :ensure t
-    :defer t
-    :functions py-isort-before-save)
-
   (use-package python
-    :mode (("\\.py\\'" . python-mode))
+    :mode (("\\.py\\'" . python-ts-mode))
     ;; :hook (before-save . py-isort-before-save)
     :config
     (setq python-fill-docstring-style 'django))
@@ -958,15 +942,6 @@ same folk who runs =stack=.
     :bind (([remap haskell-mode-format-imports] . haskell-sort-imports))
     :custom
     (haskell-program-name "stack repl"))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package lsp-haskell
-    :ensure t
-    ;; :custom
-    ;; (lsp-haskell-server-path "~/.cabal/bin/ghcide")
-    ;; (lsp-haskell-server-args '())
-    )
 #+END_SRC
 
 ** OCaml
