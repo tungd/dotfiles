@@ -335,6 +335,20 @@ Buffer location customization
 
 * General Editing
 
+#+begin_src emacs-lisp
+  (use-package evil
+    :ensure t
+    :hook (after-init . evil-mode)
+    :custom
+    (evil-cross-lines t)
+    (evil-ex-substitute-global t)
+    (evil-undo-system 'undo-redo))
+
+  (use-package evil-surround
+    :ensure t
+    :hook (evil-mode . global-evil-surround-mode))
+#+end_src
+
 #+BEGIN_SRC emacs-lisp
   (bind-key [remap zap-to-char] #'zap-up-to-char)
 #+END_SRC
@@ -494,15 +508,6 @@ NOTE: This package is huge, I'm still learning it.
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package combobulate
-    :hook ((python-ts-mode . combobulate-mode)
-           (js-ts-mode . combobulate-mode)
-           (css-ts-mode . combobulate-mode)
-           (yaml-ts-mode . combobulate-mode)
-           (tsx-ts-mode . combobulate-mode))
-    :config
-    :load-path "~/.config/emacs/vendor/combobulate")
-
   (defun td/mark-line-dwim ()
     (interactive)
     (call-interactively #'beginning-of-line)
@@ -542,7 +547,7 @@ NOTE: This package is huge, I'm still learning it.
     :config
     (add-to-list 'align-rules-list
                  '(js-object-props
-                   (modes . '(js-mode js2-mode web-mode))
+                   (modes . '(js-mode js2-mode))
                    (regexp . "\\(\\s-*\\):")
                    (spacing . 0)))
     (add-to-list 'align-rules-list
@@ -714,6 +719,7 @@ Native Tree-sitter support since Emacs 29
 #+begin_src emacs-lisp
   (use-package treesit
     :config
+    (add-to-list 'treesit-language-source-alist '(dockerfile . ("https://github.com/camdencheek/tree-sitter-dockerfile.git")))
     (add-to-list 'treesit-extra-load-path "~/.local/lib")
     (add-to-list 'treesit-extra-load-path "/opt/local/lib"))
 
@@ -837,32 +843,6 @@ re-run the tests.
 
 ** Web Development
 
-Not programming per-se. I use =web-mode= for all my templating-related
-editing, including PHP, since I rarely write PHP anymore.
-
-#+BEGIN_SRC emacs-lisp
-  (use-package web-mode
-    :ensure t
-    :mode (("\\.html" . web-mode)
-           ("\\.astro" . web-mode)
-           ("\\.tpl" . web-mode)
-           ("\\.erb" . web-mode)
-           ("\\.ejs" . web-mode)
-           ("\\.tag" . web-mode)
-           ("\\.eml" . web-mode)
-           ("\\.php" . web-mode)
-           ("\\.hbs" . web-mode)
-           ("\\.mustache" . web-mode))
-    :custom
-    (web-mode-markup-indent-offset 2)
-    (web-mode-css-indent-offset 2)
-    (web-mode-code-indent-offset 2)
-    (web-mode-script-padding 2)
-    (web-mode-style-padding 2)
-    (web-mode-enable-auto-quoting nil)
-    (web-mode-enable-comment-annotation t))
-#+END_SRC
-
 Also, I can't live without Emmet.
 
 #+BEGIN_SRC emacs-lisp
@@ -876,8 +856,8 @@ Also, I can't live without Emmet.
     :delight emmet-mode
     :hook ((sgml-mode . emmet-mode)
            (css-mode . emmet-mode)
+           (html-ts-mode . emmet-mode)
            (reason-mode . emmet-mode)
-           (web-mode . emmet-mode)
            (js-mode . emmet-mode)
            (js-ts-mode . emmet-mode)
            (tsx-ts-mode . emmet-mode))
@@ -1034,9 +1014,6 @@ Python or Haskell:
 
   (use-package reason-mode
     :ensure t)
-
-  (use-package dune
-    :ensure t)
 #+end_src
 
 ** Java
@@ -1073,9 +1050,6 @@ manage Docker images and containers.
   (use-package terraform-mode
     :ensure t
     :mode (("\\.tf" . terraform-mode)))
-
-  (use-package terraform-doc
-    :ensure t)
 #+end_src
 
 ** SQL
@@ -1118,13 +1092,6 @@ These are supports for other stuffs that I used:
     :ensure t
     :mode (("\\.feature$" . markdown-mode)))
 #+END_SRC
-
-** Gleam
-
-#+begin_src emacs-lisp
-  (use-package gleam-ts-mode
-    :mode (("\\.gleam\\'" . gleam-ts-mode)))
-#+end_src
 
 * Document and management
 
@@ -1314,8 +1281,7 @@ bold and ligatures support :(.
      (ns-appearance . dark)
      (font . "Monaco 14")
      (vertical-scroll-bars . nil)
-     ;(tool-bar-lines . 0)
-     ))
+     (tool-bar-lines . 0)))
 
   (blink-cursor-mode -1)
   ;(load-theme 'deeper-blue t)
@@ -1364,8 +1330,7 @@ theme named =user= will always have the highest priority.
 
    '(markdown-inline-code-face ((t (:slant normal))))
 
-   '(indent-guide-face ((t (:inherit font-lock-comment-face))))
-   '(web-mode-variable-name-face ((t (:inherit default)))))
+   '(indent-guide-face ((t (:inherit font-lock-comment-face)))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle no
@@ -1384,7 +1349,7 @@ down compiler error :(.
 
   (setq-default display-line-numbers-width 3)
   (add-hook 'prog-mode-hook #'display-line-numbers-mode)
-  (add-hook 'web-mode-hook #'display-line-numbers-mode)
+  (add-hook 'html-ts-mode #'display-line-numbers-mode)
 #+END_SRC
 
 The default line continuation indicator is too standout and distracting for me.
