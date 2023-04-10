@@ -329,6 +329,9 @@ Buffer location customization
     (add-to-list 'display-buffer-alist
                  '("^\\*compilation" display-buffer-at-bottom
                    (window-height . 4)))
+    (add-to-list 'display-buffer-alist
+                 '("^\\*Org-Babel Error Output*" display-buffer-at-bottom
+                   (window-height . 4)))
     )
 #+end_src
 
