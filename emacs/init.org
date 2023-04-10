@@ -657,9 +657,9 @@ NOTE: This package is huge, I'm still learning it.
             tramp-default-method "scp"
             tramp-verbose 1)
 
-      (add-to-list 'auth-sources "~/Projects/dotfiles/dotfiles/.emacs.d/authinfo.gpg")
+      (add-to-list 'auth-sources (expand-file-name "authinfo.gpg" user-emacs-directory))
       (add-to-list 'auth-sources 'macos-keychain-generic t)
-      (setq ange-ftp-netrc-filename "~/Projects/dotfiles/dotfiles/.emacs.d/authinfo.gpg")))
+      (setq ange-ftp-netrc-filename (expand-file-name "authinfo.gpg" user-emacs-directory))))
 #+END_SRC
 
 Some speedup for Tramp:
