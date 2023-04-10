@@ -747,18 +747,9 @@ I use auto completion sparingly, using Corfu.
 
   (use-package cape
     :ensure t
-    :functions cape-file cape-wrap-silent cape-wrap-purify
-    :config
-    (add-to-list 'completion-at-point-functions #'cape-file)
-    ;; (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-
-    ;; Silence the pcomplete capf, no errors or messages!
-    ;; Important for corfu
-    (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-silent)
-
-    ;; Ensure that pcomplete does not write to the buffer
-    ;; and behaves as a pure `completion-at-point-function'.
-    (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-purify))
+    :functions cape-file cape-line
+    :bind (("C-c p f" . cape-file)
+           ("C-c p l" . cape-line)))
 
   (use-package dabbrev
     :bind (("M-/" . dabbrev-expand)
