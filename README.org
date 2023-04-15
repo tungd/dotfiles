@@ -75,6 +75,20 @@ Homebrew. Installation is a little bit more involved, though.
   ./sessionmanager-bundle/install -i ~/.local/lib/aws-ssm -b ~/.local/bin/session-manager-plugin
 #+end_src
 
+#+begin_src sh
+  curl -L https://github.com/qoomon/aws-ssm-ec2-proxy-command/blob/master/aws-ssm-ec2-proxy-command.sh -o ~/.local/aws-ssm-ec2-proxy-command.sh
+  chmod +x  ~/.local/aws-ssm-ec2-proxy-command.sh
+#+end_src
+
+#+begin_src sh
+  cat >> ~/.ssh/config <<EOF
+  Host i-* mi-*
+    IdentityFile ~/.ssh/id_rsa
+    ProxyCommand ~/.local/aws-ssm-ec2-proxy-command.sh %h %r %p ~/.ssh/id_rsa.pub
+    StrictHostKeyChecking no
+  EOF
+#+end_src
+
 * System configuration
 
 ** Keyboard configuration
