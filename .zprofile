@@ -114,7 +114,7 @@ export PATH=$HOME/.yarn/bin:$PATH
 
 export PATH=$HOME/.cargo/bin:$PATH
 
-export PATH=$HOME/Library/Python/3.10/bin:$PATH
+export PATH=$HOME/Library/Python/3.11/bin:$PATH
 
 export PNPM_HOME="/Users/tung/Library/pnpm"
 export PATH="$PNPM_HOME:$PATH"
