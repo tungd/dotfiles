@@ -609,6 +609,11 @@ NOTE: This package is huge, I'm still learning it.
     :functions eshell/z
     :defer t)
 
+  (use-package eshell-vterm
+    :ensure t
+    :defer t
+    :hook (after-init . eshell-vterm-mode))
+
   (defun td/eshell-pwd ()
     (replace-regexp-in-string
      (regexp-quote (expand-file-name "~"))
@@ -637,19 +642,13 @@ NOTE: This package is huge, I'm still learning it.
       (defalias 'eshell/open #'crux-open-with)))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package with-editor
-    :ensure t
-    :hook ((term-exec . with-editor-export-editor)
-           (shell-mode . with-editor-export-editor)
-           (eshell-mode . with-editor-export-editor)))
-#+END_SRC
-
 ** Tramp
 
 #+BEGIN_SRC emacs-lisp
   (use-package tramp
     :defer t
+    :custom
+    (tramp-allow-unsafe-temporary-files t)
     :config
     (eval-and-compile
       (setq password-cache-expiry nil
@@ -722,6 +721,7 @@ Native Tree-sitter support since Emacs 29
   (use-package treesit
     :config
     (add-to-list 'treesit-language-source-alist '(dockerfile . ("https://github.com/camdencheek/tree-sitter-dockerfile.git")))
+    (add-to-list 'treesit-language-source-alist '(kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git")))
     (add-to-list 'treesit-extra-load-path "~/.local/lib")
     (add-to-list 'treesit-extra-load-path "/opt/local/lib"))
 
@@ -1192,7 +1192,10 @@ Org Babel for literate programming and API documentation.
 
   (use-package ob-http
     :defer t
-    :ensure t)
+    :ensure t
+    :custom
+    (ob-http:max-time 60)
+    (ob-http:remove-cr t))
 
   (use-package ob-graphql
     :defer t
@@ -1248,9 +1251,8 @@ bold and ligatures support :(.
    `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
      (ns-appearance . dark)
-     (font . "Monaco 14")
-     (vertical-scroll-bars . nil)
-     (tool-bar-lines . 0)))
+     (font . "JetBrains Mono NL 15")
+     (vertical-scroll-bars . nil)))
 
   (blink-cursor-mode -1)
   ;(load-theme 'deeper-blue t)
