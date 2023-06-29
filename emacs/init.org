@@ -338,7 +338,7 @@ Buffer location customization
 
 * General Editing
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package evil
     :ensure t
     :hook (after-init . evil-mode)
@@ -689,6 +689,7 @@ Some speedup for Tramp:
            (typescript-ts-mode . lsp)
            (go-mode . lsp)
            (tsx-ts-mode . lsp)
+           (php-mode . lsp)
            (lsp-mode . lsp-enable-which-key-integration))
     :custom
     (lsp-keymap-prefix "C-c l")
@@ -700,44 +701,6 @@ Some speedup for Tramp:
   (use-package lsp-ui
     :ensure t
     :commands lsp-ui-mode)
-#+end_src
-
-Eglot, as the main LSP interface.
-
-#+begin_src emacs-lisp :tangle no
-  (use-package eglot
-    :preface
-    (defun td/eglot-eldoc ()
-      (setq eldoc-documentation-strategy
-            'eldoc-documentation-compose-eagerly))
-    :hook ((kotlin-ts-mode . eglot-ensure)
-           (typescript-ts-mode . eglot-ensure)
-           (tsx-ts-mode . eglot-ensure)
-           (gleam-ts-mode . eglot-ensure)
-           (eglot-managed-mode . td/eglot-eldoc))
-    :bind (("C-c C-r" . eglot-rename)
-           ("C-c C-i" . eglot-code-action-organize-import))
-    :config
-    (add-to-list 'eglot-server-programs '(typescript-ts-mode . ("typescript-language-server" "--stdio")))
-    (add-to-list 'eglot-server-programs '(tsx-ts-mode . ("typescript-language-server" "--stdio")))
-    :custom
-    (eglot-autoshutdown t))
-#+end_src
-
-#+begin_src emacs-lisp
-  (defun td/eldoc-select-doc-buffer (_doc interactive)
-    (when interactive
-    (run-at-time 0.1 nil #'pop-to-buffer "*eldoc*")))
-
-  (use-package eldoc
-    :bind ("C-h C-h" . eldoc-print-current-symbol-info)
-    :delight eldoc-mode
-    :config
-    (global-eldoc-mode -1)
-    (advice-add 'eldoc-display-in-buffer :after #'td/eldoc-select-doc-buffer)
-    :custom
-    (eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
-    (eldoc-display-functions '(eldoc-display-in-buffer)))
 #+end_src
 
 Native Tree-sitter support since Emacs 29
@@ -838,26 +801,7 @@ re-run the tests.
 
 ** Code folding
 
-#+BEGIN_SRC emacs-lisp :tangle no
-  (define-fringe-bitmap 'hideshow-fringe-marker [255] nil 16 '(top t))
-
-  (defun td/hideshow-set-up-overlay (ov)
-    (when (eq 'code (overlay-get ov 'hs))
-      (overlay-put
-       ov 'before-string (propertize "|" 'display '(left-fringe hideshow-fringe-marker)))
-      (overlay-put
-       ov 'display (propertize " …" 'face 'font-lock-comment-face))))
-
-  (use-package hideshow
-    :hook (prog-mode . hs-minor-mode)
-    :custom
-    (hs-hide-comments-when-hiding-all nil)
-    (hs-set-up-overlay #'td/hideshow-set-up-overlay))
-
-  (use-package hideshow-org
-    :ensure t
-    :hook (hs-minor-mode . hs-org/minor-mode))
-#+END_SRC
+TDB: waiting for folding support with Treesitter
 
 ** Web Development
 
@@ -1271,12 +1215,12 @@ bold and ligatures support :(.
 #+BEGIN_SRC emacs-lisp
   (setq
    fringes-outside-margins t
-   ;; line-spacing 4
+   line-spacing 0.2
    default-frame-alist
    `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
      (ns-appearance . dark)
-     (font . "JetBrains Mono NL 15")
+     (font . "JetBrains Mono NL 14")
      (tool-bar-lines . 0)
      (vertical-scroll-bars . nil)))
 
@@ -1323,17 +1267,11 @@ theme named =user= will always have the highest priority.
    '(line-number-current-line ((t :slant normal)))
 
    ;'(hl-line ((t :foreground unspecified)))
+   '(isearch ((t :box nil :underline t)))
 
    '(markdown-inline-code-face ((t (:slant normal))))
 
    '(indent-guide-face ((t (:inherit font-lock-comment-face)))))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package highlight-numbers
-    :ensure t
-    :defer t
-    :hook (prog-mode . highlight-numbers-mode))
 #+END_SRC
 
 Line and column numbers, which I find only helpful when tracking
@@ -1344,8 +1282,7 @@ down compiler error :(.
   (line-number-mode t)
 
   (setq-default display-line-numbers-width 3)
-  (add-hook 'prog-mode-hook #'display-line-numbers-mode)
-  (add-hook 'html-ts-mode #'display-line-numbers-mode)
+  (global-display-line-numbers-mode t)
 #+END_SRC
 
 The default line continuation indicator is too standout and distracting for me.
@@ -1358,20 +1295,6 @@ The default line continuation indicator is too standout and distracting for me.
 
   (setcdr (assq 'continuation fringe-indicator-alist) 'halftone)
   (setcdr (assq 'truncation fringe-indicator-alist) 'halftone)
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package rainbow-delimiters
-    :ensure t
-    :commands rainbow-delimiters-mode
-    :hook (prog-mode . rainbow-delimiters-mode)
-    :config
-    (eval-and-compile
-      (setq rainbow-delimiters-max-face-count 1)
-
-      (custom-theme-set-faces
-       'user
-       '(rainbow-delimiters-unmatched-face ((t (:inherit error :background "#f00")))))))
 #+END_SRC
 
 Display change marker based on =git=. I usually turn this off because it is
