@@ -124,7 +124,7 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
   (setq echo-keystrokes 0.02)
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package which-key
     :ensure t
     :delight
@@ -441,7 +441,10 @@ Long lines are annoying. Auto wrap all texts at 80.
 
 #+BEGIN_SRC emacs-lisp
   (delight 'auto-fill-function "" t)
-  (delight 'auto-revert-mode "" t)
+
+  (use-package autorevert
+    :custom
+    (auto-revert-mode-text ""))
 
   (setq-default
    comment-auto-fill-only-comments t
@@ -677,9 +680,31 @@ Some speedup for Tramp:
 
 * Programming
 
+#+begin_src emacs-lisp
+  (use-package lsp-mode
+    :ensure t
+    :commands lsp
+    :hook ((kotlin-ts-mode . lsp)
+           (js-ts-mode . lsp)
+           (typescript-ts-mode . lsp)
+           (go-mode . lsp)
+           (tsx-ts-mode . lsp)
+           (lsp-mode . lsp-enable-which-key-integration))
+    :custom
+    (lsp-keymap-prefix "C-c l")
+    (lsp-headerline-breadcrumb-enable nil)
+    (lsp-enable-indentation nil)
+    (lsp-enable-on-type-formatting nil)
+    (lsp-enable-symbol-highlighting nil))
+
+  (use-package lsp-ui
+    :ensure t
+    :commands lsp-ui-mode)
+#+end_src
+
 Eglot, as the main LSP interface.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package eglot
     :preface
     (defun td/eglot-eldoc ()
@@ -1092,7 +1117,7 @@ Here's my basic Org setup:
 
   (use-package ob-plantuml
     :config
-    (setq org-plantuml-jar-path "/opt/local/share/java/plantuml.jar"))
+    (setq org-plantuml-jar-path "/opt/local/share/java/plantuml/plantuml.jar"))
 
   (defun td/org-electric-pair ()
     (setq-local
@@ -1194,7 +1219,7 @@ Org Babel for literate programming and API documentation.
     :defer t
     :ensure t
     :custom
-    (ob-http:max-time 60)
+    (ob-http:max-time 180)
     (ob-http:remove-cr t))
 
   (use-package ob-graphql
@@ -1252,16 +1277,16 @@ bold and ligatures support :(.
      (border-width . 0) (internal-border-width . 0)
      (ns-appearance . dark)
      (font . "JetBrains Mono NL 15")
+     (tool-bar-lines . 0)
      (vertical-scroll-bars . nil)))
 
   (blink-cursor-mode -1)
-  ;(load-theme 'deeper-blue t)
 #+END_SRC
 
 #+begin_src emacs-lisp
   (use-package doom-themes
     :ensure t
-    :init (load-theme 'doom-peacock t))
+    :init (load-theme 'doom-monokai-ristretto t))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1291,13 +1316,13 @@ theme named =user= will always have the highest priority.
    '(font-lock-string-face ((t (:slant normal))))
    '(font-lock-constant-face ((t (:slant normal))))
 
-   '(org-block ((t (:inherit default))))
+   ;'(org-block ((t (:inherit default))))
 
    '(fringe ((t (:background unspecified))))
    '(line-number ((t :slant normal)))
    '(line-number-current-line ((t :slant normal)))
 
-   '(hl-line ((t :foreground unspecified :background "#323850")))
+   ;'(hl-line ((t :foreground unspecified)))
 
    '(markdown-inline-code-face ((t (:slant normal))))
 
