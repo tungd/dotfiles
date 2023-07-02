@@ -714,7 +714,8 @@ Native Tree-sitter support since Emacs 29
     (add-to-list 'treesit-extra-load-path "/opt/local/lib"))
 
   (use-package typescript-ts-mode
-    :mode ("\\.ts\\'" . tsx-ts-mode))
+    :mode (("\\.ts\\'" . tsx-ts-mode)
+           ("\\.tsx\\'" . tsx-ts-mode)))
 #+end_src
 
 ** Auto completion
@@ -874,7 +875,8 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 
 #+BEGIN_SRC emacs-lisp
   (use-package js
-    :mode (("\\.eslintrc$" . js-ts-mode))
+    :mode (("\\.eslintrc$" . js-ts-mode)
+           ("\\.js$" . js-ts-mode))
     :config
     (setq js-indent-level 2
           js-indent-first-init 'dynamic
@@ -1094,9 +1096,12 @@ Here's my basic Org setup:
      '((emacs-lisp . t)
        (http . t)
        (plantuml . t)
-       (graphql . t)
        (python . t)
        (shell . t)
+       (js . t)
+       (kotlin . t)
+       ;(graphql . t)
+       ;(php . t)
        (sql . t))))
 #+END_SRC
 
