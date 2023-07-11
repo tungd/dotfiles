@@ -379,6 +379,8 @@ on extract_argv(source_string, new_delimiter)	set backup to AppleScript's text 
 				<false/>
 				<key>alfredfiltersresultsmatchmode</key>
 				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<false/>
 				<key>argumenttrimmode</key>
 				<integer>0</integer>
 				<key>argumenttype</key>
@@ -417,7 +419,7 @@ on extract_argv(source_string, new_delimiter)	set backup to AppleScript's text 
 			<key>uid</key>
 			<string>DE26058B-66D8-464C-B116-3C36FC69D3FA</string>
 			<key>version</key>
-			<integer>2</integer>
+			<integer>3</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -461,8 +463,6 @@ on extract_argv(source_string, new_delimiter)	set backup to AppleScript's text 
 			<integer>1</integer>
 		</dict>
 		<dict>
-			<key>config</key>
-			<dict/>
 			<key>type</key>
 			<string>alfred.workflow.utility.junction</string>
 			<key>uid</key>
@@ -526,6 +526,12 @@ on extract_argv(source_string, new_delimiter)	set backup to AppleScript's text 
 				<false/>
 				<key>focusedappvariablename</key>
 				<string></string>
+				<key>hotkey</key>
+				<integer>13</integer>
+				<key>hotmod</key>
+				<integer>1179648</integer>
+				<key>hotstring</key>
+				<string>W</string>
 				<key>leftcursor</key>
 				<false/>
 				<key>modsmode</key>
@@ -566,6 +572,8 @@ on extract_argv(source_string, new_delimiter)	set backup to AppleScript's text 
 				<false/>
 				<key>alfredfiltersresultsmatchmode</key>
 				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<false/>
 				<key>argumenttrimmode</key>
 				<integer>0</integer>
 				<key>argumenttype</key>
@@ -604,7 +612,7 @@ on extract_argv(source_string, new_delimiter)	set backup to AppleScript's text 
 			<key>uid</key>
 			<string>BBE27144-1C88-4DB4-BCF3-B4E7CCE3A14B</string>
 			<key>version</key>
-			<integer>2</integer>
+			<integer>3</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -951,185 +959,187 @@ Inspration is taken from "Windows Switcher" workflow from Emanuele Munafò (kudo
 		<key>0486C218-68A8-4897-8F4E-B51741037678</key>
 		<dict>
 			<key>xpos</key>
-			<integer>490</integer>
+			<real>490</real>
 			<key>ypos</key>
-			<integer>350</integer>
+			<real>350</real>
 		</dict>
 		<key>0EC23CAD-38F5-4A2D-B28A-A23685F1E575</key>
 		<dict>
 			<key>xpos</key>
-			<integer>450</integer>
+			<real>450</real>
 			<key>ypos</key>
-			<integer>170</integer>
+			<real>170</real>
 		</dict>
 		<key>14FDFA95-B03E-42F9-8F94-0DD482CBCE47</key>
 		<dict>
 			<key>xpos</key>
-			<integer>390</integer>
+			<real>390</real>
 			<key>ypos</key>
-			<integer>280</integer>
+			<real>280</real>
 		</dict>
 		<key>2A4DC329-9524-4CB9-BB77-7410877C746A</key>
 		<dict>
 			<key>xpos</key>
-			<integer>10</integer>
+			<real>30</real>
 			<key>ypos</key>
-			<integer>350</integer>
+			<real>350</real>
 		</dict>
 		<key>4B55AF9F-D256-4871-B524-9938AD009D7E</key>
 		<dict>
 			<key>xpos</key>
-			<integer>490</integer>
+			<real>490</real>
 			<key>ypos</key>
-			<integer>400</integer>
+			<real>400</real>
 		</dict>
 		<key>5A3D96FB-36AB-4CAC-A6A5-58E1B4BEA15E</key>
 		<dict>
 			<key>note</key>
 			<string>Google Chrome Canary</string>
 			<key>xpos</key>
-			<integer>500</integer>
+			<real>500</real>
 			<key>ypos</key>
-			<integer>20</integer>
+			<real>20</real>
 		</dict>
 		<key>5CECCEA1-2E2E-4EE6-A6E7-76A65C2FE3A2</key>
 		<dict>
 			<key>note</key>
 			<string>Opera</string>
 			<key>xpos</key>
-			<integer>550</integer>
+			<real>550</real>
 			<key>ypos</key>
-			<integer>590</integer>
+			<real>590</real>
 		</dict>
 		<key>7686C74A-A33F-49C2-8231-40F1569A481A</key>
 		<dict>
 			<key>note</key>
 			<string>Google Chrome</string>
 			<key>xpos</key>
-			<integer>540</integer>
+			<real>540</real>
 			<key>ypos</key>
-			<integer>160</integer>
+			<real>160</real>
 		</dict>
 		<key>8F761ADE-CFDB-4C24-A4A5-9065084AC825</key>
 		<dict>
 			<key>note</key>
 			<string>Opera Beta</string>
 			<key>xpos</key>
-			<integer>550</integer>
+			<real>550</real>
 			<key>ypos</key>
-			<integer>720</integer>
+			<real>720</real>
 		</dict>
 		<key>9DC4528B-E0EE-40CE-8594-C3F1F1B512CB</key>
 		<dict>
 			<key>note</key>
 			<string>Safari</string>
 			<key>xpos</key>
-			<integer>570</integer>
+			<real>570</real>
 			<key>ypos</key>
-			<integer>450</integer>
+			<real>450</real>
 		</dict>
 		<key>A5DC0789-027C-4177-BACF-CE2E7C089CA7</key>
 		<dict>
 			<key>note</key>
 			<string>Brave</string>
 			<key>xpos</key>
-			<integer>550</integer>
+			<real>550</real>
 			<key>ypos</key>
-			<integer>1010</integer>
+			<real>1010</real>
 		</dict>
 		<key>A9672888-73C0-4D89-A497-B85E986C1D50</key>
 		<dict>
 			<key>xpos</key>
-			<integer>450</integer>
+			<real>450</real>
 			<key>ypos</key>
-			<integer>1080</integer>
+			<real>1080</real>
 		</dict>
 		<key>A9ABD10A-3146-4A01-8965-1EED64F15DD1</key>
 		<dict>
 			<key>note</key>
 			<string>Opera Dev</string>
 			<key>xpos</key>
-			<integer>550</integer>
+			<real>550</real>
 			<key>ypos</key>
-			<integer>870</integer>
+			<real>870</real>
 		</dict>
 		<key>BBE27144-1C88-4DB4-BCF3-B4E7CCE3A14B</key>
 		<dict>
 			<key>xpos</key>
-			<integer>230</integer>
+			<real>230</real>
 			<key>ypos</key>
-			<integer>350</integer>
+			<real>350</real>
 		</dict>
 		<key>BD656024-B882-41AD-9F20-DCE01B327732</key>
 		<dict>
 			<key>xpos</key>
-			<integer>440</integer>
+			<real>440</real>
 			<key>ypos</key>
-			<integer>670</integer>
+			<real>670</real>
 		</dict>
 		<key>C44F13D3-3A11-4292-BD0F-0F36F322D6DE</key>
 		<dict>
 			<key>xpos</key>
-			<integer>710</integer>
+			<real>710</real>
 			<key>ypos</key>
-			<integer>270</integer>
+			<real>270</real>
 		</dict>
 		<key>CBC5D8A8-255D-4E28-BE50-D7B19EE45B5F</key>
 		<dict>
 			<key>xpos</key>
-			<integer>440</integer>
+			<real>440</real>
 			<key>ypos</key>
-			<integer>910</integer>
+			<real>910</real>
 		</dict>
 		<key>D6DE9E5D-7883-4216-B28B-1D762E60364A</key>
 		<dict>
 			<key>note</key>
 			<string>iTerm</string>
 			<key>xpos</key>
-			<integer>785</integer>
+			<real>785</real>
 			<key>ypos</key>
-			<integer>240</integer>
+			<real>240</real>
 		</dict>
 		<key>DE26058B-66D8-464C-B116-3C36FC69D3FA</key>
 		<dict>
 			<key>xpos</key>
-			<integer>230</integer>
+			<real>230</real>
 			<key>ypos</key>
-			<integer>210</integer>
+			<real>210</real>
 		</dict>
 		<key>DFDD4CE8-9ED6-40D8-8E11-7B5104273C26</key>
 		<dict>
 			<key>xpos</key>
-			<integer>450</integer>
+			<real>450</real>
 			<key>ypos</key>
-			<integer>590</integer>
+			<real>590</real>
 		</dict>
 		<key>F6142494-8ED8-4369-9BE3-555D11956DD7</key>
 		<dict>
 			<key>xpos</key>
-			<integer>410</integer>
+			<real>410</real>
 			<key>ypos</key>
-			<integer>120</integer>
+			<real>120</real>
 		</dict>
 		<key>F9DFD058-DFE7-4C1C-BC68-1DFAE864F813</key>
 		<dict>
 			<key>note</key>
 			<string>Safari Tech Preview</string>
 			<key>xpos</key>
-			<integer>570</integer>
+			<real>570</real>
 			<key>ypos</key>
-			<integer>320</integer>
+			<real>320</real>
 		</dict>
 		<key>FA71F597-12C1-4357-B3CB-D8A7CDA00BB9</key>
 		<dict>
 			<key>note</key>
 			<string>Other Apps (No Tabs Support)</string>
 			<key>xpos</key>
-			<integer>230</integer>
+			<real>230</real>
 			<key>ypos</key>
-			<integer>610</integer>
+			<real>610</real>
 		</dict>
 	</dict>
+	<key>userconfigurationconfig</key>
+	<array/>
 	<key>version</key>
 	<string>0.3.6</string>
 	<key>webaddress</key>

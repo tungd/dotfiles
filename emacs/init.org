@@ -1174,6 +1174,11 @@ Org Babel for literate programming and API documentation.
   (use-package ob-graphql
     :defer t
     :ensure t)
+
+  (use-package ob-python
+    :defer t
+    :custom
+    (org-babel-python-command "python3"))
 #+END_SRC
 
 ** Spell checking
