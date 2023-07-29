@@ -60,6 +60,7 @@ are stored in the =~/.emacs.d/vendor= directory.
 
 #+BEGIN_SRC emacs-lisp
   (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
+  (add-to-list 'load-path (concat user-emacs-directory "vendor/copilot.el/"))
 #+END_SRC
 
 
@@ -690,6 +691,7 @@ Some speedup for Tramp:
            (go-mode . lsp)
            (tsx-ts-mode . lsp)
            (php-mode . lsp)
+           (tuareg-mode . lsp)
            (lsp-mode . lsp-enable-which-key-integration))
     :custom
     (lsp-keymap-prefix "C-c l")
@@ -743,6 +745,18 @@ I use auto completion sparingly, using Corfu.
   (use-package dabbrev
     :bind (("M-/" . dabbrev-expand)
            ("C-M-/" . completion-at-point)))
+
+  (use-package copilot
+    :bind (("C-j" . copilot-accept-completion))
+    :hook ((sgml-mode . copilot-mode)
+           (css-mode . copilot-mode)
+           (html-ts-mode . copilot-mode)
+           (js-ts-mode . copilot-mode)
+           (tsx-ts-mode . copilot-mode)
+           (php-mode . copilot-mode)
+           (kotlin-mode . copilot-mode)
+           (go-mode . copilot-mode)
+           (python-mode . copilot-mode)))
 #+end_src
 
 ** Error checking
@@ -805,32 +819,6 @@ re-run the tests.
 TDB: waiting for folding support with Treesitter
 
 ** Web Development
-
-Also, I can't live without Emmet.
-
-#+BEGIN_SRC emacs-lisp
-  (defun td/emmet-jsx-mode ()
-    (interactive)
-    (when (string-suffix-p "sx" (buffer-file-name))
-      (setq-local emmet-expand-jsx-className? t)))
-
-  (use-package emmet-mode
-    :ensure t
-    :delight emmet-mode
-    :hook ((sgml-mode . emmet-mode)
-           (css-mode . emmet-mode)
-           (html-ts-mode . emmet-mode)
-           (reason-mode . emmet-mode)
-           (js-mode . emmet-mode)
-           (js-ts-mode . emmet-mode)
-           (tsx-ts-mode . emmet-mode))
-    :config
-    (setq emmet-indentation 2
-          emmet-preview-default nil
-          emmet-insert-flash-time 0.1)
-
-    (add-hook 'emmet-mode-hook #'td/emmet-jsx-mode))
-#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   (defun td/format-html-attributes ()
