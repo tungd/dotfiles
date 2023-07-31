@@ -11,34 +11,19 @@ look for alternatives.
 
 * Packages and initialization
 
-All the packages I used are from [[https://melpa.org][MELPA]]. However, I
-install them automatically with =use-package.el= instead of using =package.el=
-directly.
+All the packages I used are from [[https://melpa.org][MELPA]]. However, I install them automatically
+with =use-package.el= instead of using =package.el= directly. Since Emacs 29.1,
+=use-package.el= has been bundled with Emacs.
 
-I'm also trying out some of the start-up optimization tips from Doom.
-
-So far the biggest save is coming from 'native-comp'
-
-#+BEGIN_SRC emacs-lisp
-  (require 'package)
-
-  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-
-  (eval-when-compile
-    (unless (package-installed-p 'use-package)
-      (package-refresh-contents)
-      (package-install 'use-package))
-
-    (require 'use-package))
-
-  (setq package-quickstart t)
-#+END_SRC
+Also, Emacs 29.1 added the =package-vc-install= command, which is really handy as
+quite a few of the packages I used are not available on MELPA yet.
 
 #+BEGIN_SRC emacs-lisp
   (use-package package
-    :defer t
     :config
-    (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t))
+    (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+    :custom
+    (package-quickstart t))
 #+END_SRC
 
 #+begin_src emacs-lisp
@@ -58,9 +43,8 @@ So far the biggest save is coming from 'native-comp'
 Sometimes I write my own package, or download package from Emacs wiki; they
 are stored in the =~/.emacs.d/vendor= directory.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
-  (add-to-list 'load-path (concat user-emacs-directory "vendor/copilot.el/"))
 #+END_SRC
 
 
@@ -207,7 +191,8 @@ Default key bindings is
 #+begin_src emacs-lisp
   (use-package xref
     :bind (("C-M-p" . xref-find-definitions-other-window)
-           ("C-M-g" . xref-go-back)))
+           ("C-M-g" . xref-go-back))
+    :hook ((xref-after-update . outline-minor-mode)))
 
   (bind-key* "C-M-." #'xref-find-definitions)
 #+end_src
@@ -300,8 +285,8 @@ Split windows horizontally by default.
 #+begin_src emacs-lisp
   (use-package ace-window
     :ensure t
-    :bind* (("M-j" . ace-window)
-            ("M-J" . ace-delete-window)))
+    :bind* (("M-o" . ace-window)
+            ("M-O" . ace-delete-window)))
 #+end_src
 
 Temporary "focus" on a buffer by maximizing it in the current frame.
@@ -322,17 +307,34 @@ Temporary "focus" on a buffer by maximizing it in the current frame.
 Buffer location customization
 
 #+begin_src emacs-lisp
+  (tab-bar-mode t)
+
   (use-package window
     :config
     (add-to-list 'display-buffer-alist
-                 '("^\\*eldoc for" display-buffer-at-bottom
-                   (window-height . 4)))
+                 '("\\*compilation\\*" display-buffer-in-direction
+                   (window . root)
+                   (direction . bottom)
+                   (window-height . 6)))
     (add-to-list 'display-buffer-alist
-                 '("^\\*compilation" display-buffer-at-bottom
-                   (window-height . 4)))
+                 '("\\*Help\\*"
+                   (display-buffer-reuse-window display-buffer-pop-up-window)
+                   (inhibit-same-window . t)))
     (add-to-list 'display-buffer-alist
-                 '("^\\*Org-Babel Error Output*" display-buffer-at-bottom
-                   (window-height . 4)))
+                 '("\\*Org-Babel Error Output\\*" display-buffer-in-direction
+                   (window . root)
+                   (direction . bottom)
+                   (window-height . 6)))
+    (add-to-list 'display-buffer-alist
+                 `(,(rx (| "inbox.org" "*Org Agenda*" "init.org"))
+                   (display-buffer-in-tab display-buffer-full-frame)
+                   (ignore-current-tab . t)
+                   (tab-name . "🚀 Org")
+                   (tab-group . "Org")))
+    (add-to-list 'display-buffer-alist
+                 `("\\*Org Src" display-buffer-full-frame))
+    (add-to-list 'display-buffer-alist
+                 `(,(rx (| "README.org" "WORKBOOK.org" "NOTES.org")) display-buffer-full-frame))
     )
 #+end_src
 
@@ -389,12 +391,14 @@ Editing utilities:
   (use-package crux
     :ensure t
     :hook (after-init . crux-reopen-as-root-mode)
-    :bind (("M-C-]" . crux-switch-to-previous-buffer)
+    :bind (;; There's a built-in `switch-to-prev-buffer', but it is less helpful
+           ;; since it is not allowing me to quickly switch between the most
+           ;; recent buffers
+           ("M-C-]" . crux-switch-to-previous-buffer)
            ("M-J" . crux-top-join-line)
            ("M-=" . crux-cleanup-buffer-or-region)
            ("C-M-k" . crux-kill-whole-line)
            ("C-c D" . crux-delete-file-and-buffer)
-           ("C-c r" . crux-rename-file-and-buffer)
            ("C-c C-o" . crux-open-with)
            ([remap kill-line] . crux-smart-kill-line))
     :config
@@ -403,10 +407,10 @@ Editing utilities:
     (crux-with-region-or-point-to-eol kill-ring-save)
     (setq kill-do-not-save-duplicates t))
 
-  (bind-key* "C-c C-k" #'kill-this-buffer)
+  (bind-key* "C-x C-k" #'kill-this-buffer)
+  (bind-key* "C-c r" #'rename-visited-file)
   (bind-key* "s-n" #'next-buffer)
   (bind-key* "s-p" #'previous-buffer)
-  (bind-key [remap just-one-space] #'cycle-spacing)
 #+END_SRC
 
 Create directory for the file if not exists:
@@ -427,6 +431,13 @@ Make the file executable if starting with "shebang":
 #+END_SRC
 
 ** Search and replace
+
+#+begin_src emacs-lisp
+  (use-package isearch
+    :defer t
+    :custom
+    (isearch-wrap-pause 'no))
+#+end_src
 
 #+begin_src emacs-lisp
   (use-package visual-regexp
@@ -508,7 +519,7 @@ NOTE: This package is huge, I'm still learning it.
     :hook (after-init . show-paren-mode)
     :custom
     (show-paren-delay 0)
-    (show-paren-context-when-offscreen t))
+    (show-paren-context-when-offscreen 'overlay))
 
   (use-package elec-pair
     :hook (after-init . electric-pair-mode))
@@ -653,16 +664,10 @@ NOTE: This package is huge, I'm still learning it.
     :defer t
     :custom
     (tramp-allow-unsafe-temporary-files t)
+    (tramp-default-method "scp")
     :config
-    (eval-and-compile
-      (setq password-cache-expiry nil
-            ;; tramp-debug-buffer t
-            tramp-default-method "scp"
-            tramp-verbose 1)
-
-      (add-to-list 'auth-sources (expand-file-name "authinfo.gpg" user-emacs-directory))
-      (add-to-list 'auth-sources 'macos-keychain-generic t)
-      (setq ange-ftp-netrc-filename (expand-file-name "authinfo.gpg" user-emacs-directory))))
+    (add-to-list 'auth-sources (expand-file-name "authinfo.gpg" user-emacs-directory))
+    (add-to-list 'auth-sources 'macos-keychain-generic t))
 #+END_SRC
 
 Some speedup for Tramp:
@@ -681,28 +686,31 @@ Some speedup for Tramp:
 
 * Programming
 
-#+begin_src emacs-lisp
-  (use-package lsp-mode
-    :ensure t
-    :commands lsp
-    :hook ((kotlin-ts-mode . lsp)
-           (js-ts-mode . lsp)
-           (typescript-ts-mode . lsp)
-           (go-mode . lsp)
-           (tsx-ts-mode . lsp)
-           (php-mode . lsp)
-           (tuareg-mode . lsp)
-           (lsp-mode . lsp-enable-which-key-integration))
-    :custom
-    (lsp-keymap-prefix "C-c l")
-    (lsp-headerline-breadcrumb-enable nil)
-    (lsp-enable-indentation nil)
-    (lsp-enable-on-type-formatting nil)
-    (lsp-enable-symbol-highlighting nil))
+Native LSP support via =Eglot= since Emacs 29.1
 
-  (use-package lsp-ui
+#+begin_src emacs-lisp
+  (use-package eglot
+    :hook ((kotlin-ts-mode . eglot-ensure)
+           (js-ts-mode . eglot-ensure)
+           (typescript-ts-mode . eglot-ensure)
+           (tsx-ts-mode . eglot-ensure)
+           (go-ts-mode . eglot-ensure)
+           (php-mode . eglot-ensure)
+           (tuareg-mode . eglot-ensure)))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package eldoc
+    :delight
+    :config
+    (setq eldoc-display-functions '(eldoc-display-in-buffer)))
+
+  (use-package eldoc-box
     :ensure t
-    :commands lsp-ui-mode)
+    :bind ("C-c C-h" . eldoc-box-help-at-point)
+    :custom
+    (eldoc-box-cleanup-interval 0.2)
+    (eldoc-box-clear-with-C-g t))
 #+end_src
 
 Native Tree-sitter support since Emacs 29
@@ -712,12 +720,42 @@ Native Tree-sitter support since Emacs 29
     :config
     (add-to-list 'treesit-language-source-alist '(dockerfile . ("https://github.com/camdencheek/tree-sitter-dockerfile.git")))
     (add-to-list 'treesit-language-source-alist '(kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git")))
-    (add-to-list 'treesit-extra-load-path "~/.local/lib")
     (add-to-list 'treesit-extra-load-path "/opt/local/lib"))
 
   (use-package typescript-ts-mode
     :mode (("\\.ts\\'" . tsx-ts-mode)
            ("\\.tsx\\'" . tsx-ts-mode)))
+
+  (use-package go-ts-mode
+    :mode (("\\.go\\'" . tsx-ts-mode)))
+
+  (use-package go-ts-mode
+    :mode (("go.mod$" . go-mod-ts-mode)))
+
+  (use-package dockerfile-ts-mode
+    :mode ("Dockerfile$" . dockerfile-ts-mode))
+
+  (use-package yaml-ts-mode
+    :mode ("\\.yaml\\'" . yaml-ts-mode))
+
+  (setq
+   major-mode-remap-alist
+   '((js-mode . js-ts-mode)
+     (typescript-mode . typescript-ts-mode)
+     (json-mode . json-ts-mode)
+     (css-mode . css-ts-mode)
+     (python-mode . python-ts-mode)))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package combobulate
+    :vc (:url "git@github.com:mickeynp/combobulate.git")
+    :hook ((python-ts-mode . combobulate-mode)
+           (js-ts-mode . combobulate-mode)
+           (css-ts-mode . combobulate-mode)
+           (yaml-ts-mode . combobulate-mode)
+           (typescript-ts-mode . combobulate-mode)
+           (tsx-ts-mode . combobulate-mode)))
 #+end_src
 
 ** Auto completion
@@ -742,21 +780,23 @@ I use auto completion sparingly, using Corfu.
     :bind (("C-c p f" . cape-file)
            ("C-c p l" . cape-line)))
 
-  (use-package dabbrev
-    :bind (("M-/" . dabbrev-expand)
+  (use-package hippie-exp
+    :bind (("M-/" . hippie-expand)
            ("C-M-/" . completion-at-point)))
 
   (use-package copilot
+    :vc (:url "git@github.com:zerolfx/copilot.el.git")
     :bind (("C-j" . copilot-accept-completion))
     :hook ((sgml-mode . copilot-mode)
-           (css-mode . copilot-mode)
+           (css-ts-mode . copilot-mode)
            (html-ts-mode . copilot-mode)
            (js-ts-mode . copilot-mode)
+           (typescript-ts-mode . copilot-mode)
            (tsx-ts-mode . copilot-mode)
            (php-mode . copilot-mode)
-           (kotlin-mode . copilot-mode)
-           (go-mode . copilot-mode)
-           (python-mode . copilot-mode)))
+           (kotlin-ts-mode . copilot-mode)
+           (go-ts-mode . copilot-mode)
+           (python-ts-mode . copilot-mode)))
 #+end_src
 
 ** Error checking
@@ -772,6 +812,8 @@ Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
     :bind (:map flymake-mode-map
                 ("C-c e n" . flymake-goto-next-error)
                 ("C-c e p" . flymake-goto-prev-error))
+    :custom
+    (flymake-mode-line-lighter "FM")
     :config
     (advice-add
      'flymake-proc-create-temp-inplace
@@ -811,7 +853,8 @@ re-run the tests.
     :hook (compilation-filter . td/colorize-compilation-buffer)
     :custom
     (compilation-ask-about-save nil)
-    (compilation-scroll-output 'first-error))
+    (compilation-scroll-output 'first-error)
+    (compilation-auto-jump-to-first-error 'if-location-known))
 #+END_SRC
 
 ** Code folding
@@ -863,8 +906,7 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 
 #+BEGIN_SRC emacs-lisp
   (use-package js
-    :mode (("\\.eslintrc$" . js-ts-mode)
-           ("\\.js$" . js-ts-mode))
+    :mode (("\\.eslintrc$" . js-ts-mode))
     :config
     (setq js-indent-level 2
           js-indent-first-init 'dynamic
@@ -873,14 +915,6 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 #+END_SRC
 
 ** Python
-
-#+BEGIN_SRC emacs-lisp
-  (use-package python
-    :mode (("\\.py\\'" . python-ts-mode))
-    ;; :hook (before-save . py-isort-before-save)
-    :config
-    (setq python-fill-docstring-style 'django))
-#+END_SRC
 
 ** Haskell
 
@@ -955,23 +989,6 @@ Python or Haskell:
            ("\\.kts\\'" . kotlin-ts-mode)))
 #+end_src
 
-** Docker
-
-I use Docker for almost every project now, it is useful even just for setting up
-consistent development environment across the team. I use =docker= package to
-manage Docker images and containers.
-
-#+BEGIN_SRC emacs-lisp
-  (use-package docker
-    :ensure t)
-
-  (use-package dockerfile-ts-mode
-    :mode ("Dockerfile$" . dockerfile-ts-mode))
-
-  (use-package kubel
-    :ensure t)
-#+END_SRC
-
 ** Terraform
 
 #+begin_src emacs-lisp
@@ -1020,6 +1037,7 @@ These are supports for other stuffs that I used:
     :ensure t
     :mode (("\\.feature$" . markdown-mode)))
 #+END_SRC
+
 
 * Document and management
 
@@ -1201,8 +1219,9 @@ the way I liked.
         scroll-preserve-screen-position t
         scroll-margin 8
         scroll-conservatively 101
-        auto-window-vscroll nil
-        fast-but-imprecise-scrolling t)
+        auto-window-vscroll nil)
+
+  (pixel-scroll-precision-mode t)
 #+END_SRC
 
 Default window configuration: half-left of the screen, no scroll bars, no menu
@@ -1321,6 +1340,7 @@ kind of distracting, but it is really helpful sometimes.
 
     (advice-add 'diff-hl-overlay-modified :override #'td/diff-hl-overlay-modified))
 #+END_SRC
+
 
 * Misc
 
