@@ -694,7 +694,7 @@ Native LSP support via =Eglot= since Emacs 29.1
            (js-ts-mode . eglot-ensure)
            (typescript-ts-mode . eglot-ensure)
            (tsx-ts-mode . eglot-ensure)
-           (go-ts-mode . eglot-ensure)
+           (go-mode . eglot-ensure)
            (php-mode . eglot-ensure)
            (tuareg-mode . eglot-ensure)))
 #+end_src
@@ -726,8 +726,9 @@ Native Tree-sitter support since Emacs 29
     :mode (("\\.ts\\'" . tsx-ts-mode)
            ("\\.tsx\\'" . tsx-ts-mode)))
 
-  (use-package go-ts-mode
-    :mode (("\\.go\\'" . tsx-ts-mode)))
+  (use-package go-mode
+    :ensure t
+    :mode (("\\.go\\'" . go-mode)))
 
   (use-package go-ts-mode
     :mode (("go.mod$" . go-mod-ts-mode)))
@@ -1223,6 +1224,16 @@ the way I liked.
 
   (pixel-scroll-precision-mode t)
 #+END_SRC
+
+I use mouse scroll a lot, and with the default key binding it would accidentally
+change the text scale. I don't want this behavior, hence unbind the key here.
+
+#+begin_src emacs-lisp
+  (unbind-key "C-<mouse-5>")
+  (unbind-key "C-<mouse-4>")
+  (unbind-key "C-<wheel-down>")
+  (unbind-key "C-<wheel-up>")
+#+end_src
 
 Default window configuration: half-left of the screen, no scroll bars, no menu
 bars, no cursor blinking. And btw, nothing beats the classic Monaco. "Menlo",
