@@ -18,52 +18,52 @@ with =use-package.el= instead of using =package.el= directly. Since Emacs 29.1,
 Also, Emacs 29.1 added the =package-vc-install= command, which is really handy as
 quite a few of the packages I used are not available on MELPA yet.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package package
     :config
     (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
     :custom
     (package-quickstart t))
-#+END_SRC
+#+end_src
 
 #+begin_src emacs-lisp
   (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
   (load custom-file 'noerror)
 #+end_src
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package bind-key
     :ensure t
     :functions (override-global-mode)
     :config (override-global-mode t))
 
   (use-package delight :ensure t)
-#+END_SRC
+#+end_src
 
 Sometimes I write my own package, or download package from Emacs wiki; they
 are stored in the =~/.emacs.d/vendor= directory.
 
 #+begin_src emacs-lisp
   (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
-#+END_SRC
+#+end_src
 
 
 * Defaults
 
 Personal information that some package use:
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (setq user-full-name "Tung Dao"
         user-mail-address "me@tungdao.com"
         default-input-method 'vietnamese-telex)
   (defvar personal-keybindings nil)
-#+END_SRC
+#+end_src
 
 Less verbose choice:
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (setq use-short-answers t)
-#+END_SRC
+#+end_src
 
 Sane, modern defaults:
 
@@ -71,13 +71,13 @@ Sane, modern defaults:
 - no unnecessary temporary files (I do keep backup files, but not auto-save
   and lock files)
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (setq auto-save-file-name-transforms
         `((".*" ,temporary-file-directory t))
         backup-directory-alist
         `(("." . ,(concat user-emacs-directory "backups")))
         create-lockfiles nil)
-#+END_SRC
+#+end_src
 
 Performance stuffs, I'm not sure how relevant these are, since I've moved to =nativecomp=.
 
@@ -91,7 +91,7 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
         inhibit-compacting-font-caches t)
 #+end_src
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package exec-path-from-shell
     :ensure t
     :if (memq window-system '(mac ns))
@@ -99,11 +99,11 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
     :hook (after-init . exec-path-from-shell-initialize)
     :config
     (exec-path-from-shell-copy-envs '("LANG")))
-#+END_SRC
+#+end_src
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (savehist-mode t)
-#+END_SRC
+#+end_src
 
 #+begin_src emacs-lisp
   (setq echo-keystrokes 0.02)
@@ -135,34 +135,34 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 
 ** Server
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (defun td/ensure-server-running ()
     (require 'server)
     (unless (server-running-p)
       (server-start)))
 
   (add-hook 'after-init-hook #'td/ensure-server-running)
-#+END_SRC
+#+end_src
 
 
 ** MacOS specific stuffs
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (setq ns-command-modifier 'meta
         ns-option-modifier 'super
         trash-directory "~/.Trash"
         delete-by-moving-to-trash t)
-#+END_SRC
+#+end_src
 
 
 * Navigation
 
 ** File position
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (use-package saveplace
   :hook (after-init . save-place-mode))
-#+END_SRC
+#+end_src
 
 ** Projects
 
@@ -171,7 +171,9 @@ still some missing features coming from =projectile=, but I can live with that.
 
 #+begin_src emacs-lisp
   (use-package project
-    :commands (project-find-file project-current))
+    :commands (project-find-file project-vc-dir project-current)
+    :custom
+    (project-switch-commands 'project-dired))
 #+end_src
 
 ** Symbols
@@ -217,9 +219,10 @@ Vertico is the next in line for vertical completion.
 #+end_src
 
 #+begin_src emacs-lisp
-  (use-package vertico
-    :ensure t
-    :hook (after-init . vertico-mode))
+  (use-package icomplete
+    :hook (after-init . icomplete-mode)
+    :custom
+    (icomplete-show-matches-on-no-input t))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -282,13 +285,6 @@ Split windows horizontally by default.
         split-height-threshold 0)
 #+end_src
 
-#+begin_src emacs-lisp
-  (use-package ace-window
-    :ensure t
-    :bind* (("M-o" . ace-window)
-            ("M-O" . ace-delete-window)))
-#+end_src
-
 Temporary "focus" on a buffer by maximizing it in the current frame.
 
 #+begin_src emacs-lisp
@@ -302,6 +298,8 @@ Temporary "focus" on a buffer by maximizing it in the current frame.
         (delete-other-windows))))
 
   (bind-key* [remap delete-other-windows] #'td/toggle-maximize-buffer)
+  (bind-key* "M-C-o" #'td/toggle-maximize-buffer)
+  (bind-key* "M-o" #'other-window)
 #+end_src
 
 Buffer location customization
@@ -331,8 +329,8 @@ Buffer location customization
                    (ignore-current-tab . t)
                    (tab-name . "🚀 Org")
                    (tab-group . "Org")))
-    (add-to-list 'display-buffer-alist
-                 `("\\*Org Src" display-buffer-full-frame))
+    ;; (add-to-list 'display-buffer-alist
+    ;;              `("\\*Org Src" display-buffer-full-frame))
     (add-to-list 'display-buffer-alist
                  `(,(rx (| "README.org" "WORKBOOK.org" "NOTES.org")) display-buffer-full-frame))
     )
@@ -355,21 +353,21 @@ Buffer location customization
     :hook (evil-mode . global-evil-surround-mode))
 #+end_src
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (bind-key [remap zap-to-char] #'zap-up-to-char)
-#+END_SRC
+#+end_src
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package uniquify
     :custom
     (uniquify-buffer-name-style 'forward))
-#+END_SRC
+#+end_src
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package ibuffer
     :defer t
     :bind ([remap list-buffers] . ibuffer))
-#+END_SRC
+#+end_src
 
 #+begin_src emacs-lisp
   (setq kill-do-not-save-duplicates t)
@@ -377,17 +375,17 @@ Buffer location customization
 
 Basic settings:
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (setq-default
    tab-width 2
    indent-tabs-mode nil
    require-final-newline t
    reb-re-syntax 'string)
-#+END_SRC
+#+end_src
 
 Editing utilities:
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package crux
     :ensure t
     :hook (after-init . crux-reopen-as-root-mode)
@@ -411,24 +409,24 @@ Editing utilities:
   (bind-key* "C-c r" #'rename-visited-file)
   (bind-key* "s-n" #'next-buffer)
   (bind-key* "s-p" #'previous-buffer)
-#+END_SRC
+#+end_src
 
 Create directory for the file if not exists:
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (defun td/make-new-directories ()
     (let ((dir (file-name-directory buffer-file-name)))
       (when (and buffer-file-name (not (file-exists-p dir)))
         (make-directory dir t))))
 
   (add-to-list 'find-file-not-found-functions #'td/make-new-directories)
-#+END_SRC
+#+end_src
 
 Make the file executable if starting with "shebang":
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
-#+END_SRC
+#+end_src
 
 ** Search and replace
 
@@ -451,10 +449,11 @@ Make the file executable if starting with "shebang":
 
 Long lines are annoying. Auto wrap all texts at 80.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (delight 'auto-fill-function "" t)
 
   (use-package autorevert
+    :hook (after-init . global-auto-revert-mode)
     :custom
     (auto-revert-mode-text ""))
 
@@ -463,17 +462,17 @@ Long lines are annoying. Auto wrap all texts at 80.
    fill-column 80)
 
   (add-hook 'text-mode-hook #'turn-on-auto-fill)
-#+END_SRC
+#+end_src
 
 ** Whitespace
 
 Cleanup whitespaces automatically on save.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package whitespace
     :commands (whitespace-cleanup)
     :hook (before-save . whitespace-cleanup))
-#+END_SRC
+#+end_src
 
 ** Parenthesis
 
@@ -491,7 +490,7 @@ the commands. All key bindings are started with =M-s=.
 
 NOTE: This package is huge, I'm still learning it.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle no
   (use-package smartparens
     :ensure t
     :delight smartparens-mode
@@ -512,9 +511,9 @@ NOTE: This package is huge, I'm still learning it.
              :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
     (sp-pair "(" nil
              :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC"))))
-#+END_SRC
+#+end_src
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package paren
     :hook (after-init . show-paren-mode)
     :custom
@@ -523,9 +522,9 @@ NOTE: This package is huge, I'm still learning it.
 
   (use-package elec-pair
     :hook (after-init . electric-pair-mode))
-#+END_SRC
+#+end_src
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (defun td/mark-line-dwim ()
     (interactive)
     (call-interactively #'beginning-of-line)
@@ -536,11 +535,11 @@ NOTE: This package is huge, I'm still learning it.
 
   (use-package delsel
     :hook (after-init . delete-selection-mode))
-#+END_SRC
+#+end_src
 
 ** Snippets
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package yasnippet
     :ensure t
     :delight yas-minor-mode
@@ -555,11 +554,11 @@ NOTE: This package is huge, I'm still learning it.
 
     (unbind-key "TAB" yas-minor-mode-map)
     (unbind-key "<tab>" yas-minor-mode-map))
-#+END_SRC
+#+end_src
 
 ** Alignment
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package align
     :bind (("C-c =" . align))
     :config
@@ -583,17 +582,17 @@ NOTE: This package is huge, I'm still learning it.
                    (modes . '(haskell-mode))
                    (regexp . "\\(\\s-*\\).=")
                    (spacing . 1))))
-#+END_SRC
+#+end_src
 
 ** Diff
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package ediff
     :defer t
     :custom
     (ediff-window-setup-function 'ediff-setup-windows-plain)
     (ediff-split-window-function 'split-window-horizontally))
-#+END_SRC
+#+end_src
 
 
 * Shell and remote
@@ -605,7 +604,7 @@ NOTE: This package is huge, I'm still learning it.
 
 ** EShell
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package eshell-toggle
     :ensure t
     :bind* (("C-c C-s" . eshell-toggle))
@@ -655,11 +654,11 @@ NOTE: This package is huge, I'm still learning it.
     (defalias 'eshell/e #'find-file)
     (with-eval-after-load "crux"
       (defalias 'eshell/open #'crux-open-with)))
-#+END_SRC
+#+end_src
 
 ** Tramp
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package tramp
     :defer t
     :custom
@@ -668,7 +667,7 @@ NOTE: This package is huge, I'm still learning it.
     :config
     (add-to-list 'auth-sources (expand-file-name "authinfo.gpg" user-emacs-directory))
     (add-to-list 'auth-sources 'macos-keychain-generic t))
-#+END_SRC
+#+end_src
 
 Some speedup for Tramp:
 
@@ -688,7 +687,7 @@ Some speedup for Tramp:
 
 Native LSP support via =Eglot= since Emacs 29.1
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package eglot
     :hook ((kotlin-ts-mode . eglot-ensure)
            (js-ts-mode . eglot-ensure)
@@ -696,7 +695,29 @@ Native LSP support via =Eglot= since Emacs 29.1
            (tsx-ts-mode . eglot-ensure)
            (go-mode . eglot-ensure)
            (php-mode . eglot-ensure)
-           (tuareg-mode . eglot-ensure)))
+           (tuareg-mode . eglot-ensure))
+    :config
+    (add-to-list 'eglot-server-programs '(kotlin-ts-mode "kotlin-language-server")))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package lsp-mode
+    :ensure t
+    :commands lsp
+    :hook ((kotlin-ts-mode . lsp)
+           (js-ts-mode . lsp)
+           (typescript-ts-mode . lsp)
+           (tsx-ts-mode . lsp)
+           (go-mode . lsp)
+           (php-mode . lsp)
+           (tuareg-mode . lsp)
+           (lsp-mode . lsp-enable-which-key-integration))
+    :custom
+    (lsp-keymap-prefix "C-c l")
+    (lsp-headerline-breadcrumb-enable nil)
+    (lsp-enable-indentation nil)
+    (lsp-enable-on-type-formatting nil)
+    (lsp-enable-symbol-highlighting nil))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -804,7 +825,7 @@ I use auto completion sparingly, using Corfu.
 
 Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (defun flymake-proc-create-temp-in-tmp (file-name)
     (concat temporary-file-directory file-name))
 
@@ -819,20 +840,20 @@ Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
     (advice-add
      'flymake-proc-create-temp-inplace
      :filter-return #'flymake-proc-create-temp-in-tmp))
-#+END_SRC
+#+end_src
 
 ** Version Control
 
 Git has won the version control war, everyone uses Git now. Emacs'
 built-in VC has great support for git but Magit is godsend.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package magit
     :ensure t
     :bind ("C-x p v" . magit)
     :custom
     (magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1))
-#+END_SRC
+#+end_src
 
 ** Compile
 
@@ -841,7 +862,7 @@ repetitive tasks. For example, I to run unit tests repeatedly, I first run
 =M-x compile= with the test commands. Subsequence =recompile= call will
 re-run the tests.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (require 'ansi-color)
 
   (defun td/colorize-compilation-buffer ()
@@ -856,7 +877,7 @@ re-run the tests.
     (compilation-ask-about-save nil)
     (compilation-scroll-output 'first-error)
     (compilation-auto-jump-to-first-error 'if-location-known))
-#+END_SRC
+#+end_src
 
 ** Code folding
 
@@ -864,7 +885,7 @@ TDB: waiting for folding support with Treesitter
 
 ** Web Development
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (defun td/format-html-attributes ()
     (interactive)
     (save-excursion
@@ -875,28 +896,28 @@ TDB: waiting for folding support with Treesitter
         (newline-and-indent))))
 
   (bind-key "C-M-=" #'td/format-html-attributes)
-#+END_SRC
+#+end_src
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package sgml-mode
     :mode (("\\.svg" . sgml-mode)))
-#+END_SRC
+#+end_src
 
 ** CSS
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package css-mode
     :mode "\\.css\\'"
     :config
     (setq css-indent-offset 2))
-#+END_SRC
+#+end_src
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package rainbow-mode
     :ensure t
     :defer t
     :hook (css-mode . rainbow-mode))
-#+END_SRC
+#+end_src
 
 ** JavaScript
 
@@ -905,7 +926,7 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 =es-lint= for syntax checking anyways, I think I'm going to give the built-in
 =js-mode= a try.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package js
     :mode (("\\.eslintrc$" . js-ts-mode))
     :config
@@ -913,7 +934,7 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
           js-indent-first-init 'dynamic
           js-switch-indent-offset 2
           js-enabled-frameworks '(javascript)))
-#+END_SRC
+#+end_src
 
 ** Python
 
@@ -923,14 +944,14 @@ I'm also a Haskell beginner :). Setting up Haskell with Emacs is relatively
 easy. There's also a catch-all IDE-like mode called =intero=, by the very
 same folk who runs =stack=.
 
-#+BEGIN_SRC emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle no
   (use-package haskell-mode
     :ensure t
     :mode (("\\.hs\\'" . haskell-mode))
     :bind (([remap haskell-mode-format-imports] . haskell-sort-imports))
     :custom
     (haskell-program-name "stack repl"))
-#+END_SRC
+#+end_src
 
 ** OCaml
 
@@ -1017,7 +1038,7 @@ Python or Haskell:
 
 These are supports for other stuffs that I used:
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package markdown-mode
     :ensure t
     :mode (("\\.md$" . markdown-mode)
@@ -1025,19 +1046,19 @@ These are supports for other stuffs that I used:
     :config
     ;; Requires 'pip3 install --user markdown'
     (setq markdown-command "python3 -m markdown -x extra"))
-#+END_SRC
+#+end_src
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package nginx-mode
     :ensure t
     :mode (".*nginx.*\\.conf$" . nginx-mode))
-#+END_SRC
+#+end_src
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package feature-mode
     :ensure t
     :mode (("\\.feature$" . markdown-mode)))
-#+END_SRC
+#+end_src
 
 
 * Document and management
@@ -1062,7 +1083,7 @@ Here's my basic Org setup:
 - Nicer display with inline images
 - Enable GTD todo keyword sequence and time logging
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package ob-async
     :ensure t
     :config
@@ -1110,7 +1131,7 @@ Here's my basic Org setup:
        ;(graphql . t)
        ;(php . t)
        (sql . t))))
-#+END_SRC
+#+end_src
 
 Agenda overview and filtering. Org provides a bunch of quick overviews:
 
@@ -1128,7 +1149,7 @@ Stuck projects are:
 - Without holding state (waiting/done/canceled)
 - But don't have any todo items
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package org-agenda
     :bind (("C-c o a" . org-agenda)
            ("C-c o t" . org-todo-list))
@@ -1137,7 +1158,7 @@ Stuck projects are:
           org-agenda-window-setup 'current-window
           org-stuck-projects
           '("+project+LEVEL=1/-WAITING-DONE-CANCELED" ("TODO" "WAITING") nil "")))
-#+END_SRC
+#+end_src
 
 ** Note taking
 
@@ -1164,7 +1185,7 @@ As stated earlier, I practice GTD. Working projects and new stuffs go to
 
 Org Babel for literate programming and API documentation.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package ob-core
     :defer t
     :hook (org-babel-after-execute . org-display-inline-images)
@@ -1186,11 +1207,11 @@ Org Babel for literate programming and API documentation.
     :defer t
     :custom
     (org-babel-python-command "python3"))
-#+END_SRC
+#+end_src
 
 ** Spell checking
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package ispell
     :bind ("s-i" . ispell-word)
     :config
@@ -1205,7 +1226,7 @@ Org Babel for literate programming and API documentation.
     :defer t
     :delight flyspell-mode
     :hook (org-mode . flyspell-mode))
-#+END_SRC
+#+end_src
 
 
 * Appearance
@@ -1213,7 +1234,7 @@ Org Babel for literate programming and API documentation.
 I love eye candy <3. I put quite a lot of efforts to make Emacs look
 the way I liked.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (setq inhibit-startup-screen t
         visible-bell nil
         ring-bell-function 'ignore
@@ -1223,7 +1244,7 @@ the way I liked.
         auto-window-vscroll nil)
 
   (pixel-scroll-precision-mode t)
-#+END_SRC
+#+end_src
 
 I use mouse scroll a lot, and with the default key binding it would accidentally
 change the text scale. I don't want this behavior, hence unbind the key here.
@@ -1240,46 +1261,46 @@ bars, no cursor blinking. And btw, nothing beats the classic Monaco. "Menlo",
 "Source Code Pro" and "Fira Code" come close, currently I have to use them for
 bold and ligatures support :(.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (setq
    fringes-outside-margins t
-   line-spacing 0.2
    default-frame-alist
    `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
      (ns-appearance . dark)
-     (font . "JetBrains Mono NL 14")
+     (font . "Monaco 13")
      (tool-bar-lines . 0)
+     (fullscreen . maximized)
      (vertical-scroll-bars . nil)))
 
   (blink-cursor-mode -1)
-#+END_SRC
+#+end_src
 
 #+begin_src emacs-lisp
   (use-package doom-themes
     :ensure t
-    :init (load-theme 'doom-monokai-ristretto t))
+    :init (load-theme 'doom-1337 t))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package hl-line
     :hook (after-init . global-hl-line-mode))
 #+end_src
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (setq ns-use-native-fullscreen t)
-#+END_SRC
+#+end_src
 
 Truncate lines:
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (setq-default truncate-lines t)
-#+END_SRC
+#+end_src
 
 Some preferences that I set for all the theme. Per documentation, the custom
 theme named =user= will always have the highest priority.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (custom-theme-set-faces
    'user
    '(vertical-border ((t (:foreground "#000" :background "#000"))))
@@ -1288,7 +1309,7 @@ theme named =user= will always have the highest priority.
    '(font-lock-string-face ((t (:slant normal))))
    '(font-lock-constant-face ((t (:slant normal))))
 
-   ;'(org-block ((t (:inherit default))))
+   ;'(org-block ((t (:background unspecified))))
 
    '(fringe ((t (:background unspecified))))
    '(line-number ((t :slant normal)))
@@ -1300,22 +1321,21 @@ theme named =user= will always have the highest priority.
    '(markdown-inline-code-face ((t (:slant normal))))
 
    '(indent-guide-face ((t (:inherit font-lock-comment-face)))))
-#+END_SRC
+#+end_src
 
 Line and column numbers, which I find only helpful when tracking
 down compiler error :(.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (column-number-mode t)
   (line-number-mode t)
 
-  (setq-default display-line-numbers-width 3)
   (global-display-line-numbers-mode t)
-#+END_SRC
+#+end_src
 
 The default line continuation indicator is too standout and distracting for me.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (define-fringe-bitmap 'halftone
     [#b01000000
      #b10000000]
@@ -1323,12 +1343,12 @@ The default line continuation indicator is too standout and distracting for me.
 
   (setcdr (assq 'continuation fringe-indicator-alist) 'halftone)
   (setcdr (assq 'truncation fringe-indicator-alist) 'halftone)
-#+END_SRC
+#+end_src
 
 Display change marker based on =git=. I usually turn this off because it is
 kind of distracting, but it is really helpful sometimes.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (define-fringe-bitmap 'td/diff-hl-bmp [#b11110000] 1 8 '(top t))
 
   (defun td/diff-hl-fringe-bmp (_type _pos) 'td/diff-hl-bmp)
@@ -1350,25 +1370,25 @@ kind of distracting, but it is really helpful sometimes.
      '(diff-hl-change ((t (:inherit nil :background unspecified :foreground "#deae3e")))))
 
     (advice-add 'diff-hl-overlay-modified :override #'td/diff-hl-overlay-modified))
-#+END_SRC
+#+end_src
 
 
 * Misc
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (use-package dired
     :defer t
     :config
     (setq dired-recursive-deletes 'always))
-#+END_SRC
+#+end_src
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
   (defun td/refresh-front-most-tab ()
     (interactive)
     (shell-command "osascript -e 'tell application \"Microsoft Edge\" to reload active tab of window 1'"))
 
   (bind-key* "C-M-r" #'td/refresh-front-most-tab)
-#+END_SRC
+#+end_src
 
 
 * Ideas
@@ -1381,8 +1401,8 @@ kind of distracting, but it is really helpful sometimes.
 
 Where the magic happen!
 
-#+BEGIN_SRC text :tangle no
+#+begin_src text :tangle no
   # Local Variables:
   # eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle) (byte-recompile-file "~/.config/emacs/init.el")) nil t)
   # End:
-#+END_SRC
+#+end_src
