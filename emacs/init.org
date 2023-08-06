@@ -308,6 +308,8 @@ Buffer location customization
   (tab-bar-mode t)
 
   (use-package window
+    :custom
+    (window-min-height 1)
     :config
     (add-to-list 'display-buffer-alist
                  '("\\*compilation\\*" display-buffer-in-direction
@@ -1276,10 +1278,16 @@ bold and ligatures support :(.
   (blink-cursor-mode -1)
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package doom-themes
     :ensure t
     :init (load-theme 'doom-1337 t))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package modus-themes
+    :ensure t
+    :init (load-theme 'modus-vivendi-deuteranopia t))
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
@@ -1311,7 +1319,7 @@ theme named =user= will always have the highest priority.
 
    ;'(org-block ((t (:background unspecified))))
 
-   '(fringe ((t (:background unspecified))))
+   '(fringe ((t (:background unspecified :inherit line-number))))
    '(line-number ((t :slant normal)))
    '(line-number-current-line ((t :slant normal)))
 
@@ -1330,6 +1338,7 @@ down compiler error :(.
   (column-number-mode t)
   (line-number-mode t)
 
+  (setq-default display-line-numbers-width 4)
   (global-display-line-numbers-mode t)
 #+end_src
 
