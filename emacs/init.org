@@ -1279,7 +1279,7 @@ bold and ligatures support :(.
    `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
      (ns-appearance . dark)
-     (font . "Monaco 13")
+     (font . "JetBrains Mono NL 14")
      (tool-bar-lines . 0)
      (fullscreen . maximized)
      (vertical-scroll-bars . nil)))
@@ -1296,7 +1296,7 @@ bold and ligatures support :(.
 #+begin_src emacs-lisp
   (use-package modus-themes
     :ensure t
-    :init (load-theme 'modus-vivendi-deuteranopia t))
+    :init (load-theme 'modus-operandi-tinted t))
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
