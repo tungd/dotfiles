@@ -219,6 +219,12 @@ Vertico is the next in line for vertical completion.
 #+end_src
 
 #+begin_src emacs-lisp
+ (use-package vertico
+   :ensure t
+   :hook (after-init . vertico-mode))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
   (use-package icomplete
     :hook (after-init . icomplete-mode)
     :custom
