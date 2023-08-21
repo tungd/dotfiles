@@ -347,7 +347,7 @@ Buffer location customization
 
 * General Editing
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package evil
     :ensure t
     :hook (after-init . evil-mode)
@@ -803,12 +803,6 @@ I use auto completion sparingly, using Corfu.
     :custom
     (corfu-cycle t)
     (corfu-echo-documentation 0.1))
-
-  (use-package cape
-    :ensure t
-    :functions cape-file cape-line
-    :bind (("C-c p f" . cape-file)
-           ("C-c p l" . cape-line)))
 
   (use-package hippie-exp
     :bind (("M-/" . hippie-expand)
