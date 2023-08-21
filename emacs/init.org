@@ -946,13 +946,22 @@ I'm also a Haskell beginner :). Setting up Haskell with Emacs is relatively
 easy. There's also a catch-all IDE-like mode called =intero=, by the very
 same folk who runs =stack=.
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package haskell-mode
     :ensure t
     :mode (("\\.hs\\'" . haskell-mode))
+    :hook ((haskell-mode . lsp)
+           (haskell-mode . copilot-mode))
     :bind (([remap haskell-mode-format-imports] . haskell-sort-imports))
     :custom
-    (haskell-program-name "stack repl"))
+    (haskell-program-name "cabal repl")
+    :config
+    (require 'lsp-haskell))
+
+  (use-package lsp-haskell
+    :ensure t
+    :custom
+    (lsp-haskell-server-path "haskell-language-server-wrapper"))
 #+end_src
 
 ** OCaml
