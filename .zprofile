@@ -103,8 +103,6 @@ myip() {
     dig +short txt ch whoami.cloudflare @1.0.0.1;
 }
 
-export NOMAD_ADDR=http://100.74.70.61:4646
-
 # opam configuration
 test -r $HOME/.opam/opam-init/init.zsh && . $HOME/.opam/opam-init/init.zsh > /dev/null 2> /dev/null || true
 
@@ -122,4 +120,4 @@ export PATH="$PNPM_HOME:$PATH"
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-export PATH=/Users/tung/.tiup/bin:$PATH
+[[ $commands[kubectl] ]] && source <(kubectl completion zsh)
