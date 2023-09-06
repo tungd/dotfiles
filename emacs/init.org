@@ -76,7 +76,8 @@ Sane, modern defaults:
         `((".*" ,temporary-file-directory t))
         backup-directory-alist
         `(("." . ,(concat user-emacs-directory "backups")))
-        create-lockfiles nil)
+        create-lockfiles nil
+        remote-file-name-inhibit-locks t)
 #+end_src
 
 Performance stuffs, I'm not sure how relevant these are, since I've moved to =nativecomp=.
@@ -318,17 +319,18 @@ Buffer location customization
     (window-min-height 1)
     :config
     (add-to-list 'display-buffer-alist
-                 '("\\*compilation\\*" display-buffer-in-direction
-                   (window . root)
+                 '("\\*compilation\\*" display-buffer-below-selected
+                   (window-height . 16)))
+    (add-to-list 'display-buffer-alist
+                 '("\\*Warnings\\*" display-buffer-in-direction
                    (direction . bottom)
-                   (window-height . 6)))
+                   (window-height . 8)))
     (add-to-list 'display-buffer-alist
                  '("\\*Help\\*"
                    (display-buffer-reuse-window display-buffer-pop-up-window)
                    (inhibit-same-window . t)))
     (add-to-list 'display-buffer-alist
                  '("\\*Org-Babel Error Output\\*" display-buffer-in-direction
-                   (window . root)
                    (direction . bottom)
                    (window-height . 6)))
     (add-to-list 'display-buffer-alist
@@ -671,10 +673,11 @@ NOTE: This package is huge, I'm still learning it.
     :defer t
     :custom
     (tramp-allow-unsafe-temporary-files t)
-    (tramp-default-method "scp")
+    (tramp-default-method "ssh")
     :config
     (add-to-list 'auth-sources (expand-file-name "authinfo.gpg" user-emacs-directory))
-    (add-to-list 'auth-sources 'macos-keychain-generic t))
+    (add-to-list 'auth-sources 'macos-keychain-generic t)
+    (add-to-list 'tramp-connection-properties '("/ssh:" "direct-async-process" t)))
 #+end_src
 
 Some speedup for Tramp:
