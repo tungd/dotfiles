@@ -302,7 +302,8 @@ Buffer location customization
     (window-min-height 1)
     :config
     (add-to-list 'display-buffer-alist
-                 '("\\*compilation\\*" display-buffer-below-selected
+                 '("\\*compilation\\*" (display-buffer-reuse-window display-buffer-below-selected)
+                   (inhibit-same-window . t)
                    (window-height . 16)))
     (add-to-list 'display-buffer-alist
                  '("\\*Warnings\\*" display-buffer-in-direction
