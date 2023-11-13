@@ -197,9 +197,10 @@ Default key bindings is
   (bind-key* "C-M-." #'xref-find-definitions)
 #+end_src
 
-** Vertico
+** Mini-buffer
 
-Vertico is the next in line for vertical completion.
+Shortcut key to go back to the home directory, works regardless of the
+mini-buffer completion framework.
 
 #+begin_src emacs-lisp
   (ido-mode -1)
@@ -215,6 +216,8 @@ Vertico is the next in line for vertical completion.
   (bind-key "~" #'td/minibuffer-smart-tilde minibuffer-local-map)
   (bind-key "<s-backspace>" #'backward-kill-word minibuffer-local-map)
 #+end_src
+
+Vertico is the next in line for vertical completion.
 
 #+begin_src emacs-lisp
  (use-package vertico
@@ -253,6 +256,7 @@ Vertico is the next in line for vertical completion.
     :config
     (add-to-list 'recentf-exclude "elpa/.*")
     (add-to-list 'recentf-exclude "__init__.py")
+    (add-to-list 'recentf-exclude "_build/*")
     (add-to-list 'recentf-exclude "node_modules/.*"))
 #+end_src
 
@@ -267,9 +271,17 @@ Vertico is the next in line for vertical completion.
     ;; Configure a custom style dispatcher (see the Consult wiki)
     ;; (setq orderless-style-dispatchers '(+orderless-dispatch)
     ;;       orderless-component-separator #'orderless-escapable-split-on-space)
-    (setq completion-styles '(orderless flex basic)
+    (setq completion-styles '(orderless basic)
           completion-category-defaults nil
           completion-category-overrides '((file (styles partial-completion)))))
+#+end_src
+
+** Bookmark
+
+#+begin_src emacs-lisp
+  (use-package bookmark
+    :custom
+    (bookmark-save-flag 1))
 #+end_src
 
 
@@ -316,24 +328,24 @@ Buffer location customization
     (add-to-list 'display-buffer-alist
                  '("\\*Org-Babel Error Output\\*" display-buffer-in-direction
                    (direction . bottom)
-                   (window-height . 6)))
-    (add-to-list 'display-buffer-alist
-                 `(,(rx (| "inbox.org" "*Org Agenda*" "init.org"))
-                   (display-buffer-in-tab display-buffer-full-frame)
-                   (ignore-current-tab . t)
-                   (tab-name . "🚀 Org")
-                   (tab-group . "Org")))
+                   (window-height . 8)))
+    ;; (add-to-list 'display-buffer-alist
+    ;;              `(,(rx (| "inbox.org" "*Org Agenda*" "init.org"))
+    ;;                (display-buffer-in-tab display-buffer-full-frame)
+    ;;                (ignore-current-tab . t)
+    ;;                (tab-name . "🚀 Org")
+    ;;                (tab-group . "Org")))
     ;; (add-to-list 'display-buffer-alist
     ;;              `("\\*Org Src" display-buffer-full-frame))
-    (add-to-list 'display-buffer-alist
-                 `(,(rx (| "README.org" "WORKBOOK.org" "NOTES.org")) display-buffer-full-frame))
+    ;; (add-to-list 'display-buffer-alist
+    ;;              `(,(rx (| "README.org" "WORKBOOK.org" "NOTES.org")) display-buffer-full-frame))
     )
 #+end_src
 
 
 * General Editing
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package evil
     :ensure t
     :hook (after-init . evil-mode)
@@ -444,10 +456,8 @@ Make the file executable if starting with "shebang":
 Long lines are annoying. Auto wrap all texts at 80.
 
 #+begin_src emacs-lisp
-  ;; (use-package autorevert
-  ;;   :hook (after-init . global-auto-revert-mode)
-  ;;   :custom
-  ;;   (auto-revert-mode-text ""))
+  (use-package autorevert
+    :hook (after-init . global-auto-revert-mode))
 
   (setq-default
    comment-auto-fill-only-comments t
@@ -530,20 +540,49 @@ NOTE: This package is huge, I'm still learning it.
 
 ** Snippets
 
+I've since switched to =Tempel= instead of =Yasnippet=. With Copilot, the
+suggestions is my snippet/template. Coupled with Eglot/LSP for
+function/method-based templates, I rarely need a library of
+snippets/templates. For the occasional needs that is specific to me/my workflow,
+a more minimal template library like =Tempo=/=Tempel= is suffice.
+
+I settled with =Tempel=, it polished some of the rough edges with =Tempo=, namely:
+
+- Per-language/major-mode templates. =Tempo= does support this in the form of
+  tags, however it requires some glue code, while =Tempel= has built-in support
+- Temporary key map for moving between placeholders/poi/marks
+
+Since the template definition is compatible between the 2, I can easily move to
+=Tempo= in the future if it added support for the 2 points above.
+
 #+begin_src emacs-lisp
-  (use-package yasnippet
+  (use-package tempel
     :ensure t
-    :hook (after-init . yas-global-mode)
-    :config
-    (setq yas-prompt-functions
-          '(yas-ido-prompt yas-completing-prompt yas-no-prompt)
-          yas-verbosity 1)
+    :hook (after-init . global-tempel-abbrev-mode)
+    :bind (("M-+" . tempel-complete)
+           ("M-*" . tempel-insert)))
+#+end_src
 
-    ;; I'm an old Emacs hacker, I like the abbrev-way and bind yas-expand SPC
-    (define-key yas-minor-mode-map (kbd "SPC") yas-maybe-expand)
+  Tempo integration code for future reference:
 
-    (unbind-key "TAB" yas-minor-mode-map)
-    (unbind-key "<tab>" yas-minor-mode-map))
+#+begin_src emacs-lisp :tangle no
+    (defun td/tempo-space-dwim ()
+      (interactive "*")
+      (or (tempo-expand-if-complete) (insert " ")))
+
+    (defun td/tempo-forward-mark-dwim ()
+      (interactive)
+      (or (tempo-forward-mark) (forward-paragraph)))
+
+    (use-package tempo
+      :functions (tempo-define-template tempo-expand-if-complete)
+      :bind (("M-+" . tempo-complete-tag)
+             ("SPC" . td/tempo-space-dwim)
+             ("M-}" . td/tempo-forward-mark-dwim))
+      :custom
+      (tempo-insert-region t)
+      :init
+      (tempo-define-template tempo-expand-if-complete)))
 #+end_src
 
 ** Alignment
@@ -580,6 +619,7 @@ NOTE: This package is huge, I'm still learning it.
   (use-package ediff
     :defer t
     :custom
+    (ediff-keep-variants nil)
     (ediff-window-setup-function 'ediff-setup-windows-plain)
     (ediff-split-window-function 'split-window-horizontally))
 #+end_src
@@ -634,12 +674,12 @@ NOTE: This package is huge, I'm still learning it.
          (propertize "#" 'face '(:foreground "red")) "$")))
 
   (use-package eshell
-    :defer t
     :functions (eshell/pwd)
     :custom
     (eshell-prompt-function #'td/eshell-prompt)
     (eshell-prompt-regexp "^[^#$\\n]*[#$] ")
     (eshell-highlight-prompt nil)
+    (eshell-scroll-to-bottom-on-input t)
     :config
     (defalias 'eshell/e #'find-file)
     (with-eval-after-load "crux"
@@ -650,7 +690,6 @@ NOTE: This package is huge, I'm still learning it.
 
 #+begin_src emacs-lisp
   (use-package tramp
-    :defer t
     :custom
     (tramp-allow-unsafe-temporary-files t)
     (tramp-default-method "ssh")
@@ -669,16 +708,17 @@ Some speedup for Tramp:
     (vc-handled-backends '(Git)))
 #+end_src
 
+
 * Programming
 
 Native LSP support via =Eglot= since Emacs 29.1
 
 #+begin_src emacs-lisp
   ;; https://github.com/fwcd/kotlin-language-server/blob/main/TROUBLESHOOTING.md
-  (setenv "JAVA_OPTS" "-Xmx6g")
+  (setenv "JAVA_OPTS" "-Xmx4g")
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package eglot
     :hook ((kotlin-ts-mode . eglot-ensure)
            (js-ts-mode . eglot-ensure)
@@ -687,11 +727,16 @@ Native LSP support via =Eglot= since Emacs 29.1
            (go-mode . eglot-ensure)
            (php-mode . eglot-ensure)
            (tuareg-mode . eglot-ensure))
+    :custom
+    (eglot-autoshutdown t)
+    (eglot-connect-timeout 300)
     :config
-    (add-to-list 'eglot-server-programs '(kotlin-ts-mode "kotlin-language-server")))
+    (add-to-list 'eglot-server-programs '(kotlin-ts-mode "kotlin-language-server"))
+    ;; https://www.reddit.com/r/emacs/comments/17jrsmv/comment/k74b3tg/?utm_source=share&utm_medium=web2x&context=3
+    (advice-add 'jsonrpc--log-event :override #'ignore))
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package lsp-mode
     :ensure t
     :commands lsp
@@ -702,6 +747,7 @@ Native LSP support via =Eglot= since Emacs 29.1
            (go-mode . lsp)
            (php-mode . lsp)
            (tuareg-mode . lsp)
+           (python-mode . lsp)
            (lsp-mode . lsp-enable-which-key-integration))
     :custom
     (lsp-keymap-prefix "C-c l")
@@ -727,11 +773,13 @@ Native LSP support via =Eglot= since Emacs 29.1
 Native Tree-sitter support since Emacs 29
 
 #+begin_src emacs-lisp
+  (add-to-list 'treesit-extra-load-path "/opt/local/lib")
+
   (use-package treesit
     :config
     (add-to-list 'treesit-language-source-alist '(dockerfile . ("https://github.com/camdencheek/tree-sitter-dockerfile.git")))
     (add-to-list 'treesit-language-source-alist '(kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git")))
-    (add-to-list 'treesit-extra-load-path "/opt/local/lib"))
+    (add-to-list 'treesit-language-source-alist '(org . ("https://github.com/milisims/tree-sitter-org.git"))))
 
   (use-package typescript-ts-mode
     :mode (("\\.ts\\'" . tsx-ts-mode)
@@ -756,18 +804,26 @@ Native Tree-sitter support since Emacs 29
      (typescript-mode . typescript-ts-mode)
      (json-mode . json-ts-mode)
      (css-mode . css-ts-mode)
-     (python-mode . python-ts-mode)))
+     ;; (python-mode . python-ts-mode)
+     ))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package combobulate
-    :vc (:url "git@github.com:mickeynp/combobulate.git")
-    :hook ((python-ts-mode . combobulate-mode)
-           (js-ts-mode . combobulate-mode)
+    :vc (:url "git@github.com:mickeynp/combobulate.git" :branch "master")
+    :hook ((js-ts-mode . combobulate-mode)
            (css-ts-mode . combobulate-mode)
            (yaml-ts-mode . combobulate-mode)
            (typescript-ts-mode . combobulate-mode)
            (tsx-ts-mode . combobulate-mode)))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
+  (defun td/ts-inspect-node-at-point ()
+    (interactive)
+    (treesit-inspect-node-at-point))
+
+  (bind-key* "C-M-i" #'td/ts-inspect-node-at-point)
 #+end_src
 
 ** Auto completion
@@ -785,13 +841,17 @@ I use auto completion sparingly, using Corfu.
     :custom
     (corfu-cycle t)
     (corfu-echo-documentation 0.1))
+#+end_src
 
-  (use-package hippie-exp
-    :bind (("M-/" . hippie-expand)
+#+begin_src emacs-lisp
+  (use-package dabbrev
+    :bind (("M-/" . dabbrev-completion)
            ("C-M-/" . completion-at-point)))
+#+end_src
 
+#+begin_src emacs-lisp
   (use-package copilot
-    :vc (:url "git@github.com:zerolfx/copilot.el.git")
+    :vc (:url "git@github.com:zerolfx/copilot.el.git" :branch "main")
     :bind (("C-j" . copilot-accept-completion))
     :hook ((sgml-mode . copilot-mode)
            (css-ts-mode . copilot-mode)
@@ -801,12 +861,11 @@ I use auto completion sparingly, using Corfu.
            (tsx-ts-mode . copilot-mode)
            (php-mode . copilot-mode)
            (go-ts-mode . copilot-mode)
-           (python-ts-mode . copilot-mode)))
+           (go-mode . copilot-mode)
+           (python-mode . copilot-mode)))
 #+end_src
 
 ** Error checking
-
-Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
 
 #+begin_src emacs-lisp
   (defun flymake-proc-create-temp-in-tmp (file-name)
@@ -817,12 +876,11 @@ Flymake have a rewrite in Emacs 26.1. I'm giving it a try now
     :bind (:map flymake-mode-map
                 ("C-c e n" . flymake-goto-next-error)
                 ("C-c e p" . flymake-goto-prev-error))
-    :custom
-    (flymake-mode-line-lighter "FM")
-    :config
-    (advice-add
-     'flymake-proc-create-temp-inplace
-     :filter-return #'flymake-proc-create-temp-in-tmp))
+    ;; :config
+    ;; (advice-add
+    ;;  'flymake-proc-create-temp-inplace
+    ;;  :filter-return #'flymake-proc-create-temp-in-tmp)
+    )
 #+end_src
 
 ** Version Control
@@ -861,8 +919,7 @@ re-run the tests.
     :hook (compilation-filter . td/colorize-compilation-buffer)
     :custom
     (compilation-ask-about-save nil)
-    (compilation-scroll-output 'first-error)
-    (compilation-auto-jump-to-first-error 'if-location-known))
+    (compilation-scroll-output t))
 #+end_src
 
 ** Code folding
@@ -930,7 +987,7 @@ I'm also a Haskell beginner :). Setting up Haskell with Emacs is relatively
 easy. There's also a catch-all IDE-like mode called =intero=, by the very
 same folk who runs =stack=.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package haskell-mode
     :ensure t
     :mode (("\\.hs\\'" . haskell-mode))
@@ -1004,8 +1061,7 @@ Python or Haskell:
     :ensure t
     :mode (("\\.kt\\'" . kotlin-ts-mode)
            ("\\.kts\\'" . kotlin-ts-mode))
-    :hook ((kotlin-ts-mode . eglot-ensure)
-           (kotlin-ts-mode . copilot-mode)))
+    :hook ((kotlin-ts-mode . copilot-mode)))
 #+end_src
 
 ** Terraform
@@ -1043,18 +1099,6 @@ These are supports for other stuffs that I used:
     :config
     ;; Requires 'pip3 install --user markdown'
     (setq markdown-command "python3 -m markdown -x extra"))
-#+end_src
-
-#+begin_src emacs-lisp
-  (use-package nginx-mode
-    :ensure t
-    :mode (".*nginx.*\\.conf$" . nginx-mode))
-#+end_src
-
-#+begin_src emacs-lisp
-  (use-package feature-mode
-    :ensure t
-    :mode (("\\.feature$" . markdown-mode)))
 #+end_src
 
 
@@ -1124,7 +1168,6 @@ Here's my basic Org setup:
        (shell . t)
        (js . t)
        (kotlin . t)
-       ;(graphql . t)
        ;(php . t)
        (sql . t))))
 #+end_src
@@ -1195,10 +1238,6 @@ Org Babel for literate programming and API documentation.
     (ob-http:max-time 180)
     (ob-http:remove-cr t))
 
-  (use-package ob-graphql
-    :defer t
-    :ensure t)
-
   (use-package ob-python
     :defer t
     :custom
@@ -1238,7 +1277,7 @@ the way I liked.
         scroll-conservatively 101
         auto-window-vscroll nil)
 
-  (pixel-scroll-precision-mode t)
+  ;; (pixel-scroll-precision-mode t)
 #+end_src
 
 I use mouse scroll a lot, and with the default key binding it would accidentally
@@ -1262,13 +1301,14 @@ bold and ligatures support :(.
    default-frame-alist
    `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
-     (ns-appearance . dark)
-     (font . "JetBrains Mono NL 13")
+     (ns-appearance . light)
+     (font . "JetBrains Mono NL 14")
      (tool-bar-lines . 0)
      (fullscreen . maximized)
      (vertical-scroll-bars . nil)))
 
   (blink-cursor-mode -1)
+  (tool-bar-mode -1)
   (setq-default cursor-in-non-selected-windows nil)
 #+end_src
 
@@ -1280,16 +1320,27 @@ Hide unnecessary long mode line mode list
     :hook (after-init . minions-mode))
 #+end_src
 
+#+begin_src emacs-lisp :tangle no
+  (use-package tango-plus-theme
+    :ensure t
+    :init (load-theme 'tango-plus t)
+    :config
+    (custom-theme-set-faces
+     'user
+     '(line-number ((t (:inherit font-lock-comment-face :slant normal))))
+     '(show-paren-match ((t (:background "#e9b96e"))))))
+#+end_src
+
 #+begin_src emacs-lisp
   (use-package doom-themes
     :ensure t
-    :init (load-theme 'doom-badger t))
+    :init (load-theme 'doom-peacock t))
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
   (use-package modus-themes
     :ensure t
-    :init (load-theme 'modus-operandi-tinted t))
+    :init (load-theme 'modus-operandi-tritanopia t))
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
@@ -1307,13 +1358,20 @@ Truncate lines:
   (setq-default truncate-lines t)
 #+end_src
 
+#+begin_src emacs-lisp
+  (use-package highlight-indentation
+    :ensure t
+    :hook ((python-mode . highlight-indentation-mode))
+    :custom
+    (highlight-indentation-blank-lines t))
+#+end_src
+
 Some preferences that I set for all the theme. Per documentation, the custom
 theme named =user= will always have the highest priority.
 
 #+begin_src emacs-lisp
   (custom-theme-set-faces
    'user
-   '(vertical-border ((t (:foreground "#000" :background "#000"))))
    '(font-lock-comment-face ((t (:slant normal))))
    '(font-lock-comment-delimiter-face ((t (:slant normal))))
    '(font-lock-string-face ((t (:slant normal))))
@@ -1321,16 +1379,17 @@ theme named =user= will always have the highest priority.
 
    ;'(org-block ((t (:background unspecified))))
 
-   '(fringe ((t (:background unspecified :inherit line-number))))
-   '(line-number ((t :slant normal)))
-   '(line-number-current-line ((t :slant normal)))
+   ;; '(fringe ((t (:background unspecified :inherit line-number))))
+   ;; '(line-number ((t (:inherit font-lock-comment-face :slant normal))))
+   '(line-number-current-line ((t :slant normal :weight normal)))
 
-   ;'(hl-line ((t :foreground unspecified)))
-   '(isearch ((t :box nil :underline t)))
+   ;; '(hl-line ((t :foreground unspecified)))
+   ;; '(isearch ((t :box nil :underline t)))
 
-   '(markdown-inline-code-face ((t (:slant normal))))
+   ;; '(markdown-inline-code-face ((t (:slant normal))))
 
-   '(indent-guide-face ((t (:inherit font-lock-comment-face)))))
+   ;; '(highlight-indentation-face ((t (:inherit font-lock-comment-face))))
+   )
 #+end_src
 
 Line and column numbers, which I find only helpful when tracking
@@ -1373,6 +1432,7 @@ kind of distracting, but it is really helpful sometimes.
     :custom
     (diff-hl-draw-borders nil)
     (diff-hl-fringe-bmp-function #'td/diff-hl-fringe-bmp)
+    (diff-hl-disable-on-remote t)
     :config
     (custom-theme-set-faces
      'user
@@ -1388,9 +1448,9 @@ kind of distracting, but it is really helpful sometimes.
 
 #+begin_src emacs-lisp
   (use-package dired
-    :defer t
-    :config
-    (setq dired-recursive-deletes 'always))
+    :custom
+    (dired-recursive-deletes 'always)
+    (dired-auto-revert-buffer t))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1403,9 +1463,6 @@ kind of distracting, but it is really helpful sometimes.
 
 
 * Ideas
-
-** Misc.
-- https://github.com/raxod502/radian/blob/develop/emacs/radian.el#L3210
 
 
 * Init file generation
