@@ -146,9 +146,14 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 ** MacOS specific stuffs
 
 #+begin_src emacs-lisp
-  (setq ns-command-modifier 'meta
-        ns-option-modifier 'super
-        trash-directory "~/.Trash"
+  (if (boundp 'ns-command-modifier)
+      (setq ns-command-modifier 'meta))
+  (if (boundp 'ns-option-modifier)
+      (setq ns-option-modifier 'super))
+  (if (boundp 'ns-use-native-fullscreen)
+      (setq ns-use-native-fullscreen t))
+
+    (setq trash-directory "~/.Trash"
         delete-by-moving-to-trash t)
 #+end_src
 
@@ -169,9 +174,7 @@ still some missing features coming from =projectile=, but I can live with that.
 
 #+begin_src emacs-lisp
   (use-package project
-    :commands (project-find-file project-vc-dir project-current)
-    :custom
-    (project-switch-commands 'project-vc-dir))
+    :commands (project-find-file project-vc-dir project-current))
 #+end_src
 
 ** Symbols
@@ -632,6 +635,19 @@ Since the template definition is compatible between the 2, I can easily move to
     :bind ("C-c C-l" . comint-clear-buffer))
 #+end_src
 
+#+begin_src emacs-lisp
+  (use-package detached
+    :ensure t
+    :hook (after-init . detached-init)
+    :bind (([remap async-shell-command] . detached-shell-command)
+           ([remap compile] . detached-compile-compile)
+           ([remap recompile] . detached-compile-recompile)
+           ("C-x C-d" . detached-open-session))
+    :custom
+    (detached-show-output-on-attach t)
+    (detached-terminal-data-command system-type))
+#+end_src
+
 ** EShell
 
 #+begin_src emacs-lisp
@@ -718,7 +734,7 @@ Native LSP support via =Eglot= since Emacs 29.1
   (setenv "JAVA_OPTS" "-Xmx4g")
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package eglot
     :hook ((kotlin-ts-mode . eglot-ensure)
            (js-ts-mode . eglot-ensure)
@@ -730,13 +746,19 @@ Native LSP support via =Eglot= since Emacs 29.1
     :custom
     (eglot-autoshutdown t)
     (eglot-connect-timeout 300)
+    (eglot-ignored-server-capabilities '(:documentFormattingProvider
+                                         :documentRangeFormattingProvider
+                                         :documentOnTypeFormattingProvider
+                                         :documentHighlightProvider))
+    ;(eglot-events-buffer-size 4096)
     :config
     (add-to-list 'eglot-server-programs '(kotlin-ts-mode "kotlin-language-server"))
     ;; https://www.reddit.com/r/emacs/comments/17jrsmv/comment/k74b3tg/?utm_source=share&utm_medium=web2x&context=3
-    (advice-add 'jsonrpc--log-event :override #'ignore))
+    ;; (advice-add 'jsonrpc--log-event :override #'ignore)
+    )
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package lsp-mode
     :ensure t
     :commands lsp
@@ -779,7 +801,8 @@ Native Tree-sitter support since Emacs 29
     :config
     (add-to-list 'treesit-language-source-alist '(dockerfile . ("https://github.com/camdencheek/tree-sitter-dockerfile.git")))
     (add-to-list 'treesit-language-source-alist '(kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git")))
-    (add-to-list 'treesit-language-source-alist '(org . ("https://github.com/milisims/tree-sitter-org.git"))))
+    (add-to-list 'treesit-language-source-alist '(org . ("https://github.com/milisims/tree-sitter-org.git")))
+    (add-to-list 'treesit-language-source-alist '(clojure . ("https://github.com/sogaiu/tree-sitter-clojure.git"))))
 
   (use-package typescript-ts-mode
     :mode (("\\.ts\\'" . tsx-ts-mode)
@@ -851,7 +874,7 @@ I use auto completion sparingly, using Corfu.
 
 #+begin_src emacs-lisp
   (use-package copilot
-    :vc (:url "git@github.com:zerolfx/copilot.el.git" :branch "main")
+    ;:vc (:url "git@github.com:zerolfx/copilot.el.git" :branch "main")
     :bind (("C-j" . copilot-accept-completion))
     :hook ((sgml-mode . copilot-mode)
            (css-ts-mode . copilot-mode)
@@ -1125,11 +1148,6 @@ Here's my basic Org setup:
 - Enable GTD todo keyword sequence and time logging
 
 #+begin_src emacs-lisp
-  (use-package ob-async
-    :ensure t
-    :config
-    (require 'ob-async))
-
   (use-package ob-plantuml
     :config
     (setq org-plantuml-jar-path "/opt/local/share/java/plantuml/plantuml.jar"))
@@ -1334,13 +1352,16 @@ Hide unnecessary long mode line mode list
 #+begin_src emacs-lisp
   (use-package doom-themes
     :ensure t
-    :init (load-theme 'doom-peacock t))
+    :init (load-theme 'doom-1337 t))
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
   (use-package modus-themes
     :ensure t
-    :init (load-theme 'modus-operandi-tritanopia t))
+    :init
+    (setq modus-themes-common-palette-overrides
+          '((string green-warmer)))
+    (load-theme 'modus-vivendi-tritanopia t))
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
@@ -1349,7 +1370,7 @@ Hide unnecessary long mode line mode list
 #+end_src
 
 #+begin_src emacs-lisp
-  (setq ns-use-native-fullscreen t)
+
 #+end_src
 
 Truncate lines:
@@ -1361,7 +1382,9 @@ Truncate lines:
 #+begin_src emacs-lisp
   (use-package highlight-indentation
     :ensure t
-    :hook ((python-mode . highlight-indentation-mode))
+    :hook ((python-mode . highlight-indentation-mode)
+           (yaml-mode . highlight-indentation-mode)
+           (yaml-ts-mode . highlight-indentation-mode))
     :custom
     (highlight-indentation-blank-lines t))
 #+end_src
@@ -1399,8 +1422,11 @@ down compiler error :(.
   (column-number-mode t)
   (line-number-mode t)
 
-  (setq-default display-line-numbers-width 4)
-  (global-display-line-numbers-mode t)
+  (use-package display-line-numbers
+    :hook ((prog-mode . display-line-numbers-mode)
+           (org-mode . display-line-numbers-mode))
+    :custom
+    (display-line-numbers-width-start 100))
 #+end_src
 
 The default line continuation indicator is too standout and distracting for me.
@@ -1461,6 +1487,13 @@ kind of distracting, but it is really helpful sometimes.
   (bind-key* "C-M-r" #'td/refresh-front-most-tab)
 #+end_src
 
+#+begin_src emacs-lisp
+  (use-package kubel
+    :ensure t
+    :defer t
+    :custom
+    (kubel-kubectl "/opt/local/bin/kubectl"))
+#+end_src
 
 * Ideas
 
