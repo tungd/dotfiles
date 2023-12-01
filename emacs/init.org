@@ -91,16 +91,6 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 #+end_src
 
 #+begin_src emacs-lisp
-  (use-package exec-path-from-shell
-    :ensure t
-    :if (memq window-system '(mac ns))
-    :functions exec-path-from-shell-copy-envs
-    :hook (after-init . exec-path-from-shell-initialize)
-    :config
-    (exec-path-from-shell-copy-envs '("LANG")))
-#+end_src
-
-#+begin_src emacs-lisp
   (savehist-mode t)
 #+end_src
 
@@ -631,6 +621,18 @@ Since the template definition is compatible between the 2, I can easily move to
 * Shell and remote
 
 #+begin_src emacs-lisp
+  (use-package exec-path-from-shell
+    :ensure t
+    :hook (after-init . exec-path-from-shell-initialize))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package envrc
+    :ensure t
+    :hook (after-init . envrc-global-mode))
+#+end_src
+
+#+begin_src emacs-lisp
   (use-package comint
     :bind ("C-c C-l" . comint-clear-buffer))
 #+end_src
@@ -735,6 +737,8 @@ Native LSP support via =Eglot= since Emacs 29.1
 #+end_src
 
 #+begin_src emacs-lisp
+  (setq read-process-output-max (* 8 1024 1024))
+
   (use-package eglot
     :hook ((kotlin-ts-mode . eglot-ensure)
            (js-ts-mode . eglot-ensure)
@@ -795,10 +799,31 @@ Native LSP support via =Eglot= since Emacs 29.1
 Native Tree-sitter support since Emacs 29
 
 #+begin_src emacs-lisp
-  (add-to-list 'treesit-extra-load-path "/opt/local/lib")
+  (defun td/tressit-expand-region ()
+    "Poor man's expand-region, worked surprisingly well for me"
+    (interactive)
+    (if (region-active-p)
+        (let* ((bounds (car (region-bounds)))
+               (node (treesit-node-on (car bounds) (cdr bounds)))
+               (parent (treesit-node-parent node)))
+          (goto-char (treesit-node-start parent))
+          (call-interactively #'set-mark-command)
+          (goto-char (treesit-node-end parent)))
+      (let ((node (treesit-node-at (point))))
+        (goto-char (treesit-node-start node))
+        (call-interactively #'set-mark-command)
+        (goto-char (treesit-node-end node)))))
+
+  (bind-key "M--" #'td/tressit-expand-region)
 
   (use-package treesit
+    :functions (treesit-node-on
+                treesit-node-at
+                treesit-node-parent
+                treesit-node-start
+                treesit-node-end)
     :config
+    (add-to-list 'treesit-extra-load-path "/opt/local/lib")
     (add-to-list 'treesit-language-source-alist '(dockerfile . ("https://github.com/camdencheek/tree-sitter-dockerfile.git")))
     (add-to-list 'treesit-language-source-alist '(kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git")))
     (add-to-list 'treesit-language-source-alist '(org . ("https://github.com/milisims/tree-sitter-org.git")))
@@ -808,12 +833,11 @@ Native Tree-sitter support since Emacs 29
     :mode (("\\.ts\\'" . tsx-ts-mode)
            ("\\.tsx\\'" . tsx-ts-mode)))
 
-  (use-package go-mode
-    :ensure t
-    :mode (("\\.go\\'" . go-mode)))
-
   (use-package go-ts-mode
-    :mode (("go.mod$" . go-mod-ts-mode)))
+    :mode (("go.mod$" . go-mod-ts-mode)
+           ("\\.go\\'" . go-mode))
+    :custom
+    (go-ts-mode-indent-offset 2))
 
   (use-package dockerfile-ts-mode
     :mode ("Dockerfile$" . dockerfile-ts-mode))
@@ -1175,8 +1199,8 @@ Here's my basic Org setup:
     (org-src-fontify-natively t)
 
     :config
+    (require 'ob-tempo)
     (org-clock-persistence-insinuate)
-
     (org-babel-do-load-languages
      'org-babel-load-languages
      '((emacs-lisp . t)
@@ -1323,6 +1347,7 @@ bold and ligatures support :(.
      (font . "JetBrains Mono NL 14")
      (tool-bar-lines . 0)
      (fullscreen . maximized)
+     (ns-appearance . dark)
      (vertical-scroll-bars . nil)))
 
   (blink-cursor-mode -1)
@@ -1352,19 +1377,14 @@ Hide unnecessary long mode line mode list
 #+begin_src emacs-lisp
   (use-package doom-themes
     :ensure t
-    :init (load-theme 'doom-1337 t))
+    :init (load-theme 'doom-oceanic-next t)
+    :config
+    (custom-theme-set-faces
+     'user
+     '(line-number ((t (:inherit font-lock-comment-face :slant normal :foreground unspecified))))))
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
-  (use-package modus-themes
-    :ensure t
-    :init
-    (setq modus-themes-common-palette-overrides
-          '((string green-warmer)))
-    (load-theme 'modus-vivendi-tritanopia t))
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package hl-line
     :hook (after-init . global-hl-line-mode))
 #+end_src
