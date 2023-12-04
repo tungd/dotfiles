@@ -747,6 +747,7 @@ Native LSP support via =Eglot= since Emacs 29.1
            (go-mode . eglot-ensure)
            (php-mode . eglot-ensure)
            (tuareg-mode . eglot-ensure))
+    :bind ("C-c C-a" . eglot-code-actions)
     :custom
     (eglot-autoshutdown t)
     (eglot-connect-timeout 300)
@@ -1199,7 +1200,7 @@ Here's my basic Org setup:
     (org-src-fontify-natively t)
 
     :config
-    (require 'ob-tempo)
+    (require 'org-tempo)
     (org-clock-persistence-insinuate)
     (org-babel-do-load-languages
      'org-babel-load-languages

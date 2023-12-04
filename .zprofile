@@ -82,6 +82,7 @@ export PGUSER=postgres
 export PATH=/opt/local/bin:/opt/local/sbin:$PATH
 export PATH=$HOME/.local/sbin:$HOME/.local/bin:$PATH
 export PATH=$HOME/Projects/dotfiles/bin:$PATH
+export PATH=$HOME/.nix-profile/bin:$PATH
 
 [[ -e /opt/local/etc/profile.d/z.sh ]] && . /opt/local/etc/profile.d/z.sh
 [[ $+commands[direnv] ]] && eval "$(direnv hook zsh)"
@@ -103,21 +104,7 @@ myip() {
     dig +short txt ch whoami.cloudflare @1.0.0.1;
 }
 
-# opam configuration
-test -r $HOME/.opam/opam-init/init.zsh && . $HOME/.opam/opam-init/init.zsh > /dev/null 2> /dev/null || true
-
-# export PATH=$HOME/.poetry/bin:$PATH
-
-export PATH=$HOME/.yarn/bin:$PATH
-
-export PATH=$HOME/.cargo/bin:$PATH
-
 export PATH=$HOME/Library/Python/3.11/bin:$PATH
 
 export PNPM_HOME="/Users/tung/Library/pnpm"
 export PATH="$PNPM_HOME:$PATH"
-
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-
-[[ $commands[kubectl] ]] && source <(kubectl completion zsh)
