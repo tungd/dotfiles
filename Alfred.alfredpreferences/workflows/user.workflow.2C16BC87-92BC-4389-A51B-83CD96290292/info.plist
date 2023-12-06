@@ -608,23 +608,6 @@ end alfred_script</string>
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>applescript</key>
-				<string>on alfred_script(q)
-  choose color
-end alfred_script</string>
-				<key>cachescript</key>
-				<true/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.applescript</string>
-			<key>uid</key>
-			<string>A127EB99-8550-4EEA-9FAB-0323CB5FD886</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
 				<key>action</key>
 				<integer>0</integer>
 				<key>argument</key>
@@ -634,11 +617,11 @@ end alfred_script</string>
 				<key>focusedappvariablename</key>
 				<string></string>
 				<key>hotkey</key>
-				<integer>0</integer>
+				<integer>35</integer>
 				<key>hotmod</key>
-				<integer>0</integer>
+				<integer>1441792</integer>
 				<key>hotstring</key>
-				<string></string>
+				<string>P</string>
 				<key>leftcursor</key>
 				<false/>
 				<key>modsmode</key>
@@ -652,6 +635,23 @@ end alfred_script</string>
 			<string>82D27BCC-C703-4C17-B847-127B410FAEA3</string>
 			<key>version</key>
 			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>applescript</key>
+				<string>on alfred_script(q)
+  choose color
+end alfred_script</string>
+				<key>cachescript</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.applescript</string>
+			<key>uid</key>
+			<string>A127EB99-8550-4EEA-9FAB-0323CB5FD886</string>
+			<key>version</key>
+			<integer>1</integer>
 		</dict>
 		<dict>
 			<key>config</key>

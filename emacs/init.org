@@ -167,6 +167,36 @@ still some missing features coming from =projectile=, but I can live with that.
     :commands (project-find-file project-vc-dir project-current))
 #+end_src
 
+** Workspace
+
+Perspective.el is nice, especially the narrowed down buffer list, however
+Burly's killer feature is that it can restores windows that are not pointing to
+buffers, .ie Eshell.
+
+#+begin_src emacs-lisp :tangle no
+  (use-package perspective
+    :ensure t
+    :functions (persp-mode)
+    :hook
+    ((after-init . persp-mode)
+     (kill-emacs . persp-state-save))
+    :custom
+    (persp-mode-prefix-key (kbd "C-c C-p"))
+    (persp-state-default-file (expand-file-name "persp-auto-save" user-emacs-directory))
+    (persp-modestring-short t)
+    :config
+    (with-eval-after-load 'consult
+      ;(consult-customize consult--source-buffer :hidden t :default nil)
+      (add-to-list 'consult-buffer-sources persp-consult-source)))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package burly
+    :ensure t
+    :custom
+    (burly-bookmark-prefix "Project: "))
+#+end_src
+
 ** Symbols
 
 I used to use =dumb-jumb=, but LSP has gotten good enough and it supported all
@@ -300,7 +330,7 @@ Temporary "focus" on a buffer by maximizing it in the current frame.
 Buffer location customization
 
 #+begin_src emacs-lisp
-  (tab-bar-mode t)
+  ;(tab-bar-mode t)
 
   (use-package window
     :custom
@@ -744,7 +774,7 @@ Native LSP support via =Eglot= since Emacs 29.1
            (js-ts-mode . eglot-ensure)
            (typescript-ts-mode . eglot-ensure)
            (tsx-ts-mode . eglot-ensure)
-           (go-mode . eglot-ensure)
+           (go-ts-mode . eglot-ensure)
            (php-mode . eglot-ensure)
            (tuareg-mode . eglot-ensure))
     :bind ("C-c C-a" . eglot-code-actions)
@@ -755,7 +785,7 @@ Native LSP support via =Eglot= since Emacs 29.1
                                          :documentRangeFormattingProvider
                                          :documentOnTypeFormattingProvider
                                          :documentHighlightProvider))
-    ;(eglot-events-buffer-size 4096)
+    (eglot-events-buffer-size 4096)
     :config
     (add-to-list 'eglot-server-programs '(kotlin-ts-mode "kotlin-language-server"))
     ;; https://www.reddit.com/r/emacs/comments/17jrsmv/comment/k74b3tg/?utm_source=share&utm_medium=web2x&context=3
@@ -803,17 +833,13 @@ Native Tree-sitter support since Emacs 29
   (defun td/tressit-expand-region ()
     "Poor man's expand-region, worked surprisingly well for me"
     (interactive)
-    (if (region-active-p)
-        (let* ((bounds (car (region-bounds)))
-               (node (treesit-node-on (car bounds) (cdr bounds)))
-               (parent (treesit-node-parent node)))
-          (goto-char (treesit-node-start parent))
-          (call-interactively #'set-mark-command)
-          (goto-char (treesit-node-end parent)))
-      (let ((node (treesit-node-at (point))))
-        (goto-char (treesit-node-start node))
-        (call-interactively #'set-mark-command)
-        (goto-char (treesit-node-end node)))))
+    (let ((node (if (region-active-p)
+                    (treesit-node-parent
+                     (treesit-node-on (region-beginning) (region-end)))
+                  (treesit-node-at (point)))))
+      (goto-char (treesit-node-start node))
+      (call-interactively #'set-mark-command)
+      (goto-char (treesit-node-end node))))
 
   (bind-key "M--" #'td/tressit-expand-region)
 
@@ -827,8 +853,7 @@ Native Tree-sitter support since Emacs 29
     (add-to-list 'treesit-extra-load-path "/opt/local/lib")
     (add-to-list 'treesit-language-source-alist '(dockerfile . ("https://github.com/camdencheek/tree-sitter-dockerfile.git")))
     (add-to-list 'treesit-language-source-alist '(kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git")))
-    (add-to-list 'treesit-language-source-alist '(org . ("https://github.com/milisims/tree-sitter-org.git")))
-    (add-to-list 'treesit-language-source-alist '(clojure . ("https://github.com/sogaiu/tree-sitter-clojure.git"))))
+    (add-to-list 'treesit-language-source-alist '(org . ("https://github.com/milisims/tree-sitter-org.git"))))
 
   (use-package typescript-ts-mode
     :mode (("\\.ts\\'" . tsx-ts-mode)
@@ -836,7 +861,7 @@ Native Tree-sitter support since Emacs 29
 
   (use-package go-ts-mode
     :mode (("go.mod$" . go-mod-ts-mode)
-           ("\\.go\\'" . go-mode))
+           ("\\.go\\'" . go-ts-mode))
     :custom
     (go-ts-mode-indent-offset 2))
 
@@ -854,24 +879,6 @@ Native Tree-sitter support since Emacs 29
      (css-mode . css-ts-mode)
      ;; (python-mode . python-ts-mode)
      ))
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (use-package combobulate
-    :vc (:url "git@github.com:mickeynp/combobulate.git" :branch "master")
-    :hook ((js-ts-mode . combobulate-mode)
-           (css-ts-mode . combobulate-mode)
-           (yaml-ts-mode . combobulate-mode)
-           (typescript-ts-mode . combobulate-mode)
-           (tsx-ts-mode . combobulate-mode)))
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (defun td/ts-inspect-node-at-point ()
-    (interactive)
-    (treesit-inspect-node-at-point))
-
-  (bind-key* "C-M-i" #'td/ts-inspect-node-at-point)
 #+end_src
 
 ** Auto completion
@@ -1289,7 +1296,7 @@ Org Babel for literate programming and API documentation.
 
 ** Spell checking
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package ispell
     :bind ("s-i" . ispell-word)
     :config
@@ -1364,34 +1371,9 @@ Hide unnecessary long mode line mode list
     :hook (after-init . minions-mode))
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
-  (use-package tango-plus-theme
-    :ensure t
-    :init (load-theme 'tango-plus t)
-    :config
-    (custom-theme-set-faces
-     'user
-     '(line-number ((t (:inherit font-lock-comment-face :slant normal))))
-     '(show-paren-match ((t (:background "#e9b96e"))))))
-#+end_src
-
-#+begin_src emacs-lisp
-  (use-package doom-themes
-    :ensure t
-    :init (load-theme 'doom-oceanic-next t)
-    :config
-    (custom-theme-set-faces
-     'user
-     '(line-number ((t (:inherit font-lock-comment-face :slant normal :foreground unspecified))))))
-#+end_src
-
 #+begin_src emacs-lisp
   (use-package hl-line
     :hook (after-init . global-hl-line-mode))
-#+end_src
-
-#+begin_src emacs-lisp
-
 #+end_src
 
 Truncate lines:
@@ -1414,6 +1396,8 @@ Some preferences that I set for all the theme. Per documentation, the custom
 theme named =user= will always have the highest priority.
 
 #+begin_src emacs-lisp
+  (load-theme 'deeper-blue)
+
   (custom-theme-set-faces
    'user
    '(font-lock-comment-face ((t (:slant normal))))
@@ -1423,16 +1407,15 @@ theme named =user= will always have the highest priority.
 
    ;'(org-block ((t (:background unspecified))))
 
-   ;; '(fringe ((t (:background unspecified :inherit line-number))))
-   ;; '(line-number ((t (:inherit font-lock-comment-face :slant normal))))
+   '(line-number ((t (:inherit font-lock-comment-face :slant normal))))
    '(line-number-current-line ((t :slant normal :weight normal)))
 
-   ;; '(hl-line ((t :foreground unspecified)))
+   '(fringe ((t (:background unspecified :inherit line-number))))
+   '(vertical-border ((t (:background unspecified :inherit line-number))))
+
+   '(hl-line ((t :background "#28416F")))
+   '(region ((t :background "#3A5EA1")))
    ;; '(isearch ((t :box nil :underline t)))
-
-   ;; '(markdown-inline-code-face ((t (:slant normal))))
-
-   ;; '(highlight-indentation-face ((t (:inherit font-lock-comment-face))))
    )
 #+end_src
 
@@ -1444,8 +1427,7 @@ down compiler error :(.
   (line-number-mode t)
 
   (use-package display-line-numbers
-    :hook ((prog-mode . display-line-numbers-mode)
-           (org-mode . display-line-numbers-mode))
+    :hook ((prog-mode . display-line-numbers-mode))
     :custom
     (display-line-numbers-width-start 100))
 #+end_src
@@ -1508,7 +1490,7 @@ kind of distracting, but it is really helpful sometimes.
   (bind-key* "C-M-r" #'td/refresh-front-most-tab)
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package kubel
     :ensure t
     :defer t
