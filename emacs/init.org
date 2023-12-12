@@ -463,7 +463,14 @@ Make the file executable if starting with "shebang":
   (use-package isearch
     :defer t
     :custom
-    (isearch-wrap-pause 'no))
+    (isearch-wrap-pause 'no)
+    (isearch-lazy-count t))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package isearch-mb
+    :ensure t
+    :hook (after-init . isearch-mb-mode))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -668,6 +675,22 @@ Since the template definition is compatible between the 2, I can easily move to
 #+end_src
 
 #+begin_src emacs-lisp
+  (defun td/detached-notification-function (session)
+    "Issue a notification when SESSION transitions from active to inactive.
+  This function uses the `terminal-notifier' command line utility."
+    (let ((status (detached-session-status session))
+          (host (detached-session-host-name session)))
+      (start-process
+       "terminal-notifier"
+       nil
+       "terminal-notifier"
+       "-sender" "org.gnu.Emacs"
+       "-activate" "org.gnu.Emacs"
+       "-title" (pcase status
+                  ('success (format "Detached finished [%s]" host))
+                  ('failure (format "Detached failed [%s]" host)))
+       "-message" (detached-session-command session))))
+
   (use-package detached
     :ensure t
     :hook (after-init . detached-init)
@@ -677,7 +700,15 @@ Since the template definition is compatible between the 2, I can easily move to
            ("C-x C-d" . detached-open-session))
     :custom
     (detached-show-output-on-attach t)
-    (detached-terminal-data-command system-type))
+    (detached-notification-function #'td/detached-notification-function))
+
+  (connection-local-set-profile-variables
+   'remote-detached
+   '((detached-shell-program . "/bin/bash")
+     (detached-session-directory . "/tmp/detached")))
+
+  (connection-local-set-profiles
+   '(:application tramp :protocol "ssh") 'remote-detached)
 #+end_src
 
 ** EShell
