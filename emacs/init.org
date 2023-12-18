@@ -33,9 +33,8 @@ quite a few of the packages I used are not available on MELPA yet.
 
 #+begin_src emacs-lisp
   (use-package bind-key
-    :ensure t
-    :functions (override-global-mode)
-    :config (override-global-mode t))
+    :functions (override-global-mode bind-key--remove)
+    :hook (after-init . override-global-mode))
 #+end_src
 
 Sometimes I write my own package, or download package from Emacs wiki; they
@@ -110,26 +109,13 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 
 #+begin_src emacs-lisp
   (setq enable-recursive-minibuffers t)
-
-  (defun td/keyboard-quit-dwim ()
-    (interactive)
-    (if-let ((minibuffer (active-minibuffer-window)))
-        (with-current-buffer (window-buffer minibuffer)
-          (minibuffer-keyboard-quit))
-      (funcall 'keyboard-quit)))
-
-  (bind-key [remap keyboard-quit] #'td/keyboard-quit-dwim)
 #+end_src
 
 ** Server
 
 #+begin_src emacs-lisp
-  (defun td/ensure-server-running ()
-    (require 'server)
-    (unless (server-running-p)
-      (server-start)))
-
-  (add-hook 'after-init-hook #'td/ensure-server-running)
+  (use-package server
+    :hook (after-init . server-start))
 #+end_src
 
 
@@ -693,6 +679,9 @@ Since the template definition is compatible between the 2, I can easily move to
 
   (use-package detached
     :ensure t
+    :functions (detached-session-command
+                detached-session-host-name
+                detached-session-status)
     :hook (after-init . detached-init)
     :bind (([remap async-shell-command] . detached-shell-command)
            ([remap compile] . detached-compile-compile)
@@ -1475,8 +1464,8 @@ The default line continuation indicator is too standout and distracting for me.
      #b01010101]
     nil nil '(top t))
 
-  (setcdr (assq 'continuation fringe-indicator-alist) 'halftone)
-  (setcdr (assq 'truncation fringe-indicator-alist) 'halftone)
+  (setcdr (assq 'continuation fringe-indicator-alist) '(nil halftone))
+  (setcdr (assq 'truncation fringe-indicator-alist) '(nil halftone))
 #+end_src
 
 Display change marker based on =git=. I usually turn this off because it is
