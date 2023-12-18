@@ -354,6 +354,16 @@ Buffer location customization
 
 * General Editing
 
+#+begin_src emacs-lisp
+  (use-package undo-fu-session
+    :ensure t
+    :hook (after-init . undo-fu-session-global-mode)
+    :custom
+    (undo-fu-session-incompatible-files '("/COMMIT_EDITMSG\\'")))
+
+  (use-package vundo :ensure t)
+#+end_src
+
 #+begin_src emacs-lisp :tangle no
   (use-package evil
     :ensure t
