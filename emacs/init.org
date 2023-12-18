@@ -1028,6 +1028,12 @@ TDB: waiting for folding support with Treesitter
 #+end_src
 
 #+begin_src emacs-lisp
+  (use-package emmet-mode
+    :ensure t
+    :hook (mhtml-mode . emmet-mode))
+#+end_src
+
+#+begin_src emacs-lisp
   (use-package sgml-mode
     :mode (("\\.svg" . sgml-mode)))
 #+end_src
@@ -1176,6 +1182,11 @@ Python or Haskell:
 ** Misc
 
 These are supports for other stuffs that I used:
+
+#+begin_src emacs-lisp
+  (use-package nix-ts-mode
+    :ensure t)
+#+end_src
 
 #+begin_src emacs-lisp
   (use-package markdown-mode
@@ -1528,6 +1539,7 @@ kind of distracting, but it is really helpful sometimes.
     :custom
     (kubel-kubectl "/opt/local/bin/kubectl"))
 #+end_src
+
 
 * Ideas
 
