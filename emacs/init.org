@@ -953,19 +953,11 @@ I use auto completion sparingly, using Corfu.
 ** Error checking
 
 #+begin_src emacs-lisp
-  (defun flymake-proc-create-temp-in-tmp (file-name)
-    (concat temporary-file-directory file-name))
-
   (use-package flymake
     :defer t
     :bind (:map flymake-mode-map
                 ("C-c e n" . flymake-goto-next-error)
-                ("C-c e p" . flymake-goto-prev-error))
-    ;; :config
-    ;; (advice-add
-    ;;  'flymake-proc-create-temp-inplace
-    ;;  :filter-return #'flymake-proc-create-temp-in-tmp)
-    )
+                ("C-c e p" . flymake-goto-prev-error)))
 #+end_src
 
 ** Version Control
