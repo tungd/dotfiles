@@ -1391,9 +1391,8 @@ bold and ligatures support :(.
   (setq
    fringes-outside-margins t
    default-frame-alist
-   `((left-fringe . 8) (right-fringe . 4)
+   `((left-fringe . 4) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
-     (ns-appearance . light)
      (font . "JetBrains Mono NL 14")
      (tool-bar-lines . 0)
      (fullscreen . maximized)
@@ -1408,14 +1407,11 @@ bold and ligatures support :(.
 Hide unnecessary long mode line mode list
 
 #+begin_src emacs-lisp
-  (use-package minions
-    :ensure t
-    :hook (after-init . minions-mode))
+  (use-package minions :ensure t :hook (after-init . minions-mode))
 #+end_src
 
 #+begin_src emacs-lisp
-  (use-package hl-line
-    :hook (after-init . global-hl-line-mode))
+  (use-package hl-line :hook (after-init . global-hl-line-mode))
 #+end_src
 
 Truncate lines:
@@ -1442,23 +1438,19 @@ theme named =user= will always have the highest priority.
 
   (custom-theme-set-faces
    'user
-   '(font-lock-comment-face ((t (:slant normal))))
-   '(font-lock-comment-delimiter-face ((t (:slant normal))))
-   '(font-lock-string-face ((t (:slant normal))))
-   '(font-lock-constant-face ((t (:slant normal))))
+   '(font-lock-comment-face ((t :slant normal)))
+   '(font-lock-comment-delimiter-face ((t :slant normal)))
+   '(font-lock-string-face ((t :slant normal)))
+   '(font-lock-constant-face ((t :slant normal)))
 
-   ;'(org-block ((t (:background unspecified))))
+   '(line-number ((t :inherit nil :slant normal :background "#0b0c11" :foreground "gray30")))
+   '(line-number-current-line ((t :inherit line-number :weight normal :foreground "gray60")))
+   '(fringe ((t :inherit line-number :background unspecified)))
+   '(vertical-border ((t :foreground "#000")))
 
-   '(line-number ((t (:inherit font-lock-comment-face :slant normal))))
-   '(line-number-current-line ((t :slant normal :weight normal)))
-
-   '(fringe ((t (:background unspecified :inherit line-number))))
-   '(vertical-border ((t (:background unspecified :inherit line-number))))
-
-   '(hl-line ((t :background "#28416F")))
-   '(region ((t :background "#3A5EA1")))
-   ;; '(isearch ((t :box nil :underline t)))
-   )
+   '(mode-line-buffer-id ((t :foreground "#deae3e")))
+   '(mode-line ((t :inherit line-number-current-line :foreground nil :background nil :box (:style 'flat))))
+   '(mode-line-inactive ((t :inherit line-number :background nil :foreground nil))))
 #+end_src
 
 Line and column numbers, which I find only helpful when tracking
@@ -1469,7 +1461,8 @@ down compiler error :(.
   (line-number-mode t)
 
   (use-package display-line-numbers
-    :hook ((prog-mode . display-line-numbers-mode))
+    :hook ((prog-mode . display-line-numbers-mode)
+           (org-mode . display-line-numbers-mode))
     :custom
     (display-line-numbers-width-start 100))
 #+end_src
@@ -1478,8 +1471,8 @@ The default line continuation indicator is too standout and distracting for me.
 
 #+begin_src emacs-lisp
   (define-fringe-bitmap 'halftone
-    [#b01000000
-     #b10000000]
+    [#b10101010
+     #b01010101]
     nil nil '(top t))
 
   (setcdr (assq 'continuation fringe-indicator-alist) 'halftone)
@@ -1490,12 +1483,10 @@ Display change marker based on =git=. I usually turn this off because it is
 kind of distracting, but it is really helpful sometimes.
 
 #+begin_src emacs-lisp
-  (define-fringe-bitmap 'td/diff-hl-bmp [#b11110000] 1 8 '(top t))
-
-  (defun td/diff-hl-fringe-bmp (_type _pos) 'td/diff-hl-bmp)
+  (defun td/diff-hl-fringe-bmp (_type _pos) 'halftone)
 
   (defun td/diff-hl-overlay-modified (ov after-p beg end &optional len)
-    "No-op. Markers disappear and reapear is kind of annoying to me.")
+    "No-op. Markers disappear and reapear is annoying to me.")
 
   (use-package diff-hl
     :ensure t
