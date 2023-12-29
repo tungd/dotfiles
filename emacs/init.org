@@ -860,16 +860,25 @@ Native LSP support via =Eglot= since Emacs 29.1
 Native Tree-sitter support since Emacs 29
 
 #+begin_src emacs-lisp
+  (defun td/treesit-mark-node (node)
+    (goto-char (treesit-node-start node))
+    (call-interactively #'set-mark-command)
+    (goto-char (treesit-node-end node)))
+
   (defun td/tressit-expand-region ()
     "Poor man's expand-region, worked surprisingly well for me"
     (interactive)
-    (let ((node (if (region-active-p)
+    (let ((start (if (region-active-p) (region-beginning) 1))
+          (end (if (region-active-p) (region-end) 1))
+          (node (if (region-active-p)
                     (treesit-node-parent
                      (treesit-node-on (region-beginning) (region-end)))
                   (treesit-node-at (point)))))
-      (goto-char (treesit-node-start node))
-      (call-interactively #'set-mark-command)
-      (goto-char (treesit-node-end node))))
+      (if (or (/= start (treesit-node-start node))
+              (/= end (treesit-node-end node)))
+          (td/treesit-mark-node node)
+        (forward-char)
+        (td/tressit-expand-region))))
 
   (bind-key "M--" #'td/tressit-expand-region)
 
@@ -883,7 +892,8 @@ Native Tree-sitter support since Emacs 29
     (add-to-list 'treesit-extra-load-path "/opt/local/lib")
     (add-to-list 'treesit-language-source-alist '(dockerfile . ("https://github.com/camdencheek/tree-sitter-dockerfile.git")))
     (add-to-list 'treesit-language-source-alist '(kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git")))
-    (add-to-list 'treesit-language-source-alist '(org . ("https://github.com/milisims/tree-sitter-org.git"))))
+    (add-to-list 'treesit-language-source-alist '(org . ("https://github.com/milisims/tree-sitter-org.git")))
+    (add-to-list 'treesit-language-source-alist '(nix . ("https://github.com/nix-community/tree-sitter-nix.git"))))
 
   (use-package typescript-ts-mode
     :mode (("\\.ts\\'" . tsx-ts-mode)
@@ -935,10 +945,14 @@ I use auto completion sparingly, using Corfu.
 #+end_src
 
 #+begin_src emacs-lisp
+  (defvar
+    td/copilot-load-path
+    (expand-file-name "vendor/copilot" user-emacs-directory))
+
   (use-package copilot
-    ;:vc (:url "git@github.com:zerolfx/copilot.el.git" :branch "main")
+    :load-path td/copilot-load-path
     :bind (("C-j" . copilot-accept-completion))
-    :hook ((sgml-mode . copilot-mode)
+    :hook ((mhtml-mode . copilot-mode)
            (css-ts-mode . copilot-mode)
            (html-ts-mode . copilot-mode)
            (js-ts-mode . copilot-mode)
@@ -1021,7 +1035,9 @@ TDB: waiting for folding support with Treesitter
 #+begin_src emacs-lisp
   (use-package emmet-mode
     :ensure t
-    :hook (mhtml-mode . emmet-mode))
+    :hook (mhtml-mode . emmet-mode)
+    :config
+    (unbind-key "C-j" emmet-mode-keymap))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1382,7 +1398,7 @@ bold and ligatures support :(.
   (setq
    fringes-outside-margins t
    default-frame-alist
-   `((left-fringe . 4) (right-fringe . 4)
+   `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
      (font . "JetBrains Mono NL 14")
      (tool-bar-lines . 0)
@@ -1424,9 +1440,22 @@ Truncate lines:
 Some preferences that I set for all the theme. Per documentation, the custom
 theme named =user= will always have the highest priority.
 
-#+begin_src emacs-lisp
-  (load-theme 'deeper-blue)
+#+begin_src emacs-lisp :tangle no
+  (use-package tango-plus-theme
+    :ensure t
+    :init (load-theme 'tango-plus t))
+#+end_src
 
+#+begin_src emacs-lisp
+  (use-package modus-themes
+    :init (load-theme 'modus-vivendi t)
+    :custom
+    (modus-themes-subtle-line-numbers t)
+    (modus-themes-region '(bg-only))
+    (modus-themes-deuteranopia t))
+#+end_src
+
+#+begin_src emacs-lisp
   (custom-theme-set-faces
    'user
    '(font-lock-comment-face ((t :slant normal)))
@@ -1434,14 +1463,16 @@ theme named =user= will always have the highest priority.
    '(font-lock-string-face ((t :slant normal)))
    '(font-lock-constant-face ((t :slant normal)))
 
-   '(line-number ((t :inherit nil :slant normal :background "#0b0c11" :foreground "gray30")))
-   '(line-number-current-line ((t :inherit line-number :weight normal :foreground "gray60")))
+   ;;'(line-number ((t :inherit nil :slant normal :background "#0b0c11" :foreground "gray30")))
+   ;;'(line-number-current-line ((t :inherit line-number :weight normal :foreground "gray60")))
    '(fringe ((t :inherit line-number :background unspecified)))
-   '(vertical-border ((t :foreground "#000")))
+   ;;'(vertical-border ((t :foreground "#000")))
 
-   '(mode-line-buffer-id ((t :foreground "#deae3e")))
-   '(mode-line ((t :inherit line-number-current-line :foreground nil :background nil :box (:style 'flat))))
-   '(mode-line-inactive ((t :inherit line-number :background nil :foreground nil))))
+   ;;'(mode-line-buffer-id ((t :foreground "#deae3e")))
+   ;;'(mode-line ((t :inherit line-number-current-line :foreground nil :background nil :box (:style 'flat))))
+   ;;'(mode-line-inactive ((t :inherit line-number :background nil :foreground nil)))
+   ;;'(cursor ((t :background "orange")))
+   )
 #+end_src
 
 Line and column numbers, which I find only helpful when tracking
@@ -1462,8 +1493,8 @@ The default line continuation indicator is too standout and distracting for me.
 
 #+begin_src emacs-lisp
   (define-fringe-bitmap 'halftone
-    [#b10101010
-     #b01010101]
+    [#b10100000
+     #b01010000]
     nil nil '(top t))
 
   (setcdr (assq 'continuation fringe-indicator-alist) '(nil halftone))
