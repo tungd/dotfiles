@@ -151,19 +151,6 @@
 				<false/>
 			</dict>
 		</array>
-		<key>D81D621C-C59A-4065-B485-084A4C08A579</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>79D15212-5A57-4634-BCDB-60F2075626D2</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
 	</dict>
 	<key>createdby</key>
 	<string>Tung Dao</string>
@@ -577,33 +564,19 @@ end alfred_script</string>
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>action</key>
-				<integer>0</integer>
-				<key>argument</key>
-				<integer>0</integer>
-				<key>focusedappvariable</key>
-				<false/>
-				<key>focusedappvariablename</key>
-				<string></string>
-				<key>hotkey</key>
-				<integer>36</integer>
-				<key>hotmod</key>
-				<integer>1310720</integer>
-				<key>hotstring</key>
-				<string>↩</string>
-				<key>leftcursor</key>
-				<false/>
-				<key>modsmode</key>
-				<integer>0</integer>
-				<key>relatedAppsMode</key>
-				<integer>0</integer>
+				<key>applescript</key>
+				<string>on alfred_script(q)
+  choose color
+end alfred_script</string>
+				<key>cachescript</key>
+				<true/>
 			</dict>
 			<key>type</key>
-			<string>alfred.workflow.trigger.hotkey</string>
+			<string>alfred.workflow.action.applescript</string>
 			<key>uid</key>
-			<string>D81D621C-C59A-4065-B485-084A4C08A579</string>
+			<string>A127EB99-8550-4EEA-9FAB-0323CB5FD886</string>
 			<key>version</key>
-			<integer>2</integer>
+			<integer>1</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -635,23 +608,6 @@ end alfred_script</string>
 			<string>82D27BCC-C703-4C17-B847-127B410FAEA3</string>
 			<key>version</key>
 			<integer>2</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>applescript</key>
-				<string>on alfred_script(q)
-  choose color
-end alfred_script</string>
-				<key>cachescript</key>
-				<true/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.applescript</string>
-			<key>uid</key>
-			<string>A127EB99-8550-4EEA-9FAB-0323CB5FD886</string>
-			<key>version</key>
-			<integer>1</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -838,13 +794,6 @@ end alfred_script</string>
 			<real>60</real>
 			<key>ypos</key>
 			<real>50</real>
-		</dict>
-		<key>D81D621C-C59A-4065-B485-084A4C08A579</key>
-		<dict>
-			<key>xpos</key>
-			<real>60</real>
-			<key>ypos</key>
-			<real>625</real>
 		</dict>
 		<key>F0562F04-928E-4797-B0A1-046CCB737779</key>
 		<dict>

@@ -806,6 +806,7 @@ Native LSP support via =Eglot= since Emacs 29.1
            (tsx-ts-mode . eglot-ensure)
            (go-ts-mode . eglot-ensure)
            (php-mode . eglot-ensure)
+           (ocaml-ts-mode . eglot-ensure)
            (tuareg-mode . eglot-ensure))
     :bind ("C-c C-a" . eglot-code-actions)
     :custom
@@ -818,6 +819,7 @@ Native LSP support via =Eglot= since Emacs 29.1
     (eglot-events-buffer-size 4096)
     :config
     (add-to-list 'eglot-server-programs '(kotlin-ts-mode "kotlin-language-server"))
+    (add-to-list 'eglot-server-programs '(ocaml-ts-mode "ocamllsp"))
     ;; https://www.reddit.com/r/emacs/comments/17jrsmv/comment/k74b3tg/?utm_source=share&utm_medium=web2x&context=3
     ;; (advice-add 'jsonrpc--log-event :override #'ignore)
     )
@@ -848,13 +850,6 @@ Native LSP support via =Eglot= since Emacs 29.1
   (use-package eldoc
     :config
     (setq eldoc-display-functions '(eldoc-display-in-buffer)))
-
-  (use-package eldoc-box
-    :ensure t
-    :bind ("C-c C-h" . eldoc-box-help-at-point)
-    :custom
-    (eldoc-box-cleanup-interval 0.2)
-    (eldoc-box-clear-with-C-g t))
 #+end_src
 
 Native Tree-sitter support since Emacs 29
@@ -951,6 +946,7 @@ I use auto completion sparingly, using Corfu.
 
   (use-package copilot
     :load-path td/copilot-load-path
+    :functions copilot-mode
     :bind (("C-j" . copilot-accept-completion))
     :hook ((mhtml-mode . copilot-mode)
            (css-ts-mode . copilot-mode)
@@ -958,6 +954,7 @@ I use auto completion sparingly, using Corfu.
            (js-ts-mode . copilot-mode)
            (typescript-ts-mode . copilot-mode)
            (tsx-ts-mode . copilot-mode)
+           (kotlin-ts-mode . copilot-mode)
            (php-mode . copilot-mode)
            (go-ts-mode . copilot-mode)
            (go-mode . copilot-mode)
@@ -1036,6 +1033,7 @@ TDB: waiting for folding support with Treesitter
   (use-package emmet-mode
     :ensure t
     :hook (mhtml-mode . emmet-mode)
+    :bind ("C-M-<return>" . emmet-expand-line)
     :config
     (unbind-key "C-j" emmet-mode-keymap))
 #+end_src
@@ -1159,8 +1157,7 @@ Python or Haskell:
   (use-package kotlin-ts-mode
     :ensure t
     :mode (("\\.kt\\'" . kotlin-ts-mode)
-           ("\\.kts\\'" . kotlin-ts-mode))
-    :hook ((kotlin-ts-mode . copilot-mode)))
+           ("\\.kts\\'" . kotlin-ts-mode)))
 #+end_src
 
 ** Terraform
@@ -1190,7 +1187,7 @@ Python or Haskell:
 
 These are supports for other stuffs that I used:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package nix-ts-mode
     :ensure t)
 #+end_src

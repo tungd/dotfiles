@@ -108,3 +108,6 @@ export PATH=$HOME/Library/Python/3.11/bin:$PATH
 
 export PNPM_HOME="/Users/tung/Library/pnpm"
 export PATH="$PNPM_HOME:$PATH"
+
+# Added by OrbStack: command-line tools and integration
+source ~/.orbstack/shell/init.zsh 2>/dev/null || :
