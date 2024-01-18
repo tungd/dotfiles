@@ -670,7 +670,7 @@ Since the template definition is compatible between the 2, I can easily move to
     :bind ("C-c C-l" . comint-clear-buffer))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (defun td/detached-notification-function (session)
     "Issue a notification when SESSION transitions from active to inactive.
   This function uses the `terminal-notifier' command line utility."
@@ -816,13 +816,17 @@ Native LSP support via =Eglot= since Emacs 29.1
                                          :documentRangeFormattingProvider
                                          :documentOnTypeFormattingProvider
                                          :documentHighlightProvider))
-    (eglot-events-buffer-size 4096)
     :config
     (add-to-list 'eglot-server-programs '(kotlin-ts-mode "kotlin-language-server"))
     (add-to-list 'eglot-server-programs '(ocaml-ts-mode "ocamllsp"))
     ;; https://www.reddit.com/r/emacs/comments/17jrsmv/comment/k74b3tg/?utm_source=share&utm_medium=web2x&context=3
     ;; (advice-add 'jsonrpc--log-event :override #'ignore)
     )
+
+  (use-package eglot-booster
+    :after eglot
+    :functions eglot-booster-mode
+    :config	(eglot-booster-mode))
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
@@ -1424,7 +1428,7 @@ Truncate lines:
   (setq-default truncate-lines t)
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package highlight-indentation
     :ensure t
     :hook ((python-mode . highlight-indentation-mode)
@@ -1443,7 +1447,14 @@ theme named =user= will always have the highest priority.
     :init (load-theme 'tango-plus t))
 #+end_src
 
+
 #+begin_src emacs-lisp
+  (use-package doom-themes
+    :ensure t
+    :init (load-theme 'doom-badger t))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
   (use-package modus-themes
     :init (load-theme 'modus-vivendi t)
     :custom
@@ -1460,8 +1471,8 @@ theme named =user= will always have the highest priority.
    '(font-lock-string-face ((t :slant normal)))
    '(font-lock-constant-face ((t :slant normal)))
 
-   ;;'(line-number ((t :inherit nil :slant normal :background "#0b0c11" :foreground "gray30")))
-   ;;'(line-number-current-line ((t :inherit line-number :weight normal :foreground "gray60")))
+   '(line-number ((t :slant normal)))
+   '(line-number-current-line ((t :slant normal)))
    '(fringe ((t :inherit line-number :background unspecified)))
    ;;'(vertical-border ((t :foreground "#000")))
 

@@ -25,7 +25,7 @@ prompt_tungd_precmd() {
     PROMPT=$'\n%{$fg[red]%}%n%{$reset_color%}@%{$fg[yellow]%}%m%{$reset_color%} in %{$fg[green]%}%~/%{$reset_color%} $vcs_info_msg_0_\n› '
     RPROMPT="%{$fg[cyan]%}$(virtualenv_info)%{$reset_color%}"
   else
-    PROMPT=$'\n%n@%m in %~/\n› '
+    PROMPT=$'\n%~/ $vcs_info_msg_0_\n› '
     # export RPROMPT="$(vcs_prompt_info)"
   fi
 }
