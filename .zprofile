@@ -104,7 +104,7 @@ myip() {
     dig +short txt ch whoami.cloudflare @1.0.0.1;
 }
 
-export PATH=$HOME/Library/Python/3.11/bin:$PATH
+export PATH=$HOME/Library/Python/3.12/bin:$PATH
 
 export PNPM_HOME="/Users/tung/Library/pnpm"
 export PATH="$PNPM_HOME:$PATH"
