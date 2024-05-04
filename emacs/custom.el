@@ -4,9 +4,6 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(auth-source-save-behavior nil)
- '(buffer-env-safe-files
-   '(("/Users/tung/Projects/luck/dump/.envrc" .
-      "d52c1c4f219a54c549e6ff5ce2997b9c3190f6f9ef244d2aaf0829c5440e0f35")))
  '(connection-local-criteria-alist
    '(((:application tramp :machine "192.168.1.7")
       tramp-connection-local-darwin-ps-profile)
@@ -218,13 +215,13 @@
  '(package-selected-packages
    '(burly consult consult-eglot copilot corfu crux csv-mode d2-mode detached
            diff-hl doom-themes dune editorconfig eglot eglot-booster emmet-mode
-           envrc eshell-toggle eshell-up eshell-z exec-path-from-shell go-mode
-           highlight-indentation indent-guide isearch-mb kotlin-mode
+           envrc eshell-toggle eshell-up eshell-z exec-path-from-shell f go-mode
+           highlight-indentation indent-guide isearch-mb jade-mode kotlin-mode
            kotlin-ts-mode kubel magit minions modus-theme nginx-mode ob-http
            ob-kotlin ob-php ob-plantuml ocaml-ts-mode orderless persp-mode
            php-mode protobuf-mode rainbow-mode reason-mode rg scad-mode
            sqlformat tango-plus-theme tempel terraform-mode tuareg
-           undo-fu-session vertico visual-regexp vundo which-key))
+           undo-fu-session vertico visual-regexp vterm vundo which-key))
  '(package-vc-selected-packages
    '((lsp-bridge :url "git@github.com:manateelazycat/lsp-bridge.git" :branch
                  "master" :main-file "lsp-bridge")
