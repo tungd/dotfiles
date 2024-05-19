@@ -1170,7 +1170,8 @@ Python or Haskell:
 #+begin_src emacs-lisp
   (use-package terraform-mode
     :ensure t
-    :mode (("\\.tf" . terraform-mode)))
+    :mode (("\\.tf" . terraform-mode))
+    :custom (terraform-format-on-save t))
 #+end_src
 
 ** SQL
