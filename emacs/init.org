@@ -810,7 +810,6 @@ Native LSP support via =Eglot= since Emacs 29.1
            (typescript-ts-mode . eglot-ensure)
            (tsx-ts-mode . eglot-ensure)
            (go-ts-mode . eglot-ensure)
-           (php-mode . eglot-ensure)
            (ocaml-ts-mode . eglot-ensure)
            (tuareg-mode . eglot-ensure))
     :bind ("C-c C-a" . eglot-code-actions)
@@ -843,7 +842,6 @@ Native LSP support via =Eglot= since Emacs 29.1
            (typescript-ts-mode . lsp)
            (tsx-ts-mode . lsp)
            (go-mode . lsp)
-           (php-mode . lsp)
            (tuareg-mode . lsp)
            (python-mode . lsp)
            (lsp-mode . lsp-enable-which-key-integration))
@@ -960,7 +958,6 @@ I use auto completion sparingly, using Corfu.
            (typescript-ts-mode . copilot-mode)
            (tsx-ts-mode . copilot-mode)
            (kotlin-ts-mode . copilot-mode)
-           (php-mode . copilot-mode)
            (go-ts-mode . copilot-mode)
            (go-mode . copilot-mode)
            (python-mode . copilot-mode)))
@@ -1270,7 +1267,6 @@ Here's my basic Org setup:
        (shell . t)
        (js . t)
        (kotlin . t)
-       ;(php . t)
        (sql . t))))
 #+end_src
 
