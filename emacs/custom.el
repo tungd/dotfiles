@@ -242,7 +242,7 @@
            ob-kotlin ob-plantuml ocaml-ts-mode orderless persp-mode
            protobuf-mode rainbow-mode reason-mode rg scad-mode sqlformat
            tango-plus-theme tempel terraform-mode tuareg undo-fu-session vertico
-           visual-regexp vterm vundo which-key))
+           visual-regexp vterm vue-mode vundo which-key))
  '(package-vc-selected-packages
    '((lsp-bridge :url "git@github.com:manateelazycat/lsp-bridge.git" :branch
                  "master" :main-file "lsp-bridge")
