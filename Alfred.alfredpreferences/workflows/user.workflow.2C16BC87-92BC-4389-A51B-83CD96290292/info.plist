@@ -549,7 +549,7 @@ end alfred_script</string>
 			<dict>
 				<key>paths</key>
 				<array>
-					<string>/System/Applications/Utilities/Terminal.app</string>
+					<string>/Applications/MacPorts/WezTerm.app</string>
 				</array>
 				<key>toggle</key>
 				<true/>
@@ -558,23 +558,6 @@ end alfred_script</string>
 			<string>alfred.workflow.action.launchfiles</string>
 			<key>uid</key>
 			<string>79D15212-5A57-4634-BCDB-60F2075626D2</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>applescript</key>
-				<string>on alfred_script(q)
-  choose color
-end alfred_script</string>
-				<key>cachescript</key>
-				<true/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.applescript</string>
-			<key>uid</key>
-			<string>A127EB99-8550-4EEA-9FAB-0323CB5FD886</string>
 			<key>version</key>
 			<integer>1</integer>
 		</dict>
@@ -612,9 +595,26 @@ end alfred_script</string>
 		<dict>
 			<key>config</key>
 			<dict>
+				<key>applescript</key>
+				<string>on alfred_script(q)
+  choose color
+end alfred_script</string>
+				<key>cachescript</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.applescript</string>
+			<key>uid</key>
+			<string>A127EB99-8550-4EEA-9FAB-0323CB5FD886</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
 				<key>paths</key>
 				<array>
-					<string>/Applications/Logseq.app</string>
+					<string>/Applications/IntelliJ IDEA.app</string>
 				</array>
 				<key>toggle</key>
 				<true/>

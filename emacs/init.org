@@ -1400,7 +1400,9 @@ bold and ligatures support :(.
    `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
      ;; (font . "JetBrains Mono NL 14")
-     (font . "Monaco 14")
+     ;; (font . "Monaco 14")
+     ;; (font . "Agave 16")
+     (font . "Ubuntu Mono 16")
      (tool-bar-lines . 0)
      (fullscreen . maximized)
      (ns-appearance . dark)
@@ -1409,6 +1411,9 @@ bold and ligatures support :(.
   (blink-cursor-mode -1)
   (tool-bar-mode -1)
   (setq-default cursor-in-non-selected-windows nil)
+
+  (unless (display-graphic-p)
+    (menu-bar-mode -1))
 #+end_src
 
 Hide unnecessary long mode line mode list
