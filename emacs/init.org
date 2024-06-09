@@ -1399,7 +1399,8 @@ bold and ligatures support :(.
    default-frame-alist
    `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
-     (font . "JetBrains Mono NL 14")
+     ;; (font . "JetBrains Mono NL 14")
+     (font . "Monaco 14")
      (tool-bar-lines . 0)
      (fullscreen . maximized)
      (ns-appearance . dark)
