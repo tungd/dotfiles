@@ -418,7 +418,7 @@ Editing utilities:
            ;; since it is not allowing me to quickly switch between the most
            ;; recent buffers
            ("M-C-]" . crux-switch-to-previous-buffer)
-           ("M-J" . crux-top-join-line)
+           ("M-J" . join-line)
            ("M-=" . crux-cleanup-buffer-or-region)
            ("C-M-k" . crux-kill-whole-line)
            ("C-c D" . crux-delete-file-and-buffer)
@@ -430,7 +430,7 @@ Editing utilities:
     (crux-with-region-or-point-to-eol kill-ring-save)
     (setq kill-do-not-save-duplicates t))
 
-  (bind-key* "C-x C-k" #'kill-this-buffer)
+  (bind-key* "C-x C-k" #'kill-current-buffer)
   (bind-key* "C-c r" #'rename-visited-file)
   (bind-key* "s-n" #'next-buffer)
   (bind-key* "s-p" #'previous-buffer)
@@ -504,7 +504,9 @@ Cleanup whitespaces automatically on save.
 #+begin_src emacs-lisp
   (use-package whitespace
     :commands (whitespace-cleanup)
-    :hook (before-save . whitespace-cleanup))
+    :hook (before-save . whitespace-cleanup)
+    :config
+    (setq whitespace-style (remove 'newline-mark whitespace-style)))
 #+end_src
 
 ** Parenthesis
@@ -1445,26 +1447,10 @@ Truncate lines:
 Some preferences that I set for all the theme. Per documentation, the custom
 theme named =user= will always have the highest priority.
 
-#+begin_src emacs-lisp :tangle no
-  (use-package tango-plus-theme
-    :ensure t
-    :init (load-theme 'tango-plus t))
-#+end_src
-
-
 #+begin_src emacs-lisp
   (use-package doom-themes
     :ensure t
-    :init (load-theme 'doom-badger t))
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (use-package modus-themes
-    :init (load-theme 'modus-vivendi t)
-    :custom
-    (modus-themes-subtle-line-numbers t)
-    (modus-themes-region '(bg-only))
-    (modus-themes-deuteranopia t))
+    :init (load-theme 'doom-ayu-mirage t))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1475,7 +1461,7 @@ theme named =user= will always have the highest priority.
    '(font-lock-string-face ((t :slant normal)))
    '(font-lock-constant-face ((t :slant normal)))
 
-   '(line-number ((t :slant normal)))
+   '(line-number ((t :slant normal :foreground nil :inherit font-lock-comment-face)))
    '(line-number-current-line ((t :slant normal)))
    '(fringe ((t :inherit line-number :background unspecified)))
    ;;'(vertical-border ((t :foreground "#000")))
