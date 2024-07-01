@@ -234,16 +234,15 @@
      "7ea883b13485f175d3075c72fceab701b5bf76b2076f024da50dff4107d0db25"
      "4fda8201465755b403a33e385cf0f75eeec31ca8893199266a6aeccb4adedfa4" default))
  '(package-selected-packages
-   '(burly consult consult-eglot copilot corfu crux csv-mode d2-mode detached
-           diff-hl doom-themes dune editorconfig eglot eglot-booster emmet-mode
-           envrc eshell-toggle eshell-up eshell-z exec-path-from-shell f go-mode
-           highlight-indentation indent-guide isearch-mb jade-mode kotlin-mode
-           kotlin-ts-mode kubel lua-mode magit markdown-mode markdown-ts-mode
-           minions modus-theme nginx-mode ob-http ob-kotlin ob-plantuml
-           ocaml-ts-mode orderless persp-mode protobuf-mode rainbow-mode
-           reason-mode rg scad-mode sqlformat tango-plus-theme tempel
-           terraform-mode tuareg undo-fu-session vertico visual-regexp vterm
-           vue-mode vundo which-key))
+   '(consult copilot corfu crux csv-mode d2-mode detached diff-hl doom-themes dune
+             editorconfig eglot eglot-booster emmet-mode envrc eshell-toggle
+             eshell-up eshell-z exec-path-from-shell f go-mode
+             highlight-indentation indent-guide isearch-mb kotlin-mode
+             kotlin-ts-mode lua-mode magit markdown-mode markdown-ts-mode
+             minions modus-theme nginx-mode ob-http ob-kotlin ob-plantuml
+             orderless persp-mode protobuf-mode rainbow-mode reason-mode rg
+             scad-mode sqlformat tempel terraform-mode tuareg undo-fu-session
+             vertico visual-regexp vterm vundo which-key))
  '(package-vc-selected-packages
    '((lsp-bridge :url "git@github.com:manateelazycat/lsp-bridge.git" :branch
                  "master" :main-file "lsp-bridge")

@@ -159,29 +159,6 @@ Perspective.el is nice, especially the narrowed down buffer list, however
 Burly's killer feature is that it can restores windows that are not pointing to
 buffers, .ie Eshell.
 
-#+begin_src emacs-lisp :tangle no
-  (use-package perspective
-    :ensure t
-    :functions (persp-mode)
-    :hook
-    ((after-init . persp-mode)
-     (kill-emacs . persp-state-save))
-    :custom
-    (persp-mode-prefix-key (kbd "C-c C-p"))
-    (persp-state-default-file (expand-file-name "persp-auto-save" user-emacs-directory))
-    (persp-modestring-short t)
-    :config
-    (with-eval-after-load 'consult
-      ;(consult-customize consult--source-buffer :hidden t :default nil)
-      (add-to-list 'consult-buffer-sources persp-consult-source)))
-#+end_src
-
-#+begin_src emacs-lisp
-  (use-package burly
-    :ensure t
-    :custom
-    (burly-bookmark-prefix "Project: "))
-#+end_src
 
 ** Symbols
 
@@ -1145,7 +1122,7 @@ Python or Haskell:
      Haskell world seems to be a one-off experiment, or an one-time job then
      abandoned at best. (I'm talking about iCalendar, and there are many other cases).
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package tuareg
     :ensure t)
 
@@ -1176,9 +1153,6 @@ Python or Haskell:
 ** SQL
 
 #+begin_src emacs-lisp
-  (use-package sqlformat
-    :ensure t)
-
   (use-package sql
     :custom
     (sql-postgres-login-params
