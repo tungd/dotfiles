@@ -2,8 +2,8 @@ PortIndex: editors/emacs-dev/Portfile
 	portindex
 
 emacs-dev:
-	curl -LO 'https://codeload.github.com/emacs-mirror/emacs/legacy.tar.gz/7c8d4e96ba6db19bdca20a87bafed024a84eb517?dummy='
-	shasum -a 256 7c8d4e96ba6db19bdca20a87bafed024a84eb517
+	curl -LO 'https://codeload.github.com/emacs-mirror/emacs/legacy.tar.gz/bd86a6c4fde1aa42ea9e8b5434f0cb63f8d52684?dummy='
+	shasum -a 256 bd86a6c4fde1aa42ea9e8b5434f0cb63f8d52684
 	echo 'Latest revision: '
 	echo 'Latest sha: '
 
