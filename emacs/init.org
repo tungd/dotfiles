@@ -1461,8 +1461,7 @@ down compiler error :(.
   (line-number-mode t)
 
   (use-package display-line-numbers
-    :hook ((prog-mode . display-line-numbers-mode)
-           (org-mode . display-line-numbers-mode))
+    :hook (after-init . global-display-line-numbers-mode)
     :custom
     (display-line-numbers-width-start 100))
 #+end_src
