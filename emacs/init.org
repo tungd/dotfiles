@@ -177,9 +177,9 @@ Default key bindings is
   (use-package xref
     :bind (("C-M-p" . xref-find-definitions-other-window)
            ("C-M-g" . xref-go-back))
-    :hook ((xref-after-update . outline-minor-mode)))
-
-  (bind-key* "C-M-." #'xref-find-definitions)
+    :hook ((xref-after-update . outline-minor-mode))
+    :custom
+    (xref-search-program 'ripgrep))
 #+end_src
 
 ** Mini-buffer
