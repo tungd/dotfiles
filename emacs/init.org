@@ -811,9 +811,11 @@ Native LSP support via =Eglot= since Emacs 29.1
     )
 
   (use-package eglot-booster
+    ;:vc (:url "https://github.com/jdtsmith/eglot-booster.git" :branch "main")
+    ;:ensure t
     :after eglot
     :functions eglot-booster-mode
-    :config	(eglot-booster-mode))
+    :config (eglot-booster-mode))
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
@@ -931,7 +933,8 @@ I use auto completion sparingly, using Corfu.
 
 #+begin_src emacs-lisp
   (use-package copilot
-    :load-path "/Users/tung/Projects/dotfiles/emacs/vendor/copilot"
+    :vc (:url "https://github.com/copilot-emacs/copilot.el.git" :branch "main")
+    :ensure t
     :functions copilot-mode
     :bind (("C-j" . copilot-accept-completion))
     :hook ((mhtml-mode . copilot-mode)
@@ -942,7 +945,6 @@ I use auto completion sparingly, using Corfu.
            (tsx-ts-mode . copilot-mode)
            (kotlin-ts-mode . copilot-mode)
            (go-ts-mode . copilot-mode)
-           (go-mode . copilot-mode)
            (python-mode . copilot-mode)))
 #+end_src
 
