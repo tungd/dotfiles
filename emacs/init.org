@@ -99,7 +99,6 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 
 #+begin_src emacs-lisp
   (use-package which-key
-    :ensure t
     :hook (after-init . which-key-mode)
     :config
     (setq which-key-show-early-on-C-h t)
@@ -330,6 +329,11 @@ Buffer location customization
 
 
 * General Editing
+
+#+begin_src emacs-lisp
+  (use-package editorconfig
+    :hook (after-init . editorconfig-mode))
+#+end_src
 
 #+begin_src emacs-lisp
   (use-package undo-fu-session
@@ -820,7 +824,7 @@ Native LSP support via =Eglot= since Emacs 29.1
            (js-ts-mode . lsp)
            (typescript-ts-mode . lsp)
            (tsx-ts-mode . lsp)
-           (go-mode . lsp)
+           (go-ts-mode . lsp)
            (tuareg-mode . lsp)
            (python-mode . lsp)
            (lsp-mode . lsp-enable-which-key-integration))
@@ -880,11 +884,11 @@ Native Tree-sitter support since Emacs 29
     :mode (("\\.ts\\'" . tsx-ts-mode)
            ("\\.tsx\\'" . tsx-ts-mode)))
 
-  ;; (use-package go-ts-mode
-  ;;   :mode (("go.mod$" . go-mod-ts-mode)
-  ;;          ("\\.go\\'" . go-ts-mode))
-  ;;   :custom
-  ;;   (go-ts-mode-indent-offset 2))
+  (use-package go-ts-mode
+    :mode (("go.mod$" . go-mod-ts-mode)
+           ("\\.go\\'" . go-ts-mode))
+    :custom
+    (go-ts-mode-indent-offset 2))
 
   (use-package dockerfile-ts-mode
     :mode ("Dockerfile$" . dockerfile-ts-mode))
