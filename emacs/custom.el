@@ -239,10 +239,10 @@
              eshell-up eshell-z exec-path-from-shell f highlight-indentation
              indent-guide isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit
              markdown-mode markdown-ts-mode minions modus-theme nginx-mode
-             ob-http ob-kotlin ob-plantuml orderless persp-mode protobuf-mode
-             rainbow-mode reason-mode rg scad-mode sqlformat tempel
-             terraform-mode tuareg undo-fu-session vertico visual-regexp vterm
-             vundo))
+             ob-async ob-http ob-kotlin ob-plantuml orderless persp-mode
+             protobuf-mode rainbow-mode reason-mode rg scad-mode sqlformat
+             tempel terraform-mode tuareg undo-fu-session vertico visual-regexp
+             vterm vundo web-mode))
  '(package-vc-selected-packages
    '((eglot-booster :url "https://github.com/jdtsmith/eglot-booster.git" :branch
                     "main")
