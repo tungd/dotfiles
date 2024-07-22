@@ -110,9 +110,9 @@ if {$subport eq $name || $subport eq "emacs-devel" || $subport eq "emacs-app-dev
 
     # do not forget to check that configure hasn't introduce some suprises via
     # git diff [old]..[new] -- '**/configure.ac'
-    github.setup    emacs-mirror emacs f38c42d1c7a8413f63b1e56261850d3dbe8abef8
+    github.setup    emacs-mirror emacs da0165a01e01dcb4334feee03b462ac09ceb0f8c
     epoch           5
-    version         20240714
+    version         20240722
     revision        0
 
     master_sites    ${github.master_sites}
@@ -120,7 +120,7 @@ if {$subport eq $name || $subport eq "emacs-devel" || $subport eq "emacs-app-dev
     # checksums       rmd160  ff0c37c5f8df3e7e0c8c65fdeca086d64a455129 \
     #                 sha256  b8e0ae5ecca0d2f908759dacd00503f2d4e44562443ce2ac6c5f335dc8960f52 \
     #                 size    49660683
-    checksums	sha256 84450ea287eded169e640555b33293993867bd52fa2dd57056a51adaace0c26e
+    checksums	sha256 17dfcb7c0feb278389052ed6b14609bc1a4f5d05ea3709dddde721d2fbc97789
 
     # patchfiles-append \
     #                 patch-allow-powerpc-devel.diff

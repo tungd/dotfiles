@@ -907,7 +907,7 @@ Native Tree-sitter support since Emacs 29
   (use-package yaml-ts-mode
     :mode (("\\.yaml\\'" . yaml-ts-mode)
            ("\\.yml\\'" . yaml-ts-mode)))
-p
+
   (setq
    major-mode-remap-alist
    '((js-mode . js-ts-mode)
