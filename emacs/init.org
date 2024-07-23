@@ -818,13 +818,6 @@ Native LSP support via =Eglot= since Emacs 29.1
     ;; https://www.reddit.com/r/emacs/comments/17jrsmv/comment/k74b3tg/?utm_source=share&utm_medium=web2x&context=3
     ;; (advice-add 'jsonrpc--log-event :override #'ignore)
     )
-
-  (use-package eglot-booster
-    ;:vc (:url "https://github.com/jdtsmith/eglot-booster.git" :branch "main")
-    ;:ensure t
-    :after eglot
-    :functions eglot-booster-mode
-    :config (eglot-booster-mode))
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
