@@ -235,7 +235,7 @@
      "4fda8201465755b403a33e385cf0f75eeec31ca8893199266a6aeccb4adedfa4" default))
  '(package-selected-packages
    '(consult copilot corfu crux csv-mode d2-mode detached diff-hl doom-themes dune
-             editorconfig eglot eglot-booster emmet-mode envrc eshell-toggle
+             editorconfig eglot emmet-mode envrc eshell-toggle
              eshell-up eshell-z exec-path-from-shell f highlight-indentation
              indent-guide isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit
              markdown-mode markdown-ts-mode minions modus-theme nginx-mode
@@ -244,40 +244,10 @@
              terraform-mode tuareg undo-fu-session vertico visual-regexp vterm
              vundo web-mode))
  '(package-vc-selected-packages
-   '((eglot-booster :url "https://github.com/jdtsmith/eglot-booster.git" :branch
-                    "main")
-     (copilot :url "https://github.com/copilot-emacs/copilot.el.git" :branch
-              "main")
-     (lsp-bridge :url "git@github.com:manateelazycat/lsp-bridge.git" :branch
-                 "master" :main-file "lsp-bridge")
-     (combobulate :url "git@github.com:mickeynp/combobulate.git")))
+   '((copilot :url "https://github.com/copilot-emacs/copilot.el.git" :branch
+              "main")))
  '(safe-local-variable-values
-   '((sql-connection-alist
-      (marketing (sql-product 'mysql)
-                 (sql-server "nagagamesmarketing.mysql.database.azure.com")
-                 (sql-default-directory "/kubernetes:fulong-bd4b54b65-47sj8:")))
-     (sql-connection-alist
-      (marketing (sql-product 'mysql) (sql-server "10.1.48.4")
-                 (sql-default-directory "/kubernetes:fulong-bd4b54b65-47sj8:/")))
-     (sql-connection-alist
-      (marketing (sql-product 'mysql)
-                 (sql-server "nagagamesmarketing.mysql.database.azure.com")
-                 (sql-default-directory "/kubernetes:fulong-bd4b54b65-47sj8:/")))
-     (sql-connection-alist
-      (marketing (sql-product 'mysql)
-                 (sql-server "nagagamesmarketing.mysql.database.azure.com")
-                 (default-directory "/kubernetes:fulong-bd4b54b65-47sj8:/")))
-     (sql-connection-alist
-      (marketing (sql-product 'mysql)
-                 (sql-server "nagagamesmarketing.mysql.database.azure.com")
-                 (default-directory "/kubernetes:fulong-bd4b54b65-47sj8:")))
-     (sql-connection-alist quote
-                           ((marketing (sql-product 'mysql)
-                                       (sql-server
-                                        "nagagamesmarketing.mysql.database.azure.com")
-                                       (default-directory
-                                        "/kubernetes:fulong-bd4b54b65-47sj8:"))))
-     (eval setenv "LIBRARY_PATH" "/opt/local/lib/mysql8/mysql")
+   '((eval setenv "LIBRARY_PATH" "/opt/local/lib/mysql8/mysql")
      (eval add-hook 'after-save-hook
            (lambda nil (org-babel-tangle)
              (byte-recompile-file "~/.config/emacs/init.el"))

@@ -1324,7 +1324,7 @@ Org Babel for literate programming and API documentation.
   (use-package ob-python
     :defer t
     :custom
-    (org-babel-python-command "python3"))
+    (org-babel-python-command "python3.12"))
 #+end_src
 
 ** Spell checking
