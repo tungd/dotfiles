@@ -195,6 +195,10 @@ mini-buffer completion framework.
 #+begin_src emacs-lisp
   (ido-mode -1)
 
+  (use-package minibuffer
+    :custom
+    (completion-auto-help 'visible))
+
   (defun td/minibuffer-smart-tilde ()
     (interactive)
     (if (not (looking-back "/" 0))
@@ -205,14 +209,17 @@ mini-buffer completion framework.
 
   (bind-key "~" #'td/minibuffer-smart-tilde minibuffer-local-map)
   (bind-key "<s-backspace>" #'backward-kill-word minibuffer-local-map)
+
+  (bind-key "C-p" #'minibuffer-previous-completion minibuffer-local-map)
+  (bind-key "C-n" #'minibuffer-next-completion minibuffer-local-map)
 #+end_src
 
 Vertico is the next in line for vertical completion.
 
 #+begin_src emacs-lisp
- (use-package vertico
-   :ensure t
-   :hook (after-init . vertico-mode))
+  ;; (use-package vertico
+  ;;   :ensure t
+  ;;   :hook (after-init . vertico-mode))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -916,16 +923,16 @@ Native Tree-sitter support since Emacs 29
 I use auto completion sparingly, using Corfu.
 
 #+begin_src emacs-lisp
-  (use-package corfu
-    :ensure t
-    :hook (after-init . global-corfu-mode)
-    :bind* (:map corfu-map
-                 ("SPC" . corfu-insert-separator)
-                 ("C-n" . corfu-next)
-                 ("C-p" . corfu-previous))
-    :custom
-    (corfu-cycle t)
-    (corfu-echo-documentation 0.1))
+  ;; (use-package corfu
+  ;;   :ensure t
+  ;;   :hook (after-init . global-corfu-mode)
+  ;;   :bind* (:map corfu-map
+  ;;                ("SPC" . corfu-insert-separator)
+  ;;                ("C-n" . corfu-next)
+  ;;                ("C-p" . corfu-previous))
+  ;;   :custom
+  ;;   (corfu-cycle t)
+  ;;   (corfu-echo-documentation 0.1))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1464,7 +1471,8 @@ down compiler error :(.
   (line-number-mode t)
 
   (use-package display-line-numbers
-    :hook (after-init . global-display-line-numbers-mode)
+    :hook ((prog-mode . display-line-numbers-mode)
+           (text-mode . display-line-numbers-mode))
     :custom
     (display-line-numbers-width-start 100))
 #+end_src
