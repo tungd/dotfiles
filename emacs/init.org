@@ -197,7 +197,11 @@ mini-buffer completion framework.
 
   (use-package minibuffer
     :custom
-    (completion-auto-help 'visible))
+    (completion-auto-help 'always)
+    (completion-show-help nil)
+    (completions-max-height 20)
+    (completions-format 'one-column)
+    (completions-detailed t))
 
   (defun td/minibuffer-smart-tilde ()
     (interactive)
@@ -212,6 +216,9 @@ mini-buffer completion framework.
 
   (bind-key "C-p" #'minibuffer-previous-completion minibuffer-local-map)
   (bind-key "C-n" #'minibuffer-next-completion minibuffer-local-map)
+
+  (bind-key "C-p" #'minibuffer-previous-completion completion-in-region-mode-map)
+  (bind-key "C-n" #'minibuffer-next-completion completion-in-region-mode-map)
 #+end_src
 
 Vertico is the next in line for vertical completion.
@@ -1472,7 +1479,7 @@ down compiler error :(.
 
   (use-package display-line-numbers
     :hook ((prog-mode . display-line-numbers-mode)
-           (text-mode . display-line-numbers-mode))
+           (org-mode . display-line-numbers-mode))
     :custom
     (display-line-numbers-width-start 100))
 #+end_src
