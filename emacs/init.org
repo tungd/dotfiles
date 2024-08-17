@@ -128,7 +128,7 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
   (if (boundp 'ns-use-native-fullscreen)
       (setq ns-use-native-fullscreen t))
 
-    (setq trash-directory "~/.Trash"
+  (setq trash-directory "~/.Trash"
         delete-by-moving-to-trash t)
 #+end_src
 
@@ -138,8 +138,8 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 ** File position
 
 #+begin_src emacs-lisp
-(use-package saveplace
-  :hook (after-init . save-place-mode))
+  (use-package saveplace
+    :hook (after-init . save-place-mode))
 #+end_src
 
 ** Projects
@@ -315,7 +315,7 @@ Temporary "focus" on a buffer by maximizing it in the current frame.
 Buffer location customization
 
 #+begin_src emacs-lisp
-  ;(tab-bar-mode t)
+                                          ;(tab-bar-mode t)
 
   (use-package window
     :custom
@@ -600,26 +600,26 @@ Since the template definition is compatible between the 2, I can easily move to
            ("M-*" . tempel-insert)))
 #+end_src
 
-  Tempo integration code for future reference:
+Tempo integration code for future reference:
 
 #+begin_src emacs-lisp :tangle no
-    (defun td/tempo-space-dwim ()
-      (interactive "*")
-      (or (tempo-expand-if-complete) (insert " ")))
+  (defun td/tempo-space-dwim ()
+    (interactive "*")
+    (or (tempo-expand-if-complete) (insert " ")))
 
-    (defun td/tempo-forward-mark-dwim ()
-      (interactive)
-      (or (tempo-forward-mark) (forward-paragraph)))
+  (defun td/tempo-forward-mark-dwim ()
+    (interactive)
+    (or (tempo-forward-mark) (forward-paragraph)))
 
-    (use-package tempo
-      :functions (tempo-define-template tempo-expand-if-complete)
-      :bind (("M-+" . tempo-complete-tag)
-             ("SPC" . td/tempo-space-dwim)
-             ("M-}" . td/tempo-forward-mark-dwim))
-      :custom
-      (tempo-insert-region t)
-      :init
-      (tempo-define-template tempo-expand-if-complete)))
+  (use-package tempo
+    :functions (tempo-define-template tempo-expand-if-complete)
+    :bind (("M-+" . tempo-complete-tag)
+           ("SPC" . td/tempo-space-dwim)
+           ("M-}" . td/tempo-forward-mark-dwim))
+    :custom
+    (tempo-insert-region t)
+    :init
+    (tempo-define-template tempo-expand-if-complete)))
 #+end_src
 
 ** Alignment
@@ -829,6 +829,7 @@ Native LSP support via =Eglot= since Emacs 29.1
     :config
     (add-to-list 'eglot-server-programs '(kotlin-ts-mode "kotlin-language-server"))
     (add-to-list 'eglot-server-programs '(ocaml-ts-mode "ocamllsp"))
+    (add-to-list 'eglot-server-programs '((web-mode :language-id "typescriptreact") "typescript-language-server" "--stdio"))
     ;; https://www.reddit.com/r/emacs/comments/17jrsmv/comment/k74b3tg/?utm_source=share&utm_medium=web2x&context=3
     ;; (advice-add 'jsonrpc--log-event :override #'ignore)
     )
@@ -890,17 +891,70 @@ Native Tree-sitter support since Emacs 29
                 treesit-node-at
                 treesit-node-parent
                 treesit-node-start
-                treesit-node-end)
+                treesit-node-end
+                treesit-node-prev-sibling)
     :config
     (add-to-list 'treesit-extra-load-path "/opt/local/lib")
     (add-to-list 'treesit-language-source-alist '(dockerfile . ("https://github.com/camdencheek/tree-sitter-dockerfile.git")))
     (add-to-list 'treesit-language-source-alist '(kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git")))
     (add-to-list 'treesit-language-source-alist '(org . ("https://github.com/milisims/tree-sitter-org.git")))
-    (add-to-list 'treesit-language-source-alist '(nix . ("https://github.com/nix-community/tree-sitter-nix.git"))))
+    (add-to-list 'treesit-language-source-alist '(nix . ("https://github.com/nix-community/tree-sitter-nix.git")))
+    (add-to-list 'treesit-language-source-alist '(tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src")))
+    (add-to-list 'treesit-language-source-alist '(typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))))
+
+  (defun td/treesit-indent-debug (n p bol)
+    (message
+     "treesit-indent-debug: %s %s %s"
+     n p (treesit-node-prev-sibling n)))
+
+  (defun td/treesit-tag-start (n p bol)
+    (save-excursion
+      (goto-char (treesit-node-start p))
+      (search-forward "<")
+      (- (point) 1)))
+
+  (defun td/treesit-tag-sibling (n p bol)
+    (when treesit--indent-verbose
+      (td/treesit-indent-debug n p bol))
+    (let* ((tag (treesit-parent-until
+                 p
+                 (rx (or "jsx_closing_element" "jsx_element" "jsx_self_closing_element"))))
+           (prev (treesit-node-prev-sibling tag)))
+      (when treesit--indent-verbose
+        (message "tag: %s, prev: %s" tag prev))
+      (cond
+       ((treesit-node-match-p prev (rx "jsx_opening_element"))
+        ;; This is the first child, need to check the parent tag
+        (let ((parent-tag (treesit-parent-until tag "jsx_element")))
+          (+ (td/treesit-tag-start tag parent-tag 0) typescript-ts-mode-indent-offset)))
+       ((treesit-node-match-p tag (rx "jsx_closing_element"))
+        (let ((parent-tag (treesit-parent-until tag "jsx_element")))
+          (td/treesit-tag-start tag parent-tag 0)))
+       (t (save-excursion
+            (goto-char (treesit-node-start prev))
+            (while (and (<= (point) (point-max))
+                        (looking-at (rx (| whitespace control)) t))
+              (forward-char))
+            (point))))))
+
+  (defvar td/tsx-additional-indent-rules
+    '(((match nil "<") td/treesit-tag-sibling 0)
+      ((parent-is "jsx_text") parent-bol 2)
+      ((node-is "jsx_closing_element") td/treesit-tag-start 0)
+      ((match "/" "jsx_self_closing_element") td/treesit-tag-start 0)
+      ((match ">" "jsx_opening_element") td/treesit-tag-start 0)
+      ((parent-is "jsx_opening_element") td/treesit-tag-start 2)
+      ((parent-is "jsx_self_closing_element") td/treesit-tag-start 2)))
+
+  (defun td/fix-tsx-indentation ()
+    (setq-local
+     treesit-simple-indent-rules
+     (list (cons 'tsx (append td/tsx-additional-indent-rules (cdar (typescript-ts-mode--indent-rules 'tsx)))))))
 
   (use-package typescript-ts-mode
-    :mode (("\\.ts\\'" . tsx-ts-mode)
-           ("\\.tsx\\'" . tsx-ts-mode)))
+    :mode (("\\.ts\\'" . typescript-ts-mode)
+           ("\\.tsx\\'" . tsx-ts-mode))
+    :hook ((tsx-ts-mode . td/fix-tsx-indentation)))
 
   (use-package go-ts-mode
     :mode (("go.mod$" . go-mod-ts-mode)
@@ -1131,19 +1185,19 @@ Python or Haskell:
      APNS push packages. It can't be detected until it's shipped to production,
      so it's really bad.
 
- 2. Haskell
-   - Stack breaks.
-   - The compiler is slow, and there's no good story regarding cross-compile. My
-     guess is that the runtime is so sophisticated that it has to be linked to
-     at least libc, hence making producing static binaries much harder.
-   - Lack of production oriented library/framework. It's kind of like with
-     Clojure, the libraries are there and they are excellent, but there is no
-     standard bundle requiring a lot of wiring setting up a project. OCaml has Sihl.
-   - I was told that OCaml is worse than Haskell regarding libraries, but in my
-     experience that is not true. OCaml might have less libraries, but they are
-     much more comprehensive and well-maintained. A lot of the libraries in the
-     Haskell world seems to be a one-off experiment, or an one-time job then
-     abandoned at best. (I'm talking about iCalendar, and there are many other cases).
+   2. Haskell
+      - Stack breaks.
+      - The compiler is slow, and there's no good story regarding cross-compile. My
+        guess is that the runtime is so sophisticated that it has to be linked to
+        at least libc, hence making producing static binaries much harder.
+      - Lack of production oriented library/framework. It's kind of like with
+        Clojure, the libraries are there and they are excellent, but there is no
+        standard bundle requiring a lot of wiring setting up a project. OCaml has Sihl.
+      - I was told that OCaml is worse than Haskell regarding libraries, but in my
+        experience that is not true. OCaml might have less libraries, but they are
+        much more comprehensive and well-maintained. A lot of the libraries in the
+        Haskell world seems to be a one-off experiment, or an one-time job then
+        abandoned at best. (I'm talking about iCalendar, and there are many other cases).
 
 #+begin_src emacs-lisp :tangle no
   (use-package tuareg
