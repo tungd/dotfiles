@@ -100,10 +100,10 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 #+begin_src emacs-lisp
   (use-package which-key
     :hook (after-init . which-key-mode)
-    :config
-    (setq which-key-show-early-on-C-h t)
-    (setq which-key-idle-delay most-positive-fixnum)
-    (setq which-key-idle-secondary-delay 1e-100))
+    :custom
+    (which-key-show-early-on-C-h t)
+    (which-key-idle-delay most-positive-fixnum)
+    (which-key-idle-secondary-delay 1e-100))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -368,20 +368,6 @@ Buffer location customization
   (use-package vundo :ensure t)
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
-  (use-package evil
-    :ensure t
-    :hook (after-init . evil-mode)
-    :custom
-    (evil-cross-lines t)
-    (evil-ex-substitute-global t)
-    (evil-undo-system 'undo-redo))
-
-  (use-package evil-surround
-    :ensure t
-    :hook (evil-mode . global-evil-surround-mode))
-#+end_src
-
 #+begin_src emacs-lisp
   (bind-key [remap zap-to-char] #'zap-up-to-char)
 #+end_src
@@ -405,11 +391,12 @@ Buffer location customization
 Basic settings:
 
 #+begin_src emacs-lisp
-  (setq-default
-   tab-width 2
-   indent-tabs-mode nil
-   require-final-newline t
-   reb-re-syntax 'string)
+    (setq-default
+     tab-width 2
+     indent-tabs-mode nil
+     ;require-final-newline t
+     reb-re-syntax 'string
+     )
 #+end_src
 
 Editing utilities:
@@ -429,9 +416,9 @@ Editing utilities:
            ("C-c C-o" . crux-open-with)
            ([remap kill-line] . crux-smart-kill-line))
     :config
-    (crux-with-region-or-buffer indent-region)
-    (crux-with-region-or-buffer untabify)
-    (crux-with-region-or-point-to-eol kill-ring-save)
+    ;(crux-with-region-or-buffer indent-region)
+    ;(crux-with-region-or-buffer untabify)
+    ;(crux-with-region-or-point-to-eol kill-ring-save)
     (setq kill-do-not-save-duplicates t))
 
   (bind-key* "C-x C-k" #'kill-current-buffer)
@@ -472,12 +459,6 @@ Make the file executable if starting with "shebang":
     ([remap isearch-backward] . isearch-backward-regexp))
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
-  (use-package isearch-mb
-    :ensure t
-    :hook (after-init . isearch-mb-mode))
-#+end_src
-
 #+begin_src emacs-lisp
   (use-package visual-regexp
     :ensure t
@@ -510,7 +491,8 @@ Cleanup whitespaces automatically on save.
     :commands (whitespace-cleanup)
     :hook (before-save . whitespace-cleanup)
     :config
-    (setq whitespace-style (remove 'newline-mark whitespace-style)))
+    ;; (setq whitespace-style (remove 'newline-mark whitespace-style))
+    )
 #+end_src
 
 ** Parenthesis
@@ -528,28 +510,6 @@ the commands. All key bindings are started with =M-s=.
 | =<left>=  | =sp-forward-barf-sexp= | Shrink the pair, the right-most item is put outside |
 
 NOTE: This package is huge, I'm still learning it.
-
-#+begin_src emacs-lisp :tangle no
-  (use-package smartparens
-    :ensure t
-    :hook ((prog-mode . smartparens-mode))
-    :bind (("M-s DEL" . sp-splice-sexp)
-           ("M-S" . sp-rewrap-sexp)
-           ("M-s <right>" . sp-slurp-hybrid-sexp)
-           ("C-S-f" . sp-slurp-hybrid-sexp)
-           ("M-s <left>" . sp-forward-barf-sexp)
-           ("C-M-a" . sp-beginning-of-sexp)
-           ("C-M-e" . sp-end-of-sexp)
-           ("M-K" . sp-kill-sexp)
-           ("M-]" . sp-select-next-thing))
-    :config
-    (sp-pair "{" nil
-             :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
-    (sp-pair "[" nil
-             :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC")))
-    (sp-pair "(" nil
-             :post-handlers '(:add ("||\n[i]" "RET") ("| " "SPC"))))
-#+end_src
 
 #+begin_src emacs-lisp
   (use-package paren
@@ -679,46 +639,6 @@ Tempo integration code for future reference:
 #+begin_src emacs-lisp
   (use-package comint
     :bind ("C-c C-l" . comint-clear-buffer))
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (defun td/detached-notification-function (session)
-    "Issue a notification when SESSION transitions from active to inactive.
-  This function uses the `terminal-notifier' command line utility."
-    (let ((status (detached-session-status session))
-          (host (detached-session-host-name session)))
-      (start-process
-       "terminal-notifier"
-       nil
-       "terminal-notifier"
-       "-sender" "org.gnu.Emacs"
-       "-activate" "org.gnu.Emacs"
-       "-title" (pcase status
-                  ('success (format "Detached finished [%s]" host))
-                  ('failure (format "Detached failed [%s]" host)))
-       "-message" (detached-session-command session))))
-
-  (use-package detached
-    :ensure t
-    :functions (detached-session-command
-                detached-session-host-name
-                detached-session-status)
-    :hook (after-init . detached-init)
-    :bind (([remap async-shell-command] . detached-shell-command)
-           ([remap compile] . detached-compile-compile)
-           ([remap recompile] . detached-compile-recompile)
-           ("C-x C-d" . detached-open-session))
-    :custom
-    (detached-show-output-on-attach t)
-    (detached-notification-function #'td/detached-notification-function))
-
-  (connection-local-set-profile-variables
-   'remote-detached
-   '((detached-shell-program . "/bin/bash")
-     (detached-session-directory . "/tmp/detached")))
-
-  (connection-local-set-profiles
-   '(:application tramp :protocol "ssh") 'remote-detached)
 #+end_src
 
 ** EShell
