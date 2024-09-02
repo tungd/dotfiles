@@ -1,4 +1,4 @@
-COMMIT_HASH := 7811a7d38bb7cb303dc66efa02eb95e75a03f39d
+COMMIT_HASH := 92ea393a16e5c99a8860dab368c6ca3ca6abc3c5
 
 PortIndex: editors/emacs-dev/Portfile
 	portindex
