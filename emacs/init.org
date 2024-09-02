@@ -924,7 +924,7 @@ I use auto completion sparingly, using Corfu.
 
 #+begin_src emacs-lisp
   (use-package copilot
-    :vc (:url "https://github.com/copilot-emacs/copilot.el.git" :branch "main")
+    :vc (:url "https://github.com/copilot-emacs/copilot.el.git" :branch "main" :rev :newest)
     :ensure t
     :functions copilot-mode
     :bind (("C-j" . copilot-accept-completion))
