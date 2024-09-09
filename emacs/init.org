@@ -197,11 +197,12 @@ mini-buffer completion framework.
 
   (use-package minibuffer
     :custom
-    (completion-auto-help 'always)
+    ;; (completion-auto-help 'always)
     (completion-show-help nil)
     (completions-max-height 20)
     (completions-format 'one-column)
-    (completions-detailed t))
+    (completions-detailed t)
+    )
 
   (defun td/minibuffer-smart-tilde ()
     (interactive)
@@ -214,19 +215,19 @@ mini-buffer completion framework.
   (bind-key "~" #'td/minibuffer-smart-tilde minibuffer-local-map)
   (bind-key "<s-backspace>" #'backward-kill-word minibuffer-local-map)
 
-  (bind-key "C-p" #'minibuffer-previous-completion minibuffer-local-map)
-  (bind-key "C-n" #'minibuffer-next-completion minibuffer-local-map)
+  ;; (bind-key "C-p" #'minibuffer-previous-completion minibuffer-local-map)
+  ;; (bind-key "C-n" #'minibuffer-next-completion minibuffer-local-map)
 
-  (bind-key "C-p" #'minibuffer-previous-completion completion-in-region-mode-map)
-  (bind-key "C-n" #'minibuffer-next-completion completion-in-region-mode-map)
+  ;; (bind-key "C-p" #'minibuffer-previous-completion completion-in-region-mode-map)
+  ;; (bind-key "C-n" #'minibuffer-next-completion completion-in-region-mode-map)
 #+end_src
 
 Vertico is the next in line for vertical completion.
 
 #+begin_src emacs-lisp
-  ;; (use-package vertico
-  ;;   :ensure t
-  ;;   :hook (after-init . vertico-mode))
+  (use-package vertico
+    :ensure t
+    :hook (after-init . vertico-mode))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1418,10 +1419,14 @@ Truncate lines:
 Some preferences that I set for all the theme. Per documentation, the custom
 theme named =user= will always have the highest priority.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package doom-themes
     :ensure t
     :init (load-theme 'doom-ayu-mirage t))
+#+end_src
+
+#+begin_src emacs-lisp
+  (load-theme 'modus-vivendi t)
 #+end_src
 
 #+begin_src emacs-lisp

@@ -89,7 +89,8 @@ export PATH=$HOME/.nix-profile/bin:$PATH
 
 
 alias g=git
-alias e=emacsclient -n
+alias e="emacsclient -n"
+alias diff="diff --color -u"
 
 notify() {
   osascript -e "display notification \"$2\" with title \"$1\""
