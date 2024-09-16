@@ -940,6 +940,18 @@ I use auto completion sparingly, using Corfu.
            (python-mode . copilot-mode)))
 #+end_src
 
+#+begin_src emacs-lisp
+  (use-package gptel
+    :ensure t
+    :custom
+    (gptel-model "claude-3-sonnet-20240229")
+    :config
+    (setq gptel-backend
+          (gptel-make-anthropic
+              "Claude"
+            :stream t :key (auth-source-pick-first-password :host "claude" :max 1))))
+#+end_src
+
 ** Error checking
 
 #+begin_src emacs-lisp
