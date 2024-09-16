@@ -235,7 +235,7 @@
      "4fda8201465755b403a33e385cf0f75eeec31ca8893199266a6aeccb4adedfa4" default))
  '(package-selected-packages
    '(consult copilot crux csv-mode d2-mode detached diff-hl dune editorconfig eglot
-             emmet-mode envrc eshell-toggle eshell-up eshell-z evil
+             emmet-mode envrc eshell-toggle eshell-up eshell-z
              exec-path-from-shell f gptel gptel-anthropic highlight-indentation
              indent-guide isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit
              markdown-mode markdown-ts-mode minions modus-theme ob-async ob-http
