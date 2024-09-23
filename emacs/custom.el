@@ -233,6 +233,7 @@
      "02f57ef0a20b7f61adce51445b68b2a7e832648ce2e7efb19d217b6454c1b644"
      "7ea883b13485f175d3075c72fceab701b5bf76b2076f024da50dff4107d0db25"
      "4fda8201465755b403a33e385cf0f75eeec31ca8893199266a6aeccb4adedfa4" default))
+ '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
  '(package-selected-packages
    '(consult copilot crux csv-mode d2-mode detached diff-hl dune editorconfig eglot
              emmet-mode envrc eshell-toggle eshell-up eshell-z
@@ -241,7 +242,8 @@
              markdown-mode markdown-ts-mode minions modus-theme ob-async ob-http
              ob-kotlin ob-plantuml orderless persp-mode protobuf-mode
              rainbow-mode reason-mode rg scad-mode tempel terraform-mode tuareg
-             undo-fu-session vertico visual-regexp vterm vundo web-mode))
+             undo-fu-session vertico visual-regexp vterm vundo web-beautify
+             web-mode))
  '(package-vc-selected-packages
    '((copilot :url "https://github.com/copilot-emacs/copilot.el.git" :branch "main")))
  '(safe-local-variable-values

@@ -430,7 +430,7 @@ Editing utilities:
 
 Create directory for the file if not exists:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (defun td/make-new-directories ()
     (let ((dir (file-name-directory buffer-file-name)))
       (when (and buffer-file-name (not (file-exists-p dir)))
@@ -815,7 +815,6 @@ Native Tree-sitter support since Emacs 29
                 treesit-node-end
                 treesit-node-prev-sibling)
     :config
-    (add-to-list 'treesit-extra-load-path "/opt/local/lib")
     (add-to-list 'treesit-language-source-alist '(dockerfile . ("https://github.com/camdencheek/tree-sitter-dockerfile.git")))
     (add-to-list 'treesit-language-source-alist '(kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git")))
     (add-to-list 'treesit-language-source-alist '(org . ("https://github.com/milisims/tree-sitter-org.git")))
@@ -941,6 +940,9 @@ I use auto completion sparingly, using Corfu.
 #+end_src
 
 #+begin_src emacs-lisp
+  (use-package gptel-anthropic
+    :functions gptel-make-anthropic)
+  (use-package gptel-org)
   (use-package gptel
     :ensure t
     :custom
@@ -1449,7 +1451,7 @@ theme named =user= will always have the highest priority.
    '(font-lock-string-face ((t :slant normal)))
    '(font-lock-constant-face ((t :slant normal)))
 
-   '(line-number ((t :slant normal :foreground nil :inherit font-lock-comment-face)))
+   '(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face)))
    '(line-number-current-line ((t :slant normal)))
    '(fringe ((t :inherit line-number :background unspecified)))
    ;;'(vertical-border ((t :foreground "#000")))

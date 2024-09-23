@@ -7,7 +7,7 @@ PortGroup       active_variants 1.1
 PortGroup       legacysupport 1.1
 legacysupport.newest_darwin_requires_legacy 13
 
-name            emacs-dev
+name            emacs
 categories      editors
 license         GPL-3+
 maintainers     {dports @drkp} {@catap korins.ky:kirill} openmaintainer
@@ -24,8 +24,19 @@ platforms       darwin freebsd
 homepage        https://www.gnu.org/software/emacs/emacs.html
 master_sites    gnu
 
+set rpaths [list]
+
 if {$subport eq $name} {
-    conflicts   emacs-app emacs-app-devel
+    conflicts   emacs-devel
+}
+subport emacs-devel {
+    conflicts   $name
+}
+subport emacs-app {
+    conflicts   emacs-app-devel
+}
+subport emacs-app-devel {
+    conflicts   emacs-app
 }
 
 depends_build-append port:autoconf port:automake port:libtool
@@ -44,18 +55,21 @@ configure.args  --disable-silent-rules \
                 --with-xml2 \
                 --with-modules \
                 --with-sqlite3 \
-                --with-webp \
                 --infodir ${prefix}/share/info/${name}
+
+pre-configure {
+    if {[llength $rpaths] > 0} {
+        configure.ldflags-append "-Wl,-rpath " [join $rpaths " -Wl,-rpath "]
+    }
+}
 
 depends_build-append   port:pkgconfig \
                        port:texinfo
 depends_lib-append     port:gmp \
                        path:lib/pkgconfig/gnutls.pc:gnutls \
-                       port:jansson \
                        port:libxml2 \
                        port:ncurses \
-                       port:sqlite3 \
-                       port:webp
+                       port:sqlite3
 
 compiler.blacklist-append  *gcc-4.0 *gcc-4.2
 
@@ -64,16 +78,11 @@ post-destroot {
     delete ${destroot}${prefix}/bin/ctags
     delete ${destroot}${prefix}/share/man/man1/ctags.1.gz
 
-    # if {$subport eq $name || $subport eq "emacs-devel"} {
-    #     file copy ${filespath}/site-start.el \
-    #         ${destroot}${prefix}/share/emacs/site-lisp/
-    #     reinplace "s|__PREFIX__|${prefix}|g" \
-    #         ${destroot}${prefix}/share/emacs/site-lisp/site-start.el
-
-    #     # avoid conflicts with xemacs
-    #     move ${destroot}${prefix}/bin/etags ${destroot}${prefix}/bin/etags-emacs
-    #     move ${destroot}${prefix}/share/man/man1/etags.1.gz ${destroot}${prefix}/share/man/man1/etags-emacs.1.gz
-    # }
+    if {$subport eq $name || $subport eq "emacs-devel"} {
+        # avoid conflicts with xemacs
+        move ${destroot}${prefix}/bin/etags ${destroot}${prefix}/bin/etags-emacs
+        move ${destroot}${prefix}/share/man/man1/etags.1.gz ${destroot}${prefix}/share/man/man1/etags-emacs.1.gz
+    }
 }
 
 platform darwin {
@@ -94,36 +103,33 @@ platform darwin {
     }
 }
 
-# if {$subport eq $name || $subport eq "emacs-app"} {
-#     version         29.3
-#     revision        0
-#     checksums       rmd160  74592d7dba2f02b2d827a74b5a5aa5e2077fc73f \
-#                     sha256  2de8df5cab8ac697c69a1c46690772b0cf58fe7529f1d1999582c67d927d22e4 \
-#                     size    78508272
+if {$subport eq $name || $subport eq "emacs-app"} {
+    version         29.4
+    revision        1
+    checksums       rmd160  b32b86be6f600ba745ad023efd7238088dfa5952 \
+                    sha256  1adb1b9a2c6cdb316609b3e86b0ba1ceb523f8de540cfdda2aec95b6a5343abf \
+                    size    78519074
 
-#     patchfiles-append \
-#                     patch-allow-powerpc.diff
-# }
+    patchfiles-append \
+                    patch-allow-powerpc.diff
+}
 
-if {$subport eq $name || $subport eq "emacs-devel" || $subport eq "emacs-app-devel"} {
+if {$subport eq "emacs-devel" || $subport eq "emacs-app-devel"} {
     PortGroup       github 1.0
 
     # do not forget to check that configure hasn't introduce some suprises via
     # git diff [old]..[new] -- '**/configure.ac'
-    github.setup    emacs-mirror emacs f27553c30a772a0103d2e6762e4d7f588f302e4b
+    github.setup    emacs-mirror emacs 3fb966dc6392e1908304a1b6fe481da9f670cfbb
     epoch           5
-    version         20240916
+    version         20240923
     revision        0
 
     master_sites    ${github.master_sites}
 
-    # checksums       rmd160  ff0c37c5f8df3e7e0c8c65fdeca086d64a455129 \
-    #                 sha256  b8e0ae5ecca0d2f908759dacd00503f2d4e44562443ce2ac6c5f335dc8960f52 \
-    #                 size    49660683
-    checksums	sha256 7f9ddb5137085929ddf46193691d4e88dc310f4af24529da68cf3c95751e56ec
+    checksums       sha256  32750c8b54b5b79ead0c80745e035885a8efd070ae2632bad666ca151ebb6112
 
-    # patchfiles-append \
-    #                 patch-allow-powerpc-devel.diff
+    patchfiles-append \
+                    patch-allow-powerpc-devel.diff
 
     pre-configure {
         system -W ${worksrcpath} "sh ./autogen.sh"
@@ -132,8 +138,8 @@ if {$subport eq $name || $subport eq "emacs-devel" || $subport eq "emacs-app-dev
     livecheck.type none
 
     if {[variant_isset nativecomp]} {
-        notes "Devel subport of emacs not always keep compatibility for native \
- compiled files, better to cleanup your ~/.emacs.d/.local/cache/eln"
+        notes "emacs devel subports don't always keep compatibility for native\
+ compiled files. Better to cleanup your ~/.emacs.d/.local/cache/eln"
     }
 } else {
     livecheck.type  regex
@@ -141,86 +147,86 @@ if {$subport eq $name || $subport eq "emacs-devel" || $subport eq "emacs-app-dev
     livecheck.regex ${name}-(\\d+\\.\\d+\\w*)\\.tar
 }
 
-# if {$subport eq $name || $subport eq "emacs-devel"} {
-#     PortGroup  muniversal 1.0
+if {$subport eq $name || $subport eq "emacs-devel"} {
+    PortGroup  muniversal 1.0
 
-#     variant x11 description {Builds emacs as a X11 program with Lucid widgets} {
-#         configure.args-delete   --without-x
-#         configure.args-append   --with-x-toolkit=lucid \
-#             --without-xaw3d \
-#             --without-imagemagick \
-#             --with-xpm \
-#             --with-jpeg \
-#             --with-tiff \
-#             --with-gif \
-#             --with-png \
-#             --with-lcms2 \
-#             --without-rsvg \
-#             --with-xft
-#         depends_lib-append      port:xorg-libXmu \
-#             port:xorg-libXaw \
-#             port:xpm \
-#             path:include/turbojpeg.h:libjpeg-turbo \
-#             port:tiff \
-#             port:giflib \
-#             port:libpng \
-#             port:lcms2 \
-#             port:Xft2 \
-#             path:lib/pkgconfig/harfbuzz.pc:harfbuzz
+    variant x11 description {Builds emacs as a X11 program with Lucid widgets} {
+        configure.args-delete   --without-x
+        configure.args-append   --with-x-toolkit=lucid \
+            --without-xaw3d \
+            --without-imagemagick \
+            --with-xpm \
+            --with-jpeg \
+            --with-tiff \
+            --with-gif \
+            --with-png \
+            --with-lcms2 \
+            --without-rsvg \
+            --with-xft
+        depends_lib-append      port:xorg-libXmu \
+            port:xorg-libXaw \
+            port:xpm \
+            path:include/turbojpeg.h:libjpeg-turbo \
+            port:tiff \
+            port:giflib \
+            port:libpng \
+            port:lcms2 \
+            port:Xft2 \
+            path:lib/pkgconfig/harfbuzz.pc:harfbuzz
 
-#         # autoconf appears to be dropping linker flags for freetype &
-#         # fontconfig; work around this. See #28083
-#         configure.ldflags-append -lfreetype -lfontconfig
-#     }
+        # autoconf appears to be dropping linker flags for freetype &
+        # fontconfig; work around this. See #28083
+        configure.ldflags-append -lfreetype -lfontconfig
+    }
 
-#     variant motif requires x11 description {Builds emacs as an X11 program with Motif widgets} {
-#         configure.args-delete   --with-x-toolkit=lucid
-#         configure.args-append   --with-x-toolkit=motif
-#         depends_lib-append      lib:libXm:openmotif
-#     }
+    variant motif requires x11 description {Builds emacs as an X11 program with Motif widgets} {
+        configure.args-delete   --with-x-toolkit=lucid
+        configure.args-append   --with-x-toolkit=motif
+        depends_lib-append      lib:libXm:openmotif
+    }
 
-#     variant gtk requires x11 description {Builds emacs as an X11 program with GTK+3 widgets} {
-#         configure.args-delete   --with-x-toolkit=lucid
-#         configure.args-delete   --without-gconf
-#         configure.args-delete   --without-rsvg
-#         configure.args-append   --with-x-toolkit=gtk3
-#         configure.args-append   --with-gconf
-#         configure.args-append   --with-rsvg
-#         depends_lib-append      path:lib/pkgconfig/gtk+-3.0.pc:gtk3 \
-#                                 path:lib/pkgconfig/glib-2.0.pc:glib2 \
-#                                 port:gconf \
-#                                 path:lib/pkgconfig/librsvg-2.0.pc:librsvg
-#         # see #21917
-#         require_active_variants gtk2 x11
-#     }
+    variant gtk requires x11 description {Builds emacs as an X11 program with GTK+3 widgets} {
+        configure.args-delete   --with-x-toolkit=lucid
+        configure.args-delete   --without-gconf
+        configure.args-delete   --without-rsvg
+        configure.args-append   --with-x-toolkit=gtk3
+        configure.args-append   --with-gconf
+        configure.args-append   --with-rsvg
+        depends_lib-append      path:lib/pkgconfig/gtk+-3.0.pc:gtk3 \
+                                path:lib/pkgconfig/glib-2.0.pc:glib2 \
+                                port:gconf \
+                                path:lib/pkgconfig/librsvg-2.0.pc:librsvg
+        # see #21917
+        require_active_variants gtk2 x11
+    }
 
-#     # imagemagick variant requires either x11 or quartz, so we have to
-#     # define it twice; see #53315
-#     variant imagemagick requires x11 description {Use ImageMagick} {
-#         depends_lib-append  port:ImageMagick
-#         configure.args-append --with-imagemagick
-#     }
+    # imagemagick variant requires either x11 or quartz, so we have to
+    # define it twice; see #53315
+    variant imagemagick requires x11 description {Use ImageMagick} {
+        depends_lib-append  port:ImageMagick
+        configure.args-append --with-imagemagick
+    }
 
-#     variant dbus description {Builds emacs with D-Bus support} {
-#         # our dbus is autolaunched by launchd, so disable the check that it's running
-#         patchfiles-append        patch-src_dbusbind.c.diff
-#         configure.args-delete    --without-dbus
-#         configure.args-append    --with-dbus
-#         depends_lib-append       port:dbus
-#     }
+    variant dbus description {Builds emacs with D-Bus support} {
+        # our dbus is autolaunched by launchd, so disable the check that it's running
+        patchfiles-append        patch-src_dbusbind.c.diff
+        configure.args-delete    --without-dbus
+        configure.args-append    --with-dbus
+        depends_lib-append       port:dbus
+    }
 
-#     variant xwidgets requires gtk description {Enable use of xwidgets in Emacs buffers} {
-#         configure.args-append  --with-xwidgets
-#     }
+    variant xwidgets requires gtk description {Enable use of xwidgets in Emacs buffers} {
+        configure.args-append  --with-xwidgets
+    }
 
-#     post-destroot {
-#         xinstall -m 0755 -d ${destroot}${prefix}/include/emacs
-#         xinstall -m 0644 ${worksrcpath}/src/emacs-module.h \
-#             ${destroot}${prefix}/include/emacs
-#     }
-# }
+    post-destroot {
+        xinstall -m 0755 -d ${destroot}${prefix}/include/emacs
+        xinstall -m 0644 ${worksrcpath}/src/emacs-module.h \
+            ${destroot}${prefix}/include/emacs
+    }
+}
 
-if {$subport eq $name || $subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
+if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
     categories-append   aqua
 
     configure.args-append  --with-ns \
@@ -275,18 +281,23 @@ if {$subport eq $name || $subport eq "emacs-app" || $subport eq "emacs-app-devel
 }
 
 variant nativecomp description {Builds emacs with native compilation support} {
-    set gcc_v                      13
+    set gcc_v                      14
     depends_lib-append             port:gcc${gcc_v}
     configure.args-append          --with-native-compilation=aot
     compiler.cpath-prepend         ${prefix}/include/gcc${gcc_v}
     compiler.library_path-prepend  ${prefix}/lib/gcc${gcc_v}
-    configure.ldflags-append       "-Wl,-rpath ${prefix}/lib/gcc${gcc_v}"
+    lappend rpaths                 ${prefix}/lib/gcc${gcc_v}
 }
 
 variant treesitter description {Builds emacs with tree-sitter support} {
     configure.args-delete   --without-tree-sitter
     configure.args-append   --with-tree-sitter
-    depends_lib-append  port:tree-sitter
+    depends_lib-append      port:tree-sitter
+
+    if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
+        lappend rpaths ${prefix}/lib
+    }
+
     depends_run-append \
         port:tree-sitter-typescript \
         port:tree-sitter-javascript \
@@ -313,8 +324,15 @@ variant treesitter description {Builds emacs with tree-sitter support} {
             port:tree-sitter-html \
             port:tree-sitter-heex \
             port:tree-sitter-elixir \
-            port:tree-sitter-lua
+            port:tree-sitter-lua \
+            port:tree-sitter-php
     }
+
+    notes-append "
+To install tree-sitter grammar libraries not required by built-in *-ts-modes,\
+please use M-x treesit-install-language-grammar. For details, please refer to\
+etc/NEWS or the Emacs Lisp reference manual.
+"
 }
 
 default_variants-append     +treesitter
