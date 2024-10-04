@@ -267,10 +267,16 @@ Vertico is the next in line for vertical completion.
 
 #+begin_src emacs-lisp
   (bind-key* "C-;" #'execute-extended-command)
-
-  ;; (bind-key* "C-l" 'ctl-x-map)
-
   (global-set-key (kbd "C-l") ctl-x-map)
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package avy
+    :ensure t
+    :custom
+    (avy-background t)
+    :config
+    (bind-key* "C-'" 'avy-goto-char))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -374,6 +380,10 @@ Buffer location customization
 #+end_src
 
 #+begin_src emacs-lisp
+  (bind-key* "C-c C-d" #'duplicate-dwim)
+#+end_src
+
+#+begin_src emacs-lisp
   (use-package uniquify
     :custom
     (uniquify-buffer-name-style 'forward))
@@ -395,9 +405,7 @@ Basic settings:
     (setq-default
      tab-width 2
      indent-tabs-mode nil
-     ;require-final-newline t
-     reb-re-syntax 'string
-     )
+     reb-re-syntax 'string)
 #+end_src
 
 Editing utilities:
@@ -407,7 +415,7 @@ Editing utilities:
     :ensure t
     :hook (after-init . crux-reopen-as-root-mode)
     :bind (;; There's a built-in `switch-to-prev-buffer', but it is less helpful
-           ;; since it is not allowing me to quickly switch between the most
+           ;; since it doesn't allow me to quickly switch between the most
            ;; recent buffers
            ("M-C-]" . crux-switch-to-previous-buffer)
            ("M-J" . join-line)
@@ -776,12 +784,6 @@ Native LSP support via =Eglot= since Emacs 29.1
     (lsp-enable-symbol-highlighting nil))
 #+end_src
 
-#+begin_src emacs-lisp
-  (use-package eldoc
-    :config
-    (setq eldoc-display-functions '(eldoc-display-in-buffer)))
-#+end_src
-
 Native Tree-sitter support since Emacs 29
 
 #+begin_src emacs-lisp
@@ -947,6 +949,7 @@ I use auto completion sparingly, using Corfu.
     :ensure t
     :custom
     (gptel-model "claude-3-sonnet-20240229")
+    (gptel-default-mode 'org-mode)
     :config
     (setq gptel-backend
           (gptel-make-anthropic
@@ -1387,7 +1390,7 @@ bold and ligatures support :(.
    default-frame-alist
    `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
-     (font . "Monaco 14")
+     (font . "Iosevka SS07 16")
      ;; (font . "JetBrains Mono NL 14")
      ;; (font . "Agave 16")
      ;; (font . "Ubuntu Mono 16")
@@ -1471,7 +1474,7 @@ down compiler error :(.
   (line-number-mode t)
 
   (use-package display-line-numbers
-    :hook ((prog-mode . display-line-numbers-mode)
+    :hook ((after-init . display-line-numbers-mode)
            (org-mode . display-line-numbers-mode))
     :custom
     (display-line-numbers-width-start 100))
