@@ -110,6 +110,12 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
   (setq enable-recursive-minibuffers t)
 #+end_src
 
+#+begin_src emacs-lisp
+  (use-package desktop
+    :hook ((after-init . desktop-save-mode)
+           (after-init . desktop-read)))
+#+end_src
+
 ** Server
 
 #+begin_src emacs-lisp
@@ -380,7 +386,21 @@ Buffer location customization
 #+end_src
 
 #+begin_src emacs-lisp
-  (bind-key* "C-c C-d" #'duplicate-dwim)
+  (defun td/duplicate-line ()
+    "Duplicate current line"
+    (interactive)
+    (let ((column (- (point) (line-beginning-position)))
+          (line (let ((s (thing-at-point 'line t)))
+                  (if s (string-remove-suffix "\n" s) ""))))
+      (move-end-of-line 1)
+      (newline)
+      (insert line)
+      (move-beginning-of-line 1)
+      (forward-char column)))
+
+  ;; Not sure why C-M-d didn't work, it wasn't bind to anything and I press it
+  ;; Emacs doesn't receive it at all
+  (bind-key* "C-c C-d" #'td/duplicate-line)
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1474,7 +1494,7 @@ down compiler error :(.
   (line-number-mode t)
 
   (use-package display-line-numbers
-    :hook ((after-init . display-line-numbers-mode)
+    :hook ((prog-mode . display-line-numbers-mode)
            (org-mode . display-line-numbers-mode))
     :custom
     (display-line-numbers-width-start 100))
