@@ -433,7 +433,6 @@ Editing utilities:
 #+begin_src emacs-lisp
   (use-package crux
     :ensure t
-    :hook (after-init . crux-reopen-as-root-mode)
     :bind (;; There's a built-in `switch-to-prev-buffer', but it is less helpful
            ;; since it doesn't allow me to quickly switch between the most
            ;; recent buffers
@@ -454,17 +453,6 @@ Editing utilities:
   (bind-key* "C-c r" #'rename-visited-file)
   (bind-key* "s-n" #'next-buffer)
   (bind-key* "s-p" #'previous-buffer)
-#+end_src
-
-Create directory for the file if not exists:
-
-#+begin_src emacs-lisp :tangle no
-  (defun td/make-new-directories ()
-    (let ((dir (file-name-directory buffer-file-name)))
-      (when (and buffer-file-name (not (file-exists-p dir)))
-        (make-directory dir t))))
-
-  (add-to-list 'find-file-not-found-functions #'td/make-new-directories)
 #+end_src
 
 Make the file executable if starting with "shebang":
@@ -770,6 +758,7 @@ Native LSP support via =Eglot= since Emacs 29.1
     :bind ("C-c C-a" . eglot-code-actions)
     :custom
     (eglot-autoshutdown t)
+    (eglot-prefer-plaintext t)
     (eglot-connect-timeout 300)
     (eglot-ignored-server-capabilities '(:documentFormattingProvider
                                          :documentRangeFormattingProvider
@@ -802,6 +791,12 @@ Native LSP support via =Eglot= since Emacs 29.1
     (lsp-enable-indentation nil)
     (lsp-enable-on-type-formatting nil)
     (lsp-enable-symbol-highlighting nil))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package eldoc
+    :config
+    (setq eldoc-display-functions '(eldoc-display-in-buffer)))
 #+end_src
 
 Native Tree-sitter support since Emacs 29
@@ -998,6 +993,7 @@ built-in VC has great support for git but Magit is godsend.
     :bind ("C-x p v" . magit)
     :custom
     (magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
+    (magit-show-long-lines-warning nil)
     :config
     (remove-hook 'server-switch-hook 'magit-commit-diff)
     (remove-hook 'with-editor-filter-visit-hook 'magit-commit-diff))
@@ -1495,7 +1491,8 @@ down compiler error :(.
 
   (use-package display-line-numbers
     :hook ((prog-mode . display-line-numbers-mode)
-           (org-mode . display-line-numbers-mode))
+           (org-mode . display-line-numbers-mode)
+           (conf-mode . display-line-numbers-mode))
     :custom
     (display-line-numbers-width-start 100))
 #+end_src
@@ -1545,6 +1542,7 @@ kind of distracting, but it is really helpful sometimes.
   (use-package dired
     :custom
     (dired-recursive-deletes 'always)
+    (dired-listing-switches "-lah")
     (dired-auto-revert-buffer t))
 #+end_src
 
