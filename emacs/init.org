@@ -652,59 +652,6 @@ Tempo integration code for future reference:
     :bind ("C-c C-l" . comint-clear-buffer))
 #+end_src
 
-** EShell
-
-#+begin_src emacs-lisp
-  (use-package eshell-toggle
-    :ensure t
-    :bind* (("C-c C-s" . eshell-toggle))
-    :custom
-    (eshell-toggle-use-git-root t))
-
-  (use-package eshell-up
-    :ensure t
-    :functions eshell-up
-    :defer t
-    :config
-    (defalias 'eshell/up 'eshell-up))
-
-  (use-package eshell-z
-    :ensure t
-    :functions eshell/z
-    :defer t)
-
-  ;; (use-package eshell-vterm
-  ;;   :ensure t
-  ;;   :defer t
-  ;;   :hook (after-init . eshell-vterm-mode))
-
-  (defun td/eshell-pwd ()
-    (replace-regexp-in-string
-     (regexp-quote (expand-file-name "~"))
-     "~"
-     (eshell/pwd)))
-
-  (defun td/eshell-prompt ()
-    (format
-     "\n%s@%s in %s\n%s "
-     (propertize user-login-name 'face '(:foreground "#dc322f"))
-     (propertize (or (getenv "HOST") (system-name)) 'face '(:foreground "#b58900"))
-     (propertize (td/eshell-pwd) 'face '(:foreground "#859900"))
-     (if (= (user-uid) 0)
-         (propertize "#" 'face '(:foreground "red")) "$")))
-
-  (use-package eshell
-    :functions (eshell/pwd)
-    :custom
-    (eshell-prompt-function #'td/eshell-prompt)
-    (eshell-prompt-regexp "^[^#$\\n]*[#$] ")
-    (eshell-highlight-prompt nil)
-    (eshell-scroll-to-bottom-on-input t)
-    :config
-    (defalias 'eshell/e #'find-file)
-    (with-eval-after-load "crux"
-      (defalias 'eshell/open #'crux-open-with)))
-#+end_src
 
 ** Tramp
 

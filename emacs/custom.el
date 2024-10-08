@@ -236,14 +236,13 @@
  '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
  '(package-selected-packages
    '(avy consult copilot crux csv-mode d2-mode detached diff-hl dune editorconfig
-         eglot emmet-mode envrc eshell-toggle eshell-up eshell-z
-         exec-path-from-shell f gptel gptel-anthropic highlight-indentation
-         indent-guide isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit
-         markdown-mode markdown-ts-mode minions modus-theme ob-async ob-http
-         ob-kotlin ob-plantuml ob-redis orderless persp-mode protobuf-mode
-         rainbow-mode reason-mode redis rg scad-mode surround tempel
-         terraform-mode tuareg undo-fu-session vertico visual-regexp vterm vundo
-         web-beautify web-mode))
+         eglot emmet-mode envrc exec-path-from-shell f gptel gptel-anthropic
+         highlight-indentation indent-guide isearch-mb kotlin-mode
+         kotlin-ts-mode lua-mode magit markdown-mode markdown-ts-mode minions
+         modus-theme ob-async ob-http ob-kotlin ob-plantuml ob-redis orderless
+         persp-mode protobuf-mode rainbow-mode reason-mode redis rg scad-mode
+         surround tempel terraform-mode tuareg undo-fu-session vertico
+         visual-regexp vterm vundo web-beautify web-mode))
  '(package-vc-selected-packages
    '((copilot :url "https://github.com/copilot-emacs/copilot.el.git" :branch "main")))
  '(safe-local-variable-values
