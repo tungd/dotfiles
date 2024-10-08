@@ -241,9 +241,9 @@
          indent-guide isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit
          markdown-mode markdown-ts-mode minions modus-theme ob-async ob-http
          ob-kotlin ob-plantuml ob-redis orderless persp-mode protobuf-mode
-         rainbow-mode reason-mode redis rg scad-mode tempel terraform-mode
-         tuareg undo-fu-session vertico visual-regexp vterm vundo web-beautify
-         web-mode))
+         rainbow-mode reason-mode redis rg scad-mode surround tempel
+         terraform-mode tuareg undo-fu-session vertico visual-regexp vterm vundo
+         web-beautify web-mode))
  '(package-vc-selected-packages
    '((copilot :url "https://github.com/copilot-emacs/copilot.el.git" :branch "main")))
  '(safe-local-variable-values

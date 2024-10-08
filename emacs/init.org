@@ -514,19 +514,7 @@ Cleanup whitespaces automatically on save.
 
 ** Parenthesis
 
-Parenthesis come in pairs, that's why they are cumbersome to deal with. Better
-use =smart-parens= to manage them. However the command name use words from an
-arcane language :(, so I put together a table of human-readable description of
-the commands. All key bindings are started with =M-s=.
-
-| Bindings  | Command                | Description                                         |
-|-----------+------------------------+-----------------------------------------------------|
-| =DEL=     | =sp-splice-sexp=       | Delete surrounding pair                             |
-| =M-S=     | =sp-rewrap-sexp=       | Replace the surrounding pair                        |
-| =<right>= | =sp-slurp-hybrid-sexp= | Extend the pair to include items to the right       |
-| =<left>=  | =sp-forward-barf-sexp= | Shrink the pair, the right-most item is put outside |
-
-NOTE: This package is huge, I'm still learning it.
+Parenthesis come in pairs, that's why they are cumbersome to deal with.
 
 #+begin_src emacs-lisp
   (use-package paren
@@ -537,6 +525,12 @@ NOTE: This package is huge, I'm still learning it.
 
   (use-package elec-pair
     :hook (after-init . electric-pair-mode))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package surround
+    :ensure t
+    :bind-keymap ("M-s" . surround-keymap))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -740,16 +734,10 @@ Some speedup for Tramp:
 Native LSP support via =Eglot= since Emacs 29.1
 
 #+begin_src emacs-lisp
-  ;; https://github.com/fwcd/kotlin-language-server/blob/main/TROUBLESHOOTING.md
-  (setenv "JAVA_OPTS" "-Xmx4g")
-#+end_src
-
-#+begin_src emacs-lisp
   (setq read-process-output-max (* 8 1024 1024))
 
   (use-package eglot
-    :hook ((kotlin-ts-mode . eglot-ensure)
-           (js-ts-mode . eglot-ensure)
+    :hook ((js-ts-mode . eglot-ensure)
            (typescript-ts-mode . eglot-ensure)
            (tsx-ts-mode . eglot-ensure)
            (go-ts-mode . eglot-ensure)
@@ -765,32 +753,11 @@ Native LSP support via =Eglot= since Emacs 29.1
                                          :documentOnTypeFormattingProvider
                                          :documentHighlightProvider))
     :config
-    (add-to-list 'eglot-server-programs '(kotlin-ts-mode "kotlin-language-server"))
     (add-to-list 'eglot-server-programs '(ocaml-ts-mode "ocamllsp"))
     (add-to-list 'eglot-server-programs '((web-mode :language-id "typescriptreact") "typescript-language-server" "--stdio"))
     ;; https://www.reddit.com/r/emacs/comments/17jrsmv/comment/k74b3tg/?utm_source=share&utm_medium=web2x&context=3
     ;; (advice-add 'jsonrpc--log-event :override #'ignore)
     )
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (use-package lsp-mode
-    :ensure t
-    :commands lsp
-    :hook ((kotlin-ts-mode . lsp)
-           (js-ts-mode . lsp)
-           (typescript-ts-mode . lsp)
-           (tsx-ts-mode . lsp)
-           (go-ts-mode . lsp)
-           (tuareg-mode . lsp)
-           (python-mode . lsp)
-           (lsp-mode . lsp-enable-which-key-integration))
-    :custom
-    (lsp-keymap-prefix "C-c l")
-    (lsp-headerline-breadcrumb-enable nil)
-    (lsp-enable-indentation nil)
-    (lsp-enable-on-type-formatting nil)
-    (lsp-enable-symbol-highlighting nil))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -832,10 +799,8 @@ Native Tree-sitter support since Emacs 29
                 treesit-node-end
                 treesit-node-prev-sibling)
     :config
-    (add-to-list 'treesit-language-source-alist '(dockerfile . ("https://github.com/camdencheek/tree-sitter-dockerfile.git")))
     (add-to-list 'treesit-language-source-alist '(kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git")))
     (add-to-list 'treesit-language-source-alist '(org . ("https://github.com/milisims/tree-sitter-org.git")))
-    (add-to-list 'treesit-language-source-alist '(nix . ("https://github.com/nix-community/tree-sitter-nix.git")))
     (add-to-list 'treesit-language-source-alist '(tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src")))
     (add-to-list 'treesit-language-source-alist '(typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))))
 
@@ -899,13 +864,6 @@ Native Tree-sitter support since Emacs 29
     :custom
     (go-ts-mode-indent-offset 2))
 
-  (use-package dockerfile-ts-mode
-    :mode ("Dockerfile$" . dockerfile-ts-mode))
-
-  (use-package yaml-ts-mode
-    :mode (("\\.yaml\\'" . yaml-ts-mode)
-           ("\\.yml\\'" . yaml-ts-mode)))
-
   (setq
    major-mode-remap-alist
    '((js-mode . js-ts-mode)
@@ -918,20 +876,7 @@ Native Tree-sitter support since Emacs 29
 
 ** Auto completion
 
-I use auto completion sparingly, using Corfu.
-
-#+begin_src emacs-lisp
-  ;; (use-package corfu
-  ;;   :ensure t
-  ;;   :hook (after-init . global-corfu-mode)
-  ;;   :bind* (:map corfu-map
-  ;;                ("SPC" . corfu-insert-separator)
-  ;;                ("C-n" . corfu-next)
-  ;;                ("C-p" . corfu-previous))
-  ;;   :custom
-  ;;   (corfu-cycle t)
-  ;;   (corfu-echo-documentation 0.1))
-#+end_src
+I use auto completion sparingly.
 
 #+begin_src emacs-lisp
   (use-package dabbrev
@@ -1080,7 +1025,7 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 
 #+begin_src emacs-lisp
   (use-package js
-    :mode (("\\.eslintrc$" . js-ts-mode))
+    :mode (("\\.eslintrc$" . json-ts-mode))
     :config
     (setq js-indent-level 2
           js-indent-first-init 'dynamic
@@ -1089,30 +1034,6 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 #+end_src
 
 ** Python
-
-** Haskell
-
-I'm also a Haskell beginner :). Setting up Haskell with Emacs is relatively
-easy. There's also a catch-all IDE-like mode called =intero=, by the very
-same folk who runs =stack=.
-
-#+begin_src emacs-lisp :tangle no
-  (use-package haskell-mode
-    :ensure t
-    :mode (("\\.hs\\'" . haskell-mode))
-    :hook ((haskell-mode . copilot-mode)
-           (haskell-mode . eglot-ensure))
-    :bind (([remap haskell-mode-format-imports] . haskell-sort-imports))
-    :custom
-    (haskell-program-name "cabal repl"))
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (use-package lsp-haskell
-    :ensure t
-    :custom
-    (lsp-haskell-server-path "haskell-language-server-wrapper"))
-#+end_src
 
 ** OCaml
 
@@ -1492,6 +1413,7 @@ down compiler error :(.
   (use-package display-line-numbers
     :hook ((prog-mode . display-line-numbers-mode)
            (org-mode . display-line-numbers-mode)
+           (yaml-mode . display-line-numbers-mode)
            (conf-mode . display-line-numbers-mode))
     :custom
     (display-line-numbers-width-start 100))
