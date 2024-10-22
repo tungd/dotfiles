@@ -60,7 +60,7 @@ Personal information that some package use:
 #+begin_src emacs-lisp
   (setopt user-full-name "Tung Dao"
           user-mail-address "me@tungdao.com"
-          default-input-method 'vietnamese-telex)
+          default-input-method "vietnamese-telex")
   (defvar personal-keybindings nil)
 #+end_src
 
@@ -166,6 +166,12 @@ still some missing features coming from =projectile=, but I can live with that.
     :commands (project-find-file project-vc-dir project-current))
 #+end_src
 
+#+begin_src emacs-lisp
+  (use-package rg
+    :ensure t
+    :bind ("C-c s" . rg-menu))
+#+end_src
+
 ** Workspace
 
 Perspective.el is nice, especially the narrowed down buffer list, however
@@ -253,7 +259,7 @@ Vertico is the next in line for vertical completion.
            ("M-g y" . consult-yank-from-kill-ring)
            ("M-g t" . consult-theme)
            ("M-g m" . consult-mode-command)
-           ("M-g r" . consult-ripgrep)
+           ;("M-g r" . consult-ripgrep)
            ([remap goto-line] . consult-goto-line)
            ([remap switch-to-buffer] . consult-buffer)
            ([remap imenu] . consult-imenu))
@@ -697,12 +703,13 @@ Native LSP support via =Eglot= since Emacs 29.1
                                          :documentRangeFormattingProvider
                                          :documentOnTypeFormattingProvider
                                          :documentHighlightProvider))
+    (eglot-send-changes-idle-time 0.1)
+    (eglot-extend-to-xref t)
     :config
     (add-to-list 'eglot-server-programs '(ocaml-ts-mode "ocamllsp"))
     (add-to-list 'eglot-server-programs '((web-mode :language-id "typescriptreact") "typescript-language-server" "--stdio"))
     ;; https://www.reddit.com/r/emacs/comments/17jrsmv/comment/k74b3tg/?utm_source=share&utm_medium=web2x&context=3
-    ;; (advice-add 'jsonrpc--log-event :override #'ignore)
-    )
+    (advice-add 'jsonrpc--log-event :override #'ignore))
 #+end_src
 
 #+begin_src emacs-lisp
