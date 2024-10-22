@@ -394,21 +394,11 @@ Buffer location customization
 #+end_src
 
 #+begin_src emacs-lisp
-  (defun td/duplicate-line ()
-    "Duplicate current line"
-    (interactive)
-    (let ((column (- (point) (line-beginning-position)))
-          (line (let ((s (thing-at-point 'line t)))
-                  (if s (string-remove-suffix "\n" s) ""))))
-      (move-end-of-line 1)
-      (newline)
-      (insert line)
-      (move-beginning-of-line 1)
-      (forward-char column)))
-
-  ;; Not sure why C-M-d didn't work, it wasn't bind to anything and I press it
-  ;; Emacs doesn't receive it at all
-  (bind-key* "C-c C-d" #'td/duplicate-line)
+  (use-package misc
+    :custom
+    (duplicate-line-final-position -1)
+    :bind*
+    ("C-c C-d" . duplicate-dwim))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -875,9 +865,9 @@ I use auto completion sparingly.
     (gptel-default-mode 'org-mode)
     :config
     (setopt gptel-backend
-          (gptel-make-anthropic
-              "Claude"
-            :stream t :key (auth-source-pick-first-password :host "claude" :max 1))))
+            (gptel-make-anthropic
+                "Claude"
+              :stream t :key (auth-source-pick-first-password :host "claude" :max 1))))
 #+end_src
 
 ** Error checking
@@ -915,16 +905,9 @@ repetitive tasks. For example, I to run unit tests repeatedly, I first run
 re-run the tests.
 
 #+begin_src emacs-lisp
-  (require 'ansi-color)
-
-  (defun td/colorize-compilation-buffer ()
-    (read-only-mode -1)
-    (ansi-color-apply-on-region compilation-filter-start (point))
-    (read-only-mode t))
-
   (use-package compile
     :bind ("C-c m" . recompile)
-    :hook (compilation-filter . td/colorize-compilation-buffer)
+    :hook (compilation-filter . ansi-color-compilation-filter)
     :custom
     (compilation-ask-about-save nil)
     (compilation-scroll-output t))
@@ -966,7 +949,7 @@ TDB: waiting for folding support with Treesitter
 ** CSS
 
 #+begin_src emacs-lisp
-  (use-package css-mode
+  (use-package css-ts-mode
     :mode "\\.css\\'"
     :custom
     (css-indent-offset 2))
@@ -989,6 +972,7 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 #+begin_src emacs-lisp
   (use-package js
     :mode (("\\.eslintrc$" . json-ts-mode))
+    :mode (("\\.mjs$" . js-ts-mode))
     :custom
     (js-indent-level 2)
     (js-indent-first-init 'dynamic)
