@@ -9,6 +9,14 @@ The idea is that I'm going to add things in, bit by bit, just enough to get it
 going. This way I will be able to nail down the packages that cause issue, and
 look for alternatives.
 
+* Enable Lexical Binding
+
+Make things a little bit faster. For context: https://www.emacswiki.org/emacs/DynamicBindingVsLexicalBinding
+
+#+begin_src emacs-lisp
+  ;; -*- lexical-binding:t -*-
+#+end_src
+
 * Packages and initialization
 
 All the packages I used are from [[https://melpa.org][MELPA]]. However, I install them automatically
@@ -27,7 +35,7 @@ quite a few of the packages I used are not available on MELPA yet.
 #+end_src
 
 #+begin_src emacs-lisp
-  (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+  (setopt custom-file (expand-file-name "custom.el" user-emacs-directory))
   (load custom-file 'noerror)
 #+end_src
 
@@ -50,16 +58,16 @@ are stored in the =~/.emacs.d/vendor= directory.
 Personal information that some package use:
 
 #+begin_src emacs-lisp
-  (setq user-full-name "Tung Dao"
-        user-mail-address "me@tungdao.com"
-        default-input-method 'vietnamese-telex)
+  (setopt user-full-name "Tung Dao"
+          user-mail-address "me@tungdao.com"
+          default-input-method 'vietnamese-telex)
   (defvar personal-keybindings nil)
 #+end_src
 
 Less verbose choice:
 
 #+begin_src emacs-lisp
-  (setq use-short-answers t)
+  (setopt use-short-answers t)
 #+end_src
 
 Sane, modern defaults:
@@ -69,7 +77,7 @@ Sane, modern defaults:
   and lock files)
 
 #+begin_src emacs-lisp
-  (setq auto-save-file-name-transforms
+  (setopt auto-save-file-name-transforms
         `((".*" ,temporary-file-directory t))
         backup-directory-alist
         `(("." . ,(concat user-emacs-directory "backups")))
@@ -85,7 +93,7 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
    bidi-paragraph-direction 'left-to-right
    bidi-inhibit-bpa t)
 
-  (setq read-process-output-max (* 16 1024 1024)
+  (setopt read-process-output-max (* 16 1024 1024)
         inhibit-compacting-font-caches t)
 #+end_src
 
@@ -94,7 +102,7 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 #+end_src
 
 #+begin_src emacs-lisp
-  (setq echo-keystrokes 0.02)
+  (setopt echo-keystrokes 0.02)
 #+end_src
 
 #+begin_src emacs-lisp
@@ -107,7 +115,7 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 #+end_src
 
 #+begin_src emacs-lisp
-  (setq enable-recursive-minibuffers t)
+  (setopt enable-recursive-minibuffers t)
 #+end_src
 
 #+begin_src emacs-lisp
@@ -128,13 +136,13 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 
 #+begin_src emacs-lisp
   (if (boundp 'ns-command-modifier)
-      (setq ns-command-modifier 'meta))
+      (setopt ns-command-modifier 'meta))
   (if (boundp 'ns-option-modifier)
-      (setq ns-option-modifier 'super))
+      (setopt ns-option-modifier 'super))
   (if (boundp 'ns-use-native-fullscreen)
-      (setq ns-use-native-fullscreen t))
+      (setopt ns-use-native-fullscreen t))
 
-  (setq trash-directory "~/.Trash"
+  (setopt trash-directory "~/.Trash"
         delete-by-moving-to-trash t)
 #+end_src
 
@@ -203,7 +211,7 @@ mini-buffer completion framework.
 
   (use-package minibuffer
     :custom
-    ;; (completion-auto-help 'always)
+    (completion-auto-help 'always)
     (completion-show-help nil)
     (completions-max-height 20)
     (completions-format 'one-column)
@@ -221,16 +229,16 @@ mini-buffer completion framework.
   (bind-key "~" #'td/minibuffer-smart-tilde minibuffer-local-map)
   (bind-key "<s-backspace>" #'backward-kill-word minibuffer-local-map)
 
-  ;; (bind-key "C-p" #'minibuffer-previous-completion minibuffer-local-map)
-  ;; (bind-key "C-n" #'minibuffer-next-completion minibuffer-local-map)
+  (bind-key "C-p" #'minibuffer-previous-completion minibuffer-local-map)
+  (bind-key "C-n" #'minibuffer-next-completion minibuffer-local-map)
 
-  ;; (bind-key "C-p" #'minibuffer-previous-completion completion-in-region-mode-map)
-  ;; (bind-key "C-n" #'minibuffer-next-completion completion-in-region-mode-map)
+  (bind-key "C-p" #'minibuffer-previous-completion completion-in-region-mode-map)
+  (bind-key "C-n" #'minibuffer-next-completion completion-in-region-mode-map)
 #+end_src
 
 Vertico is the next in line for vertical completion.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package vertico
     :ensure t
     :hook (after-init . vertico-mode))
@@ -290,9 +298,9 @@ Vertico is the next in line for vertical completion.
     :ensure t
     :init
     ;; Configure a custom style dispatcher (see the Consult wiki)
-    ;; (setq orderless-style-dispatchers '(+orderless-dispatch)
+    ;; (setopt orderless-style-dispatchers '(+orderless-dispatch)
     ;;       orderless-component-separator #'orderless-escapable-split-on-space)
-    (setq completion-styles '(orderless basic)
+    (setopt completion-styles '(orderless basic)
           completion-category-defaults nil
           completion-category-overrides '((file (styles partial-completion)))))
 #+end_src
@@ -416,7 +424,7 @@ Buffer location customization
 #+end_src
 
 #+begin_src emacs-lisp
-  (setq kill-do-not-save-duplicates t)
+  (setopt kill-do-not-save-duplicates t)
 #+end_src
 
 Basic settings:
@@ -447,7 +455,7 @@ Editing utilities:
     ;(crux-with-region-or-buffer indent-region)
     ;(crux-with-region-or-buffer untabify)
     ;(crux-with-region-or-point-to-eol kill-ring-save)
-    (setq kill-do-not-save-duplicates t))
+    (setopt kill-do-not-save-duplicates t))
 
   (bind-key* "C-x C-k" #'kill-current-buffer)
   (bind-key* "C-c r" #'rename-visited-file)
@@ -508,7 +516,7 @@ Cleanup whitespaces automatically on save.
     :commands (whitespace-cleanup)
     :hook (before-save . whitespace-cleanup)
     :config
-    ;; (setq whitespace-style (remove 'newline-mark whitespace-style))
+    ;; (setopt whitespace-style (remove 'newline-mark whitespace-style))
     )
 #+end_src
 
@@ -681,7 +689,7 @@ Some speedup for Tramp:
 Native LSP support via =Eglot= since Emacs 29.1
 
 #+begin_src emacs-lisp
-  (setq read-process-output-max (* 8 1024 1024))
+  (setopt read-process-output-max (* 8 1024 1024))
 
   (use-package eglot
     :hook ((js-ts-mode . eglot-ensure)
@@ -710,7 +718,7 @@ Native LSP support via =Eglot= since Emacs 29.1
 #+begin_src emacs-lisp
   (use-package eldoc
     :config
-    (setq eldoc-display-functions '(eldoc-display-in-buffer)))
+    (setopt eldoc-display-functions '(eldoc-display-in-buffer)))
 #+end_src
 
 Native Tree-sitter support since Emacs 29
@@ -751,12 +759,12 @@ Native Tree-sitter support since Emacs 29
     (add-to-list 'treesit-language-source-alist '(tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src")))
     (add-to-list 'treesit-language-source-alist '(typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))))
 
-  (defun td/treesit-indent-debug (n p bol)
+  (defun td/treesit-indent-debug (n p _bol)
     (message
      "treesit-indent-debug: %s %s %s"
      n p (treesit-node-prev-sibling n)))
 
-  (defun td/treesit-tag-start (n p bol)
+  (defun td/treesit-tag-start (_n p _bol)
     (save-excursion
       (goto-char (treesit-node-start p))
       (search-forward "<")
@@ -811,7 +819,7 @@ Native Tree-sitter support since Emacs 29
     :custom
     (go-ts-mode-indent-offset 2))
 
-  (setq
+  (setopt
    major-mode-remap-alist
    '((js-mode . js-ts-mode)
      (typescript-mode . typescript-ts-mode)
@@ -829,6 +837,14 @@ I use auto completion sparingly.
   (use-package dabbrev
     :bind (("M-/" . dabbrev-completion)
            ("C-M-/" . completion-at-point)))
+
+  (defun td/expand-lines ()
+    (interactive)
+    (let ((hippie-expand-try-functions-list
+           '(try-expand-line)))
+      (call-interactively 'hippie-expand)))
+
+  (bind-key "C-x C-l" #'td/expand-lines)
 #+end_src
 
 #+begin_src emacs-lisp
@@ -858,7 +874,7 @@ I use auto completion sparingly.
     (gptel-model "claude-3-sonnet-20240229")
     (gptel-default-mode 'org-mode)
     :config
-    (setq gptel-backend
+    (setopt gptel-backend
           (gptel-make-anthropic
               "Claude"
             :stream t :key (auth-source-pick-first-password :host "claude" :max 1))))
@@ -952,8 +968,8 @@ TDB: waiting for folding support with Treesitter
 #+begin_src emacs-lisp
   (use-package css-mode
     :mode "\\.css\\'"
-    :config
-    (setq css-indent-offset 2))
+    :custom
+    (css-indent-offset 2))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -973,11 +989,11 @@ including JSX. Since I'm no longer write as much JavaScript, and I will use
 #+begin_src emacs-lisp
   (use-package js
     :mode (("\\.eslintrc$" . json-ts-mode))
-    :config
-    (setq js-indent-level 2
-          js-indent-first-init 'dynamic
-          js-switch-indent-offset 2
-          js-enabled-frameworks '(javascript)))
+    :custom
+    (js-indent-level 2)
+    (js-indent-first-init 'dynamic)
+    (js-switch-indent-offset 2)
+    (js-enabled-frameworks '(javascript)))
 #+end_src
 
 ** Python
@@ -1075,9 +1091,9 @@ These are supports for other stuffs that I used:
     :ensure t
     :mode (("\\.md$" . markdown-mode)
            ("\\.markdown$" . markdown-mode))
-    :config
+    :custom
     ;; Requires 'pip3 install --user markdown'
-    (setq markdown-command "python3 -m markdown -x extra"))
+    (markdown-command "python3 -m markdown -x extra"))
 #+end_src
 
 
@@ -1105,8 +1121,8 @@ Here's my basic Org setup:
 
 #+begin_src emacs-lisp
   (use-package ob-plantuml
-    :config
-    (setq org-plantuml-jar-path "/opt/local/share/java/plantuml/plantuml.jar"))
+    :custom
+    (org-plantuml-jar-path "/opt/local/share/java/plantuml/plantuml.jar"))
 
   (defun td/org-electric-pair ()
     (setq-local
@@ -1165,11 +1181,11 @@ Stuck projects are:
   (use-package org-agenda
     :bind (("C-c o a" . org-agenda)
            ("C-c o t" . org-todo-list))
-    :config
-    (setq org-agenda-restore-windows-after-quit t
-          org-agenda-window-setup 'current-window
-          org-stuck-projects
-          '("+project+LEVEL=1/-WAITING-DONE-CANCELED" ("TODO" "WAITING") nil "")))
+    :custom
+    (org-agenda-restore-windows-after-quit t)
+    (org-agenda-window-setup 'current-window)
+    (org-stuck-projects
+     '("+project+LEVEL=1/-WAITING-DONE-CANCELED" ("TODO" "WAITING") nil "")))
 #+end_src
 
 ** Note taking
@@ -1222,13 +1238,13 @@ Org Babel for literate programming and API documentation.
 #+begin_src emacs-lisp :tangle no
   (use-package ispell
     :bind ("s-i" . ispell-word)
-    :config
-    (setq ispell-program-name "aspell"
-          ispell-extra-args
-          '("--sug-mode=ultra" "--lang=en_US" "--personal=~/.emacs.d/dictionary")
-          ispell-skip-html t
-          ispell-silently-savep t
-          ispell-really-aspell t))
+    :custom
+    (ispell-program-name "aspell")
+    (ispell-extra-args
+     '("--sug-mode=ultra" "--lang=en_US" "--personal=~/.emacs.d/dictionary"))
+    (ispell-skip-html t)
+    (ispell-silently-savep t)
+    (ispell-really-aspell t))
 
   (use-package flyspell
     :defer t
@@ -1242,15 +1258,15 @@ I love eye candy <3. I put quite a lot of efforts to make Emacs look
 the way I liked.
 
 #+begin_src emacs-lisp
-  (setq inhibit-startup-screen t
-        visible-bell nil
-        ring-bell-function 'ignore
-        scroll-preserve-screen-position t
-        scroll-margin 8
-        scroll-conservatively 101
-        auto-window-vscroll nil)
+  (setopt inhibit-startup-screen t
+          visible-bell nil
+          ring-bell-function 'ignore
+          scroll-preserve-screen-position t
+          scroll-margin 8
+          scroll-conservatively 101
+          auto-window-vscroll nil)
 
-  ;; (pixel-scroll-precision-mode t)
+  (pixel-scroll-precision-mode t)
 #+end_src
 
 I use mouse scroll a lot, and with the default key binding it would accidentally
@@ -1269,7 +1285,7 @@ bars, no cursor blinking. And btw, nothing beats the classic Monaco. "Menlo",
 bold and ligatures support :(.
 
 #+begin_src emacs-lisp
-  (setq
+  (setopt
    fringes-outside-margins t
    default-frame-alist
    `((left-fringe . 8) (right-fringe . 4)
@@ -1384,7 +1400,7 @@ kind of distracting, but it is really helpful sometimes.
 #+begin_src emacs-lisp
   (defun td/diff-hl-fringe-bmp (_type _pos) 'halftone)
 
-  (defun td/diff-hl-overlay-modified (ov after-p beg end &optional len)
+  (defun td/diff-hl-overlay-modified (_ov _after-p _beg _end &optional _len)
     "No-op. Markers disappear and reapear is annoying to me.")
 
   (use-package diff-hl
