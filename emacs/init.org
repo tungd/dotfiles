@@ -222,7 +222,8 @@ mini-buffer completion framework.
     (completions-max-height 20)
     (completions-format 'one-column)
     (completions-detailed t)
-    )
+    (completion-auto-select 'second-tab)
+    (completions-group t))
 
   (defun td/minibuffer-smart-tilde ()
     (interactive)
@@ -234,12 +235,13 @@ mini-buffer completion framework.
 
   (bind-key "~" #'td/minibuffer-smart-tilde minibuffer-local-map)
   (bind-key "<s-backspace>" #'backward-kill-word minibuffer-local-map)
+  (bind-key "TAB" #'minibuffer-complete minibuffer-mode-map)
 
-  (bind-key "C-p" #'minibuffer-previous-completion minibuffer-local-map)
-  (bind-key "C-n" #'minibuffer-next-completion minibuffer-local-map)
+  ;(bind-key "C-p" #'minibuffer-previous-completion minibuffer-local-map)
+  ;(bind-key "C-n" #'minibuffer-next-completion minibuffer-local-map)
 
-  (bind-key "C-p" #'minibuffer-previous-completion completion-in-region-mode-map)
-  (bind-key "C-n" #'minibuffer-next-completion completion-in-region-mode-map)
+  ;(bind-key "C-p" #'minibuffer-previous-completion completion-in-region-mode-map)
+  ;(bind-key "C-n" #'minibuffer-next-completion completion-in-region-mode-map)
 #+end_src
 
 Vertico is the next in line for vertical completion.
@@ -266,6 +268,7 @@ Vertico is the next in line for vertical completion.
     :custom
     (consult-narrow-key (kbd "<"))
     (consult-project-root-function #'vc-root-dir)
+    (consult-preview-key nil)
     (xref-show-xrefs-function #'consult-xref)
     (xref-show-definitions-function #'consult-xref))
 
@@ -494,7 +497,11 @@ Long lines are annoying. Auto wrap all texts at 80.
 
 #+begin_src emacs-lisp
   (use-package autorevert
-    :hook (after-init . global-auto-revert-mode))
+    :hook (after-init . global-auto-revert-mode)
+    :custom
+    (auto-revert-avoid-polling t)
+    (auto-revert-interval 5)
+    (auto-revert-check-vc-info t))
 
   (setq-default
    comment-auto-fill-only-comments t
@@ -605,12 +612,12 @@ Tempo integration code for future reference:
     :config
     (add-to-list 'align-rules-list
                  '(js-object-props
-                   (modes . '(js-mode js2-mode))
+                   (modes . '(js-mode js2-mode js-ts-mode tsx-ts-mode))
                    (regexp . "\\(\\s-*\\):")
                    (spacing . 0)))
     (add-to-list 'align-rules-list
                  '(css-declaration
-                   (modes . '(css-mode))
+                   (modes . '(css-mode css-ts-mode))
                    (regexp . "^\\s-*\\w+:\\(\\s-*\\).*;")
                    (group 1)))
     (add-to-list 'align-rules-list
@@ -693,6 +700,7 @@ Native LSP support via =Eglot= since Emacs 29.1
            (tsx-ts-mode . eglot-ensure)
            (go-ts-mode . eglot-ensure)
            (ocaml-ts-mode . eglot-ensure)
+           (kotlin-ts-mode . eglot-ensure)
            (tuareg-mode . eglot-ensure))
     :bind ("C-c C-a" . eglot-code-actions)
     :custom
@@ -848,8 +856,7 @@ I use auto completion sparingly.
   (use-package copilot
     :vc (:url "https://github.com/copilot-emacs/copilot.el.git" :branch "main" :rev :newest)
     :ensure t
-    :functions copilot-mode
-    :bind (("C-j" . copilot-accept-completion))
+    :bind (:map copilot-completion-map ("C-j" . copilot-accept-completion))
     :hook ((mhtml-mode . copilot-mode)
            (css-ts-mode . copilot-mode)
            (html-ts-mode . copilot-mode)
@@ -858,7 +865,9 @@ I use auto completion sparingly.
            (tsx-ts-mode . copilot-mode)
            (kotlin-ts-mode . copilot-mode)
            (go-ts-mode . copilot-mode)
-           (python-mode . copilot-mode)))
+           (python-mode . copilot-mode))
+    :config
+    (add-to-list 'copilot-major-mode-alist '("tsx" . "typescriptreact")))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -867,8 +876,9 @@ I use auto completion sparingly.
   (use-package gptel-org)
   (use-package gptel
     :ensure t
+    :bind ("C-l c" . gptel-menu)
     :custom
-    (gptel-model "claude-3-sonnet-20240229")
+    (gptel-model 'claude-3-5-sonnet-20241022)
     (gptel-default-mode 'org-mode)
     :config
     (setopt gptel-backend
@@ -956,8 +966,8 @@ TDB: waiting for folding support with Treesitter
 ** CSS
 
 #+begin_src emacs-lisp
-  (use-package css-ts-mode
-    :mode "\\.css\\'"
+  (use-package css-mode
+    :mode ("\\.css\\'" . css-ts-mode)
     :custom
     (css-indent-offset 2))
 #+end_src
@@ -966,7 +976,8 @@ TDB: waiting for folding support with Treesitter
   (use-package rainbow-mode
     :ensure t
     :defer t
-    :hook (css-mode . rainbow-mode))
+    :hook ((css-mode . rainbow-mode)
+           (css-ts-mode . rainbow-mode)))
 #+end_src
 
 ** JavaScript
