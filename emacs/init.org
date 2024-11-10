@@ -484,11 +484,19 @@ Make the file executable if starting with "shebang":
 #+end_src
 
 #+begin_src emacs-lisp
-  (use-package visual-regexp
+  (use-package visual-replace
     :ensure t
-    :bind (("M-r" . vr/query-replace)
-           ([remap query-replace] . vr/query-replace)
-           ("C-M-r" . vr/mc-mark)))
+    :bind (("M-r" . visual-replace)
+           ([remap query-replace] . visual-replace)
+           :map isearch-mode-map
+           ("M-r" . visual-replace-from-isearch))
+    :custom
+    (visual-replace-default-to-full-scope t)
+    (visual-replace-display-total t)
+    (visual-replace-keep-initial-position t)
+    :config
+    (define-key visual-replace-mode-map (kbd "M-r")
+                visual-replace-secondary-mode-map))
 #+end_src
 
 ** Long lines
