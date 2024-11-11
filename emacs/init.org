@@ -1091,6 +1091,12 @@ Python or Haskell:
 
 These are supports for other stuffs that I used:
 
+#+begin_src emacs-lisp
+  (use-package yaml-ts-mode
+    :mode (("\\.yaml$" . yaml-ts-mode))
+    :hook (yaml-ts-mode . display-line-numbers-mode))
+#+end_src
+
 #+begin_src emacs-lisp :tangle no
   (use-package nix-ts-mode
     :ensure t)
