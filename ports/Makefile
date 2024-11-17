@@ -1,4 +1,4 @@
-COMMIT_HASH := 1704fa4fb4164a15c7e258b922dbba190811d92d
+COMMIT_HASH := 7ded1064cf4d9fde32c7a89473ef9476520cd556
 
 PortIndex: editors/emacs-weekly/Portfile
 	portindex
