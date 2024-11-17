@@ -82,7 +82,6 @@ export PGUSER=postgres
 export PATH=/opt/local/bin:/opt/local/sbin:$PATH
 export PATH=$HOME/.local/sbin:$HOME/.local/bin:$PATH
 export PATH=$HOME/Projects/dotfiles/bin:$PATH
-export PATH=$HOME/.nix-profile/bin:$PATH
 
 [[ -e /opt/local/etc/profile.d/z.sh ]] && . /opt/local/etc/profile.d/z.sh
 [[ $+commands[direnv] ]] && eval "$(direnv hook zsh)"
@@ -109,6 +108,8 @@ export PATH=$HOME/Library/Python/3.12/bin:$PATH
 
 export PNPM_HOME="/Users/tung/Library/pnpm"
 export PATH="$PNPM_HOME:$PATH"
+
+export PATH="$HOME/.cargo/bin:$PATH"
 
 # Added by OrbStack: command-line tools and integration
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
