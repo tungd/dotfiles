@@ -124,6 +124,11 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
            (after-init . desktop-read)))
 #+end_src
 
+#+begin_src emacs-lisp
+  (use-package midnight
+    :hook (after-init . midnight-mode))
+#+end_src
+
 ** Server
 
 #+begin_src emacs-lisp
