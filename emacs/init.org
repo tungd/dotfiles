@@ -350,8 +350,6 @@ Temporary "focus" on a buffer by maximizing it in the current frame.
 Buffer location customization
 
 #+begin_src emacs-lisp
-                                          ;(tab-bar-mode t)
-
   (use-package window
     :custom
     (window-min-height 1)
@@ -371,18 +369,7 @@ Buffer location customization
     (add-to-list 'display-buffer-alist
                  '("\\*Org-Babel Error Output\\*" display-buffer-in-direction
                    (direction . bottom)
-                   (window-height . 8)))
-    ;; (add-to-list 'display-buffer-alist
-    ;;              `(,(rx (| "inbox.org" "*Org Agenda*" "init.org"))
-    ;;                (display-buffer-in-tab display-buffer-full-frame)
-    ;;                (ignore-current-tab . t)
-    ;;                (tab-name . "🚀 Org")
-    ;;                (tab-group . "Org")))
-    ;; (add-to-list 'display-buffer-alist
-    ;;              `("\\*Org Src" display-buffer-full-frame))
-    ;; (add-to-list 'display-buffer-alist
-    ;;              `(,(rx (| "README.org" "WORKBOOK.org" "NOTES.org")) display-buffer-full-frame))
-    )
+                   (window-height . 8))))
 #+end_src
 
 
@@ -394,12 +381,6 @@ Buffer location customization
 #+end_src
 
 #+begin_src emacs-lisp
-  (use-package undo-fu-session
-    :ensure t
-    :hook (after-init . undo-fu-session-global-mode)
-    :custom
-    (undo-fu-session-incompatible-files '("/COMMIT_EDITMSG\\'")))
-
   (use-package vundo :ensure t)
 #+end_src
 
@@ -1445,6 +1426,7 @@ kind of distracting, but it is really helpful sometimes.
   (use-package dired
     :custom
     (dired-recursive-deletes 'always)
+    (dired-recursive-copies 'always)
     (dired-listing-switches "-lah")
     (dired-auto-revert-buffer t))
 #+end_src

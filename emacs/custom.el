@@ -206,7 +206,7 @@
          meow-tree-sitter minions modus-theme ob-async ob-http ob-kotlin
          ob-plantuml orderless persp-mode plantuml-mode protobuf-mode
          rainbow-mode reason-mode rg scad-mode surround tempel terraform-mode
-         tuareg undo-fu-session visual-replace vterm vundo web-beautify web-mode))
+         tuareg visual-replace vterm vundo web-beautify web-mode))
  '(package-vc-selected-packages
    '((copilot :url "https://github.com/copilot-emacs/copilot.el.git" :branch "main")))
  '(safe-local-variable-values
