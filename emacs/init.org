@@ -1428,7 +1428,8 @@ kind of distracting, but it is really helpful sometimes.
     (dired-recursive-deletes 'always)
     (dired-recursive-copies 'always)
     (dired-listing-switches "-lah")
-    (dired-auto-revert-buffer t))
+    (dired-auto-revert-buffer t)
+    (dired-kill-when-opening-new-dired-buffer t))
 #+end_src
 
 #+begin_src emacs-lisp
