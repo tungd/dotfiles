@@ -163,12 +163,20 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 
 ** Projects
 
+#+begin_src emacs-lisp
+  (use-package files
+    :custom
+    (remote-file-name-access-timeout 5))
+#+end_src
+
 Emacs built-in =project.el= has gone a long way so I'm using that now. There are
 still some missing features coming from =projectile=, but I can live with that.
 
 #+begin_src emacs-lisp
   (use-package project
-    :commands (project-find-file project-vc-dir project-current))
+    :commands (project-find-file project-vc-dir project-current)
+    :custom
+    (project-file-history-behavior 'relativize))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -222,12 +230,14 @@ mini-buffer completion framework.
 
   (use-package minibuffer
     :custom
+    (minibuffer-visible-completions t)
     (completion-auto-help 'always)
     (completion-show-help nil)
+    (completion-auto-select 'second-tab)
     (completions-max-height 20)
+    (completions-sort 'historical)
     (completions-format 'one-column)
     (completions-detailed t)
-    (completion-auto-select 'second-tab)
     (completions-group t))
 
   (defun td/minibuffer-smart-tilde ()
