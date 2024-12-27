@@ -741,17 +741,19 @@ Native Tree-sitter support since Emacs 29
   (defun td/tressit-expand-region ()
     "Poor man's expand-region, worked surprisingly well for me"
     (interactive)
-    (let ((start (if (region-active-p) (region-beginning) 1))
-          (end (if (region-active-p) (region-end) 1))
-          (node (if (region-active-p)
-                    (treesit-node-parent
-                     (treesit-node-on (region-beginning) (region-end)))
-                  (treesit-node-at (point)))))
-      (if (or (/= start (treesit-node-start node))
-              (/= end (treesit-node-end node)))
-          (td/treesit-mark-node node)
-        (forward-char)
-        (td/tressit-expand-region))))
+    (if (treesit-language-at (point))
+        (let ((start (if (region-active-p) (region-beginning) 1))
+              (end (if (region-active-p) (region-end) 1))
+              (node (if (region-active-p)
+                        (treesit-node-parent
+                         (treesit-node-on (region-beginning) (region-end)))
+                      (treesit-node-at (point)))))
+          (if (or (/= start (treesit-node-start node))
+                  (/= end (treesit-node-end node)))
+              (td/treesit-mark-node node)
+            (forward-char)
+            (td/tressit-expand-region)))
+      (mark-sexp 1 t)))
 
   (bind-key "M--" #'td/tressit-expand-region)
 
@@ -855,7 +857,6 @@ I use auto completion sparingly.
 
 #+begin_src emacs-lisp
   (use-package copilot
-    :vc (:url "https://github.com/copilot-emacs/copilot.el.git" :branch "main" :rev :newest)
     :ensure t
     :bind (:map copilot-completion-map ("C-j" . copilot-accept-completion))
     :hook ((mhtml-mode . copilot-mode)
@@ -1458,6 +1459,12 @@ kind of distracting, but it is really helpful sometimes.
     (kubel-kubectl "/opt/local/bin/kubectl"))
 #+end_src
 
+#+begin_src emacs-lisp
+  (unless (package-installed-p 'pg)
+    (package-vc-install "https://github.com/emarsden/pg-el" nil nil 'pg))
+  (unless (package-installed-p 'pgmacs)
+    (package-vc-install "https://github.com/emarsden/pgmacs"))
+#+end_src
 
 * Ideas
 
