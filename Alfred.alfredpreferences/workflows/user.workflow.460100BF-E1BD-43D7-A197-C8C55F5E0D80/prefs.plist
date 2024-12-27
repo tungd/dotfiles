@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>keyword_01</key>
+	<string>terraform</string>
+	<key>keyword_02</key>
+	<string>spring_boot</string>
+	<key>keyword_03</key>
+	<string>ocaml</string>
+	<key>keyword_04</key>
+	<string>go</string>
+	<key>keyword_05</key>
+	<string>java</string>
+	<key>keyword_06</key>
+	<string>kotlin</string>
+	<key>keyword_07</key>
+	<string>py</string>
+</dict>
+</plist>
