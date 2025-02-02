@@ -492,7 +492,8 @@ Make the file executable if starting with "shebang":
     (visual-replace-keep-initial-position t)
     :config
     (define-key visual-replace-mode-map (kbd "M-r")
-                visual-replace-secondary-mode-map))
+                visual-replace-secondary-mode-map)
+    (unbind-key [remap yank] visual-replace-mode-map))
 #+end_src
 
 ** Long lines
@@ -819,7 +820,8 @@ Native Tree-sitter support since Emacs 29
   (use-package typescript-ts-mode
     :mode (("\\.ts\\'" . typescript-ts-mode)
            ("\\.tsx\\'" . tsx-ts-mode))
-    :hook ((tsx-ts-mode . td/fix-tsx-indentation)))
+    ;:hook ((tsx-ts-mode . td/fix-tsx-indentation))
+    )
 
   (use-package go-ts-mode
     :mode (("go.mod$" . go-mod-ts-mode)
@@ -1324,7 +1326,7 @@ Hide unnecessary long mode line mode list
 #+end_src
 
 #+begin_src emacs-lisp
-  (use-package hl-line :hook (after-init . global-hl-line-mode))
+  (use-package hl-line :hook (prog-mode . hl-line-mode))
 #+end_src
 
 Truncate lines:
