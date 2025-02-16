@@ -276,7 +276,7 @@ Vertico is the next in line for vertical completion.
            ("M-g y" . consult-yank-from-kill-ring)
            ("M-g t" . consult-theme)
            ("M-g m" . consult-mode-command)
-           ;("M-g r" . consult-ripgrep)
+           ("M-g r" . consult-ripgrep)
            ([remap goto-line] . consult-goto-line)
            ([remap switch-to-buffer] . consult-buffer)
            ([remap imenu] . consult-imenu))
@@ -308,7 +308,7 @@ Vertico is the next in line for vertical completion.
   (global-set-key (kbd "C-l") ctl-x-map)
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package avy
     :ensure t
     :custom
@@ -317,16 +317,16 @@ Vertico is the next in line for vertical completion.
     (bind-key* "C-'" 'avy-goto-char))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package orderless
     :ensure t
     :init
     ;; Configure a custom style dispatcher (see the Consult wiki)
-    ;; (setopt orderless-style-dispatchers '(+orderless-dispatch)
+    ;; (setopt porderless-style-dispatchers '(+orderless-dispatch)
     ;;       orderless-component-separator #'orderless-escapable-split-on-space)
     (setopt completion-styles '(orderless basic)
-          completion-category-defaults nil
-          completion-category-overrides '((file (styles partial-completion)))))
+            completion-category-defaults nil
+            completion-category-overrides '((file (styles partial-completion)))))
 #+end_src
 
 ** Bookmark
@@ -707,7 +707,7 @@ Native LSP support via =Eglot= since Emacs 29.1
            (ocaml-ts-mode . eglot-ensure)
            (kotlin-ts-mode . eglot-ensure)
            (tuareg-mode . eglot-ensure))
-    :bind ("C-c C-a" . eglot-code-actions)
+    ;; :bind ("C-c C-a" . eglot-code-actions)
     :custom
     (eglot-autoshutdown t)
     (eglot-prefer-plaintext t)
@@ -936,7 +936,13 @@ re-run the tests.
 
 ** Code folding
 
-TDB: waiting for folding support with Treesitter
+#+begin_src emacs-lisp
+  (use-package treesit-fold
+    :ensure t
+    :hook ((after-init . global-treesit-fold-mode)
+           (after-init . global-treesit-fold-indicators-mode)
+           (treesit-fold-mode . treesit-fold-line-comment-mode)))
+#+end_src
 
 ** Web Development
 
@@ -1326,7 +1332,7 @@ Hide unnecessary long mode line mode list
 #+end_src
 
 #+begin_src emacs-lisp
-  (use-package hl-line :hook (prog-mode . hl-line-mode))
+  (use-package hl-line :hook (prog-mode . global-hl-line-mode))
 #+end_src
 
 Truncate lines:
@@ -1348,12 +1354,6 @@ Truncate lines:
 Some preferences that I set for all the theme. Per documentation, the custom
 theme named =user= will always have the highest priority.
 
-#+begin_src emacs-lisp :tangle no
-  (use-package doom-themes
-    :ensure t
-    :init (load-theme 'doom-ayu-mirage t))
-#+end_src
-
 #+begin_src emacs-lisp
   (load-theme 'modus-vivendi t)
 #+end_src
@@ -1367,14 +1367,12 @@ theme named =user= will always have the highest priority.
    '(font-lock-constant-face ((t :slant normal)))
 
    '(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face)))
-   '(line-number-current-line ((t :slant normal)))
+   '(line-number-current-line ((t :slant normal :weight normal)))
    '(fringe ((t :inherit line-number :background unspecified)))
    ;;'(vertical-border ((t :foreground "#000")))
 
-   ;;'(mode-line-buffer-id ((t :foreground "#deae3e")))
-   ;;'(mode-line ((t :inherit line-number-current-line :foreground nil :background nil :box (:style 'flat))))
-   ;;'(mode-line-inactive ((t :inherit line-number :background nil :foreground nil)))
-   ;;'(cursor ((t :background "orange")))
+   '(mode-line-buffer-id ((t :foreground "orange")))
+   '(cursor ((t :background "orange")))
    )
 #+end_src
 
@@ -1432,7 +1430,6 @@ kind of distracting, but it is really helpful sometimes.
     (advice-add 'diff-hl-overlay-modified :override #'td/diff-hl-overlay-modified))
 #+end_src
 
-
 * Misc
 
 #+begin_src emacs-lisp
@@ -1462,10 +1459,25 @@ kind of distracting, but it is really helpful sometimes.
 #+end_src
 
 #+begin_src emacs-lisp
-  (unless (package-installed-p 'pg)
-    (package-vc-install "https://github.com/emarsden/pg-el" nil nil 'pg))
-  (unless (package-installed-p 'pgmacs)
-    (package-vc-install "https://github.com/emarsden/pgmacs"))
+  (use-package evil
+    :ensure t
+    :hook (after-init . evil-mode)
+    :custom
+    (evil-search-module 'isearch)
+    (evil-echo-state nil)
+    (evil-ex-substitute-global t)
+    (evil-cross-lines t))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package aidermacs
+    :vc (:url "https://github.com/MatthewZMD/aidermacs.git" :rev :newest)
+    :bind* ("C-c C-a" . aidermacs-transient-menu)
+    :custom
+    (aidermacs-default-model "anthropic/claude-3-5-sonnet-20241022")
+    (aidermacs-backends 'vterm)
+    :config
+    (setenv "ANTHROPIC_API_KEY" (auth-source-pick-first-password :host "claude" :max 1)))
 #+end_src
 
 * Ideas

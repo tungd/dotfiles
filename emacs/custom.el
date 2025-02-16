@@ -199,15 +199,17 @@
      "4fda8201465755b403a33e385cf0f75eeec31ca8893199266a6aeccb4adedfa4" default))
  '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
  '(package-selected-packages
-   '(avy consult copilot crux csv-mode d2-mode detached diff-hl dune dune-format
-         eglot emmet-mode envrc exec-path-from-shell f gptel gptel-anthropic
-         highlight-indentation iedit indent-guide isearch-mb kotlin-mode
-         kotlin-ts-mode kuronami-theme lua-mode magit markdown-mode
-         markdown-ts-mode meow meow-tree-sitter minions modus-theme ob-async
-         ob-http ob-kotlin ob-plantuml ocaml-ts-mode orderless persp-mode pg
-         pgmacs plantuml-mode protobuf-mode rainbow-mode reason-mode rg
-         scad-mode surround tempel terraform-mode tuareg visual-replace vterm
-         vundo web-beautify web-mode))
+   '(aidermacs consult copilot crux csv-mode d2-mode detached diff-hl dune
+               dune-format eglot emmet-mode envrc evil exec-path-from-shell f
+               gptel gptel-anthropic highlight-indentation indent-guide
+               isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit
+               markdown-mode markdown-ts-mode minions modus-theme ob-async
+               ob-http ob-kotlin ob-plantuml ocaml-ts-mode persp-mode
+               plantuml-mode protobuf-mode rainbow-mode reason-mode rg scad-mode
+               surround tempel terraform-mode treesit-fold tuareg visual-replace
+               vterm vundo web-mode))
+ '(package-vc-selected-packages
+   '((aidermacs :url "https://github.com/MatthewZMD/aidermacs.git")))
  '(safe-local-variable-values
    '((eval setenv "LIBRARY_PATH" "/opt/local/lib/mysql8/mysql")
      (eval add-hook 'after-save-hook
@@ -219,6 +221,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(cursor ((t :background "orange")))
  '(diff-hl-change ((t (:inherit nil :background unspecified :foreground "#deae3e"))))
  '(diff-hl-delete ((t (:inherit nil :background unspecified :foreground "#ff0000"))))
  '(diff-hl-insert ((t (:inherit nil :background unspecified :foreground "#81af34"))))
@@ -228,4 +231,5 @@
  '(font-lock-string-face ((t :slant normal)))
  '(fringe ((t :inherit line-number :background unspecified)))
  '(line-number ((t :slant normal)))
- '(line-number-current-line ((t :slant normal))))
+ '(line-number-current-line ((t :slant normal)))
+ '(mode-line-buffer-id ((t :foreground "#deae3e"))))
