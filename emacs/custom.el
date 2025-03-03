@@ -206,10 +206,8 @@
                markdown-mode markdown-ts-mode minions modus-theme ob-async
                ob-http ob-kotlin ob-plantuml ocaml-ts-mode persp-mode
                plantuml-mode protobuf-mode rainbow-mode reason-mode rg scad-mode
-               surround tempel terraform-mode treesit-fold tuareg visual-replace
-               vterm vundo web-mode))
- '(package-vc-selected-packages
-   '((aidermacs :url "https://github.com/MatthewZMD/aidermacs.git")))
+               scala-ts-mode surround tempel terraform-mode treesit-fold tuareg
+               visual-replace vterm vundo web-mode))
  '(safe-local-variable-values
    '((eval setenv "LIBRARY_PATH" "/opt/local/lib/mysql8/mysql")
      (eval add-hook 'after-save-hook
