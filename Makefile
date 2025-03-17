@@ -1,4 +1,4 @@
-COMMIT_HASH := f1950fbdb49abfcea26b995b38223c1e89b3c720
+COMMIT_HASH := eab14d68b2e72b9a6b8b0cc67c9667c2bfbed4f5
 TODAY := $(shell date "+%Y%m%d")
 
 ports/PortIndex: ports/editors/emacs-weekly/Portfile

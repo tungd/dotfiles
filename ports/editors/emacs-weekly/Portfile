@@ -39,7 +39,9 @@ subport emacs-app-devel {
     conflicts   emacs-app
 }
 
-depends_build-append port:autoconf port:automake port:libtool
+depends_build-append port:autoconf \
+                     port:automake \
+                     port:libtool
 
 configure.args  --disable-silent-rules \
                 --without-ns \
@@ -51,16 +53,19 @@ configure.args  --disable-silent-rules \
                 --without-tree-sitter \
                 --with-libgmp \
                 --with-gnutls \
-                --with-json \
                 --with-xml2 \
                 --with-modules \
                 --with-sqlite3 \
                 --infodir ${prefix}/share/info/${name}
 
+configure.args-append  --disable-gc-mark-trace
+
 pre-configure {
     if {[llength $rpaths] > 0} {
         configure.ldflags-append "-Wl,-rpath " [join $rpaths " -Wl,-rpath "]
     }
+
+    system -W ${worksrcpath} "sh ./autogen.sh"
 }
 
 depends_build-append   port:pkgconfig \
@@ -104,14 +109,13 @@ platform darwin {
 }
 
 if {$subport eq $name || $subport eq "emacs-app"} {
-    version         29.4
+    version         30.1
     revision        1
-    checksums       rmd160  b32b86be6f600ba745ad023efd7238088dfa5952 \
-                    sha256  1adb1b9a2c6cdb316609b3e86b0ba1ceb523f8de540cfdda2aec95b6a5343abf \
-                    size    78519074
+    checksums       rmd160  d84d527bb0db3d56d558e8f4bed80af5e3eddef3 \
+                    sha256  54404782ea5de37e8fcc4391fa9d4a41359a4ba9689b541f6bc97dd1ac283f6c \
+                    size    82678582
 
-    patchfiles-append \
-                    patch-allow-powerpc.diff
+    patchfiles-append patch-allow-powerpc.diff
 }
 
 if {$subport eq "emacs-devel" || $subport eq "emacs-app-devel"} {
@@ -119,16 +123,15 @@ if {$subport eq "emacs-devel" || $subport eq "emacs-app-devel"} {
 
     # do not forget to check that configure hasn't introduce some suprises via
     # git diff [old]..[new] -- '**/configure.ac'
-    github.setup    emacs-mirror emacs f1950fbdb49abfcea26b995b38223c1e89b3c720
+    github.setup    emacs-mirror emacs eab14d68b2e72b9a6b8b0cc67c9667c2bfbed4f5
     github.tarball_from archive
     epoch           5
-    version         20250303
+    version         20250317
     revision        0
 
     master_sites    ${github.master_sites}
-    # master_sites    https://codeload.github.com/emacs-mirror/emacs/legacy.tar.gz/f2e97338eb96739711f9d4cb308219ed3df46c06?dummy=
 
-    checksums       sha256  513144a63eae5102b3cd803e4a4c8d564f0bdb22db26fc72e05c11c9aef67d7c
+    checksums       sha256  c8a447fa533fbd66c2f08ad9a1725e1e8c2708df2a9c3835dbe1ed9bcd57a9de
 
     # patchfiles-append \
     #                 patch-allow-powerpc-devel.diff
@@ -248,6 +251,7 @@ if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
 
     post-patch {
         reinplace "s,@PATH@,${prefix}/bin:${prefix}/sbin:/usr/bin:/bin:/usr/sbin:/sbin," ${worksrcpath}/nextstep/templates/Info.plist.in
+        reinplace "s,@LIBRARY_PATH@,${prefix}/lib/gcc14:${prefix}/lib/gcc14/gcc/aarch64-apple-darwin24/14.2.0:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib," ${worksrcpath}/nextstep/templates/Info.plist.in
     }
 
     destroot {

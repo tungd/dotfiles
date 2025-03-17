@@ -251,7 +251,7 @@ if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
 
     post-patch {
         reinplace "s,@PATH@,${prefix}/bin:${prefix}/sbin:/usr/bin:/bin:/usr/sbin:/sbin," ${worksrcpath}/nextstep/templates/Info.plist.in
-        reinplace "s,@LIBRARY_PATH@,${prefix}/lib/gcc${gcc_v}:${prefix}/lib/gcc${gcc_v}/gcc/aarch64-apple-darwin24/14.2.0," ${worksrcpath}/nextstep/templates/Info.plist.in
+        reinplace "s,@LIBRARY_PATH@,${prefix}/lib/gcc14:${prefix}/lib/gcc14/gcc/aarch64-apple-darwin24/14.2.0:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib," ${worksrcpath}/nextstep/templates/Info.plist.in
     }
 
     destroot {
