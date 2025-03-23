@@ -201,13 +201,13 @@
  '(package-selected-packages
    '(aidermacs consult copilot crux csv-mode d2-mode detached diff-hl dune
                dune-format eglot emmet-mode envrc evil exec-path-from-shell f
-               gptel gptel-anthropic highlight-indentation indent-guide
-               isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit
+               feature-mode gptel gptel-anthropic highlight-indentation
+               indent-guide isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit
                markdown-mode markdown-ts-mode minions modus-theme ob-async
                ob-http ob-kotlin ob-plantuml ocaml-ts-mode persp-mode
                plantuml-mode protobuf-mode rainbow-mode reason-mode rg scad-mode
                scala-ts-mode surround tempel terraform-mode treesit-fold tuareg
-               visual-replace vterm vundo web-mode))
+               visual-replace vterm vundo web-mode yasnippet))
  '(safe-local-variable-values
    '((eval setenv "LIBRARY_PATH" "/opt/local/lib/mysql8/mysql")
      (eval add-hook 'after-save-hook

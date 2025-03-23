@@ -703,7 +703,7 @@ Some speedup for Tramp:
 
 Native LSP support via =Eglot= since Emacs 29.1
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (setopt read-process-output-max (* 8 1024 1024))
 
   (use-package eglot
@@ -732,6 +732,36 @@ Native LSP support via =Eglot= since Emacs 29.1
     (add-to-list 'eglot-server-programs '(scala-ts-mode "metals"))
     ;; https://www.reddit.com/r/emacs/comments/17jrsmv/comment/k74b3tg/?utm_source=share&utm_medium=web2x&context=3
     (advice-add 'jsonrpc--log-event :override #'ignore))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package lspce
+    :load-path "/Users/tung/.config/emacs/vendor/lspce"
+    :hook
+    ((js-ts-mode . lspce-mode)
+    (typescript-ts-mode . lspce-mode)
+    (tsx-ts-mode . lspce-mode)
+    (go-ts-mode . lspce-mode)
+    (ocaml-ts-mode . lspce-mode)
+    (kotlin-ts-mode . lspce-mode)
+    (scala-ts-mode . lspce-mode)
+    (tuareg-mode . lspce-mode))
+    :custom
+    (lspce-send-changes-idle-time 0.1)
+    (lspce-show-log-level-in-modeline t)
+    :config
+    ;; You should call this first if you want lspce to write logs
+    (lspce-set-log-file "/tmp/lspce.log")
+
+    ;; By default, lspce will not write log out to anywhere.
+    ;; To enable logging, you can add the following line
+    ;; (lspce-enable-logging)
+    ;; You can enable/disable logging on the fly by calling `lspce-enable-logging' or `lspce-disable-logging'.
+
+    ;; modify `lspce-server-programs' to add or change a lsp server, see document
+    ;; of `lspce-lsp-type-function' to understand how to get buffer's lsp type.
+    ;; Bellow is what I use
+    (add-to-list 'lspce-server-programs '("scala" "metals" "")))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1318,8 +1348,8 @@ bold and ligatures support :(.
    `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
      ;; (font . "Iosevka Fixed SS07 15")
-     ;; (font . "Iosevka Mono 16")
-     (font . "JetBrains Mono NL 14")
+     (font . "Iosevka Mono 16")
+     ;; (font . "JetBrains Mono NL 14")
      ;; (font . "Agave 16")
      ;; (font . "Ubuntu Mono 16")
      (tool-bar-lines . 0)
@@ -1440,6 +1470,7 @@ kind of distracting, but it is really helpful sometimes.
     (advice-add 'diff-hl-overlay-modified :override #'td/diff-hl-overlay-modified))
 #+end_src
 
+
 * Misc
 
 #+begin_src emacs-lisp
@@ -1479,17 +1510,17 @@ kind of distracting, but it is really helpful sometimes.
     (evil-cross-lines t))
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package aidermacs
-    :vc (:url "https://github.com/MatthewZMD/aidermacs.git" :branch :main)
+    :ensure t
     :bind* ("C-c C-a" . aidermacs-transient-menu)
     :custom
     (aidermacs-default-model "anthropic/claude-3-5-sonnet-20241022")
-    (aidermacs-backend 'vterm)
     (aidermacs-extra-args '("--cache-prompts" "--no-stream" "--watch-files"))
     :config
     (setenv "ANTHROPIC_API_KEY" (auth-source-pick-first-password :host "claude" :max 1)))
 #+end_src
+
 
 * Ideas
 
