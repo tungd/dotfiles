@@ -24,6 +24,7 @@ Make things a little bit faster. For context: https://www.emacswiki.org/emacs/Dy
     ":"))
 #+end_src
 
+
 * Packages and initialization
 
 All the packages I used are from [[https://melpa.org][MELPA]]. However, I install them automatically
@@ -703,9 +704,11 @@ Some speedup for Tramp:
 
 Native LSP support via =Eglot= since Emacs 29.1
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (setopt read-process-output-max (* 8 1024 1024))
+#+end_src
 
+#+begin_src emacs-lisp :tangle no
   (use-package eglot
     :hook ((js-ts-mode . eglot-ensure)
            (typescript-ts-mode . eglot-ensure)
@@ -734,7 +737,7 @@ Native LSP support via =Eglot= since Emacs 29.1
     (advice-add 'jsonrpc--log-event :override #'ignore))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package lspce
     :load-path "/Users/tung/.config/emacs/vendor/lspce"
     :hook
@@ -773,109 +776,116 @@ Native LSP support via =Eglot= since Emacs 29.1
 Native Tree-sitter support since Emacs 29
 
 #+begin_src emacs-lisp
-  (defun td/treesit-mark-node (node)
-    (goto-char (treesit-node-start node))
-    (call-interactively #'set-mark-command)
-    (goto-char (treesit-node-end node)))
+    (defun td/treesit-mark-node (node)
+      (goto-char (treesit-node-start node))
+      (call-interactively #'set-mark-command)
+      (goto-char (treesit-node-end node)))
 
-  (defun td/tressit-expand-region ()
-    "Poor man's expand-region, worked surprisingly well for me"
-    (interactive)
-    (if (treesit-language-at (point))
-        (let ((start (if (region-active-p) (region-beginning) 1))
-              (end (if (region-active-p) (region-end) 1))
-              (node (if (region-active-p)
-                        (treesit-node-parent
-                         (treesit-node-on (region-beginning) (region-end)))
-                      (treesit-node-at (point)))))
-          (if (or (/= start (treesit-node-start node))
-                  (/= end (treesit-node-end node)))
-              (td/treesit-mark-node node)
-            (forward-char)
-            (td/tressit-expand-region)))
-      (mark-sexp 1 t)))
+    (defun td/tressit-expand-region ()
+      "Poor man's expand-region, worked surprisingly well for me"
+      (interactive)
+      (if (treesit-language-at (point))
+          (let ((start (if (region-active-p) (region-beginning) 1))
+                (end (if (region-active-p) (region-end) 1))
+                (node (if (region-active-p)
+                          (treesit-node-parent
+                           (treesit-node-on (region-beginning) (region-end)))
+                        (treesit-node-at (point)))))
+            (if (or (/= start (treesit-node-start node))
+                    (/= end (treesit-node-end node)))
+                (td/treesit-mark-node node)
+              (forward-char)
+              (td/tressit-expand-region)))
+        (mark-sexp 1 t)))
 
-  (bind-key "M--" #'td/tressit-expand-region)
+    (bind-key "M--" #'td/tressit-expand-region)
 
-  (use-package treesit
-    :functions (treesit-node-on
-                treesit-node-at
-                treesit-node-parent
-                treesit-node-start
-                treesit-node-end
-                treesit-node-prev-sibling)
-    :config
-    (add-to-list 'treesit-language-source-alist '(kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git"))))
+    (use-package treesit
+      :functions (treesit-node-on
+                  treesit-node-at
+                  treesit-node-parent
+                  treesit-node-start
+                  treesit-node-end
+                  treesit-node-prev-sibling)
+      :config
+      (add-to-list 'treesit-language-source-alist '(kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git")))
+      (add-to-list 'treesit-language-source-alist '(protobuf . ("https://github.com/casouri/tree-sitter-module.git")))
+      )
 
-  (defun td/treesit-indent-debug (n p _bol)
-    (message
-     "treesit-indent-debug: %s %s %s"
-     n p (treesit-node-prev-sibling n)))
+    (defun td/treesit-indent-debug (n p _bol)
+      (message
+       "treesit-indent-debug: %s %s %s"
+       n p (treesit-node-prev-sibling n)))
 
-  (defun td/treesit-tag-start (_n p _bol)
-    (save-excursion
-      (goto-char (treesit-node-start p))
-      (search-forward "<")
-      (- (point) 1)))
+    (defun td/treesit-tag-start (_n p _bol)
+      (save-excursion
+        (goto-char (treesit-node-start p))
+        (search-forward "<")
+        (- (point) 1)))
 
-  (defun td/treesit-tag-sibling (n p bol)
-    (when treesit--indent-verbose
-      (td/treesit-indent-debug n p bol))
-    (let* ((tag (treesit-parent-until
-                 p
-                 (rx (or "jsx_closing_element" "jsx_element" "jsx_self_closing_element"))))
-           (prev (treesit-node-prev-sibling tag)))
+    (defun td/treesit-tag-sibling (n p bol)
       (when treesit--indent-verbose
-        (message "tag: %s, prev: %s" tag prev))
-      (cond
-       ((treesit-node-match-p prev (rx "jsx_opening_element"))
-        ;; This is the first child, need to check the parent tag
-        (let ((parent-tag (treesit-parent-until tag "jsx_element")))
-          (+ (td/treesit-tag-start tag parent-tag 0) typescript-ts-mode-indent-offset)))
-       ((treesit-node-match-p tag (rx "jsx_closing_element"))
-        (let ((parent-tag (treesit-parent-until tag "jsx_element")))
-          (td/treesit-tag-start tag parent-tag 0)))
-       (t (save-excursion
-            (goto-char (treesit-node-start prev))
-            (while (and (<= (point) (point-max))
-                        (looking-at (rx (| whitespace control)) t))
-              (forward-char))
-            (point))))))
+        (td/treesit-indent-debug n p bol))
+      (let* ((tag (treesit-parent-until
+                   p
+                   (rx (or "jsx_closing_element" "jsx_element" "jsx_self_closing_element"))))
+             (prev (treesit-node-prev-sibling tag)))
+        (when treesit--indent-verbose
+          (message "tag: %s, prev: %s" tag prev))
+        (cond
+         ((treesit-node-match-p prev (rx "jsx_opening_element"))
+          ;; This is the first child, need to check the parent tag
+          (let ((parent-tag (treesit-parent-until tag "jsx_element")))
+            (+ (td/treesit-tag-start tag parent-tag 0) typescript-ts-mode-indent-offset)))
+         ((treesit-node-match-p tag (rx "jsx_closing_element"))
+          (let ((parent-tag (treesit-parent-until tag "jsx_element")))
+            (td/treesit-tag-start tag parent-tag 0)))
+         (t (save-excursion
+              (goto-char (treesit-node-start prev))
+              (while (and (<= (point) (point-max))
+                          (looking-at (rx (| whitespace control)) t))
+                (forward-char))
+              (point))))))
 
-  (defvar td/tsx-additional-indent-rules
-    '(((match nil "<") td/treesit-tag-sibling 0)
-      ((parent-is "jsx_text") parent-bol 2)
-      ((node-is "jsx_closing_element") td/treesit-tag-start 0)
-      ((match "/" "jsx_self_closing_element") td/treesit-tag-start 0)
-      ((match ">" "jsx_opening_element") td/treesit-tag-start 0)
-      ((parent-is "jsx_opening_element") td/treesit-tag-start 2)
-      ((parent-is "jsx_self_closing_element") td/treesit-tag-start 2)))
+    (defvar td/tsx-additional-indent-rules
+      '(((match nil "<") td/treesit-tag-sibling 0)
+        ((parent-is "jsx_text") parent-bol 2)
+        ((node-is "jsx_closing_element") td/treesit-tag-start 0)
+        ((match "/" "jsx_self_closing_element") td/treesit-tag-start 0)
+        ((match ">" "jsx_opening_element") td/treesit-tag-start 0)
+        ((parent-is "jsx_opening_element") td/treesit-tag-start 2)
+        ((parent-is "jsx_self_closing_element") td/treesit-tag-start 2)))
 
-  (defun td/fix-tsx-indentation ()
-    (setq-local
-     treesit-simple-indent-rules
-     (list (cons 'tsx (append td/tsx-additional-indent-rules (cdar (typescript-ts-mode--indent-rules 'tsx)))))))
+    (defun td/fix-tsx-indentation ()
+      (setq-local
+       treesit-simple-indent-rules
+       (list (cons 'tsx (append td/tsx-additional-indent-rules (cdar (typescript-ts-mode--indent-rules 'tsx)))))))
 
-  (use-package typescript-ts-mode
-    :mode (("\\.ts\\'" . typescript-ts-mode)
-           ("\\.tsx\\'" . tsx-ts-mode))
-    ;:hook ((tsx-ts-mode . td/fix-tsx-indentation))
-    )
+    (use-package typescript-ts-mode
+      :mode (("\\.ts\\'" . typescript-ts-mode)
+             ("\\.tsx\\'" . tsx-ts-mode))
+      ;:hook ((tsx-ts-mode . td/fix-tsx-indentation))
+      )
 
-  (use-package go-ts-mode
-    :mode (("go.mod$" . go-mod-ts-mode)
-           ("\\.go\\'" . go-ts-mode))
-    :custom
-    (go-ts-mode-indent-offset 2))
+    (use-package go-ts-mode
+      :mode (("go.mod$" . go-mod-ts-mode)
+             ("\\.go\\'" . go-ts-mode))
+      :custom
+      (go-ts-mode-indent-offset 2))
 
-  (setopt
-   major-mode-remap-alist
-   '((js-mode . js-ts-mode)
-     (typescript-mode . typescript-ts-mode)
-     (json-mode . json-ts-mode)
-     (css-mode . css-ts-mode)
-     ;; (python-mode . python-ts-mode)
-     ))
+    (use-package scala-ts-mode
+      :ensure t
+      :mode (("\\.scala\\'" . scala-ts-mode)
+             ("build.mill'" . scala-ts-mode)))
+
+    (setopt
+     major-mode-remap-alist
+     '((js-mode . js-ts-mode)
+       (typescript-mode . typescript-ts-mode)
+       (json-mode . json-ts-mode)
+       (css-mode . css-ts-mode)
+       ;; (python-mode . python-ts-mode)
+       ))
 #+end_src
 
 ** Auto completion
@@ -1347,8 +1357,8 @@ bold and ligatures support :(.
    default-frame-alist
    `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
-     ;; (font . "Iosevka Fixed SS07 15")
-     (font . "Iosevka Mono 16")
+     (font . "Iosevka Fixed SS07 Semibold 18")
+     ;; (font . "Iosevka Mono 16")
      ;; (font . "JetBrains Mono NL 14")
      ;; (font . "Agave 16")
      ;; (font . "Ubuntu Mono 16")
@@ -1469,7 +1479,6 @@ kind of distracting, but it is really helpful sometimes.
 
     (advice-add 'diff-hl-overlay-modified :override #'td/diff-hl-overlay-modified))
 #+end_src
-
 
 * Misc
 

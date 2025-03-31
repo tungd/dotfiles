@@ -61,9 +61,8 @@ Homebrew. Installation is a little bit more involved, though.
   sudo port install kubectl-1.24 terraform-1.2
   sudo port install watchman sqlite3 ripgrep tree libxml2 lcms2
   sudo port install nodejs18 npm8 yarn python3.10 py310-pip py310-awscli postgresql14
-  sudo port install texinfo gnutls jansson
+  sudo port install texinfo gnutls
   sudo port install z direnv
-  sudo port install emacs-app-devel
 #+END_SRC
 
 ** AWS Session Manager plugin
@@ -107,3 +106,9 @@ Decrease repeat delay, increase repeat rate and disable Emoji.
 #+BEGIN_SRC sh
   defaults write com.apple.screencapture disable-shadow -bool true
 #+END_SRC
+
+** Disable font-smoothing, works better with 2k external display (provided web pages are zoomed & editors uses medium fonts)
+
+#+begin_src sh
+  defaults -currentHost write -g AppleFontSmoothing -int 0
+#+end_src
