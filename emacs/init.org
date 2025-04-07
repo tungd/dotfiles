@@ -732,12 +732,10 @@ Native LSP support via =Eglot= since Emacs 29.1
     :config
     (add-to-list 'eglot-server-programs '(ocaml-ts-mode "ocamllsp"))
     (add-to-list 'eglot-server-programs '((web-mode :language-id "typescriptreact") "typescript-language-server" "--stdio"))
-    (add-to-list 'eglot-server-programs '(scala-ts-mode "metals"))
-    ;; https://www.reddit.com/r/emacs/comments/17jrsmv/comment/k74b3tg/?utm_source=share&utm_medium=web2x&context=3
-    (advice-add 'jsonrpc--log-event :override #'ignore))
+    (add-to-list 'eglot-server-programs '(scala-ts-mode "metals")))
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package lspce
     :load-path "/Users/tung/.config/emacs/vendor/lspce"
     :hook
@@ -1357,7 +1355,7 @@ bold and ligatures support :(.
    default-frame-alist
    `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
-     (font . "Iosevka Fixed SS07 Semibold 18")
+     (font . "Iosevka Fixed SS07 Semibold 16")
      ;; (font . "Iosevka Mono 16")
      ;; (font . "JetBrains Mono NL 14")
      ;; (font . "Agave 16")
@@ -1404,8 +1402,15 @@ Truncate lines:
 Some preferences that I set for all the theme. Per documentation, the custom
 theme named =user= will always have the highest priority.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (load-theme 'modus-vivendi t)
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package github-dark-vscode-theme
+    :ensure t
+    :init
+    (load-theme 'github-dark-vscode t))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1519,7 +1524,7 @@ kind of distracting, but it is really helpful sometimes.
     (evil-cross-lines t))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package aidermacs
     :ensure t
     :bind* ("C-c C-a" . aidermacs-transient-menu)

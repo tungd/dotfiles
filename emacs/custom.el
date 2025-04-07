@@ -181,7 +181,8 @@
      (tramp-connection-local-default-system-profile (path-separator . ":")
                                                     (null-device . "/dev/null"))))
  '(custom-safe-themes
-   '("a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e"
+   '("5b4fc448d0fb588fdad7c86ab5bb9baaa358488f4b6e4a3d1ff2aca7b293651f"
+     "a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e"
      "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa"
      "10e5d4cc0f67ed5cafac0f4252093d2119ee8b8cb449e7053273453c1a1eb7cc"
      "bf948e3f55a8cd1f420373410911d0a50be5a04a8886cabe8d8e471ad8fdba8e"
@@ -199,15 +200,17 @@
      "4fda8201465755b403a33e385cf0f75eeec31ca8893199266a6aeccb4adedfa4" default))
  '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
  '(package-selected-packages
-   '(aidermacs consult copilot crux csv-mode d2-mode dape detached diff-hl dune
-               dune-format eglot emmet-mode envrc evil exec-path-from-shell f
-               feature-mode gptel gptel-anthropic highlight-indentation
-               indent-guide isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit
-               markdown-mode markdown-ts-mode minions modus-theme ob-async
-               ob-http ob-kotlin ob-plantuml ocaml-ts-mode persp-mode
-               plantuml-mode protobuf-ts-mode rainbow-mode reason-mode rg
-               scad-mode scala-ts-mode surround tempel terraform-mode
-               treesit-fold tuareg visual-replace vterm vundo web-mode yasnippet))
+   '(aider consult copilot crux csv-mode d2-mode dape detached diff-hl dune
+           dune-format eglot emmet-mode envrc evil exec-path-from-shell f
+           feature-mode github-dark-vscode-theme gptel gptel-anthropic
+           highlight-indentation indent-guide isearch-mb kanagawa-themes
+           kotlin-mode kotlin-ts-mode lua-mode magit markdown-mode
+           markdown-ts-mode minions modus-theme nezburn-theme nubox ob-async
+           ob-http ob-kotlin ob-plantuml ocaml-ts-mode persp-mode plantuml-mode
+           protobuf-ts-mode railscasts-reloaded-theme rainbow-mode reason-mode
+           rg scad-mode scala-ts-mode surround tempel terraform-mode
+           treesit-fold tuareg uwu-theme visual-replace vterm vundo web-mode
+           yasnippet))
  '(safe-local-variable-values
    '((eval setenv "LIBRARY_PATH" "/opt/local/lib/mysql8/mysql")
      (eval add-hook 'after-save-hook

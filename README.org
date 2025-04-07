@@ -110,5 +110,19 @@ Decrease repeat delay, increase repeat rate and disable Emoji.
 ** Disable font-smoothing, works better with 2k external display (provided web pages are zoomed & editors uses medium fonts)
 
 #+begin_src sh
-  defaults -currentHost write -g AppleFontSmoothing -int 0
+  defaults -currentHost write -g AppleFontSmoothing -int 2
+#+end_src
+
+* Experimental build of emacs-mac (Mituharu's port)
+
+#+begin_src sh
+  git clone https://github.com/jdtsmith/emacs-mac.git
+  cd emacs-macs
+  sudo port install tree-sitter-* automake autoconf texinfo
+  ./autogen.sh
+  CFLAGS="-O3 -mcpu=native -I/opt/local/include/gcc14 -L/opt/local/lib/gcc14 -rpath /opt/local/lib/gcc14" ./configure --with-native-compilation=aot --with-tree-sitter --enable-mac-app=yes --prefix=$HOME/.local
+  make -j10
+  make install
+  cp -R native-lisp mac/Emacs.app/Contents
+  cp -R mac/Emacs.app ~/Applications
 #+end_src
