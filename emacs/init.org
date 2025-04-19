@@ -126,7 +126,7 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
   (setopt enable-recursive-minibuffers t)
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package desktop
     :hook ((after-init . desktop-save-mode)
            (after-init . desktop-read)))
@@ -762,7 +762,10 @@ Native LSP support via =Eglot= since Emacs 29.1
     ;; modify `lspce-server-programs' to add or change a lsp server, see document
     ;; of `lspce-lsp-type-function' to understand how to get buffer's lsp type.
     ;; Bellow is what I use
-    (add-to-list 'lspce-server-programs '("scala" "metals" "")))
+    (add-to-list 'lspce-server-programs '("scala" "metals" ""))
+    (add-to-list 'lspce-server-programs '("typescriptreact" "typescript-language-server" "--stdio"))
+    (add-to-list 'lspce-server-programs '("tuareg" "ocamllsp" ""))
+    (add-to-list 'lspce-server-programs '("ocaml" "ocamllsp" "")))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -987,7 +990,7 @@ re-run the tests.
   (use-package treesit-fold
     :ensure t
     :hook ((after-init . global-treesit-fold-mode)
-           (after-init . global-treesit-fold-indicators-mode)
+           ;(after-init . global-treesit-fold-indicators-mode)
            (treesit-fold-mode . treesit-fold-line-comment-mode)))
 #+end_src
 
@@ -1101,6 +1104,11 @@ Python or Haskell:
     :ensure t)
 
   (use-package reason-mode
+    :ensure t)
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package ocaml-ts-mode
     :ensure t)
 #+end_src
 
@@ -1223,7 +1231,14 @@ Here's my basic Org setup:
        (shell . t)
        (js . t)
        (kotlin . t)
-       (sql . t))))
+       (sql . t)
+       (sql-mode . t))))
+
+  (use-package ob-sql-mode
+    :ensure t)
+
+  (use-package sql-clickhouse
+    :defer t)
 #+end_src
 
 Agenda overview and filtering. Org provides a bunch of quick overviews:
@@ -1334,6 +1349,24 @@ the way I liked.
   (pixel-scroll-precision-mode t)
 #+end_src
 
+I have a 2k display, and used to run a HiDPI hack for macOS. Recently I got a
+new Mac and tired of running it. So here it goes:
+
+#+begin_src emacs-lisp
+  (defun td/adapt-font-size (&optional frame)
+    (let* ((attrs (frame-monitor-attributes frame))
+           (size (alist-get 'mm-size attrs))
+           (geometry (alist-get 'geometry attrs))
+           (ppi (/ (caddr geometry) (/ (car size) 25.4))))
+      ;;(message "PPI: %s" ppi)
+      (if (> ppi 120)
+          (set-face-attribute 'default frame :height 160)
+        (set-face-attribute 'default frame :height 180))))
+
+  (add-function :after after-focus-change-function #'td/adapt-font-size)
+  (add-hook 'after-make-frame-functions #'td/adapt-font-size)
+#+end_src
+
 I use mouse scroll a lot, and with the default key binding it would accidentally
 change the text scale. I don't want this behavior, hence unbind the key here.
 
@@ -1362,6 +1395,7 @@ bold and ligatures support :(.
      ;; (font . "Ubuntu Mono 16")
      (tool-bar-lines . 0)
      (fullscreen . maximized)
+     (mac-appearance . dark)
      (ns-appearance . dark)
      (vertical-scroll-bars . nil)))
 
@@ -1407,10 +1441,10 @@ theme named =user= will always have the highest priority.
 #+end_src
 
 #+begin_src emacs-lisp
-  (use-package github-dark-vscode-theme
+  (use-package doom-themes
     :ensure t
     :init
-    (load-theme 'github-dark-vscode t))
+    (load-theme 'doom-ayu-mirage t))
 #+end_src
 
 #+begin_src emacs-lisp
