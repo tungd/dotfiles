@@ -210,7 +210,8 @@
            sql-cassandra surround tempel terraform-mode treesit-fold tuareg
            visual-replace vterm vundo web-mode yasnippet))
  '(safe-local-variable-values
-   '((eval setenv "LIBRARY_PATH" "/opt/local/lib/mysql8/mysql")
+   '((checkdoc-allow-quoting-nil-and-t . t)
+     (eval setenv "LIBRARY_PATH" "/opt/local/lib/mysql8/mysql")
      (eval add-hook 'after-save-hook
            (lambda nil (org-babel-tangle)
              (byte-recompile-file "~/.config/emacs/init.el"))
