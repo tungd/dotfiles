@@ -1,4 +1,4 @@
-;;; sql-clickhouse.el --- support ClickHouse as SQL interpreter
+;;; sql-clickhouse.el --- support ClickHouse as SQL interpreter  -*- lexical-binding: t; -*-
 
 ;; Copyright (c) 2018 Robert Schwarz
 ;; Package-Requires: ((emacs "24"))
