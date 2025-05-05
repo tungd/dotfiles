@@ -1527,36 +1527,6 @@ kind of distracting, but it is really helpful sometimes.
   (bind-key* "C-M-r" #'td/refresh-front-most-tab)
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
-  (use-package kubel
-    :ensure t
-    :defer t
-    :custom
-    (kubel-kubectl "/opt/local/bin/kubectl"))
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (use-package evil
-    :ensure t
-    :hook (after-init . evil-mode)
-    :custom
-    (evil-search-module 'isearch)
-    (evil-echo-state nil)
-    (evil-ex-substitute-global t)
-    (evil-cross-lines t))
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (use-package aider
-    :ensure t
-    :custom
-    (aider-args `("--model" "anthropic/claude-3-5-sonnet-20241022"
-                  "--cache-prompts" "--no-stream" "--watch-files"
-                  "--no-auto-commits"
-                  "--api-key"
-                  ,(format "anthropic=%s" (auth-source-pick-first-password :host "claude" :max 1)))))
-#+end_src
-
 #+begin_src emacs-lisp
   (use-package aidermacs
     :ensure t
