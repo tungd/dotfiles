@@ -267,14 +267,6 @@ mini-buffer completion framework.
   ;(bind-key "C-n" #'minibuffer-next-completion completion-in-region-mode-map)
 #+end_src
 
-Vertico is the next in line for vertical completion.
-
-#+begin_src emacs-lisp :tangle no
-  (use-package vertico
-    :ensure t
-    :hook (after-init . vertico-mode))
-#+end_src
-
 #+begin_src emacs-lisp
   (use-package consult
     :ensure t
@@ -739,41 +731,6 @@ Native LSP support via =Eglot= since Emacs 29.1
     (add-to-list 'eglot-server-programs '(ocaml-ts-mode "ocamllsp"))
     (add-to-list 'eglot-server-programs '((web-mode :language-id "typescriptreact") "typescript-language-server" "--stdio"))
     (add-to-list 'eglot-server-programs '(scala-ts-mode "metals")))
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (use-package lspce
-    :load-path "/Users/tung/.config/emacs/vendor/lspce"
-    :hook
-    ((js-ts-mode . lspce-mode)
-    (typescript-ts-mode . lspce-mode)
-    (tsx-ts-mode . lspce-mode)
-    (go-ts-mode . lspce-mode)
-    (ocaml-ts-mode . lspce-mode)
-    (kotlin-ts-mode . lspce-mode)
-    (scala-ts-mode . lspce-mode)
-    (tuareg-mode . lspce-mode))
-    :custom
-    (lspce-send-changes-idle-time 0.05)
-    (lspce-show-log-level-in-modeline t)
-    (lspce-inherit-exec-path t)
-    (lspce-envs-pass-to-subprocess '("PATH"))
-    :config
-    ;; You should call this first if you want lspce to write logs
-    (lspce-set-log-file "/tmp/lspce.log")
-
-    ;; By default, lspce will not write log out to anywhere.
-    ;; To enable logging, you can add the following line
-    ;; (lspce-enable-logging)
-    ;; You can enable/disable logging on the fly by calling `lspce-enable-logging' or `lspce-disable-logging'.
-
-    ;; modify `lspce-server-programs' to add or change a lsp server, see document
-    ;; of `lspce-lsp-type-function' to understand how to get buffer's lsp type.
-    ;; Bellow is what I use
-    (add-to-list 'lspce-server-programs '("scala" "metals" ""))
-    (add-to-list 'lspce-server-programs '("typescriptreact" "typescript-language-server" "--stdio"))
-    (add-to-list 'lspce-server-programs '("tuareg" "ocamllsp" ""))
-    (add-to-list 'lspce-server-programs '("ocaml" "ocamllsp" "")))
 #+end_src
 
 #+begin_src emacs-lisp
