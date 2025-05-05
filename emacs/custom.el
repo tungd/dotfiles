@@ -201,15 +201,16 @@
      "4fda8201465755b403a33e385cf0f75eeec31ca8893199266a6aeccb4adedfa4" default))
  '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
  '(package-selected-packages
-   '(aider consult copilot crux csv-mode d2-mode detached diff-hl doom-themes dune
-           dune-format eglot emmet-mode envrc evil exec-path-from-shell f
-           feature-mode gptel gptel-anthropic highlight-indentation indent-guide
-           isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit markdown-mode
-           markdown-ts-mode modus-theme ob-async ob-http ob-kotlin ob-plantuml
-           ob-sql-mode ocaml-ts-mode persp-mode plantuml-mode protobuf-ts-mode
-           rainbow-mode reason-mode rg scad-mode scala-ts-mode sql-cassandra
-           surround tempel terraform-mode treesit-fold tuareg visual-replace
-           vterm vundo web-mode yasnippet))
+   '(aidermacs consult copilot crux csv-mode d2-mode detached diff-hl doom-themes
+               dune dune-format eglot emmet-mode envrc evil exec-path-from-shell
+               f feature-mode gptel gptel-anthropic highlight-indentation
+               indent-guide isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit
+               markdown-ts-mode modus-theme ob-async ob-http ob-kotlin
+               ob-plantuml ob-sql-mode ocaml-ts-mode orderless persp-mode
+               plantuml-mode protobuf-ts-mode rainbow-mode reason-mode rg
+               scad-mode scala-ts-mode sql-cassandra surround tempel
+               terraform-mode treesit-fold tuareg visual-replace vterm vundo
+               web-mode window-numbering))
  '(safe-local-variable-values
    '((checkdoc-allow-quoting-nil-and-t . t)
      (eval setenv "LIBRARY_PATH" "/opt/local/lib/mysql8/mysql")

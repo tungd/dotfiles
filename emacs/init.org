@@ -325,7 +325,7 @@ Vertico is the next in line for vertical completion.
     (bind-key* "C-'" 'avy-goto-char))
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package orderless
     :ensure t
     :init
@@ -388,6 +388,12 @@ Buffer location customization
                  '("\\*Org-Babel Error Output\\*" display-buffer-in-direction
                    (direction . bottom)
                    (window-height . 8))))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package window-numbering
+    :ensure t
+    :hook (after-init . window-numbering-mode))
 #+end_src
 
 
@@ -708,7 +714,7 @@ Native LSP support via =Eglot= since Emacs 29.1
   (setopt read-process-output-max (* 8 1024 1024))
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package eglot
     :hook ((js-ts-mode . eglot-ensure)
            (typescript-ts-mode . eglot-ensure)
@@ -735,7 +741,7 @@ Native LSP support via =Eglot= since Emacs 29.1
     (add-to-list 'eglot-server-programs '(scala-ts-mode "metals")))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package lspce
     :load-path "/Users/tung/.config/emacs/vendor/lspce"
     :hook
@@ -933,6 +939,7 @@ I use auto completion sparingly.
   (use-package gptel
     :ensure t
     :bind ("C-l c" . gptel-menu)
+    :hook (gptel-mode . visual-line-mode)
     :custom
     (gptel-model 'claude-3-5-sonnet-20241022)
     (gptel-default-mode 'org-mode)
@@ -1591,6 +1598,20 @@ kind of distracting, but it is really helpful sometimes.
                   "--no-auto-commits"
                   "--api-key"
                   ,(format "anthropic=%s" (auth-source-pick-first-password :host "claude" :max 1)))))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package aidermacs
+    :ensure t
+    :bind (("C-c C-a" . aidermacs-transient-menu))
+    :config
+    :custom
+    (aidermacs-backend 'vterm)
+    (aidermacs-extra-args `("--model" "anthropic/claude-3-5-sonnet-20241022"
+                    "--cache-prompts" "--no-stream" "--watch-files"
+                    "--no-auto-commits"
+                    "--api-key"
+                    ,(format "anthropic=%s" (auth-source-pick-first-password :host "claude" :max 1)))))
 #+end_src
 
 
