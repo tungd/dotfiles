@@ -727,6 +727,7 @@ Native LSP support via =Eglot= since Emacs 29.1
                                          :documentHighlightProvider))
     (eglot-send-changes-idle-time 0.1)
     (eglot-extend-to-xref t)
+    (eglot-code-action-indications '(mode-line))
     :config
     (add-to-list 'eglot-server-programs '(ocaml-ts-mode "ocamllsp"))
     (add-to-list 'eglot-server-programs '((web-mode :language-id "typescriptreact") "typescript-language-server" "--stdio"))
@@ -1130,7 +1131,12 @@ Python or Haskell:
      '((user :default "postgres")
        (database :default "postgres")
        (server :default "localhost")
-       (port :default 5432))))
+       (port :default 5432)))
+    (sql-mysql-login-params
+     '((user :default "root")
+       (database :default "mysql")
+       (server :default "root")
+       (port :default 3306))))
 #+end_src
 
 ** Misc
@@ -1143,19 +1149,14 @@ These are supports for other stuffs that I used:
     :hook (yaml-ts-mode . display-line-numbers-mode))
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
-  (use-package nix-ts-mode
-    :ensure t)
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (use-package markdown-mode
+#+begin_src emacs-lisp
+  (use-package graphql-ts-mode
     :ensure t
-    :mode (("\\.md$" . markdown-mode)
-           ("\\.markdown$" . markdown-mode))
-    :custom
-    ;; Requires 'pip3 install --user markdown'
-    (markdown-command "python3 -m markdown -x extra"))
+    :mode ("\\.graphql\\'" "\\.gql\\'")
+    :init
+    (with-eval-after-load 'treesit
+      (add-to-list 'treesit-language-source-alist
+                   '(graphql "https://github.com/bkegley/tree-sitter-graphql"))))
 #+end_src
 
 
@@ -1428,11 +1429,18 @@ theme named =user= will always have the highest priority.
   (load-theme 'modus-vivendi t)
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package doom-themes
     :ensure t
     :init
     (load-theme 'doom-ayu-mirage t))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package pache-dark-theme
+    :ensure t
+    :init
+    (load-theme 'pache-dark t))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1450,6 +1458,9 @@ theme named =user= will always have the highest priority.
 
    '(mode-line-buffer-id ((t :foreground "orange")))
    '(cursor ((t :background "orange")))
+   '(eglot-highlight-symbol-face ((t :weight normal)))
+   '(eglot-code-action-indicator-face ((t :weight normal)))
+   '(eglot-inlay-hint-face ((t :height 1.0)))
    )
 #+end_src
 
@@ -1507,6 +1518,7 @@ kind of distracting, but it is really helpful sometimes.
     (advice-add 'diff-hl-overlay-modified :override #'td/diff-hl-overlay-modified))
 #+end_src
 
+
 * Misc
 
 #+begin_src emacs-lisp
@@ -1531,7 +1543,6 @@ kind of distracting, but it is really helpful sometimes.
   (use-package aidermacs
     :ensure t
     :bind (("C-c C-a" . aidermacs-transient-menu))
-    :config
     :custom
     (aidermacs-backend 'vterm)
     (aidermacs-extra-args `("--model" "anthropic/claude-3-5-sonnet-20241022"
@@ -1544,6 +1555,21 @@ kind of distracting, but it is really helpful sometimes.
 
 * Ideas
 
+** Aphelia
+
+https://github.com/radian-software/apheleia?tab=readme-ov-file
+
+This seems really cool
+
+** CtrlF
+
+https://github.com/radian-software/ctrlf
+
+I've used it before, not sure why I stopped using it back then.
+
+** https://github.com/radian-software/prescient.el?tab=readme-ov-file#for-the-completion-style
+
+Replacing Orderless
 
 * Init file generation
 

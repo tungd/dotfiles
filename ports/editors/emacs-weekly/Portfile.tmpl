@@ -248,6 +248,7 @@ if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
     universal_variant   no
 
     patchfiles-append   patch-Info.plist.in.diff
+    patchfiles-append   fix-window-role.patch
 
     post-patch {
         reinplace "s,@PATH@,${prefix}/bin:${prefix}/sbin:/usr/bin:/bin:/usr/sbin:/sbin," ${worksrcpath}/nextstep/templates/Info.plist.in

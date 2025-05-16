@@ -203,12 +203,13 @@
  '(package-selected-packages
    '(aidermacs consult copilot crux csv-mode d2-mode detached diff-hl doom-themes
                dune dune-format eglot emmet-mode envrc evil exec-path-from-shell
-               f feature-mode gptel gptel-anthropic highlight-indentation
-               indent-guide isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit
-               markdown-ts-mode modus-theme ob-async ob-http ob-kotlin
-               ob-plantuml ob-sql-mode ocaml-ts-mode orderless persp-mode
-               plantuml-mode protobuf-ts-mode rainbow-mode reason-mode rg
-               scad-mode scala-ts-mode sql-cassandra surround tempel
+               f feature-mode gptel gptel-anthropic graphql-ts-mode
+               highlight-indentation indent-guide isearch-mb kotlin-mode
+               kotlin-ts-mode lua-mode magit markdown-ts-mode modus-theme
+               ob-async ob-http ob-kotlin ob-plantuml ob-sql-mode ocaml-ts-mode
+               orderless pache-dark-theme persp-mode plantuml-mode
+               protobuf-ts-mode rainbow-mode reason-mode rg scad-mode
+               scala-ts-mode sql-cassandra surround tango-plus-theme tempel
                terraform-mode treesit-fold tuareg visual-replace vterm vundo
                web-mode window-numbering))
  '(safe-local-variable-values
@@ -227,6 +228,9 @@
  '(diff-hl-change ((t (:inherit nil :background unspecified :foreground "#deae3e"))))
  '(diff-hl-delete ((t (:inherit nil :background unspecified :foreground "#ff0000"))))
  '(diff-hl-insert ((t (:inherit nil :background unspecified :foreground "#81af34"))))
+ '(eglot-code-action-indicator-face ((t :weight normal)))
+ '(eglot-highlight-symbol-face ((t :weight normal)))
+ '(eglot-inlay-hint-face ((t :height 1.0)))
  '(font-lock-comment-delimiter-face ((t :slant normal)))
  '(font-lock-comment-face ((t :slant normal)))
  '(font-lock-constant-face ((t :slant normal)))

@@ -123,15 +123,15 @@ if {$subport eq "emacs-devel" || $subport eq "emacs-app-devel"} {
 
     # do not forget to check that configure hasn't introduce some suprises via
     # git diff [old]..[new] -- '**/configure.ac'
-    github.setup    emacs-mirror emacs 9261d353ccc0f94da8049faaade025f338d75354
+    github.setup    emacs-mirror emacs 9659f8aa344f73164bece7408d63991531fc115d
     github.tarball_from archive
     epoch           5
-    version         20250505
+    version         20250516
     revision        0
 
     master_sites    ${github.master_sites}
 
-    checksums       sha256  0f8ba888950d5baabd392404e682abc6b5b067008577d46e8a088814b0c39cc9
+    checksums       sha256  1f6fe7ea6de53be50d3627ec490ea3c06829b858d06c9ce0a1e89d30c9da632a
 
     # patchfiles-append \
     #                 patch-allow-powerpc-devel.diff
@@ -248,6 +248,7 @@ if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
     universal_variant   no
 
     patchfiles-append   patch-Info.plist.in.diff
+    patchfiles-append   fix-window-role.patch
 
     post-patch {
         reinplace "s,@PATH@,${prefix}/bin:${prefix}/sbin:/usr/bin:/bin:/usr/sbin:/sbin," ${worksrcpath}/nextstep/templates/Info.plist.in
