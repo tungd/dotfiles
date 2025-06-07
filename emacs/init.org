@@ -242,11 +242,19 @@ mini-buffer completion framework.
     (completion-auto-help 'always)
     (completion-show-help nil)
     (completion-auto-select 'second-tab)
+    ;(completion-auto-select t)
     (completions-max-height 20)
     (completions-sort 'historical)
     (completions-format 'one-column)
     (completions-detailed t)
     (completions-group t))
+
+  (use-package prescient
+    :ensure t
+    :hook (after-init . prescient-persist-mode)
+    :init
+    (add-to-list 'completion-styles 'prescient)
+    (setq completion-preview-sort-function #'prescient-completion-sort))
 
   (defun td/minibuffer-smart-tilde ()
     (interactive)
@@ -260,11 +268,11 @@ mini-buffer completion framework.
   (bind-key "<s-backspace>" #'backward-kill-word minibuffer-local-map)
   (bind-key "TAB" #'minibuffer-complete minibuffer-mode-map)
 
-  ;(bind-key "C-p" #'minibuffer-previous-completion minibuffer-local-map)
-  ;(bind-key "C-n" #'minibuffer-next-completion minibuffer-local-map)
+  (bind-key "C-p" #'minibuffer-previous-completion minibuffer-local-map)
+  (bind-key "C-n" #'minibuffer-next-completion minibuffer-local-map)
 
-  ;(bind-key "C-p" #'minibuffer-previous-completion completion-in-region-mode-map)
-  ;(bind-key "C-n" #'minibuffer-next-completion completion-in-region-mode-map)
+  (bind-key "C-p" #'minibuffer-previous-completion completion-in-region-mode-map)
+  (bind-key "C-n" #'minibuffer-next-completion completion-in-region-mode-map)
 #+end_src
 
 #+begin_src emacs-lisp
@@ -317,7 +325,7 @@ mini-buffer completion framework.
     (bind-key* "C-'" 'avy-goto-char))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package orderless
     :ensure t
     :init
@@ -364,6 +372,11 @@ Buffer location customization
     :custom
     (window-min-height 1)
     :config
+    (add-to-list 'display-buffer-alist
+               '("^\\*claude\\*"
+                 (display-buffer-in-side-window)
+                 (side . right)
+                 (window-width . 0.32)))
     (add-to-list 'display-buffer-alist
                  '("\\*compilation\\*" (display-buffer-reuse-window display-buffer-below-selected)
                    (inhibit-same-window . t)
@@ -1407,7 +1420,9 @@ Hide unnecessary long mode line mode list
 #+end_src
 
 #+begin_src emacs-lisp
-  (use-package hl-line :hook (prog-mode . global-hl-line-mode))
+  (use-package hl-line
+    :hook ((prog-mode . hl-line-mode)
+           (text-mode . hl-line-mode)))
 #+end_src
 
 Truncate lines:
