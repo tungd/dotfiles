@@ -101,7 +101,7 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
    bidi-paragraph-direction 'left-to-right
    bidi-inhibit-bpa t)
 
-  (setopt read-process-output-max (* 16 1024 1024)
+  (setq read-process-output-max (* 16 1024 1024)
         inhibit-compacting-font-caches t)
 #+end_src
 
@@ -464,6 +464,7 @@ Editing utilities:
            ("C-M-k" . crux-kill-whole-line)
            ("C-c D" . crux-delete-file-and-buffer)
            ("C-c C-o" . crux-open-with)
+           ([remap keyboard-quit] . crux-keyboard-quit-dwim)
            ([remap kill-line] . crux-smart-kill-line))
     :config
     ;(crux-with-region-or-buffer indent-region)
@@ -487,12 +488,13 @@ Make the file executable if starting with "shebang":
 
 #+begin_src emacs-lisp
   (use-package isearch
-    :defer t
     :custom
     (isearch-wrap-pause 'no)
     (isearch-lazy-count t)
     (search-ring-max 256)
     (regexp-search-ring-max 200)
+    (search-allow-motion t)
+    (isearch-motion-changes-direction t)
     :bind
     ([remap isearch-forward] . isearch-forward-regexp)
     ([remap isearch-backward] . isearch-backward-regexp))
@@ -565,7 +567,7 @@ Parenthesis come in pairs, that's why they are cumbersome to deal with.
 #+begin_src emacs-lisp
   (use-package surround
     :ensure t
-    :bind-keymap ("M-s" . surround-keymap))
+    :bind-keymap ("C-M-s" . surround-keymap))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -716,10 +718,6 @@ Some speedup for Tramp:
 Native LSP support via =Eglot= since Emacs 29.1
 
 #+begin_src emacs-lisp
-  (setopt read-process-output-max (* 8 1024 1024))
-#+end_src
-
-#+begin_src emacs-lisp
   (use-package eglot
     :hook ((js-ts-mode . eglot-ensure)
            (typescript-ts-mode . eglot-ensure)
@@ -727,12 +725,11 @@ Native LSP support via =Eglot= since Emacs 29.1
            (go-ts-mode . eglot-ensure)
            (ocaml-ts-mode . eglot-ensure)
            (kotlin-ts-mode . eglot-ensure)
-           (scala-ts-mode . eglot-ensure)
-           (tuareg-mode . eglot-ensure))
+           (scala-ts-mode . eglot-ensure))
     ;; :bind ("C-c C-a" . eglot-code-actions)
     :custom
-    (eglot-autoshutdown t)
-    (eglot-prefer-plaintext t)
+    (eglot-auptoshutdown t)
+    (eglot-ppprefer-plaintext t)
     (eglot-events-buffer-config '(:size 0))
     (eglot-connect-timeout 300)
     (eglot-ignored-server-capabilities '(:documentFormattingProvider
@@ -742,13 +739,14 @@ Native LSP support via =Eglot= since Emacs 29.1
     (eglot-extend-to-xref t)
     (eglot-code-action-indications '(mode-line))
     :config
+    (add-to-list 'eglot-server-programs '((neocaml-mode :language-id "ocaml") . ("ocamllsp")))
     (add-to-list 'eglot-server-programs '(ocaml-ts-mode "ocamllsp"))
     (add-to-list 'eglot-server-programs '(kotlin-ts-mode "kotlin-language-server" "--stdio"))
     (add-to-list 'eglot-server-programs '((web-mode :language-id "typescriptreact") "typescript-language-server" "--stdio"))
     (add-to-list 'eglot-server-programs '(scala-ts-mode "metals")))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package eldoc
     :config
     (setopt eldoc-display-functions '(eldoc-display-in-buffer)))
@@ -1105,17 +1103,17 @@ Python or Haskell:
         Haskell world seems to be a one-off experiment, or an one-time job then
         abandoned at best. (I'm talking about iCalendar, and there are many other cases).
 
-#+begin_src emacs-lisp :tangle no
-  (use-package tuareg
-    :ensure t)
-
-  (use-package reason-mode
-    :ensure t)
-#+end_src
-
 #+begin_src emacs-lisp
-  (use-package ocaml-ts-mode
-    :ensure t)
+  (use-package neocaml
+    :vc (:url "https://github.com/bbatsov/neocaml" :rev :newest)
+    :custom
+    (neocaml-repl-program-name "dune")
+    (neocaml-repl-program-args '("utop" "." "--" "-short-paths")))
+
+  (use-package utop
+    :ensure t
+    :custom
+    (utop-command "dune utop . -- -emacs"))
 #+end_src
 
 ** Java

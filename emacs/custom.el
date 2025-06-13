@@ -206,14 +206,15 @@
                exec-path-from-shell f feature-mode gptel gptel-anthropic
                graphql-ts-mode highlight-indentation indent-guide isearch-mb
                kotlin-mode kotlin-ts-mode lua-mode magit markdown-ts-mode
-               mermaid-mode modus-theme ob-async ob-http ob-kotlin ob-plantuml
-               ob-sql-mode ocaml-ts-mode pache-dark-theme persp-mode
-               plantuml-mode prescient protobuf-mode protobuf-ts-mode
-               rainbow-mode reason-mode rg scad-mode sql-cassandra surround
-               tango-plus-theme tempel terraform-mode treesit-fold tuareg
-               vertico visual-replace vterm vundo web-mode window-numbering))
+               mermaid-mode modus-theme neocaml ob-async ob-http ob-kotlin
+               ob-plantuml ob-sql-mode pache-dark-theme persp-mode plantuml-mode
+               prescient protobuf-mode protobuf-ts-mode rainbow-mode reason-mode
+               rg scad-mode sql-cassandra surround tango-plus-theme tempel
+               terraform-mode treesit-fold utop vertico visual-replace vterm
+               vundo web-mode window-numbering))
  '(package-vc-selected-packages
-   '((claude-code :url "https://github.com/stevemolitor/claude-code.el")))
+   '((claude-code :url "https://github.com/stevemolitor/claude-code.el")
+     (neocaml :url "https://github.com/bbatsov/neocaml")))
  '(safe-local-variable-values
    '((checkdoc-allow-quoting-nil-and-t . t)
      (eval setenv "LIBRARY_PATH" "/opt/local/lib/mysql8/mysql")
