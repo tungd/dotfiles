@@ -207,11 +207,11 @@
                graphql-ts-mode highlight-indentation indent-guide isearch-mb
                kotlin-mode kotlin-ts-mode lua-mode magit markdown-ts-mode
                mermaid-mode modus-theme neocaml ob-async ob-http ob-kotlin
-               ob-plantuml ob-sql-mode pache-dark-theme persp-mode plantuml-mode
-               prescient protobuf-mode protobuf-ts-mode rainbow-mode reason-mode
-               rg scad-mode sql-cassandra surround tango-plus-theme tempel
-               terraform-mode treesit-fold utop vertico visual-replace vterm
-               vundo web-mode window-numbering))
+               ob-plantuml ob-sql-mode ob-swift pache-dark-theme persp-mode
+               plantuml-mode prescient protobuf-mode protobuf-ts-mode
+               rainbow-mode reason-mode rg scad-mode sql-cassandra surround
+               swift-mode tango-plus-theme tempel terraform-mode treesit-fold
+               utop vertico visual-replace vterm vundo web-mode window-numbering))
  '(package-vc-selected-packages
    '((claude-code :url "https://github.com/stevemolitor/claude-code.el")
      (neocaml :url "https://github.com/bbatsov/neocaml")))
