@@ -201,19 +201,20 @@
      "4fda8201465755b403a33e385cf0f75eeec31ca8893199266a6aeccb4adedfa4" default))
  '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
  '(package-selected-packages
-   '(claude-code consult copilot crux csv-mode d2-mode detached diff-hl doom-themes
-                 dune dune-format eglot emmet-mode envrc evil
-                 exec-path-from-shell f feature-mode gptel gptel-anthropic
-                 graphql-ts-mode highlight-indentation indent-guide isearch-mb
-                 kotlin-mode kotlin-ts-mode lua-mode magit markdown-ts-mode
-                 mermaid-mode modus-theme neocaml ob-async ob-http ob-kotlin
-                 ob-plantuml ob-sql-mode ob-swift pache-dark-theme persp-mode
-                 plantuml-mode prescient protobuf-mode protobuf-ts-mode
-                 reason-mode rg scad-mode sql-cassandra surround swift-mode
-                 tango-plus-theme tempel terraform-mode treesit-fold utop
-                 vertico visual-replace vterm vundo web-mode window-numbering))
+   '(claudemacs consult crux csv-mode d2-mode detached diff-hl doom-themes dune
+                dune-format eglot emmet-mode envrc evil exec-path-from-shell f
+                feature-mode gptel gptel-anthropic graphql-ts-mode
+                highlight-indentation indent-guide isearch-mb kotlin-mode
+                kotlin-ts-mode lua-mode magit markdown-ts-mode mermaid-mode
+                modus-theme neocaml ob-async ob-http ob-kotlin ob-plantuml
+                ob-sql-mode ob-swift pache-dark-theme persp-mode plantuml-mode
+                prescient protobuf-mode protobuf-ts-mode reason-mode rg
+                scad-mode sql-cassandra surround swift-mode tango-plus-theme
+                tempel terraform-mode treesit-fold utop vertico visual-replace
+                vterm vundo web-mode window-numbering))
  '(package-vc-selected-packages
-   '((claude-code :url "https://github.com/stevemolitor/claude-code.el")
+   '((claudemacs :url "https://github.com/cpoile/claudemacs.git")
+     (claude-code :url "https://github.com/stevemolitor/claude-code.el")
      (neocaml :url "https://github.com/bbatsov/neocaml")))
  '(safe-local-variable-values
    '((checkdoc-allow-quoting-nil-and-t . t)

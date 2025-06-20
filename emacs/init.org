@@ -737,7 +737,7 @@ Native LSP support via =Eglot= since Emacs 29.1
                                          :documentOnTypeFormattingProvider
                                          :documentHighlightProvider))
     (eglot-extend-to-xref t)
-    (eglot-code-action-indications '(mode-line))
+    (eglot-code-action-indications '(eldoc-hint))
     :config
     (add-to-list 'eglot-server-programs '((neocaml-mode :language-id "ocaml") . ("ocamllsp")))
     (add-to-list 'eglot-server-programs '(ocaml-ts-mode "ocamllsp"))
@@ -910,23 +910,6 @@ I use auto completion sparingly.
       (call-interactively 'hippie-expand)))
 
   (bind-key "C-x C-l" #'td/expand-lines)
-#+end_src
-
-#+begin_src emacs-lisp
-  (use-package copilot
-    :ensure t
-    :bind (:map copilot-completion-map ("C-j" . copilot-accept-completion))
-    :hook ((mhtml-mode . copilot-mode)
-           (css-ts-mode . copilot-mode)
-           (html-ts-mode . copilot-mode)
-           (js-ts-mode . copilot-mode)
-           (typescript-ts-mode . copilot-mode)
-           (tsx-ts-mode . copilot-mode)
-           (kotlin-ts-mode . copilot-mode)
-           (go-ts-mode . copilot-mode)
-           (python-mode . copilot-mode))
-    :config
-    (add-to-list 'copilot-major-mode-alist '("tsx" . "typescriptreact")))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1382,8 +1365,8 @@ new Mac and tired of running it. So here it goes:
            (ppi (/ (caddr geometry) (/ (car size) 25.4))))
       ;;(message "PPI: %s" ppi)
       (if (> ppi 120)
-          (set-face-attribute 'default frame :height 160)
-        (set-face-attribute 'default frame :height 180))))
+          (set-face-attribute 'default frame :height 130)
+        (set-face-attribute 'default frame :height 150))))
 
   (add-function :after after-focus-change-function #'td/adapt-font-size)
   (add-hook 'after-make-frame-functions #'td/adapt-font-size)
@@ -1573,6 +1556,10 @@ kind of distracting, but it is really helpful sometimes.
   (bind-key* "C-M-r" #'td/refresh-front-most-tab)
 #+end_src
 
+#+begin_src emacs-lisp
+  (use-package claudemacs
+    :vc (:url "https://github.com/cpoile/claudemacs.git" :rev :newest))
+#+end_src
 
 * Ideas
 
