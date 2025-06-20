@@ -1365,8 +1365,8 @@ new Mac and tired of running it. So here it goes:
            (ppi (/ (caddr geometry) (/ (car size) 25.4))))
       ;;(message "PPI: %s" ppi)
       (if (> ppi 120)
-          (set-face-attribute 'default frame :height 130)
-        (set-face-attribute 'default frame :height 150))))
+          (set-face-attribute 'default frame :height 140)
+        (set-face-attribute 'default frame :height 160))))
 
   (add-function :after after-focus-change-function #'td/adapt-font-size)
   (add-hook 'after-make-frame-functions #'td/adapt-font-size)
@@ -1392,9 +1392,9 @@ bold and ligatures support :(.
    default-frame-alist
    `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
-     (font . "Iosevka Fixed SS07 Semibold 16")
+     ;; (font . "Iosevka Fixed SS07 Semibold 16")
      ;; (font . "Iosevka Mono 16")
-     ;; (font . "JetBrains Mono NL 14")
+     (font . "JetBrains Mono NL 14")
      ;; (font . "Agave 16")
      ;; (font . "Ubuntu Mono 16")
      (tool-bar-lines . 0)
@@ -1405,7 +1405,9 @@ bold and ligatures support :(.
 
   (blink-cursor-mode -1)
   (tool-bar-mode -1)
-  (setq-default cursor-in-non-selected-windows nil)
+  (setq-default
+   cursor-in-non-selected-windows nil
+   line-spacing 0.2)
 
   (unless (display-graphic-p)
     (menu-bar-mode -1))
