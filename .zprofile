@@ -118,13 +118,13 @@ export NOMAD_ADDR=http://100.126.196.13:4646
 preexec() {
   # Store the command being executed
   WEZTERM_CURRENT_COMMAND="$1"
-  printf "\033]1337;SetUserVar=WEZTERM_COMMAND_STATUS=running:%s\007" "$1"
+  printf "\e]1337;SetUserVar=WEZTERM_COMMAND_STATUS=running\007"
 }
 
 precmd() {
   # Command finished - send notification trigger
   if [[ -n "$WEZTERM_CURRENT_COMMAND" ]]; then
-    printf "\033]1337;SetUserVar=WEZTERM_COMMAND_STATUS=finished:%s\007" "$WEZTERM_CURRENT_COMMAND"
+    printf "\e]1337;SetUserVar=WEZTERM_COMMAND_STATUS=finished:%s\007" "$WEZTERM_CURRENT_COMMAND"
     unset WEZTERM_CURRENT_COMMAND
   fi
 }

@@ -182,7 +182,8 @@
      (tramp-connection-local-default-system-profile (path-separator . ":")
                                                     (null-device . "/dev/null"))))
  '(custom-safe-themes
-   '("5b4fc448d0fb588fdad7c86ab5bb9baaa358488f4b6e4a3d1ff2aca7b293651f"
+   '("5541d412c46ad24030fd34348ce1a5fa5e9030dd335e6d8322aba28fc9ceccc3"
+     "5b4fc448d0fb588fdad7c86ab5bb9baaa358488f4b6e4a3d1ff2aca7b293651f"
      "a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e"
      "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa"
      "10e5d4cc0f67ed5cafac0f4252093d2119ee8b8cb449e7053273453c1a1eb7cc"
@@ -202,8 +203,8 @@
  '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
  '(package-selected-packages
    '(claudemacs consult crux csv-mode d2-mode detached diff-hl doom-themes dune
-                dune-format eglot emmet-mode envrc evil exec-path-from-shell f
-                feature-mode gptel gptel-anthropic graphql-ts-mode
+                dune-format eat eglot emmet-mode envrc evil exec-path-from-shell
+                f feature-mode gptel gptel-anthropic graphql-ts-mode
                 highlight-indentation indent-guide isearch-mb kotlin-mode
                 kotlin-ts-mode lua-mode magit markdown-ts-mode mermaid-mode
                 modus-theme neocaml ob-async ob-http ob-kotlin ob-plantuml

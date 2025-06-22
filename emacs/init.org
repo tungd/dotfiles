@@ -726,7 +726,7 @@ Native LSP support via =Eglot= since Emacs 29.1
            (ocaml-ts-mode . eglot-ensure)
            (kotlin-ts-mode . eglot-ensure)
            (scala-ts-mode . eglot-ensure))
-    ;; :bind ("C-c C-a" . eglot-code-actions)
+    :bind ("C-c M-a" . eglot-code-actions)
     :custom
     (eglot-auptoshutdown t)
     (eglot-ppprefer-plaintext t)
@@ -737,7 +737,7 @@ Native LSP support via =Eglot= since Emacs 29.1
                                          :documentOnTypeFormattingProvider
                                          :documentHighlightProvider))
     (eglot-extend-to-xref t)
-    (eglot-code-action-indications '(eldoc-hint))
+    (eglot-code-action-indications '(mode-line))
     :config
     (add-to-list 'eglot-server-programs '((neocaml-mode :language-id "ocaml") . ("ocamllsp")))
     (add-to-list 'eglot-server-programs '(ocaml-ts-mode "ocamllsp"))
@@ -1553,14 +1553,25 @@ kind of distracting, but it is really helpful sometimes.
 #+begin_src emacs-lisp
   (defun td/refresh-front-most-tab ()
     (interactive)
-    (shell-command "osascript -e 'tell application \"Microsoft Edge\" to reload active tab of window 1'"))
+    (shell-command "osascript -e 'tell application \"Firefox\" to reload active tab of window 1'"))
 
   (bind-key* "C-M-r" #'td/refresh-front-most-tab)
 #+end_src
 
 #+begin_src emacs-lisp
   (use-package claudemacs
-    :vc (:url "https://github.com/cpoile/claudemacs.git" :rev :newest))
+    :vc (:url "https://github.com/cpoile/claudemacs.git" :rev :newest)
+    :bind* ("C-l a" . claudemacs-transient-menu))
+
+  (use-package eat
+    :ensure t
+    :custom
+    (eat-term-name "xterm-256color")
+    (eat-term-scrollback-size 400000))
+
+  (setq use-default-font-for-symbols nil)
+  (set-fontset-font t 'symbol "Menlo" nil 'prepend)
+  (set-fontset-font t 'emoji "Menlo" nil 'prepend)
 #+end_src
 
 * Ideas
