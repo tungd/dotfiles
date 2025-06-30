@@ -123,15 +123,15 @@ if {$subport eq "emacs-devel" || $subport eq "emacs-app-devel"} {
 
     # do not forget to check that configure hasn't introduce some suprises via
     # git diff [old]..[new] -- '**/configure.ac'
-    github.setup    emacs-mirror emacs 6181e0cec5158c5b66bf861c32e49674b2a110e9
+    github.setup    emacs-mirror emacs 17d976e22e9b0ba10dcbe1655a93bc4d165d7097
     github.tarball_from archive
     epoch           5
-    version         20250620
+    version         20250630
     revision        0
 
     master_sites    ${github.master_sites}
 
-    checksums       sha256  c033a56b09bf1587dcaedb22a69c7ad2b994953fcb967d8490be528e91dfbb45
+    checksums       sha256  e03a9d5506121a4915567738723d4699aaf8e18b3edf819aa2f207ffe8f00219
 
     # patchfiles-append \
     #                 patch-allow-powerpc-devel.diff

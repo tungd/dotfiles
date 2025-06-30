@@ -90,7 +90,8 @@ Sane, modern defaults:
         backup-directory-alist
         `(("." . ,(concat user-emacs-directory "backups")))
         create-lockfiles nil
-        remote-file-name-inhibit-locks t)
+        remote-file-name-inhibit-locks t
+        remote-file-name-inhibit-auto-save-visited t)
 #+end_src
 
 Performance stuffs, I'm not sure how relevant these are, since I've moved to =nativecomp=.
@@ -686,7 +687,9 @@ Tempo integration code for future reference:
 
 #+begin_src emacs-lisp
   (use-package comint
-    :bind ("C-c C-l" . comint-clear-buffer))
+    :bind ("C-c C-l" . comint-clear-buffer)
+    :custom
+    (comint-terminfo-terminal "dumb-emacs-ansi"))
 #+end_src
 
 
@@ -697,10 +700,18 @@ Tempo integration code for future reference:
     :custom
     (tramp-allow-unsafe-temporary-files t)
     (tramp-default-method "ssh")
+    (tramp-use-scp-direct-remote-copying t)
+    (tramp-copy-size-limit (* 1024 1024))
+    (tramp-verbose 2)
     :config
     (add-to-list 'auth-sources (expand-file-name "authinfo.gpg" user-emacs-directory))
     (add-to-list 'auth-sources 'macos-keychain-generic t)
-    (add-to-list 'tramp-connection-properties '("/ssh:" "direct-async-process" t)))
+    (connection-local-set-profile-variables
+     'remote-direct-async-process
+     '((tramp-direct-async-process . t)))
+    (connection-local-set-profiles
+     '(:application tramp :protocol "scp")
+     'remote-direct-async-process))
 #+end_src
 
 Some speedup for Tramp:
@@ -709,7 +720,8 @@ Some speedup for Tramp:
   (use-package vc
     :custom
     (vc-follow-symlinks t)
-    (vc-handled-backends '(Git)))
+    (vc-handled-backends '(Git))
+    (vc-ignore-dir-regexp (format "\\(%s\\)\\|\\(%s\\)" vc-ignore-dir-regexp tramp-file-name-regexp)))
 #+end_src
 
 
@@ -970,7 +982,9 @@ re-run the tests.
     :hook (compilation-filter . ansi-color-compilation-filter)
     :custom
     (compilation-ask-about-save nil)
-    (compilation-scroll-output t))
+    (compilation-scroll-output t)
+    :config
+    (remove-hook 'compilation-mode-hook #'tramp-compile-disable-ssh-controlmaster-options))
 #+end_src
 
 ** Code folding
@@ -1345,7 +1359,7 @@ the way I liked.
 #+begin_src emacs-lisp
   (setopt inhibit-startup-screen t
           visible-bell nil
-          ring-bell-function 'ignore
+          ;ring-bell-function 'ignore
           scroll-preserve-screen-position t
           scroll-margin 8
           scroll-conservatively 101
@@ -1479,7 +1493,7 @@ theme named =user= will always have the highest priority.
    '(cursor ((t :background "orange")))
    '(eglot-highlight-symbol-face ((t :weight normal)))
    '(eglot-code-action-indicator-face ((t :weight normal)))
-   '(eglot-inlay-hint-face ((t :height 1.0)))
+   '(eglot-inlay-hint-face ((t :height 1.0 :inherit font-lock-comment-face)))
    )
 #+end_src
 
@@ -1566,7 +1580,7 @@ kind of distracting, but it is really helpful sometimes.
   (use-package eat
     :ensure t
     :custom
-    (eat-term-name "xterm-256color")
+    ;(eat-term-name "xterm-256color")
     (eat-term-scrollback-size 400000))
 
   (setq use-default-font-for-symbols nil)

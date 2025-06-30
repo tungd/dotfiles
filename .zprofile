@@ -13,6 +13,9 @@ compinit
 autoload -Uz colors
 colors
 
+autoload -Uz url-quote-magic
+zle -N self-insert url-quote-magic
+
 autoload promptinit
 promptinit
 prompt tungd
