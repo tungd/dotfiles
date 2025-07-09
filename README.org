@@ -83,7 +83,7 @@ Homebrew. Installation is a little bit more involved, though.
   cat >> ~/.ssh/config <<EOF
   Host i-* mi-*
     IdentityFile ~/.ssh/id_rsa
-    ProxyCommand ~/.local/aws-ssm-ec2-proxy-command.sh %h %r %p ~/.ssh/id_rsa.pub
+    ProxyCommand aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p'
     StrictHostKeyChecking no
   EOF
 #+end_src
@@ -120,7 +120,7 @@ Decrease repeat delay, increase repeat rate and disable Emoji.
   cd emacs-macs
   sudo port install tree-sitter-* automake autoconf texinfo
   ./autogen.sh
-  CFLAGS="-O3 -mcpu=native -I/opt/local/include/gcc14 -L/opt/local/lib/gcc14 -rpath /opt/local/lib/gcc14" ./configure --with-native-compilation=aot --with-tree-sitter --enable-mac-app=yes --prefix=$HOME/.local
+  CFLAGS="-O3 -mcpu=native -mtune=native -fomit-frame-pointer -DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT -I/opt/local/include/gcc14 -L/opt/local/lib/gcc14 -rpath /opt/local/lib/gcc14" ./configure --with-native-compilation=aot --with-tree-sitter --enable-mac-app=yes --prefix=$HOME/.local --with-modules --enable-mac-self-contained --without-dbus
   make -j10
   make install
   cp -R native-lisp mac/Emacs.app/Contents

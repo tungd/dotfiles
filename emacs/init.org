@@ -175,7 +175,8 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 #+begin_src emacs-lisp
   (use-package files
     :custom
-    (remote-file-name-access-timeout 5))
+    (remote-file-name-access-timeout 5)
+    (find-file-visit-truename t))
 #+end_src
 
 Emacs built-in =project.el= has gone a long way so I'm using that now. There are
@@ -304,7 +305,7 @@ mini-buffer completion framework.
   (use-package recentf
     :hook (after-init . recentf-mode)
     :custom
-    (recentf-max-saved-items 128)
+    (recentf-max-saved-items 256)
     :config
     (add-to-list 'recentf-exclude "elpa/.*")
     (add-to-list 'recentf-exclude "__init__.py")
@@ -317,26 +318,6 @@ mini-buffer completion framework.
   (global-set-key (kbd "C-l") ctl-x-map)
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
-  (use-package avy
-    :ensure t
-    :custom
-    (avy-background t)
-    :config
-    (bind-key* "C-'" 'avy-goto-char))
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (use-package orderless
-    :ensure t
-    :init
-    ;; Configure a custom style dispatcher (see the Consult wiki)
-    ;; (setopt porderless-style-dispatchers '(+orderless-dispatch)
-    ;;       orderless-component-separator #'orderless-escapable-split-on-space)
-    (setopt completion-styles '(orderless basic)
-            completion-category-defaults nil
-            completion-category-overrides '((file (styles partial-completion)))))
-#+end_src
 
 ** Bookmark
 
@@ -371,17 +352,13 @@ Buffer location customization
 #+begin_src emacs-lisp
   (use-package window
     :custom
-    (window-min-height 1)
+    (split-height-threshold nil)
     :config
     (add-to-list 'display-buffer-alist
                '("^\\*claude\\*"
                  (display-buffer-in-side-window)
                  (side . right)
                  (window-width . 0.32)))
-    (add-to-list 'display-buffer-alist
-                 '("\\*compilation\\*" (display-buffer-reuse-window display-buffer-below-selected)
-                   (inhibit-same-window . t)
-                   (window-height . 16)))
     (add-to-list 'display-buffer-alist
                  '("\\*Warnings\\*" display-buffer-in-direction
                    (direction . bottom)
@@ -400,6 +377,11 @@ Buffer location customization
   (use-package window-numbering
     :ensure t
     :hook (after-init . window-numbering-mode))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package winner
+    :hook (after-init . winner-mode))
 #+end_src
 
 
@@ -980,6 +962,7 @@ re-run the tests.
   (use-package compile
     :bind ("C-c m" . recompile)
     :hook (compilation-filter . ansi-color-compilation-filter)
+    :hook (compilation-mode . visual-line-mode)
     :custom
     (compilation-ask-about-save nil)
     (compilation-scroll-output t)
@@ -1421,7 +1404,8 @@ bold and ligatures support :(.
   (tool-bar-mode -1)
   (setq-default
    cursor-in-non-selected-windows nil
-   line-spacing 0.2)
+   ;line-spacing 0.2
+   )
 
   (unless (display-graphic-p)
     (menu-bar-mode -1))
@@ -1574,7 +1558,7 @@ kind of distracting, but it is really helpful sometimes.
 
 #+begin_src emacs-lisp
   (use-package claudemacs
-    :vc (:url "https://github.com/cpoile/claudemacs.git" :rev :newest)
+    :vc (:url "https://github.com/cpoile/claudemacs.git" :branch :main)
     :bind* ("C-l a" . claudemacs-transient-menu))
 
   (use-package eat
@@ -1602,9 +1586,10 @@ https://github.com/radian-software/ctrlf
 
 I've used it before, not sure why I stopped using it back then.
 
-** https://github.com/radian-software/prescient.el?tab=readme-ov-file#for-the-completion-style
-
-Replacing Orderless
+** https://github.com/daedsidog/evedel
+** https://github.com/sunflowerseastar/ob-llm
+** https://github.com/xenodium/chatgpt-shell
+** https://github.com/editor-code-assistant/eca
 
 * Init file generation
 
