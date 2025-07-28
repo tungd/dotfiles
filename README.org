@@ -122,7 +122,7 @@ Decrease repeat delay, increase repeat rate and disable Emoji.
   ./autogen.sh
   CFLAGS="-O3 -mcpu=native -mtune=native -fomit-frame-pointer -DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT -I/opt/local/include/gcc14 -L/opt/local/lib/gcc14 -rpath /opt/local/lib/gcc14" ./configure --with-native-compilation=aot --with-tree-sitter --enable-mac-app=yes --prefix=$HOME/.local --with-modules --enable-mac-self-contained --without-dbus
   make -j10
-  make install
   cp -R native-lisp mac/Emacs.app/Contents
+  make install
   cp -R mac/Emacs.app ~/Applications
 #+end_src

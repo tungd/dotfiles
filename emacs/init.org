@@ -58,6 +58,10 @@ are stored in the =~/.emacs.d/vendor= directory.
 
 #+begin_src emacs-lisp
   (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
+  (add-to-list 'exec-path "~/.local/bin")
+  (add-to-list 'exec-path "/opt/local/bin")
+  (add-to-list 'exec-path "/Users/tung/Library/Python/3.12/bin/")
+  (setenv "PATH" (string-join exec-path ":"))
 #+end_src
 
 
@@ -75,7 +79,8 @@ Personal information that some package use:
 Less verbose choice:
 
 #+begin_src emacs-lisp
-  (setopt use-short-answers t)
+  (setq use-short-answers t
+        history-delete-duplicates t)
 #+end_src
 
 Sane, modern defaults:
@@ -446,9 +451,7 @@ Editing utilities:
            ("M-=" . crux-cleanup-buffer-or-region)
            ("C-M-k" . crux-kill-whole-line)
            ("C-c D" . crux-delete-file-and-buffer)
-           ("C-c C-o" . crux-open-with)
-           ([remap keyboard-quit] . crux-keyboard-quit-dwim)
-           ([remap kill-line] . crux-smart-kill-line))
+           ("C-c C-o" . crux-open-with))
     :config
     ;(crux-with-region-or-buffer indent-region)
     ;(crux-with-region-or-buffer untabify)
@@ -457,6 +460,8 @@ Editing utilities:
 
   (bind-key* "C-x C-k" #'kill-current-buffer)
   (bind-key* "C-c r" #'rename-visited-file)
+  (bind-key* [remap keyboard-quit] #'crux-keyboard-quit-dwim)
+  (bind-key* [remap kill-line] #'crux-smart-kill-line)
   (bind-key* "s-n" #'next-buffer)
   (bind-key* "s-p" #'previous-buffer)
 #+end_src
@@ -656,12 +661,6 @@ Tempo integration code for future reference:
 * Shell and remote
 
 #+begin_src emacs-lisp
-  (use-package exec-path-from-shell
-    :ensure t
-    :hook (after-init . exec-path-from-shell-initialize))
-#+end_src
-
-#+begin_src emacs-lisp
   (use-package envrc
     :ensure t
     :hook (after-init . envrc-global-mode))
@@ -734,6 +733,7 @@ Native LSP support via =Eglot= since Emacs 29.1
     (eglot-code-action-indications '(mode-line))
     :config
     (add-to-list 'eglot-server-programs '((neocaml-mode :language-id "ocaml") . ("ocamllsp")))
+    (add-to-list 'eglot-server-programs '((tuareg-mode :language-id "ocaml") . ("ocamllsp")))
     (add-to-list 'eglot-server-programs '(ocaml-ts-mode "ocamllsp"))
     (add-to-list 'eglot-server-programs '((swift-ts-mode :language-id "swift") . ("/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp")))
     (add-to-list 'eglot-server-programs '((swift-mode :language-id "swift") . ("/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp")))
@@ -1100,7 +1100,7 @@ Python or Haskell:
         Haskell world seems to be a one-off experiment, or an one-time job then
         abandoned at best. (I'm talking about iCalendar, and there are many other cases).
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package neocaml
     :vc (:url "https://github.com/bbatsov/neocaml" :rev :newest)
     :custom
@@ -1156,8 +1156,10 @@ These are supports for other stuffs that I used:
 
 #+begin_src emacs-lisp
   (use-package yaml-ts-mode
-    :mode (("\\.yaml$" . yaml-ts-mode))
-    :hook (yaml-ts-mode . display-line-numbers-mode))
+    :mode (("\\.yaml$" . yaml-ts-mode)
+           ("\\.yml$" . yaml-ts-mode))
+    :hook ((yaml-ts-mode . display-line-numbers-mode)
+           (yaml-ts-mode . visual-line-mode)))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1312,7 +1314,7 @@ Org Babel for literate programming and API documentation.
   (use-package ob-python
     :defer t
     :custom
-    (org-babel-python-command "python3.12"))
+    (org-babel-python-command "uv run"))
 #+end_src
 
 ** Spell checking
@@ -1391,8 +1393,8 @@ bold and ligatures support :(.
      (border-width . 0) (internal-border-width . 0)
      ;; (font . "Iosevka Fixed SS07 Semibold 16")
      ;; (font . "Iosevka Mono 16")
-     (font . "JetBrains Mono NL 14")
-     ;; (font . "Agave 16")
+     (font . "JetBrains Mono NL 15")
+     ;; (font . "Fira Mono 16")
      ;; (font . "Ubuntu Mono 16")
      (tool-bar-lines . 0)
      (fullscreen . maximized)
@@ -1404,7 +1406,7 @@ bold and ligatures support :(.
   (tool-bar-mode -1)
   (setq-default
    cursor-in-non-selected-windows nil
-   ;line-spacing 0.2
+   ;;line-spacing 0.2
    )
 
   (unless (display-graphic-p)
@@ -1443,21 +1445,19 @@ Some preferences that I set for all the theme. Per documentation, the custom
 theme named =user= will always have the highest priority.
 
 #+begin_src emacs-lisp :tangle no
-  (load-theme 'modus-vivendi t)
+  (load-theme 'modus-vivendi-tinted t)
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
-  (use-package doom-themes
-    :ensure t
-    :init
-    (load-theme 'doom-ayu-mirage t))
+ (use-package notink-theme
+   :ensure t
+   :init (load-theme 'notink t))
 #+end_src
 
 #+begin_src emacs-lisp
-  (use-package pache-dark-theme
-    :ensure t
-    :init
-    (load-theme 'pache-dark t))
+ (use-package pache-dark-theme
+   :ensure t
+   :init (load-theme 'pache-dark t))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1470,8 +1470,8 @@ theme named =user= will always have the highest priority.
 
    '(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face)))
    '(line-number-current-line ((t :slant normal :weight normal)))
-   '(fringe ((t :inherit line-number :background unspecified)))
-   ;;'(vertical-border ((t :foreground "#000")))
+   ;'(fringe ((t :inherit line-number :background unspecified)))
+   ;'(vertical-border ((t :foreground "#000")))
 
    '(mode-line-buffer-id ((t :foreground "orange")))
    '(cursor ((t :background "orange")))
@@ -1556,7 +1556,7 @@ kind of distracting, but it is really helpful sometimes.
   (bind-key* "C-M-r" #'td/refresh-front-most-tab)
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package claudemacs
     :vc (:url "https://github.com/cpoile/claudemacs.git" :branch :main)
     :bind* ("C-l a" . claudemacs-transient-menu))
@@ -1571,6 +1571,7 @@ kind of distracting, but it is really helpful sometimes.
   (set-fontset-font t 'symbol "Menlo" nil 'prepend)
   (set-fontset-font t 'emoji "Menlo" nil 'prepend)
 #+end_src
+
 
 * Ideas
 
@@ -1590,6 +1591,8 @@ I've used it before, not sure why I stopped using it back then.
 ** https://github.com/sunflowerseastar/ob-llm
 ** https://github.com/xenodium/chatgpt-shell
 ** https://github.com/editor-code-assistant/eca
+** Emacs cron job to watch github build of any of the opening project
+
 
 * Init file generation
 

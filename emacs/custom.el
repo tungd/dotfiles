@@ -181,7 +181,8 @@
      (tramp-connection-local-default-shell-profile (shell-file-name . "/bin/sh")
                                                    (shell-command-switch . "-c"))
      (tramp-connection-local-default-system-profile (path-separator . ":")
-                                                    (null-device . "/dev/null"))))
+                                                    (null-device . "/dev/null")
+                                                    (exec-suffixes ""))))
  '(custom-safe-themes
    '("5541d412c46ad24030fd34348ce1a5fa5e9030dd335e6d8322aba28fc9ceccc3"
      "5b4fc448d0fb588fdad7c86ab5bb9baaa358488f4b6e4a3d1ff2aca7b293651f"
@@ -202,22 +203,24 @@
      "7ea883b13485f175d3075c72fceab701b5bf76b2076f024da50dff4107d0db25"
      "4fda8201465755b403a33e385cf0f75eeec31ca8893199266a6aeccb4adedfa4" default))
  '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
+ '(exec-path
+   '("/opt/local/bin" "~/.local/bin" "/usr/bin" "/bin" "/usr/sbin" "/sbin"
+     "/usr/local/bin" "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
  '(package-selected-packages
-   '(claudemacs consult crux csv-mode d2-mode detached diff-hl doom-themes dune
-                dune-format eat eglot emmet-mode envrc evil exec-path-from-shell
-                f feature-mode gptel gptel-anthropic graphql-ts-mode
-                highlight-indentation indent-guide isearch-mb kotlin-mode
-                kotlin-ts-mode lua-mode magit markdown-ts-mode mermaid-mode
-                modus-theme neocaml ob-async ob-http ob-kotlin ob-plantuml
-                ob-sql-mode ob-swift pache-dark-theme persp-mode plantuml-mode
-                prescient protobuf-mode protobuf-ts-mode reason-mode rg
-                scad-mode sql-cassandra surround swift-mode tempel
-                terraform-mode treesit-fold utop visual-replace vterm vundo
-                web-mode window-numbering))
+   '(consult crux csv-mode d2-mode dape detached diff-hl doom-themes dune
+             dune-format eat eglot emmet-mode envrc evil f feature-mode gptel
+             gptel-anthropic graphql-ts-mode highlight-indentation indent-guide
+             isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit
+             markdown-ts-mode mermaid-mode modus-theme neocaml ob-async ob-http
+             ob-kotlin ob-plantuml ob-sql-mode ob-swift pache-dark-theme
+             persp-mode plantuml-mode prescient protobuf-mode protobuf-ts-mode
+             reason-mode rg scad-mode sql-cassandra surround swift-mode
+             tango-plus-them tango-plus-theme tempel terraform-mode treesit-fold
+             utop visual-replace vterm vundo web-mode window-numbering))
  '(package-vc-selected-packages
-   '((claudemacs :vc-backend Git :url "https://github.com/cpoile/claudemacs.git")
-     (claude-code :url "https://github.com/stevemolitor/claude-code.el")
-     (neocaml :url "https://github.com/bbatsov/neocaml")))
+   '((neocaml :url "https://github.com/bbatsov/neocaml")
+     (claudemacs :vc-backend Git :url "https://github.com/cpoile/claudemacs.git")
+     (claude-code :url "https://github.com/stevemolitor/claude-code.el")))
  '(safe-local-variable-values
    '((checkdoc-allow-quoting-nil-and-t . t)
      (eval setenv "LIBRARY_PATH" "/opt/local/lib/mysql8/mysql")
@@ -244,4 +247,5 @@
  '(fringe ((t :inherit line-number :background unspecified)))
  '(line-number ((t :slant normal)))
  '(line-number-current-line ((t :slant normal)))
- '(mode-line-buffer-id ((t :foreground "#deae3e"))))
+ '(mode-line-buffer-id ((t :foreground "#deae3e")))
+ '(vertical-border ((t :foreground "#000"))))
