@@ -207,16 +207,16 @@
    '("/opt/local/bin" "~/.local/bin" "/usr/bin" "/bin" "/usr/sbin" "/sbin"
      "/usr/local/bin" "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
  '(package-selected-packages
-   '(consult crux csv-mode d2-mode dape detached diff-hl doom-themes dune
-             dune-format eat eglot emmet-mode envrc evil f feature-mode gptel
-             gptel-anthropic graphql-ts-mode highlight-indentation indent-guide
-             isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit
-             markdown-ts-mode mermaid-mode modus-theme neocaml ob-async ob-http
-             ob-kotlin ob-plantuml ob-sql-mode ob-swift pache-dark-theme
-             persp-mode plantuml-mode prescient protobuf-mode protobuf-ts-mode
-             reason-mode rg scad-mode sql-cassandra surround swift-mode
-             tango-plus-them tango-plus-theme tempel terraform-mode treesit-fold
-             utop visual-replace vterm vundo web-mode window-numbering))
+   '(avy consult crux csv-mode d2-mode dape detached diff-hl doom-themes dune
+         dune-format eat eglot emmet-mode envrc evil f feature-mode gptel
+         gptel-anthropic graphql-ts-mode highlight-indentation indent-guide
+         isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit markdown-ts-mode
+         mermaid-mode modus-theme neocaml ob-async ob-http ob-kotlin ob-plantuml
+         ob-sql-mode ob-swift pache-dark-theme persp-mode plantuml-mode
+         prescient protobuf-mode protobuf-ts-mode rainbow-mode reason-mode rg
+         scad-mode sql-cassandra surround swift-mode tango-plus-them
+         tango-plus-theme tempel terraform-mode treesit-fold utop visual-replace
+         vterm vundo web-mode))
  '(package-vc-selected-packages
    '((neocaml :url "https://github.com/bbatsov/neocaml")
      (claudemacs :vc-backend Git :url "https://github.com/cpoile/claudemacs.git")
@@ -246,6 +246,4 @@
  '(font-lock-string-face ((t :slant normal)))
  '(fringe ((t :inherit line-number :background unspecified)))
  '(line-number ((t :slant normal)))
- '(line-number-current-line ((t :slant normal)))
- '(mode-line-buffer-id ((t :foreground "#deae3e")))
- '(vertical-border ((t :foreground "#000"))))
+ '(line-number-current-line ((t :slant normal))))
