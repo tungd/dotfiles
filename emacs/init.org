@@ -301,6 +301,20 @@ mini-buffer completion framework.
 #+end_src
 
 #+begin_src emacs-lisp
+  (defun td/isearch-consult-ripgrep ()
+    "Launch consult-ripgrep with current search term.
+  Uses project root if in a project, otherwise current directory."
+    (interactive)
+    (let* ((search-term (if isearch-string
+                            isearch-string
+                          (thing-at-point 'symbol t)))
+           (current-proj (project-current))
+           (search-dir (if current-proj
+                           (project-root current-proj)
+                         default-directory)))
+      (isearch-exit)
+      (consult-ripgrep search-dir search-term)))
+
   (use-package consult
     :ensure t
     :bind (("C-M-l" . consult-line)
@@ -312,7 +326,9 @@ mini-buffer completion framework.
            ("M-g r" . consult-ripgrep)
            ([remap goto-line] . consult-goto-line)
            ([remap switch-to-buffer] . consult-buffer)
-           ([remap imenu] . consult-imenu))
+           ([remap imenu] . consult-imenu)
+           :map isearch-mode-map
+           ("C-i" . td/isearch-consult-ripgrep))
     :custom
     (consult-narrow-key (kbd "<"))
     (consult-project-root-function #'vc-root-dir)
@@ -528,7 +544,11 @@ Make the file executable if starting with "shebang":
   (use-package avy
     :ensure t
     :bind (:map isearch-mode-map
-                ("C-j" . avy-isearch)))
+                ("C-j" . avy-isearch))
+    :bind* ("C-'" . avy-goto-char-timer)
+    :custom
+    (avy-background t)
+    (avy-all-windows t))
 #+end_src
 
 ** Long lines
@@ -1607,12 +1627,6 @@ kind of distracting, but it is really helpful sometimes.
 https://github.com/radian-software/apheleia?tab=readme-ov-file
 
 This seems really cool
-
-** CtrlF
-
-https://github.com/radian-software/ctrlf
-
-I've used it before, not sure why I stopped using it back then.
 
 ** https://github.com/daedsidog/evedel
 ** https://github.com/sunflowerseastar/ob-llm
