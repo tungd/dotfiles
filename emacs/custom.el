@@ -208,15 +208,15 @@
      "/usr/local/bin" "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
  '(package-selected-packages
    '(avy consult crux csv-mode d2-mode dape detached diff-hl doom-themes dune
-         dune-format eat eglot emmet-mode envrc evil f feature-mode gptel
-         gptel-anthropic graphql-ts-mode highlight-indentation indent-guide
-         isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit markdown-ts-mode
-         mermaid-mode modus-theme neocaml ob-async ob-http ob-kotlin ob-plantuml
-         ob-sql-mode ob-swift pache-dark-theme persp-mode plantuml-mode
-         prescient protobuf-mode protobuf-ts-mode rainbow-mode reason-mode rg
-         scad-mode sql-cassandra surround swift-mode tango-plus-them
-         tango-plus-theme tempel terraform-mode treesit-fold utop visual-replace
-         vterm vundo web-mode))
+         dune-format eat eglot emmet-mode envrc evil f feature-mode format-sql
+         gptel gptel-anthropic graphql-ts-mode highlight-indentation
+         indent-guide isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit
+         markdown-ts-mode mermaid-mode modus-theme neocaml ob-async ob-http
+         ob-kotlin ob-plantuml ob-sql-mode ob-swift pache-dark-theme persp-mode
+         plantuml-mode prescient protobuf-mode protobuf-ts-mode rainbow-mode
+         reason-mode rg scad-mode sql-cassandra surround swift-mode
+         tango-plus-them tango-plus-theme tempel terraform-mode treesit-fold
+         utop visual-replace vterm vundo web-mode))
  '(package-vc-selected-packages
    '((neocaml :url "https://github.com/bbatsov/neocaml")
      (claudemacs :vc-backend Git :url "https://github.com/cpoile/claudemacs.git")
@@ -233,7 +233,6 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(cursor ((t :background "orange")))
  '(diff-hl-change ((t (:inherit nil :background unspecified :foreground "#deae3e"))))
  '(diff-hl-delete ((t (:inherit nil :background unspecified :foreground "#ff0000"))))
  '(diff-hl-insert ((t (:inherit nil :background unspecified :foreground "#81af34"))))
@@ -243,7 +242,4 @@
  '(font-lock-comment-delimiter-face ((t :slant normal)))
  '(font-lock-comment-face ((t :slant normal)))
  '(font-lock-constant-face ((t :slant normal)))
- '(font-lock-string-face ((t :slant normal)))
- '(fringe ((t :inherit line-number :background unspecified)))
- '(line-number ((t :slant normal)))
- '(line-number-current-line ((t :slant normal))))
+ '(font-lock-string-face ((t :slant normal))))

@@ -88,7 +88,7 @@ export PATH=$HOME/Projects/dotfiles/bin:$PATH
 
 [[ -e /opt/local/etc/profile.d/z.sh ]] && . /opt/local/etc/profile.d/z.sh
 [[ $+commands[direnv] ]] && eval "$(direnv hook zsh)"
-
+[[ $+commands[thrash] ]] && alias rm=trash
 
 alias g=git
 alias e="emacsclient -n"
@@ -107,16 +107,12 @@ myip() {
     dig +short txt ch whoami.cloudflare @1.0.0.1;
 }
 
-export PATH=$HOME/Library/Python/3.12/bin:$PATH
-
 export PNPM_HOME="/Users/tung/Library/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 export PATH="$HOME/.claude/local:$PATH"
 
 # Added by OrbStack: command-line tools and integration
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
-
-export NOMAD_ADDR=http://100.126.196.13:4646
 
 preexec() {
   # Store the command being executed

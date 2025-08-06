@@ -756,7 +756,7 @@ Some speedup for Tramp:
 
 Native LSP support via =Eglot= since Emacs 29.1
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package eglot
     :hook ((js-ts-mode . eglot-ensure)
            (typescript-ts-mode . eglot-ensure)
@@ -787,6 +787,8 @@ Native LSP support via =Eglot= since Emacs 29.1
     (add-to-list 'eglot-server-programs '((web-mode :language-id "typescriptreact") "typescript-language-server" "--stdio"))
     (add-to-list 'eglot-server-programs '(scala-ts-mode "metals")))
 #+end_src
+
+I'm experimenting with working purely with LLM and without LSP. It's not that I don't like LSP, it's just that I don't think it's efficient, especially in the era of LLM.
 
 #+begin_src emacs-lisp :tangle no
   (use-package swift-ts-mode
@@ -1265,6 +1267,7 @@ Here's my basic Org setup:
     (org-clock-persist 'history)
     ;; (org-refile-targets '(("~/Desktop/archive.org" . (:level . 1))))
     (org-startup-with-inline-images t)
+    (org-startup-folded t)
     (org-todo-keywords
      '((sequence "TODO(t@)" "WAITING(w@)" "|" "DONE(d@/!)" "CANCELED(c@)")))
     (org-src-fontify-natively t)
@@ -1410,7 +1413,7 @@ new Mac and tired of running it. So here it goes:
            (ppi (/ (caddr geometry) (/ (car size) 25.4))))
       ;;(message "PPI: %s" ppi)
       (if (> ppi 120)
-          (set-face-attribute 'default frame :height 140)
+          (set-face-attribute 'default frame :height 160)
         (set-face-attribute 'default frame :height 160))))
 
   (add-function :after after-focus-change-function #'td/adapt-font-size)
@@ -1491,7 +1494,7 @@ Some preferences that I set for all the theme. Per documentation, the custom
 theme named =user= will always have the highest priority.
 
 #+begin_src emacs-lisp
-  (load-theme 'modus-operandi t)
+  (load-theme 'modus-vivendi t)
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
@@ -1515,13 +1518,13 @@ theme named =user= will always have the highest priority.
    '(font-lock-constant-face ((t :slant normal)))
 
    ;'(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face)))
-   '(line-number ((t :slant normal :background unspecified :foreground "#bbb" :inherit font-lock-comment-face)))
-   '(line-number-current-line ((t :slant normal :weight normal)))
+   ;'(line-number ((t :slant normal :background unspecified :foreground "#444" :inherit font-lock-comment-face)))
+   ;'(line-number-current-line ((t :slant normal :weight normal)))
    ;'(fringe ((t :inherit line-number :background unspecified)))
-   ;'(vertical-border ((t :foreground "#000")))
+   '(vertical-border ((t :foreground "#222")))
 
    ;'(mode-line-buffer-id ((t :foreground "orange")))
-   '(cursor ((t :background "orange")))
+   ;'(cursor ((t :background "orange")))
    '(eglot-highlight-symbol-face ((t :weight normal)))
    '(eglot-code-action-indicator-face ((t :weight normal)))
    '(eglot-inlay-hint-face ((t :height 1.0 :inherit font-lock-comment-face)))
