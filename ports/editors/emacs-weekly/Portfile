@@ -123,15 +123,15 @@ if {$subport eq "emacs-devel" || $subport eq "emacs-app-devel"} {
 
     # do not forget to check that configure hasn't introduce some suprises via
     # git diff [old]..[new] -- '**/configure.ac'
-    github.setup    emacs-mirror emacs c935b68bed174386f46dec6be525a23397a4b5f8
+    github.setup    emacs-mirror emacs fd5866cae4ae500928965516160a979cd5cd87d6
     github.tarball_from archive
     epoch           5
-    version         20250803
+    version         20250811
     revision        0
 
     master_sites    ${github.master_sites}
 
-    checksums       sha256  bcbcee6cf53d6dfe0619252cd2d57bf4f4b8d9a8070f0e07f57102177b410399
+    checksums       sha256  509d2bbad0937593c57bc1b1ac50cbdbfe8c7b839b2f369ef30b76d7a6435ddf
 
     # patchfiles-append \
     #                 patch-allow-powerpc-devel.diff
@@ -315,6 +315,8 @@ variant treesitter description {Builds emacs with tree-sitter support} {
         port:tree-sitter-python \
         port:tree-sitter-css \
         port:tree-sitter-json \
+        port:tree-sitter-php \
+        port:tree-sitter-jsdoc \
         port:tree-sitter-c-sharp \
         port:tree-sitter-bash \
         port:tree-sitter-dockerfile \

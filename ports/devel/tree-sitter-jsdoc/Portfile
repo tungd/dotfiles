@@ -1,0 +1,26 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+
+PortSystem          1.0
+PortGroup           github 1.0
+PortGroup           tree_sitter 1.0
+
+github.setup        tree-sitter tree-sitter-jsdoc 0.23.2 v
+github.tarball_from archive
+revision            0
+
+description         A tree-sitter parser for JSDoc
+
+long_description    {*}${description}
+
+categories          devel
+license             MIT
+maintainers         nomaintainer
+
+checksums           rmd160  c42c7c6d61f6e2f349c85b05af0e5158a75dc652 \
+                    sha256  d119278466266c23f237b8826dc049e56311937a5e647ab99d7200e0e3c36299 \
+                    size    43626
+
+worksrcdir          ${worksrcdir}/src
+
+# parser.c: error: 'for' loop initial declaration used outside C99 mode
+configure.cflags-append -std=c99

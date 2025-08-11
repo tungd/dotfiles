@@ -1287,6 +1287,12 @@ Here's my basic Org setup:
        (sql . t)
        (sql-mode . t))))
 
+  (use-package ob-async
+    :ensure t
+    :init
+    (eval-after-load 'ob-core
+      (require 'ob-async)))
+
   (use-package ob-sql-mode
     :ensure t)
 
