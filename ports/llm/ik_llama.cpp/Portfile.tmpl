@@ -63,9 +63,9 @@ variant native description {Optimize for local CPU architecture} {
 
 # BLAS acceleration
 variant blas description {Enable BLAS acceleration for improved performance} {
-    depends_lib-append      port:OpenBLAS
-    configure.args-append   -DGGML_BLAS=ON \
-                            -DGGML_BLAS_VENDOR=OpenBLAS
+    configure.args-append \
+        -DGGML_ACCELLERATE=ON \
+        -DGGML_BLAS_VENDOR=Apple
 }
 
 # OpenMP parallelism
@@ -82,13 +82,13 @@ variant model_converters description {Install Python model conversion scripts} {
                             port:py311-sentencepiece \
                             port:py311-transformers \
                             port:py311-torch
-    
+
     post-destroot {
         # Install Python conversion scripts
         xinstall -d ${destroot}${prefix}/share/${name}
         copy ${worksrcpath}/convert-hf-to-gguf.py ${destroot}${prefix}/share/${name}/
         copy ${worksrcpath}/convert_legacy_llama.py ${destroot}${prefix}/share/${name}/
-        
+
         # Make scripts executable
         system "chmod +x ${destroot}${prefix}/share/${name}/*.py"
     }
@@ -109,7 +109,7 @@ destroot {
             }
         }
     }
-    
+
     # Install documentation
     xinstall -d ${destroot}${prefix}/share/doc/${name}
     xinstall -m 644 ${worksrcpath}/README.md ${destroot}${prefix}/share/doc/${name}/
