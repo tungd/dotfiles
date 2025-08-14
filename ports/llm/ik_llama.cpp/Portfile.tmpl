@@ -1,0 +1,138 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+
+PortSystem              1.0
+PortGroup               github 1.0
+PortGroup               cmake 1.1
+PortGroup               legacysupport 1.1
+
+github.setup            ikawrakow ik_llama.cpp <COMMIT_HASH>
+github.tarball_from     archive
+checksums               sha256  <SHA_256>
+version                 <DATE>
+revision                0
+categories              llm
+maintainers             {TD @tungd} openmaintainer
+license                 MIT
+
+description             Enhanced llama.cpp fork with SOTA quants and improved performance
+long_description        ${name} is a fork of llama.cpp with additional state-of-the-art \
+                        quantization methods, enhanced CPU and hybrid GPU/CPU performance, \
+                        first-class Bitnet support, improved DeepSeek performance via MLA, \
+                        and tensor overrides for optimal inference.
+
+# error: 'filesystem' file not found on 10.14
+legacysupport.newest_darwin_requires_legacy \
+                        18
+legacysupport.use_mp_libcxx \
+                        yes
+
+depends_build-append    path:bin/pkg-config:pkgconfig
+
+depends_lib-append      port:curl
+
+compiler.cxx_standard   2017
+
+# cmake relies on git for version info. We need to set them manually.
+configure.args-append   -DGGML_LTO=ON \
+                        -DGGML_CCACHE=OFF \
+                        -DGGML_NATIVE=OFF \
+                        -DLLAMA_BUILD_TESTS=OFF \
+                        -DLLAMA_BUILD_EXAMPLES=ON \
+                        -DLLAMA_BUILD_SERVER=ON \
+                        -DLLAMA_CURL=ON \
+                        -DCMAKE_BUILD_TYPE=Release
+
+# Apple Silicon optimizations
+platform darwin {
+    if {${configure.build_arch} in [list arm64]} {
+        # Enable Metal for Apple Silicon
+        configure.args-append   -DGGML_METAL=ON \
+                                -DGGML_METAL_EMBED_LIBRARY=ON \
+                                -DGGML_ACCELERATE=ON
+    } else {
+        # x86_64 fallback
+        configure.args-append   -DGGML_METAL=OFF \
+                                -DGGML_ACCELERATE=ON
+    }
+}
+
+# Optimize for local CPU architecture
+variant native description {Optimize for local CPU architecture} {
+    configure.args-replace  -DGGML_NATIVE=OFF -DGGML_NATIVE=ON
+}
+
+# BLAS acceleration
+variant blas description {Enable BLAS acceleration for improved performance} {
+    depends_lib-append      port:OpenBLAS
+    configure.args-append   -DGGML_BLAS=ON \
+                            -DGGML_BLAS_VENDOR=OpenBLAS
+}
+
+# OpenMP parallelism
+variant openmp description {Enable parallelism support with OpenMP} {
+    depends_lib-append      port:libomp
+    configure.args-append   -DGGML_OPENMP=ON
+    configure.cppflags-append -I${prefix}/include/libomp
+}
+
+# Python model converters
+variant model_converters description {Install Python model conversion scripts} {
+    depends_run-append      port:python311 \
+                            port:py311-numpy \
+                            port:py311-sentencepiece \
+                            port:py311-transformers \
+                            port:py311-torch
+    
+    post-destroot {
+        # Install Python conversion scripts
+        xinstall -d ${destroot}${prefix}/share/${name}
+        copy ${worksrcpath}/convert-hf-to-gguf.py ${destroot}${prefix}/share/${name}/
+        copy ${worksrcpath}/convert_legacy_llama.py ${destroot}${prefix}/share/${name}/
+        
+        # Make scripts executable
+        system "chmod +x ${destroot}${prefix}/share/${name}/*.py"
+    }
+}
+
+# Default variants for Apple Silicon
+default_variants        +blas +native +openmp
+
+destroot {
+    # Install binaries
+    xinstall -d ${destroot}${prefix}/bin
+    fs-traverse file ${build.dir} {
+        if {[file isfile ${file}] && [file executable ${file}] && ![string match "*test*" [file tail ${file}]]} {
+            set filename [file tail ${file}]
+            # Skip object files and libraries
+            if {![string match "*.o" ${filename}] && ![string match "*.a" ${filename}] && ![string match "*.dylib" ${filename}]} {
+                xinstall -m 755 ${file} ${destroot}${prefix}/bin/
+            }
+        }
+    }
+    
+    # Install documentation
+    xinstall -d ${destroot}${prefix}/share/doc/${name}
+    xinstall -m 644 ${worksrcpath}/README.md ${destroot}${prefix}/share/doc/${name}/
+    xinstall -m 644 ${worksrcpath}/LICENSE ${destroot}${prefix}/share/doc/${name}/
+}
+
+# Notes for the user
+notes "
+ik_llama.cpp has been installed with Apple Silicon optimizations.
+
+Key features of this enhanced fork:
+- State-of-the-art quantization methods (IQ1_KT, IQ2_KT, IQ4_KS_R4)
+- Improved CPU and hybrid GPU/CPU performance
+- First-class Bitnet support
+- Enhanced DeepSeek performance via MLA
+- FlashMLA and fused MoE operations
+
+For Apple Silicon users, Metal acceleration is enabled by default.
+Use +native variant for CPU-specific optimizations.
+Use +blas for BLAS acceleration.
+Use +openmp for OpenMP parallelism.
+Use +model_converters to install Python conversion scripts.
+
+Example usage:
+  ${prefix}/bin/llama-cli -m model.gguf -p 'Hello, world!'
+"
