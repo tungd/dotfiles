@@ -243,26 +243,11 @@ mini-buffer completion framework.
 #+begin_src emacs-lisp
   (ido-mode -1)
 
-  (defun td/minibuffer-auto-complete ()
-    "Show completions if minibuffer has 2+ characters. It's supposed to be auto, you know."
-    (when (and (minibufferp)
-               (>= (length (minibuffer-contents)) 2)
-               ;; Only complete after text insertion/deletion commands
-               (memq this-command '(self-insert-command
-                                    delete-backward-char
-                                    backward-delete-char-untabify)))
-      (minibuffer-completion-help)))
-
-  (defun td/setup-minibuffer-auto-complete ()
-    "Set up auto-completion for this minibuffer session."
-    (add-hook 'post-command-hook #'td/minibuffer-auto-complete nil t))
-
-  (add-hook 'minibuffer-setup-hook #'td/setup-minibuffer-auto-complete)
-
   (use-package minibuffer
-    :hook (minibuffer-setup . td/setup-minibuffer-auto-complete)
     :custom
     (minibuffer-visible-completions t)
+    (completion-eager-update t)
+    (completion-eager-display t)
     (completion-auto-help 'always)
     (completion-show-help nil)
     ;(completion-auto-select 'second-tab)
@@ -942,6 +927,7 @@ I use auto completion sparingly.
 
 #+begin_src emacs-lisp
   (use-package dabbrev
+    :custom (dabbrev-case-fold-search nil)
     :bind (("M-/" . dabbrev-completion)
            ("C-M-/" . completion-at-point)))
 
@@ -1286,12 +1272,6 @@ Here's my basic Org setup:
        (kotlin . t)
        (sql . t)
        (sql-mode . t))))
-
-  (use-package ob-async
-    :ensure t
-    :init
-    (eval-after-load 'ob-core
-      (require 'ob-async)))
 
   (use-package ob-sql-mode
     :ensure t)
