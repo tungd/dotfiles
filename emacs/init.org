@@ -330,9 +330,20 @@ mini-buffer completion framework.
 
 #+begin_src emacs-lisp
   (use-package codex
-    :ensure nil
     :commands (codex-start)
-    :bind* (("C-l x" . codex-start)))
+    :bind* (("C-l x" . codex-start))
+    ;; Configure detection with either `codex-prompt-regexp' or
+    ;; `codex-waiting-regexps'. Use M-x codex-detect-dump-tail to inspect
+    ;; the last lines and M-x codex-set-waiting-regexp-from-tail to set
+    ;; a prompt match quickly.
+    ;; :config
+    ;; (defun td/codex-notify ()
+    ;;   "Notify via AppleScript when Codex is waiting for input."
+    ;;   (when (eq system-type 'darwin)
+    ;;     (let ((script "display notification \"Codex is waiting for input\" with title \"Codex\""))
+    ;;       (shell-command (format "osascript -e %S" script)))))
+    ;; (add-hook 'codex-waiting-hook #'td/codex-notify)
+    )
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1645,11 +1656,15 @@ kind of distracting, but it is really helpful sometimes.
   (use-package claudemacs
     :vc (:url "https://github.com/cpoile/claudemacs.git" :branch :main)
     :bind* ("C-l a" . claudemacs-transient-menu))
+#+end_src
 
+#+begin_src emacs-lisp
   (use-package eat
     :ensure t
     :custom
-    ;(eat-term-name "xterm-256color")
+    (eat-term-name "xterm-256color")
+    (eat-maximum-latency 0.008)
+    (eat-minimum-latency 0.002)
     (eat-term-scrollback-size 400000))
 
   (setq use-default-font-for-symbols nil)
