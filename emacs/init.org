@@ -332,21 +332,18 @@ mini-buffer completion framework.
   (use-package codex
     :commands (codex-start)
     :bind* (("C-l x" . codex-start))
-    ;; Configure detection with either `codex-prompt-regexp' or
-    ;; `codex-waiting-regexps'. Use M-x codex-detect-dump-tail to inspect
-    ;; the last lines and M-x codex-set-waiting-regexp-from-tail to set
-    ;; a prompt match quickly.
     :config
     (defun td/codex-notify ()
       (let* ((title "Codex")
              (body (format "Waiting for input in %s" (buffer-name)))
-             (script (format "display notification %S with title %S sound name \"Funky\"" body title)))
+             (script (format "display notification %S with title %S sound name \"Funk\"" body title)))
         (make-process :name "codex-notify"
                       :buffer nil
                       :noquery t
                       :command (list "osascript" "-e" script)
                       :sentinel (lambda (_proc _event) nil))
-        (message "[Codex] %s" body)))
+        ;(message "[Codex] %s" body)
+        ))
     (add-hook 'codex-waiting-hook #'td/codex-notify))
 #+end_src
 
