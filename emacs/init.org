@@ -338,10 +338,15 @@ mini-buffer completion framework.
     ;; a prompt match quickly.
     :config
     (defun td/codex-notify ()
-      "Notify via AppleScript when Codex is waiting for input."
-      (when (eq system-type 'darwin)
-        (let ((script "display notification \"Codex is waiting for input\" with title \"Codex\""))
-          (shell-command (format "osascript -e %S" script)))))
+      (let* ((title "Codex")
+             (body (format "Waiting for input in %s" (buffer-name)))
+             (script (format "display notification %S with title %S sound name \"Funky\"" body title)))
+        (make-process :name "codex-notify"
+                      :buffer nil
+                      :noquery t
+                      :command (list "osascript" "-e" script)
+                      :sentinel (lambda (_proc _event) nil))
+        (message "[Codex] %s" body)))
     (add-hook 'codex-waiting-hook #'td/codex-notify))
 #+end_src
 

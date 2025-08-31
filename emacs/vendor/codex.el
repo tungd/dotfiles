@@ -59,11 +59,34 @@ Only runs on transitions (not on every prompt redraw).")
     (goto-char (point-max))
     (buffer-substring-no-properties (line-beginning-position) (point-max))))
 
+(defun codex--read-tail-lines (n)
+  "Return the last N lines of the current buffer as a single string."
+  (save-excursion
+    (goto-char (point-max))
+    (forward-line (- n))
+    (buffer-substring-no-properties (line-beginning-position) (point-max))))
+
+(defun codex-busy-p ()
+  "Return non-nil if Codex CLI appears busy.
+
+This encapsulates the heuristic by reading the last 5 lines of the
+current buffer and the last line prompt. It returns nil only when the
+buffer appears to be at the Codex prompt and no in-progress indicator
+is detected. In all other ambiguous states, it returns non-nil."
+  (let* ((last (codex--read-last-line))
+         (tail (codex--read-tail-lines 5))
+         (ready-line (string-match-p (regexp-quote codex--expected-last-line) last))
+         (in-progress (string-match-p "esc to interrupt" (downcase tail))))
+    (cond
+     (in-progress t)
+     (ready-line nil)
+     (t t))))
+
 (defun codex--poll-waiting-state ()
   "Poll the buffer to detect transition into waiting-for-input state."
   (when (buffer-live-p (current-buffer))
-    (let* ((last (codex--read-last-line))
-           (now (string-match-p (regexp-quote codex--expected-last-line) last)))
+    (let* ((busy (codex-busy-p))
+           (now (not busy)))
       (when (and now (not codex--waiting))
         (setq codex--waiting t)
         (run-hooks 'codex-waiting-hook))
