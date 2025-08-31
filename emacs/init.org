@@ -331,7 +331,9 @@ mini-buffer completion framework.
 #+begin_src emacs-lisp
   (use-package codex
     :commands (codex-start)
-    :bind* (("C-l x" . codex-start))
+    :bind* (("C-l x" . codex-start)
+            :map codex-transcript-mode-map
+            ("M-c" . magit-stash))
     :config
     (defun td/codex-notify ()
       (let* ((title "Codex")

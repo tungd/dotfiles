@@ -65,14 +65,47 @@ Only runs on transitions (not on every prompt redraw).")
     map)
   "Keymap for `codex-transcript-mode'.")
 
+(defvar-local codex--saved-local-map nil)
+(defvar-local codex--local-map nil)
+
 (define-minor-mode codex-transcript-mode
   "Minor mode for navigating Codex chat transcripts.
 
-Provides quick movement between chat turns using `M-n' and `M-p'."
+Installs a buffer-local keymap that inherits from the current local
+map (usually Eat's) and adds:
+- M-n/M-p to jump between chat turns
+- C-n/C-p to send Down/Up arrow to the terminal"
   :init-value nil
   :lighter " CodexNav"
   :keymap codex-transcript-mode-map
-  :group 'codex)
+  :group 'codex
+  (if codex-transcript-mode
+      (progn
+        (setq codex--saved-local-map (current-local-map))
+        (setq codex--local-map (make-sparse-keymap))
+        (set-keymap-parent codex--local-map codex--saved-local-map)
+        (define-key codex--local-map (kbd "M-n") #'codex-next-turn)
+        (define-key codex--local-map (kbd "M-p") #'codex-previous-turn)
+        (define-key codex--local-map (kbd "C-n") #'codex-send-down)
+        (define-key codex--local-map (kbd "C-p") #'codex-send-up)
+        (use-local-map codex--local-map))
+    (when codex--saved-local-map (use-local-map codex--saved-local-map))
+    (setq codex--local-map nil
+          codex--saved-local-map nil)))
+
+(defun codex-send-up ()
+  "Send an Up Arrow keypress to the underlying terminal."
+  (interactive)
+  (if (bound-and-true-p eat-terminal)
+      (eat-term-send-string eat-terminal "\e[A")
+    (message "[Codex] Not an Eat buffer")))
+
+(defun codex-send-down ()
+  "Send a Down Arrow keypress to the underlying terminal."
+  (interactive)
+  (if (bound-and-true-p eat-terminal)
+      (eat-term-send-string eat-terminal "\e[B")
+    (message "[Codex] Not an Eat buffer")))
 
 (defun codex--goto-turn (direction &optional type)
   "Move point to the start of the next/previous chat turn content.
@@ -237,6 +270,7 @@ is detected. In all other ambiguous states, it returns non-nil."
     (codex--start-poller)
     ;; Enable transcript navigation minor mode
     (codex-transcript-mode 1)
+    ;; Local keymap overrides are installed by the minor mode
     (buffer-name)))
 
 ;;;###autoload
