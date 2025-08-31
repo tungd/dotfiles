@@ -62,6 +62,8 @@ are stored in the =~/.emacs.d/vendor= directory.
   (add-to-list 'exec-path "~/.local/bin")
   (add-to-list 'exec-path "/opt/local/bin")
   (add-to-list 'exec-path "/Users/tung/Library/Python/3.12/bin/")
+  (add-to-list 'exec-path "/Users/tung/Library/pnpm")
+  (add-to-list 'exec-path "/Users/tung/.opam/default/bin/")
   (setenv "PATH" (string-join exec-path ":"))
 #+end_src
 
@@ -937,19 +939,55 @@ I use auto completion sparingly.
 #+begin_src emacs-lisp
   (use-package gptel-anthropic
     :functions gptel-make-anthropic)
+
   (use-package gptel-org)
+
   (use-package gptel
     :ensure t
     :bind ("C-l c" . gptel-menu)
     :hook (gptel-mode . visual-line-mode)
     :custom
-    (gptel-model 'claude-sonnet-4-20250514)
+    ;(gptel-model 'claude-sonnet-4-20250514)
+    (gptel-model 'glm-4.5-air)
     (gptel-default-mode 'org-mode)
     :config
     (setopt gptel-backend
             (gptel-make-anthropic
-                "Claude"
-              :stream t :key (auth-source-pick-first-password :host "claude" :max 1))))
+                "GLM 4.5"
+              :stream t
+              :host "api.z.ai"
+              :endpoint "/api/anthropic/v1/messages"
+              :models '(glm-4.5)
+              :models '((glm-4.5-air
+                         :description "General Language Model 4.5 Air"
+                         :capabilities (media tool-use cache)
+                         :context-window 128
+                         :input-cost 0.2
+                         :output-cost 1.1
+                         :cutoff-date "2024-12")
+                        (glm-4.5
+                         :description "General Language Model 4.5"
+                         :capabilities (media tool-use cache)
+                         :context-window 128
+                         :input-cost 0.6
+                         :output-cost 2.2
+                         :cutoff-date "2024-12")
+                        (glm-4.5-x
+                         :description "General Language Model 4.5 (fast response)"
+                         :capabilities (media tool-use cache)
+                         :context-window 128
+                         :input-cost 2.2
+                         :output-cost 8.9
+                         :cutoff-date "2024-12")
+                        (glm-4.5-air-x
+                         :description "General Language Model 4.5 Air (fast response)"
+                         :capabilities (media tool-use cache)
+                         :context-window 128
+                         :input-cost 1.1
+                         :output-cost 4.5
+                         :cutoff-date "2024-12")
+                        )
+              :key (auth-source-pick-first-password :host "api.z.ai" :max 1))))
 #+end_src
 
 ** Error checking
@@ -1259,6 +1297,7 @@ Here's my basic Org setup:
      'org-babel-load-languages
      '((emacs-lisp . t)
        (http . t)
+       (ocaml . t)
        (plantuml . t)
        (python . t)
        (shell . t)

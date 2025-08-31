@@ -206,7 +206,12 @@
  '(exec-path
    '("/opt/local/bin" "~/.local/bin" "/usr/bin" "/bin" "/usr/sbin" "/sbin"
      "/usr/local/bin" "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
- '(package-selected-packages nil)
+ '(package-selected-packages
+   '(avy consult crux diff-hl dune eat emmet-mode envrc f gptel kotlin-mode
+         kotlin-ts-mode magit ob-async ob-http ob-kotlin ob-sql-mode ob-swift
+         prescient protobuf-mode protobuf-ts-mode rainbow-mode rg sql-cassandra
+         surround swift-mode tempel terraform-mode treesit-fold utop
+         visual-replace vterm vundo))
  '(package-vc-selected-packages
    '((neocaml :url "https://github.com/bbatsov/neocaml")
      (claudemacs :vc-backend Git :url "https://github.com/cpoile/claudemacs.git")
