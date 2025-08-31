@@ -329,6 +329,13 @@ mini-buffer completion framework.
 #+end_src
 
 #+begin_src emacs-lisp
+  (use-package codex
+    :ensure nil
+    :commands (codex-start)
+    :bind* (("C-l x" . codex-start)))
+#+end_src
+
+#+begin_src emacs-lisp
   (use-package recentf
     :hook (after-init . recentf-mode)
     :custom
@@ -386,6 +393,11 @@ Buffer location customization
                  (display-buffer-in-side-window)
                  (side . right)
                  (window-width . 0.32)))
+    (add-to-list 'display-buffer-alist
+                 '("^\\*codex:"
+                   (display-buffer-in-side-window)
+                   (side . right)
+                   (window-width . 0.32)))
     (add-to-list 'display-buffer-alist
                  '("\\*Warnings\\*" display-buffer-in-direction
                    (direction . bottom)
