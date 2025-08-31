@@ -133,11 +133,37 @@ Only runs on transitions (not on every prompt redraw).")
   "Compute the Codex buffer name for PROJECT using `project-name'."
   (format codex-buffer-name-format (or (and project (project-name project)) "default")))
 
-(defun codex--start-process (root name)
-  "Start a Codex CLI Eat session in project ROOT with buffer NAME."
-  (let* ((default-directory (file-name-as-directory (expand-file-name root)))
-         (program (string-join (cons codex-program codex-args) " ")))
-    (eat-make name program)))
+(defun codex--start-process (p)
+  "Start a Codex CLI Eat session in project P."
+  (with-current-buffer (get-buffer-create (codex--buffer-name p))
+    (cd (project-root p))
+    (let ((process-adaptive-read-buffering nil) ; ??? not sure about this
+          (args (remove nil codex-args)))
+      (apply #'eat-make (substring (buffer-name) 1 -1) codex-program nil args))
+
+    (setq-local scroll-conservatively 10000)  ; Never recenter
+    (setq-local scroll-margin 0)              ; No margin so text goes to edge
+    (setq-local maximum-scroll-margin 0)      ; No maximum margin
+    (setq-local scroll-preserve-screen-position t)  ; Preserve position during scrolling
+
+    ;; Additional stabilization for blinking character height changes
+    (setq-local auto-window-vscroll nil)      ; Disable automatic scrolling adjustments
+    (setq-local scroll-step 1)                ; Scroll one line at a time
+    (setq-local hscroll-step 1)               ; Horizontal scroll one column at a time
+    (setq-local hscroll-margin 0)             ; No horizontal scroll margin
+
+    ;; Force consistent line spacing to prevent height fluctuations
+    (setq-local line-spacing 0)               ; No extra line spacing)
+
+    ;; Disable eat's text blinking to reduce display changes
+    (when (bound-and-true-p eat-enable-blinking-text)
+      (setq-local eat-enable-blinking-text nil))
+
+    ;; Force consistent character metrics for blinking symbols
+    ;;(setq-local char-width-table nil)         ; causes emacs to crash!
+    (setq-local vertical-scroll-bar nil)      ; Disable scroll bar
+    (setq-local fringe-mode 0)                ; Disable fringes that can cause reflow
+    (buffer-name)))
 
 ;;;###autoload
 (defun codex-start (&optional restart)
@@ -147,7 +173,6 @@ With prefix argument RESTART (\[universal-argument]), restart the Codex
 process for the current project (kill if running, then start anew)."
   (interactive "P")
   (let* ((proj (project-current))
-         (root (project-root proj))
          (name (codex--buffer-name proj))
          (buf (get-buffer name)))
     (cond
@@ -157,15 +182,13 @@ process for the current project (kill if running, then start anew)."
         (when-let* ((proc (get-buffer-process buf)))
           (ignore-errors (kill-process proc)))
         (kill-buffer buf))
-      (setq buf (codex--start-process root name))
-      (pop-to-buffer-same-window buf))
+      (pop-to-buffer-same-window (codex--start-process proj)))
      ;; Buffer exists: just switch to it.
      ((buffer-live-p buf)
       (pop-to-buffer-same-window buf))
      ;; Otherwise, create a new one.
      (t
-      (setq buf (codex--start-process root name))
-      (pop-to-buffer-same-window buf)))))
+      (pop-to-buffer-same-window (codex--start-process proj))))))
 
 (provide 'codex)
 
