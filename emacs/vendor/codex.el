@@ -14,6 +14,7 @@
 
 (require 'subr-x)
 (require 'project)
+(require 'rx)
 
 (defgroup codex nil
   "Run Codex CLI in a per-project Eat buffer."
@@ -52,6 +53,88 @@ Only runs on transitions (not on every prompt redraw).")
 
 (defvar-local codex--waiting nil)
 (defvar-local codex--poll-timer nil)
+
+;;
+;; Transcript navigation
+;;
+
+(defvar codex-transcript-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "M-n") #'codex-next-turn)
+    (define-key map (kbd "M-p") #'codex-previous-turn)
+    map)
+  "Keymap for `codex-transcript-mode'.")
+
+(define-minor-mode codex-transcript-mode
+  "Minor mode for navigating Codex chat transcripts.
+
+Provides quick movement between chat turns using `M-n' and `M-p'."
+  :init-value nil
+  :lighter " CodexNav"
+  :keymap codex-transcript-mode-map
+  :group 'codex)
+
+(defun codex--goto-turn (direction &optional type)
+  "Move point to the start of the next/previous chat turn content.
+
+DIRECTION is 1 for next, -1 for previous. If TYPE is 'user or 'codex,
+restrict movement to that turn type. Returns non-nil if movement
+occurred, otherwise leaves point and returns nil."
+  (let* ((case-fold-search nil)
+         (regex (pcase type
+                  ('user (rx line-start "user" line-end))
+                  ('codex (rx line-start "codex" line-end))
+                  (_ (rx line-start (or "user" "codex") line-end))))
+         (start (point)))
+    (cond
+     ((> direction 0)
+      (end-of-line)
+      (when (re-search-forward regex nil t)
+        (beginning-of-line)
+        t))
+     ((< direction 0)
+      (beginning-of-line)
+      (unless (bobp) (backward-char 1))
+      (when (re-search-backward regex nil t)
+        (beginning-of-line)
+        t))
+     (t nil))))
+
+(defun codex-next-turn ()
+  "Jump to the start of the next chat turn (user or codex)."
+  (interactive)
+  (unless (codex--goto-turn +1)
+    (message "No next chat turn")))
+
+(defun codex-previous-turn ()
+  "Jump to the start of the previous chat turn (user or codex)."
+  (interactive)
+  (unless (codex--goto-turn -1)
+    (message "No previous chat turn")))
+
+(defun codex-next-user ()
+  "Jump to the start of the next user prompt."
+  (interactive)
+  (unless (codex--goto-turn +1 'user)
+    (message "No next user prompt")))
+
+(defun codex-previous-user ()
+  "Jump to the start of the previous user prompt."
+  (interactive)
+  (unless (codex--goto-turn -1 'user)
+    (message "No previous user prompt")))
+
+(defun codex-next-codex ()
+  "Jump to the start of the next Codex response."
+  (interactive)
+  (unless (codex--goto-turn +1 'codex)
+    (message "No next Codex response")))
+
+(defun codex-previous-codex ()
+  "Jump to the start of the previous Codex response."
+  (interactive)
+  (unless (codex--goto-turn -1 'codex)
+    (message "No previous Codex response")))
 
 (defun codex--read-last-line ()
   "Return the last line of the current buffer as a string."
@@ -152,6 +235,8 @@ is detected. In all other ambiguous states, it returns non-nil."
     (setq-local fringe-mode 0)                ; Disable fringes that can cause reflow
     ;; Start a simple periodic poller to detect when Codex is waiting.
     (codex--start-poller)
+    ;; Enable transcript navigation minor mode
+    (codex-transcript-mode 1)
     (buffer-name)))
 
 ;;;###autoload
