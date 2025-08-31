@@ -88,7 +88,7 @@ export PATH=$HOME/Projects/dotfiles/bin:$PATH
 
 [[ -e /opt/local/etc/profile.d/z.sh ]] && . /opt/local/etc/profile.d/z.sh
 [[ $+commands[direnv] ]] && eval "$(direnv hook zsh)"
-[[ $+commands[thrash] ]] && alias rm=trash
+# [[ $+commands[thrash] ]] && alias rm=trash
 
 alias g=git
 alias e="emacsclient -n"

@@ -206,17 +206,7 @@
  '(exec-path
    '("/opt/local/bin" "~/.local/bin" "/usr/bin" "/bin" "/usr/sbin" "/sbin"
      "/usr/local/bin" "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
- '(package-selected-packages
-   '(avy consult crux csv-mode d2-mode dape detached diff-hl doom-themes dune
-         dune-format eat eglot emmet-mode envrc evil f feature-mode format-sql
-         gptel gptel-anthropic graphql-ts-mode highlight-indentation
-         indent-guide isearch-mb kotlin-mode kotlin-ts-mode lua-mode magit
-         markdown-ts-mode mermaid-mode modus-theme neocaml ob-async ob-http
-         ob-kotlin ob-plantuml ob-sql-mode ob-swift pache-dark-theme persp-mode
-         plantuml-mode prescient protobuf-mode protobuf-ts-mode rainbow-mode
-         reason-mode rg scad-mode sql-cassandra surround swift-mode
-         tango-plus-them tango-plus-theme tempel terraform-mode treesit-fold
-         utop visual-replace vterm vundo web-mode))
+ '(package-selected-packages nil)
  '(package-vc-selected-packages
    '((neocaml :url "https://github.com/bbatsov/neocaml")
      (claudemacs :vc-backend Git :url "https://github.com/cpoile/claudemacs.git")
@@ -242,4 +232,5 @@
  '(font-lock-comment-delimiter-face ((t :slant normal)))
  '(font-lock-comment-face ((t :slant normal)))
  '(font-lock-constant-face ((t :slant normal)))
- '(font-lock-string-face ((t :slant normal))))
+ '(font-lock-string-face ((t :slant normal)))
+ '(vertical-border ((t :foreground "#222"))))

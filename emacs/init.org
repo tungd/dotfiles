@@ -58,6 +58,7 @@ are stored in the =~/.emacs.d/vendor= directory.
 
 #+begin_src emacs-lisp
   (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
+  (add-to-list 'load-path "~/Projects/personal/ellama")
   (add-to-list 'exec-path "~/.local/bin")
   (add-to-list 'exec-path "/opt/local/bin")
   (add-to-list 'exec-path "/Users/tung/Library/Python/3.12/bin/")
@@ -741,7 +742,7 @@ Some speedup for Tramp:
 
 Native LSP support via =Eglot= since Emacs 29.1
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package eglot
     :hook ((js-ts-mode . eglot-ensure)
            (typescript-ts-mode . eglot-ensure)
@@ -761,7 +762,7 @@ Native LSP support via =Eglot= since Emacs 29.1
                                          :documentOnTypeFormattingProvider
                                          :documentHighlightProvider))
     (eglot-extend-to-xref t)
-    (eglot-code-action-indications '(mode-line))
+    (eglot-code-action-indications '())
     :config
     (add-to-list 'eglot-server-programs '((neocaml-mode :language-id "ocaml") . ("ocamllsp")))
     (add-to-list 'eglot-server-programs '((tuareg-mode :language-id "ocaml") . ("ocamllsp")))
@@ -912,13 +913,6 @@ TODO: automating the entire process
      (css-mode . css-ts-mode)
      ;; (python-mode . python-ts-mode)
      ))
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (use-package scala-ts-mode
-    :ensure t
-    :mode (("\\.scala\\'" . scala-ts-mode)
-           ("build.mill'" . scala-ts-mode)))
 #+end_src
 
 ** Auto completion
@@ -1192,11 +1186,11 @@ These are supports for other stuffs that I used:
   (use-package yaml-ts-mode
     :mode (("\\.yaml$" . yaml-ts-mode)
            ("\\.yml$" . yaml-ts-mode))
-    :hook ((yaml-ts-mode . display-line-numbers-mode)
+    :hook (;(yaml-ts-mode . display-line-numbers-mode)
            (yaml-ts-mode . visual-line-mode)))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package graphql-ts-mode
     :ensure t
     :mode ("\\.graphql\\'" "\\.gql\\'")
@@ -1399,7 +1393,7 @@ new Mac and tired of running it. So here it goes:
            (ppi (/ (caddr geometry) (/ (car size) 25.4))))
       ;;(message "PPI: %s" ppi)
       (if (> ppi 120)
-          (set-face-attribute 'default frame :height 160)
+          (set-face-attribute 'default frame :height 150)
         (set-face-attribute 'default frame :height 160))))
 
   (add-function :after after-focus-change-function #'td/adapt-font-size)
@@ -1446,6 +1440,8 @@ bold and ligatures support :(.
 
   (unless (display-graphic-p)
     (menu-bar-mode -1))
+
+  (context-menu-mode)
 #+end_src
 
 Hide unnecessary long mode line mode list
@@ -1523,7 +1519,9 @@ down compiler error :(.
 #+begin_src emacs-lisp
   (column-number-mode t)
   (line-number-mode t)
+#+end_src
 
+#+begin_src emacs-lisp :tangle no
   (use-package display-line-numbers
     :hook ((prog-mode . display-line-numbers-mode)
            (org-mode . display-line-numbers-mode)
