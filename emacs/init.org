@@ -336,14 +336,13 @@ mini-buffer completion framework.
     ;; `codex-waiting-regexps'. Use M-x codex-detect-dump-tail to inspect
     ;; the last lines and M-x codex-set-waiting-regexp-from-tail to set
     ;; a prompt match quickly.
-    ;; :config
-    ;; (defun td/codex-notify ()
-    ;;   "Notify via AppleScript when Codex is waiting for input."
-    ;;   (when (eq system-type 'darwin)
-    ;;     (let ((script "display notification \"Codex is waiting for input\" with title \"Codex\""))
-    ;;       (shell-command (format "osascript -e %S" script)))))
-    ;; (add-hook 'codex-waiting-hook #'td/codex-notify)
-    )
+    :config
+    (defun td/codex-notify ()
+      "Notify via AppleScript when Codex is waiting for input."
+      (when (eq system-type 'darwin)
+        (let ((script "display notification \"Codex is waiting for input\" with title \"Codex\""))
+          (shell-command (format "osascript -e %S" script)))))
+    (add-hook 'codex-waiting-hook #'td/codex-notify))
 #+end_src
 
 #+begin_src emacs-lisp
