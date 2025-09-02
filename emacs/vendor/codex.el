@@ -188,13 +188,20 @@ occurred, otherwise leaves point and returns nil."
 This encapsulates the heuristic by reading the last 5 lines of the
 current buffer and the last line prompt. It returns nil only when the
 buffer appears to be at the Codex prompt and no in-progress indicator
-is detected. In all other ambiguous states, it returns non-nil."
+is detected. In all other ambiguous states, it returns non-nil.
+
+Busy conditions include:
+- An in-progress indicator (e.g. "esc to interrupt").
+- A permission prompt for running a local command (detected by the line
+  containing "Allow command?")."
   (let* ((last (codex--read-last-line))
          (tail (codex--read-tail-lines 5))
-         (ready-line (string-match-p (regexp-quote codex--expected-last-line) last))
-         (in-progress (string-match-p "esc to interrupt" (downcase tail))))
+          (ready-line (string-match-p (regexp-quote codex--expected-last-line) last))
+         (in-progress (string-match-p "esc to interrupt" (downcase tail)))
+         (permission (string-match-p "allow command\\\?" (downcase tail))))
     (cond
      (in-progress t)
+     (permission t)
      (ready-line nil)
      (t t))))
 
