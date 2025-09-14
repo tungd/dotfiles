@@ -191,9 +191,9 @@ buffer appears to be at the Codex prompt and no in-progress indicator
 is detected. In all other ambiguous states, it returns non-nil.
 
 Busy conditions include:
-- An in-progress indicator (e.g. "esc to interrupt").
+- An in-progress indicator (e.g. \"esc to interrupt\").
 - A permission prompt for running a local command (detected by the line
-  containing "Allow command?")."
+  containing \"Allow command?\")."
   (let* ((last (codex--read-last-line))
          (tail (codex--read-tail-lines 5))
           (ready-line (string-match-p (regexp-quote codex--expected-last-line) last))
