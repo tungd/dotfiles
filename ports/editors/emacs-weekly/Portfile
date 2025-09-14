@@ -115,26 +115,24 @@ if {$subport eq $name || $subport eq "emacs-app"} {
     checksums       rmd160  d84d527bb0db3d56d558e8f4bed80af5e3eddef3 \
                     sha256  54404782ea5de37e8fcc4391fa9d4a41359a4ba9689b541f6bc97dd1ac283f6c \
                     size    82678582
-
-    patchfiles-append patch-allow-powerpc.diff
 }
 
-patchfiles-append   patch-allow-powerpc.diff
+# patchfiles-append   patch-allow-powerpc.diff
 
 if {$subport eq "emacs-devel" || $subport eq "emacs-app-devel"} {
     PortGroup       github 1.0
 
     # do not forget to check that configure hasn't introduce some suprises via
     # git diff [old]..[new] -- '**/configure.ac'
-    github.setup    emacs-mirror emacs a4ea22d9989cece0dcbae511c3e321b34474fe14
+    github.setup    emacs-mirror emacs 04342d365406468b9d82ad81277f20d5bfd0eb4d
     github.tarball_from archive
     epoch           5
-    version         20250908
+    version         20250915
     revision        0
 
     master_sites    ${github.master_sites}
 
-    checksums       sha256  980183a0b72181e9854b70871f230b8c323a48ee24699c8df8257a050ee76ded
+    checksums       sha256  e7d4c8b0b2cadacf1e3216aef6673f672975655823c20fd6b86bd1a6866569df
 
     livecheck.type none
 
@@ -329,7 +327,8 @@ variant treesitter description {Builds emacs with tree-sitter support} {
     if {$subport eq "emacs-devel" || $subport eq "emacs-app-devel"} {
         depends_run-append \
             port:tree-sitter-markdown \
-            port:tree-sitter-go-work
+            port:tree-sitter-go-work \
+            port:tree-sitter-jsdoc
     }
 
     notes-append "
