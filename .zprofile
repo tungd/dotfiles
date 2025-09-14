@@ -85,6 +85,7 @@ export PGUSER=postgres
 export PATH=/opt/local/bin:/opt/local/sbin:$PATH
 export PATH=$HOME/.local/sbin:$HOME/.local/bin:$PATH
 export PATH=$HOME/Projects/dotfiles/bin:$PATH
+export PATH=$HOME/.opam/default/bin/:$PATH
 
 [[ -e /opt/local/etc/profile.d/z.sh ]] && . /opt/local/etc/profile.d/z.sh
 [[ $+commands[direnv] ]] && eval "$(direnv hook zsh)"
