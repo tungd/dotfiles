@@ -1485,7 +1485,8 @@ bold and ligatures support :(.
    default-frame-alist
    `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
-     (font . "Iosevka Fixed SS07 Semibold 16")
+     ;; (font . "Monaco 16")
+     (font . "Iosevka Fixed SS07 16")
      ;; (font . "Iosevka Mono 16")
      ;; (font . "JetBrains Mono NL 15")
      ;; (font . "Fira Mono 16")
