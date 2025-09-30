@@ -529,7 +529,7 @@ INTENT is recorded in `codex-last-intent' for downstream hooks."
    'refactor-readability))
 
 (defun codex-code-change-simplify ()
-  "Ask Codex to simplify the selected code." 
+  "Ask Codex to simplify the selected code."
   (interactive)
   (codex--code-change
    "Simplify this code by reducing unnecessary branching or complexity while keeping the same behavior and edge-case handling."
@@ -537,7 +537,7 @@ INTENT is recorded in `codex-last-intent' for downstream hooks."
    'simplify))
 
 (defun codex-code-change-add-docs ()
-  "Ask Codex to add documentation and comments to the current code." 
+  "Ask Codex to add documentation and comments to the current code."
   (interactive)
   (codex--code-change
    "Add concise documentation and inline comments that clarify the purpose, inputs, outputs, and important invariants of this code. Avoid redundant comments."
@@ -545,19 +545,19 @@ INTENT is recorded in `codex-last-intent' for downstream hooks."
    'add-docs))
 
 (defun codex-code-change-describe ()
-  "Ask Codex to describe what the current code does without modifying it." 
+  "Ask Codex to describe what the current code does without modifying it."
   (interactive)
   (codex--code-change
-   "Describe in detail what this code does, including inputs, outputs, side effects, and tricky edge cases. Highlight any risks or assumptions." 
+   "Describe in detail what this code does, including inputs, outputs, side effects, and tricky edge cases. Highlight any risks or assumptions."
    '("Provide an explanation only; do not modify the code or run commands.")
    nil
    'describe))
 
 (defun codex-code-change-write-tests ()
-  "Ask Codex to write or update tests for the current code." 
+  "Ask Codex to write or update tests for the current code."
   (interactive)
   (codex--code-change
-   "Write or update automated tests that thoroughly cover this behavior, including success, failure, and edge cases." 
+   "Write or update automated tests that thoroughly cover this behavior, including success, failure, and edge cases."
    '("Focus on creating or updating automated tests for the described behavior."
      "Run the relevant test suite and report the results.")
    nil
@@ -624,7 +624,7 @@ With prefix ARG, add implementations after comments instead of replacing them."
          (prompt (read-from-minibuffer "TODO implementation instruction: " initial))
          (after (codex--compose-after-response (current-buffer) nil)))
     (codex--send-prompt prompt after)
-    (message "[Codex] Requested TODO implementation")))
+    (message "[Codex] Requested TODO implementation"))))
 
 ;;;###autoload
 (defun codex-fix-tests ()
