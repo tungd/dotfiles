@@ -24,7 +24,6 @@
 (declare-function vterm-send-key "vterm" (key &optional shift meta ctrl accept-proc-output))
 (declare-function vterm-send-string "vterm" (string &optional newline))
 (declare-function vterm-send-return "vterm")
-(declare-function vterm--window-adjust-process-window-size "vterm" (process windows))
 (defvar vterm-shell)
 (defvar vterm-timer-delay)
 
@@ -79,37 +78,22 @@ Each function should accept no arguments."
 (defvar-local codex--after-response-timer nil
   "Timer object used to monitor the Codex buffer for idle state.")
 
-(defvar codex--tracked-buffers nil
-  "List of Codex vterm buffers currently being tracked for size updates.")
+(defvar-local codex--initial-resize-done nil
+  "Non-nil once the initial flicker-avoidance resize ran in this buffer.")
 
-(defun codex--register-buffer (buffer)
-  "Track BUFFER for size updates and cleanup."
-  (add-to-list 'codex--tracked-buffers buffer)
-  (with-current-buffer buffer
-    (add-hook 'kill-buffer-hook #'codex--unregister-buffer nil t)))
-
-(defun codex--unregister-buffer ()
-  "Remove the current buffer from `codex--tracked-buffers'."
-  (setq codex--tracked-buffers (delq (current-buffer) codex--tracked-buffers)))
-
-(defun codex--update-buffer-size (buffer)
-  "Ensure BUFFER's underlying PTY matches the current window size."
-  (when-let* ((win (get-buffer-window buffer t))
-              (proc (get-buffer-process buffer))
-              ((process-live-p proc)))
-    (with-selected-window win
-      (vterm--window-adjust-process-window-size proc (list win)))
-    (let ((rows (window-body-height win))
-          (cols (window-body-width win)))
-      (set-process-window-size proc rows cols))))
-
-(defun codex--window-size-change (_frame)
-  "Adjust Codex buffer PTYs when any window changes size."
-  (dolist (buffer codex--tracked-buffers)
-    (when (buffer-live-p buffer)
-      (codex--update-buffer-size buffer))))
-
-(add-hook 'window-size-change-functions #'codex--window-size-change)
+(defun codex--maybe-nudge-window (buffer)
+  "Work around initial edge flicker by briefly resizing BUFFER's window."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (unless codex--initial-resize-done
+        (setq codex--initial-resize-done t)
+        (when-let* ((win (get-buffer-window buffer t)))
+          (with-selected-window win
+            (condition-case nil
+                (progn
+                  (enlarge-window-horizontally 1)
+                  (shrink-window-horizontally 1))
+              (error nil))))))))
 
 ;;
 ;; Transcript navigation
@@ -262,16 +246,12 @@ Busy conditions include:
       (setq codex--after-response-timer nil
             codex--pending-actions nil)
       ;; Launch vterm with our Codex command.
-      (let ((process-adaptive-read-buffering nil)
-            (vterm-shell command))
+      (let ((vterm-shell command))
         (vterm-mode))
       (when project-root
         (setq default-directory (file-name-as-directory project-root)))
 
-      (codex--register-buffer buffer)
-      (codex--update-buffer-size buffer)
-
-      (setq-local vterm-timer-delay nil)
+      (setq-local vterm-timer-delay 0.02)
 
       ;; Enable transcript navigation minor mode.
       (codex-transcript-mode 1)
@@ -361,7 +341,7 @@ Returns non-nil when the prompt looked idle."
         (user-error "[Codex] Unable to start Codex session"))
       (codex--wait-for-ready buffer codex-send-timeout)
       (display-buffer buffer)
-      (codex--update-buffer-size buffer)
+      (codex--maybe-nudge-window buffer)
       (with-current-buffer buffer
         (goto-char (point-max))
         (vterm-send-string text)
@@ -693,7 +673,7 @@ process for the current project (kill if running, then start anew)."
             (t
              (pop-to-buffer-same-window (codex--start-process proj))))))
       (when (buffer-live-p target)
-        (codex--update-buffer-size target)))))
+        (codex--maybe-nudge-window target)))))
 
 (provide 'codex)
 
