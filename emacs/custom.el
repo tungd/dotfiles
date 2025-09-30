@@ -207,11 +207,11 @@
    '("/opt/local/bin" "~/.local/bin" "/usr/bin" "/bin" "/usr/sbin" "/sbin"
      "/usr/local/bin" "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
  '(package-selected-packages
-   '(avy consult coterm crux diff-hl dune eat emmet-mode envrc f gptel kotlin-mode
-         kotlin-ts-mode magit ob-async ob-http ob-kotlin ob-sql-mode ob-swift
-         prescient protobuf-mode protobuf-ts-mode rainbow-mode rg sql-cassandra
-         surround swift-mode tempel terraform-mode treesit-fold utop
-         visual-replace vterm vundo))
+   '(avy consult coterm crux csv-mode d2-mode diff-hl dune eat emmet-mode envrc f
+         gptel kotlin-mode kotlin-ts-mode magit ob-async ob-http ob-kotlin
+         ob-sql-mode ob-swift plantuml-mode prescient protobuf-mode
+         protobuf-ts-mode rainbow-mode rg sql-cassandra surround swift-mode
+         tempel terraform-mode treesit-fold utop visual-replace vterm vundo))
  '(package-vc-selected-packages
    '((claudemacs :url "https://github.com/cpoile/claudemacs.git" :branch ":main")
      (neocaml :url "https://github.com/bbatsov/neocaml")
