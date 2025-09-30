@@ -24,7 +24,9 @@
 (declare-function vterm-send-key "vterm" (key &optional shift meta ctrl accept-proc-output))
 (declare-function vterm-send-string "vterm" (string &optional newline))
 (declare-function vterm-send-return "vterm")
+(declare-function vterm--window-adjust-process-window-size "vterm" (process windows))
 (defvar vterm-shell)
+(defvar vterm-timer-delay)
 
 (defgroup codex nil
   "Run Codex CLI in a per-project vterm buffer."
@@ -46,8 +48,8 @@
   :type 'string
   :group 'codex)
 
-(defcustom codex-poll-interval 0.8
-  "Polling interval in seconds to check if Codex is waiting for input."
+(defcustom codex-after-response-check-interval 0.5
+  "Polling interval in seconds used when waiting for Codex to finish responding."
   :type 'number
   :group 'codex)
 
@@ -61,18 +63,53 @@
   :type 'number
   :group 'codex)
 
-(defvar codex-waiting-hook nil
-  "Hook run when a Codex CLI session transitions to a waiting-for-input state.
-
-Functions run with current-buffer set to the Codex terminal buffer.
-Only runs on transitions (not on every prompt redraw).")
+(defcustom codex-after-response-hook nil
+  "Hook run in the originating buffer after Codex finishes responding.
+Each function should accept no arguments."
+  :type 'hook
+  :group 'codex)
 
 (defconst codex--expected-last-line
   " ⏎ send   Ctrl+J newline   Ctrl+T transcript   Ctrl+C quit"
   "Substring that, when present in the last line, indicates Codex is waiting for input.")
 
-(defvar-local codex--waiting nil)
-(defvar-local codex--poll-timer nil)
+(defvar-local codex--pending-actions nil
+  "Queue of functions to run after Codex finishes producing output.")
+
+(defvar-local codex--after-response-timer nil
+  "Timer object used to monitor the Codex buffer for idle state.")
+
+(defvar codex--tracked-buffers nil
+  "List of Codex vterm buffers currently being tracked for size updates.")
+
+(defun codex--register-buffer (buffer)
+  "Track BUFFER for size updates and cleanup."
+  (add-to-list 'codex--tracked-buffers buffer)
+  (with-current-buffer buffer
+    (add-hook 'kill-buffer-hook #'codex--unregister-buffer nil t)))
+
+(defun codex--unregister-buffer ()
+  "Remove the current buffer from `codex--tracked-buffers'."
+  (setq codex--tracked-buffers (delq (current-buffer) codex--tracked-buffers)))
+
+(defun codex--update-buffer-size (buffer)
+  "Ensure BUFFER's underlying PTY matches the current window size."
+  (when-let* ((win (get-buffer-window buffer t))
+              (proc (get-buffer-process buffer))
+              ((process-live-p proc)))
+    (with-selected-window win
+      (vterm--window-adjust-process-window-size proc (list win)))
+    (let ((rows (window-body-height win))
+          (cols (window-body-width win)))
+      (set-process-window-size proc rows cols))))
+
+(defun codex--window-size-change (_frame)
+  "Adjust Codex buffer PTYs when any window changes size."
+  (dolist (buffer codex--tracked-buffers)
+    (when (buffer-live-p buffer)
+      (codex--update-buffer-size buffer))))
+
+(add-hook 'window-size-change-functions #'codex--window-size-change)
 
 ;;
 ;; Transcript navigation
@@ -127,17 +164,16 @@ map (usually vterm's) and adds:
       (vterm-send-key "<down>")
     (message "[Codex] Not a vterm buffer")))
 
-(defun codex--goto-turn (direction &optional type)
-  "Move point to the start of the next/previous chat turn content.
+(defun codex--goto-turn (direction)
+  "Move point to the start of the next/previous chat turn.
 
-DIRECTION is 1 for next, -1 for previous. If TYPE is 'user or 'codex,
-restrict movement to that turn type. Returns non-nil if movement
+DIRECTION is 1 for next, -1 for previous. Returns non-nil if movement
 occurred, otherwise leaves point and returns nil."
   (let* ((case-fold-search nil)
-         (regex (pcase type
-                  ('user (rx line-start "user" line-end))
-                  ('codex (rx line-start "codex" line-end))
-                  (_ (rx line-start (or "user" "codex") line-end))))
+         (bullet (char-to-string #x2022))
+         (regex (concat "^\\s-*\\(?:"
+                        (regexp-opt (list bullet ">"))
+                        "\\)"))
          (start (point)))
     (cond
      ((> direction 0)
@@ -154,40 +190,16 @@ occurred, otherwise leaves point and returns nil."
      (t nil))))
 
 (defun codex-next-turn ()
-  "Jump to the start of the next chat turn (user or codex)."
+  "Jump to the start of the next chat turn."
   (interactive)
   (unless (codex--goto-turn +1)
     (message "No next chat turn")))
 
 (defun codex-previous-turn ()
-  "Jump to the start of the previous chat turn (user or codex)."
+  "Jump to the start of the previous chat turn."
   (interactive)
   (unless (codex--goto-turn -1)
     (message "No previous chat turn")))
-
-(defun codex-next-user ()
-  "Jump to the start of the next user prompt."
-  (interactive)
-  (unless (codex--goto-turn +1 'user)
-    (message "No next user prompt")))
-
-(defun codex-previous-user ()
-  "Jump to the start of the previous user prompt."
-  (interactive)
-  (unless (codex--goto-turn -1 'user)
-    (message "No previous user prompt")))
-
-(defun codex-next-codex ()
-  "Jump to the start of the next Codex response."
-  (interactive)
-  (unless (codex--goto-turn +1 'codex)
-    (message "No next Codex response")))
-
-(defun codex-previous-codex ()
-  "Jump to the start of the previous Codex response."
-  (interactive)
-  (unless (codex--goto-turn -1 'codex)
-    (message "No previous Codex response")))
 
 (defun codex--read-last-line ()
   "Return the last line of the current buffer as a string."
@@ -225,38 +237,6 @@ Busy conditions include:
      (ready-line nil)
      (t t))))
 
-(defun codex--poll-waiting-state ()
-  "Poll the buffer to detect transition into waiting-for-input state."
-  (when (buffer-live-p (current-buffer))
-    (let* ((busy (codex-busy-p))
-           (now (not busy)))
-      (when (and now (not codex--waiting))
-        (setq codex--waiting t)
-        (run-hooks 'codex-waiting-hook))
-      (when (and (not now) codex--waiting)
-        (setq codex--waiting nil)))))
-
-(defun codex--start-poller ()
-  "Start the periodic polling timer for the current buffer."
-  (setq codex--waiting nil)
-  (when (timerp codex--poll-timer)
-    (cancel-timer codex--poll-timer)
-    (setq codex--poll-timer nil))
-  (setq codex--poll-timer
-        (run-with-timer codex-poll-interval codex-poll-interval
-                         (lambda (buf)
-                           (when (buffer-live-p buf)
-                             (with-current-buffer buf
-                               (codex--poll-waiting-state))))
-                         (current-buffer)))
-  (add-hook 'kill-buffer-hook #'codex--stop-poller nil t))
-
-(defun codex--stop-poller ()
-  "Stop and clear the polling timer for the current buffer."
-  (when (timerp codex--poll-timer)
-    (cancel-timer codex--poll-timer)
-    (setq codex--poll-timer nil)))
-
 ;;; Helper commands (intentionally minimal with timer-based detection)
 
 (defun codex--buffer-name (project)
@@ -276,9 +256,11 @@ Busy conditions include:
         (user-error "[Codex] vterm package is required"))
       (when project-root
         (setq default-directory (file-name-as-directory project-root)))
-      ;; Make sure any previous poller is cleared before we recreate the buffer
-      ;; state.
-      (codex--stop-poller)
+      ;; Reset any pending after-response state before relaunching vterm.
+      (when (timerp codex--after-response-timer)
+        (cancel-timer codex--after-response-timer))
+      (setq codex--after-response-timer nil
+            codex--pending-actions nil)
       ;; Launch vterm with our Codex command.
       (let ((process-adaptive-read-buffering nil)
             (vterm-shell command))
@@ -286,19 +268,10 @@ Busy conditions include:
       (when project-root
         (setq default-directory (file-name-as-directory project-root)))
 
-      ;; Buffer-local scrolling tweaks to keep the viewport stable while Codex
-      ;; streams output.
-      (setq-local scroll-conservatively 10000)
-      (setq-local scroll-margin 0)
-      (setq-local maximum-scroll-margin 0)
-      (setq-local scroll-preserve-screen-position t)
-      (setq-local auto-window-vscroll nil)
-      (setq-local scroll-step 1)
-      (setq-local hscroll-step 1)
-      (setq-local hscroll-margin 0)
-      (setq-local line-spacing 0)
-      (setq-local vertical-scroll-bar nil)
-      (setq-local fringe-mode 0)
+      (codex--register-buffer buffer)
+      (codex--update-buffer-size buffer)
+
+      (setq-local vterm-timer-delay nil)
 
       ;; Enable transcript navigation minor mode.
       (codex-transcript-mode 1)
@@ -378,7 +351,7 @@ Returns non-nil when the prompt looked idle."
         (sit-for interval)))
     (with-current-buffer buffer (not (codex-busy-p)))))
 
-(defun codex--send-prompt (prompt)
+(defun codex--send-prompt (prompt &optional after-action)
   "Send PROMPT to the active Codex CLI session."
   (let ((text (string-trim-right prompt)))
     (when (string-empty-p text)
@@ -388,11 +361,73 @@ Returns non-nil when the prompt looked idle."
         (user-error "[Codex] Unable to start Codex session"))
       (codex--wait-for-ready buffer codex-send-timeout)
       (display-buffer buffer)
+      (codex--update-buffer-size buffer)
       (with-current-buffer buffer
         (goto-char (point-max))
         (vterm-send-string text)
-        (vterm-send-return))
+        (vterm-send-return)
+        (when after-action
+          (codex--queue-after-response buffer after-action)))
       (message "[Codex] Sent prompt (%d chars)" (length text)))))
+
+(defun codex--queue-after-response (buffer action)
+  "Schedule ACTION to run when Codex BUFFER appears idle."
+  (when (functionp action)
+    (with-current-buffer buffer
+      (setq codex--pending-actions
+            (append codex--pending-actions (list action))))
+    (codex--ensure-after-response-timer buffer)))
+
+(defun codex--ensure-after-response-timer (buffer)
+  "Ensure BUFFER has an active timer watching for Codex idle state."
+  (with-current-buffer buffer
+    (unless (timerp codex--after-response-timer)
+      (setq codex--after-response-timer
+            (run-at-time codex-after-response-check-interval nil
+                         #'codex--after-response-check buffer)))))
+
+(defun codex--after-response-check (buffer)
+  "Process pending after-response actions for BUFFER if Codex is idle."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (setq codex--after-response-timer nil)
+      (cond
+       ((null codex--pending-actions)
+        ;; Nothing to do.
+        nil)
+       ((codex-busy-p)
+        ;; Still streaming output; re-arm the timer.
+        (codex--ensure-after-response-timer buffer))
+       (t
+        (let ((actions codex--pending-actions))
+          (setq codex--pending-actions nil)
+          (dolist (fn actions)
+            (condition-case err
+                (funcall fn)
+              (error (message "[Codex] After-response action failed: %s"
+                              (error-message-string err)))))
+          (when codex--pending-actions
+            (codex--ensure-after-response-timer buffer))))))))
+
+(defun codex--compose-after-response (buffer extra-fns)
+  "Return a closure that runs hooks in BUFFER followed by EXTRA-FNS.
+EXTRA-FNS should be a list of zero-argument functions."
+  (when (or codex-after-response-hook extra-fns)
+    (lambda ()
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer
+          (run-hooks 'codex-after-response-hook)
+          (dolist (fn extra-fns)
+            (condition-case err
+                (funcall fn)
+              (error (message "[Codex] After-response hook failed: %s"
+                              (error-message-string err))))))))))
+
+(defun codex-after-response-show-magit-diff ()
+  "Show the current unstaged diff using Magit, when available."
+  (if (fboundp 'magit-diff-unstaged)
+      (magit-diff-unstaged)
+    (message "[Codex] Magit is not available to display a diff.")))
 
 ;;
 ;; Code change prompt
@@ -430,37 +465,103 @@ Returns a plist containing file, function, region and defun metadata."
         (end (plist-get context :snippet-end)))
     (format "%s:%d-%d" file start end)))
 
-;;;###autoload
-(defun codex-code-change ()
-  "Collect code context and prompt Codex to make a targeted change."
-  (interactive)
+(defconst codex--code-change-default-postamble
+  '("Apply the requested change and explain the modifications you made."
+    "Re-run the relevant automated tests and update them if they fail."
+    "If the request is ambiguous, ask for clarification before proceeding.")
+  "Default trailing instructions appended to Codex code-change prompts.")
+
+(defvar-local codex-last-intent nil
+  "Symbol describing the most recent Codex intent triggered from this buffer.")
+
+(defun codex--code-change (initial &optional postamble extra-hooks intent)
+  "Internal helper to prompt for a code change using INITIAL text.
+POSTAMBLE, when non-nil, should be a list of trailing instructions.
+EXTRA-HOOKS is a list of functions to run after Codex responds.
+INTENT is recorded in `codex-last-intent' for downstream hooks."
   (unless buffer-file-name
     (user-error "[Codex] Current buffer is not visiting a file"))
   (let* ((context (codex--gather-context))
-         (desc (string-trim (read-from-minibuffer "Describe the change: "))))
+         (desc (string-trim (read-from-minibuffer "Describe the change: " (or initial "")))))
     (when (string-empty-p desc)
       (user-error "[Codex] Change description cannot be empty"))
+    (setq codex-last-intent intent)
     (let* ((location (codex--format-location context))
            (function-name (plist-get context :current-function))
-           (function-line (when function-name
-                            (format "\nFunction: %s" function-name)))
+           (function-line (when function-name (format "Function: %s" function-name)))
            (code-block
             (codex--format-text-block
              "Current code"
              (codex--clip-text (plist-get context :snippet))
              (codex--code-fence-language)))
-           (instruction
-            (mapconcat #'identity
-                       (list desc
-                             (format "\nContext: %s" location)
-                             (or function-line "")
-                             (or code-block "")
-                             "\nApply the requested change and explain the modifications you made."
-                             "Re-run the relevant automated tests and update them if they fail."
-                             "If the request is ambiguous, ask for clarification before proceeding.")
-                       "\n")))
-      (codex--send-prompt instruction)
+           (post-lines (or postamble codex--code-change-default-postamble))
+           (post-text (when post-lines (string-join post-lines "\n")))
+           (segments (delq nil (list desc
+                                     (format "Context: %s" location)
+                                     function-line
+                                     code-block
+                                     post-text)))
+           (prompt (string-join segments "\n\n"))
+           (after (codex--compose-after-response (current-buffer) extra-hooks)))
+      (codex--send-prompt prompt after)
       (message "[Codex] Requested code change for %s" location))))
+
+;;;###autoload
+(defun codex-code-change ()
+  "Collect code context and prompt Codex to make a targeted change."
+  (interactive)
+  (codex--code-change nil nil nil 'custom))
+
+(defun codex-code-change-add-logging ()
+  "Ask Codex to add structured logging to the current code context."
+  (interactive)
+  (codex--code-change
+   "Add structured logging that captures key inputs, outputs, and exceptional conditions without changing the behavior. Use existing logging utilities if available."
+   nil
+   'logging))
+
+(defun codex-code-change-refactor-readability ()
+  "Ask Codex to refactor the current code for readability."
+  (interactive)
+  (codex--code-change
+   "Refactor this code to improve readability and clarity. Reduce duplication, rename unclear identifiers, and reorganize logic while preserving observable behavior."
+   nil
+   'refactor-readability))
+
+(defun codex-code-change-simplify ()
+  "Ask Codex to simplify the selected code." 
+  (interactive)
+  (codex--code-change
+   "Simplify this code by reducing unnecessary branching or complexity while keeping the same behavior and edge-case handling."
+   nil
+   'simplify))
+
+(defun codex-code-change-add-docs ()
+  "Ask Codex to add documentation and comments to the current code." 
+  (interactive)
+  (codex--code-change
+   "Add concise documentation and inline comments that clarify the purpose, inputs, outputs, and important invariants of this code. Avoid redundant comments."
+   nil
+   'add-docs))
+
+(defun codex-code-change-describe ()
+  "Ask Codex to describe what the current code does without modifying it." 
+  (interactive)
+  (codex--code-change
+   "Describe in detail what this code does, including inputs, outputs, side effects, and tricky edge cases. Highlight any risks or assumptions." 
+   '("Provide an explanation only; do not modify the code or run commands.")
+   nil
+   'describe))
+
+(defun codex-code-change-write-tests ()
+  "Ask Codex to write or update tests for the current code." 
+  (interactive)
+  (codex--code-change
+   "Write or update automated tests that thoroughly cover this behavior, including success, failure, and edge cases." 
+   '("Focus on creating or updating automated tests for the described behavior."
+     "Run the relevant test suite and report the results.")
+   nil
+   'write-tests))
 
 ;;
 ;; Implement TODO prompt
@@ -480,6 +581,7 @@ With prefix ARG, add implementations after comments instead of replacing them."
   (interactive "P")
   (unless buffer-file-name
     (user-error "[Codex] Current buffer is not visiting a file"))
+  (setq codex-last-intent 'implement-todo)
   (let* ((context (codex--gather-context))
          (current-line (string-trim (or (thing-at-point 'line t) "")))
          (current-line-number (line-number-at-pos (point)))
@@ -519,8 +621,9 @@ With prefix ARG, add implementations after comments instead of replacing them."
              (t
               (format "Please implement all TODO in-place in file '%s'. The TODO are TODO comments. Keep the existing code structure and only implement these marked items.%s"
                       (file-name-nondirectory buffer-file-name) file-context))))
-         (prompt (read-from-minibuffer "TODO implementation instruction: " initial)))
-    (codex--send-prompt prompt)
+         (prompt (read-from-minibuffer "TODO implementation instruction: " initial))
+         (after (codex--compose-after-response (current-buffer) nil)))
+    (codex--send-prompt prompt after)
     (message "[Codex] Requested TODO implementation")))
 
 ;;;###autoload
@@ -528,6 +631,7 @@ With prefix ARG, add implementations after comments instead of replacing them."
   "Send a prompt instructing Codex to run and fix the project's tests.
 The active region is treated as failure context and included in the prompt."
   (interactive)
+  (setq codex-last-intent 'fix-tests)
   (let* ((context (codex--gather-context))
          (failure-snippet (when (plist-get context :region-active)
                             (codex--clip-text (plist-get context :region-text))))
@@ -539,8 +643,9 @@ The active region is treated as failure context and included in the prompt."
                           (codex--context-block context nil)
                           (or failure-block "")
                           "\nMaintain existing behavior outside the failing scenarios and avoid unrelated edits."))
-         (prompt (read-from-minibuffer "Fix tests prompt: " default)))
-    (codex--send-prompt prompt)
+         (prompt (read-from-minibuffer "Fix tests prompt: " default))
+         (after (codex--compose-after-response (current-buffer) nil)))
+    (codex--send-prompt prompt after)
     (message "[Codex] Requested test fix workflow")))
 
 ;;
@@ -550,11 +655,17 @@ The active region is treated as failure context and included in the prompt."
 ;;;###autoload
 (transient-define-prefix codex-command-menu ()
   "Transient menu for common Codex CLI prompts."
-  [["Codex prompts"
-    ["Code"
-     ("c" "Code change" codex-code-change)
-     ("t" "Implement TODO" codex-implement-todo)
-     ("f" "Fix tests" codex-fix-tests)]]])
+  [["Code change"
+    ["c" "Custom" codex-code-change]
+    ["l" "Add logging" codex-code-change-add-logging]
+    ["r" "Refactor readability" codex-code-change-refactor-readability]
+    ["s" "Simplify" codex-code-change-simplify]
+    ["a" "Add docs/comments" codex-code-change-add-docs]
+    ["e" "Describe" codex-code-change-describe]
+    ["w" "Write tests" codex-code-change-write-tests]]
+   ["Other"
+    ["t" "Implement TODO" codex-implement-todo]
+    ["f" "Fix tests" codex-fix-tests]]])
 
 ;;;###autoload
 (defun codex-start (&optional restart)
@@ -566,20 +677,23 @@ process for the current project (kill if running, then start anew)."
   (let* ((proj (project-current))
          (name (codex--buffer-name proj))
          (buf (get-buffer name)))
-    (cond
-     ;; Restart requested: kill and recreate.
-     (restart
-      (when (buffer-live-p buf)
-        (when-let* ((proc (get-buffer-process buf)))
-          (ignore-errors (kill-process proc)))
-        (kill-buffer buf))
-      (pop-to-buffer-same-window (codex--start-process proj)))
-     ;; Buffer exists: just switch to it.
-     ((buffer-live-p buf)
-      (pop-to-buffer-same-window buf))
-     ;; Otherwise, create a new one.
-     (t
-      (pop-to-buffer-same-window (codex--start-process proj))))))
+    (let ((target
+           (cond
+            ;; Restart requested: kill and recreate.
+            (restart
+             (when (buffer-live-p buf)
+               (when-let* ((proc (get-buffer-process buf)))
+                 (ignore-errors (kill-process proc)))
+               (kill-buffer buf))
+             (pop-to-buffer-same-window (codex--start-process proj)))
+            ;; Buffer exists: just switch to it.
+            ((buffer-live-p buf)
+             (pop-to-buffer-same-window buf))
+            ;; Otherwise, create a new one.
+            (t
+             (pop-to-buffer-same-window (codex--start-process proj))))))
+      (when (buffer-live-p target)
+        (codex--update-buffer-size target)))))
 
 (provide 'codex)
 
