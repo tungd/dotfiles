@@ -1,11 +1,11 @@
-;;; codex.el --- Per-project Codex CLI in Eat -*- lexical-binding: t; -*-
+;;; codex.el --- Per-project Codex CLI in vterm -*- lexical-binding: t; -*-
 
-;; Minimal integration to run Codex CLI in a per-project Eat buffer.
+;; Minimal integration to run Codex CLI in a per-project vterm buffer.
 
 ;;; Commentary:
 ;;
 ;; Provides `codex-start' to launch (or switch to) a Codex CLI session
-;; scoped to the current project. It uses the Eat terminal emulator so
+;; scoped to the current project. It uses the vterm terminal emulator so
 ;; the CLI runs as an interactive TTY and scrollback works well.
 ;;
 ;; Customization variables let you pick the program and its args.
@@ -16,8 +16,12 @@
 (require 'project)
 (require 'rx)
 
+(declare-function vterm-mode "vterm")
+(declare-function vterm-send-key "vterm" (key &optional shift meta ctrl accept-proc-output))
+(defvar vterm-shell)
+
 (defgroup codex nil
-  "Run Codex CLI in a per-project Eat buffer."
+  "Run Codex CLI in a per-project vterm buffer."
   :group 'tools
   :prefix "codex-")
 
@@ -72,7 +76,7 @@ Only runs on transitions (not on every prompt redraw).")
   "Minor mode for navigating Codex chat transcripts.
 
 Installs a buffer-local keymap that inherits from the current local
-map (usually Eat's) and adds:
+map (usually vterm's) and adds:
 - M-n/M-p to jump between chat turns
 - C-n/C-p to send Down/Up arrow to the terminal"
   :init-value nil
@@ -96,16 +100,16 @@ map (usually Eat's) and adds:
 (defun codex-send-up ()
   "Send an Up Arrow keypress to the underlying terminal."
   (interactive)
-  (if (bound-and-true-p eat-terminal)
-      (eat-term-send-string eat-terminal "\e[A")
-    (message "[Codex] Not an Eat buffer")))
+  (if (derived-mode-p 'vterm-mode)
+      (vterm-send-key "<up>")
+    (message "[Codex] Not a vterm buffer")))
 
 (defun codex-send-down ()
   "Send a Down Arrow keypress to the underlying terminal."
   (interactive)
-  (if (bound-and-true-p eat-terminal)
-      (eat-term-send-string eat-terminal "\e[B")
-    (message "[Codex] Not an Eat buffer")))
+  (if (derived-mode-p 'vterm-mode)
+      (vterm-send-key "<down>")
+    (message "[Codex] Not a vterm buffer")))
 
 (defun codex--goto-turn (direction &optional type)
   "Move point to the start of the next/previous chat turn content.
@@ -244,45 +248,50 @@ Busy conditions include:
   (format codex-buffer-name-format (or (and project (project-name project)) "default")))
 
 (defun codex--start-process (p)
-  "Start a Codex CLI Eat session in project P."
-  (with-current-buffer (get-buffer-create (codex--buffer-name p))
-    (cd (project-root p))
-    (let ((process-adaptive-read-buffering nil) ; ??? not sure about this
-          (args (remove nil codex-args)))
-      (apply #'eat-make (substring (buffer-name) 1 -1) codex-program nil args))
+  "Start a Codex CLI vterm session in project P."
+  (let* ((buffer (get-buffer-create (codex--buffer-name p)))
+         (project-root (when p (project-root p)))
+         (args (remove nil codex-args))
+         (command (mapconcat #'shell-quote-argument
+                             (cons codex-program args)
+                             " ")))
+    (with-current-buffer buffer
+      (unless (require 'vterm nil t)
+        (user-error "[Codex] vterm package is required"))
+      (when project-root
+        (setq default-directory (file-name-as-directory project-root)))
+      ;; Make sure any previous poller is cleared before we recreate the buffer
+      ;; state.
+      (codex--stop-poller)
+      ;; Launch vterm with our Codex command.
+      (let ((process-adaptive-read-buffering nil)
+            (vterm-shell command))
+        (vterm-mode))
+      (when project-root
+        (setq default-directory (file-name-as-directory project-root)))
 
-    (setq-local scroll-conservatively 10000)  ; Never recenter
-    (setq-local scroll-margin 0)              ; No margin so text goes to edge
-    (setq-local maximum-scroll-margin 0)      ; No maximum margin
-    (setq-local scroll-preserve-screen-position t)  ; Preserve position during scrolling
+      ;; Buffer-local scrolling tweaks to keep the viewport stable while Codex
+      ;; streams output.
+      (setq-local scroll-conservatively 10000)
+      (setq-local scroll-margin 0)
+      (setq-local maximum-scroll-margin 0)
+      (setq-local scroll-preserve-screen-position t)
+      (setq-local auto-window-vscroll nil)
+      (setq-local scroll-step 1)
+      (setq-local hscroll-step 1)
+      (setq-local hscroll-margin 0)
+      (setq-local line-spacing 0)
+      (setq-local vertical-scroll-bar nil)
+      (setq-local fringe-mode 0)
 
-    ;; Additional stabilization for blinking character height changes
-    (setq-local auto-window-vscroll nil)      ; Disable automatic scrolling adjustments
-    (setq-local scroll-step 1)                ; Scroll one line at a time
-    (setq-local hscroll-step 1)               ; Horizontal scroll one column at a time
-    (setq-local hscroll-margin 0)             ; No horizontal scroll margin
-
-    ;; Force consistent line spacing to prevent height fluctuations
-    (setq-local line-spacing 0)               ; No extra line spacing)
-
-    ;; Disable eat's text blinking to reduce display changes
-    (when (bound-and-true-p eat-enable-blinking-text)
-      (setq-local eat-enable-blinking-text nil))
-
-    ;; Force consistent character metrics for blinking symbols
-    ;;(setq-local char-width-table nil)         ; causes emacs to crash!
-    (setq-local vertical-scroll-bar nil)      ; Disable scroll bar
-    (setq-local fringe-mode 0)                ; Disable fringes that can cause reflow
-    ;; Start a simple periodic poller to detect when Codex is waiting.
-    (codex--start-poller)
-    ;; Enable transcript navigation minor mode
-    (codex-transcript-mode 1)
-    ;; Local keymap overrides are installed by the minor mode
-    (buffer-name)))
+      ;; Enable transcript navigation minor mode.
+      (codex-transcript-mode 1)
+      ;; Local keymap overrides are installed by the minor mode.
+      (buffer-name))))
 
 ;;;###autoload
 (defun codex-start (&optional restart)
-  "Start or switch to the per-project Codex CLI Eat buffer.
+  "Start or switch to the per-project Codex CLI vterm buffer.
 
 With prefix argument RESTART (\[universal-argument]), restart the Codex
 process for the current project (kill if running, then start anew)."
