@@ -973,17 +973,15 @@ I use auto completion sparingly.
     :bind ("C-l c" . gptel-menu)
     :hook (gptel-mode . visual-line-mode)
     :custom
-    ;(gptel-model 'claude-sonnet-4-20250514)
-    (gptel-model 'glm-4.5-air)
+    (gptel-model 'glm-4.6)
     (gptel-default-mode 'org-mode)
     :config
     (setopt gptel-backend
             (gptel-make-anthropic
-                "GLM 4.5"
+                "GLM"
               :stream t
               :host "api.z.ai"
               :endpoint "/api/anthropic/v1/messages"
-              :models '(glm-4.5)
               :models '((glm-4.5-air
                          :description "General Language Model 4.5 Air"
                          :capabilities (media tool-use cache)
@@ -991,8 +989,8 @@ I use auto completion sparingly.
                          :input-cost 0.2
                          :output-cost 1.1
                          :cutoff-date "2024-12")
-                        (glm-4.5
-                         :description "General Language Model 4.5"
+                        (glm-4.6
+                         :description "General Language Model 4.6"
                          :capabilities (media tool-use cache)
                          :context-window 128
                          :input-cost 0.6
@@ -1239,6 +1237,7 @@ Python or Haskell:
      '((user :default "root")
        (database :default "mysql")
        (server :default "root")
+       (password :default "root")
        (port :default 3306))))
 #+end_src
 
