@@ -330,8 +330,9 @@ mini-buffer completion framework.
 
 #+begin_src emacs-lisp
   (use-package codex
-    :commands (codex-start)
+    :commands (codex-start codex-command-menu codex-code-change)
     :bind* (("C-l x" . codex-start)
+            ("C-l c" . codex-command-menu)
             :map codex-transcript-mode-map
             ("M-c" . magit-stash))
     :config
@@ -970,7 +971,7 @@ I use auto completion sparingly.
 
   (use-package gptel
     :ensure t
-    :bind ("C-l c" . gptel-menu)
+    :bind ("C-l a" . gptel-menu)
     :hook (gptel-mode . visual-line-mode)
     :custom
     (gptel-model 'glm-4.6)
