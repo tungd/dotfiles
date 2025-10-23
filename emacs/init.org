@@ -236,6 +236,10 @@ Default key bindings is
     :hook ((xref-after-update . outline-minor-mode))
     :custom
     (xref-search-program 'ripgrep))
+
+  (use-package dumb-jump
+    :ensure t
+    :init (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
 #+end_src
 
 ** Mini-buffer
@@ -1451,18 +1455,8 @@ I have a 2k display, and used to run a HiDPI hack for macOS. Recently I got a
 new Mac and tired of running it. So here it goes:
 
 #+begin_src emacs-lisp
-  (defun td/adapt-font-size (&optional frame)
-    (let* ((attrs (frame-monitor-attributes frame))
-           (size (alist-get 'mm-size attrs))
-           (geometry (alist-get 'geometry attrs))
-           (ppi (/ (caddr geometry) (/ (car size) 25.4))))
-      ;;(message "PPI: %s" ppi)
-      (if (> ppi 120)
-          (set-face-attribute 'default frame :height 150)
-        (set-face-attribute 'default frame :height 160))))
-
-  (add-function :after after-focus-change-function #'td/adapt-font-size)
-  (add-hook 'after-make-frame-functions #'td/adapt-font-size)
+  (use-package adaptive-font-size-mode
+    :hook (after-init . adaptive-font-size-mode))
 #+end_src
 
 I use mouse scroll a lot, and with the default key binding it would accidentally
@@ -1541,8 +1535,14 @@ Truncate lines:
 Some preferences that I set for all the theme. Per documentation, the custom
 theme named =user= will always have the highest priority.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (load-theme 'modus-vivendi t)
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package tango-plus-theme
+    :ensure t
+    :init (load-theme 'tango-plus t))
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
@@ -1690,7 +1690,7 @@ This seems really cool
 ** https://github.com/xenodium/chatgpt-shell
 ** https://github.com/editor-code-assistant/eca
 ** Emacs cron job to watch github build of any of the opening project
-
+** https://tonsky.me/blog/syntax-highlighting/
 
 * Init file generation
 
