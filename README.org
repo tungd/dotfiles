@@ -65,6 +65,13 @@ Homebrew. Installation is a little bit more involved, though.
   sudo port install z direnv
 #+END_SRC
 
+** I also maintained a separate port for building Emacs. I have it updated weekly.
+
+#+begin_src sh
+  sudo chmod -R +a "macports allow read,execute" /Users/tung/Projects/dotfiles/ports
+  sudo port install emacs-app-devel
+#+end_src
+
 ** AWS Session Manager plugin
 
 #+begin_src sh
