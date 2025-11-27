@@ -247,9 +247,7 @@ Default key bindings is
 Shortcut key to go back to the home directory, works regardless of the
 mini-buffer completion framework.
 
-#+begin_src emacs-lisp
-  (ido-mode -1)
-
+#+begin_src emacs-lisp :tangle no
   (use-package minibuffer
     :custom
     (minibuffer-visible-completions t)
@@ -265,6 +263,40 @@ mini-buffer completion framework.
     (completions-format 'one-column)
     (completions-detailed t)
     (completions-group t))
+
+  (bind-key "TAB" #'minibuffer-complete minibuffer-mode-map)
+
+  (bind-key "C-p" #'minibuffer-previous-completion minibuffer-local-map)
+  (bind-key "C-n" #'minibuffer-next-completion minibuffer-local-map)
+
+  (bind-key "C-p" #'minibuffer-previous-completion completion-in-region-mode-map)
+  (bind-key "C-n" #'minibuffer-next-completion completion-in-region-mode-map)
+#+end_src
+
+#+begin_src emacs-lisp
+  (ido-mode -1)
+
+  (use-package vertico
+    :ensure t
+    :custom
+    (vertico-count 20)
+    (vertico-cycle t)
+    (vertico-resize t)
+    :hook (after-init . vertico-mode)
+    :config
+    ;; Adapted from vertico-reverse
+    (defun vertico-bottom--display-candidates (lines)
+      "Display lines in bottom."
+      (move-overlay vertico--candidates-ov (point-min) (point-min))
+      (unless (eq vertico-resize t)
+        (setq lines (nconc (make-list (max 0 (- vertico-count (length lines))) "\n") lines)))
+      (let ((string (apply #'concat lines)))
+        (add-face-text-property 0 (length string) 'default 'append string)
+        (overlay-put vertico--candidates-ov 'before-string string)
+        (overlay-put vertico--candidates-ov 'after-string nil))
+      (vertico--resize-window (length lines)))
+
+    (advice-add #'vertico--display-candidates :override #'vertico-bottom--display-candidates))
 
   (use-package prescient
     :ensure t
@@ -283,13 +315,6 @@ mini-buffer completion framework.
 
   (bind-key "~" #'td/minibuffer-smart-tilde minibuffer-local-map)
   (bind-key "<s-backspace>" #'backward-kill-word minibuffer-local-map)
-  (bind-key "TAB" #'minibuffer-complete minibuffer-mode-map)
-
-  (bind-key "C-p" #'minibuffer-previous-completion minibuffer-local-map)
-  (bind-key "C-n" #'minibuffer-next-completion minibuffer-local-map)
-
-  (bind-key "C-p" #'minibuffer-previous-completion completion-in-region-mode-map)
-  (bind-key "C-n" #'minibuffer-next-completion completion-in-region-mode-map)
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1454,7 +1479,7 @@ the way I liked.
 I have a 2k display, and used to run a HiDPI hack for macOS. Recently I got a
 new Mac and tired of running it. So here it goes:
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package adaptive-font-size-mode
     :hook (after-init . adaptive-font-size-mode))
 #+end_src
@@ -1480,9 +1505,9 @@ bold and ligatures support :(.
    `((left-fringe . 8) (right-fringe . 4)
      (border-width . 0) (internal-border-width . 0)
      ;; (font . "Monaco 16")
-     ;; (font . "Iosevka Fixed SS07 16")
+     (font . "Iosevka Fixed SS07 16")
      ;; (font . "Iosevka Mono 16")
-     (font . "JetBrains Mono NL 15")
+     ;; (font . "JetBrains Mono NL 14")
      ;; (font . "Fira Mono 16")
      ;; (font . "Ubuntu Mono 16")
      (tool-bar-lines . 0)
@@ -1535,11 +1560,11 @@ Truncate lines:
 Some preferences that I set for all the theme. Per documentation, the custom
 theme named =user= will always have the highest priority.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (load-theme 'modus-vivendi t)
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package tango-plus-theme
     :ensure t
     :init (load-theme 'tango-plus t))
@@ -1571,7 +1596,7 @@ theme named =user= will always have the highest priority.
    ;'(fringe ((t :inherit line-number :background unspecified)))
    '(vertical-border ((t :foreground "#222")))
 
-   ;'(mode-line-buffer-id ((t :foreground "orange")))
+   '(mode-line-buffer-id ((t :foreground "orange")))
    ;'(cursor ((t :background "orange")))
    '(eglot-highlight-symbol-face ((t :weight normal)))
    '(eglot-code-action-indicator-face ((t :weight normal)))
