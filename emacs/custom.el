@@ -207,17 +207,15 @@
    '("/opt/local/bin" "~/.local/bin" "/usr/bin" "/bin" "/usr/sbin" "/sbin"
      "/usr/local/bin" "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
  '(package-selected-packages
-   '(agent-shell avy consult coterm crux csv-mode d2-mode diff-hl dumb-jump dune
-                 eat emmet-mode envrc f gptel kotlin-mode kotlin-ts-mode magit
-                 ob-async ob-http ob-kotlin ob-sql-mode ob-swift plantuml-mode
-                 prescient protobuf-mode protobuf-ts-mode rainbow-mode rg
-                 sql-cassandra surround swift-mode tango-plus-theme tempel
-                 terraform-mode treesit-fold utop vertico visual-replace vterm
-                 vundo))
+   '(agent-shell avy base16-theme consult coterm crux csv-mode d2-mode diff-hl
+                 doom-themes dumb-jump dune eat emmet-mode envrc f gdshader-mode
+                 gptel kotlin-mode kotlin-ts-mode magit ob-async ob-http
+                 ob-kotlin ob-sql-mode ob-swift plantuml-mode prescient
+                 protobuf-mode protobuf-ts-mode rainbow-mode rg sql-cassandra
+                 surround swift-mode tango-plus-theme tempel terraform-mode
+                 treesit-fold utop vertico visual-replace vterm vundo))
  '(package-vc-selected-packages
-   '((claudemacs :url "https://github.com/cpoile/claudemacs.git" :branch ":main")
-     (neocaml :url "https://github.com/bbatsov/neocaml")
-     (claude-code :url "https://github.com/stevemolitor/claude-code.el")))
+   '((neocaml :url "https://github.com/bbatsov/neocaml")))
  '(safe-local-variable-values
    '((checkdoc-allow-quoting-nil-and-t . t)
      (eval setenv "LIBRARY_PATH" "/opt/local/lib/mysql8/mysql")
