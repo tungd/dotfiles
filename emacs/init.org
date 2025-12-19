@@ -358,7 +358,7 @@ mini-buffer completion framework.
     :bind ("M-g e" . consult-flymake))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package codex
     :commands (codex-start codex-command-menu codex-code-change)
     :bind* (("C-l x" . codex-start)
@@ -378,6 +378,17 @@ mini-buffer completion framework.
         ;(message "[Codex] %s" body)
         ))
     (add-hook 'codex-waiting-hook #'td/codex-notify))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package claudecode
+    :commands (claudecode-start claudecode-command-menu claudecode-code-change)
+    :custom
+    (claudecode-program "/Users/tung/.claude/local/claude")
+    :bind* (("C-l x" . claudecode-start)
+            ("C-l c" . claudecode-command-menu)
+            :map claudecode-transcript-mode-map
+            ("M-c" . magit-stash)))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -440,6 +451,11 @@ Buffer location customization
                  (window-width . 0.32)))
     (add-to-list 'display-buffer-alist
                  '("^\\*codex:"
+                   (display-buffer-in-side-window)
+                   (side . right)
+                   (window-width . 0.32)))
+    (add-to-list 'display-buffer-alist
+                 '("^\\*claude:"
                    (display-buffer-in-side-window)
                    (side . right)
                    (window-width . 0.32)))
@@ -1508,7 +1524,7 @@ bold and ligatures support :(.
      ;; (font . "Monaco 16")
      ;; (font . "Iosevka Fixed SS07 16")
      ;; (font . "Iosevka Mono 16")
-     (font . "JetBrains Mono NL 15")
+     (font . "JetBrains Mono NL 14")
      ;; (font . "Fira Mono 16")
      ;; (font . "Ubuntu Mono 16")
      (tool-bar-lines . 0)
@@ -1521,7 +1537,7 @@ bold and ligatures support :(.
   (tool-bar-mode -1)
   (setq-default
    cursor-in-non-selected-windows nil
-   ;; line-spacing 0.2
+   line-spacing 0.1
    )
 
   (unless (display-graphic-p)
@@ -1561,7 +1577,7 @@ Truncate lines:
 Some preferences that I set for all the theme. Per documentation, the custom
 theme named =user= will always have the highest priority.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (load-theme 'modus-vivendi t)
 #+end_src
 
@@ -1577,7 +1593,7 @@ theme named =user= will always have the highest priority.
    :init (load-theme 'notink t))
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
  (use-package pache-dark-theme
    :ensure t
    :init (load-theme 'pache-dark t))
@@ -1591,13 +1607,13 @@ theme named =user= will always have the highest priority.
    '(font-lock-string-face ((t :slant normal)))
    '(font-lock-constant-face ((t :slant normal)))
 
-   ;'(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face)))
-   ;'(line-number ((t :slant normal :background unspecified :foreground "#444" :inherit font-lock-comment-face)))
-   ;'(line-number-current-line ((t :slant normal :weight normal)))
-   ;'(fringe ((t :inherit line-number :background unspecified)))
+   '(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face)))
+   '(line-number ((t :slant normal :background unspecified :foreground "#444" :inherit font-lock-comment-face)))
+   '(line-number-current-line ((t :slant normal :weight normal :foreground "#fff")))
+   '(fringe ((t :inherit line-number :background unspecified)))
    '(vertical-border ((t :foreground "#222")))
 
-   '(mode-line-buffer-id ((t :foreground "orange")))
+   ;'(mode-line-buffer-id ((t :foreground "orange")))
    ;'(cursor ((t :background "orange")))
    '(eglot-highlight-symbol-face ((t :weight normal)))
    '(eglot-code-action-indicator-face ((t :weight normal)))
@@ -1682,12 +1698,6 @@ kind of distracting, but it is really helpful sometimes.
   (bind-key* "C-M-r" #'td/refresh-front-most-tab)
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
-  (use-package claudemacs
-    :vc (:url "https://github.com/cpoile/claudemacs.git" :branch :main)
-    :bind* ("C-l a" . claudemacs-transient-menu))
-#+end_src
-
 #+begin_src emacs-lisp
   (use-package eat
     :ensure t
@@ -1695,7 +1705,12 @@ kind of distracting, but it is really helpful sometimes.
     (eat-term-name "xterm-256color")
     (eat-maximum-latency 0.008)
     (eat-minimum-latency 0.002)
-    (eat-term-scrollback-size 400000))
+    (eat-term-scrollback-size 400000)
+    (eat-enable-mouse nil)
+    :config
+    (add-hook 'eat-mode-hook
+              (lambda ()
+                (eldoc-mode -1))))
 
   (setq use-default-font-for-symbols nil)
   (set-fontset-font t 'symbol "Menlo" nil 'prepend)
