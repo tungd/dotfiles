@@ -71,7 +71,7 @@
 
    ;; Comments
    `(font-lock-comment-face
-     ((,class (:foreground ,fg-faint :slant italic))))
+     ((,class (:foreground ,fg-faint))))
    `(font-lock-comment-delimiter-face
      ((,class (:inherit font-lock-comment-face))))
    `(font-lock-doc-face
