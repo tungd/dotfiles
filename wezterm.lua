@@ -8,7 +8,7 @@ config.font = wezterm.font('Iosevka Term SS07', {weight="Medium"})
 config.font_size = 16
 
 -- For example, changing the color scheme:
-config.color_scheme = 'Ayu Mirage'
+config.color_scheme = 'VibrantInk'
 
 config.window_background_opacity = 1.0
 

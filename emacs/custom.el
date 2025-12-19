@@ -207,15 +207,12 @@
    '("/opt/local/bin" "~/.local/bin" "/usr/bin" "/bin" "/usr/sbin" "/sbin"
      "/usr/local/bin" "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
  '(package-selected-packages
-   '(agent-shell avy base16-theme consult coterm crux csv-mode d2-mode diff-hl
-                 doom-themes dumb-jump dune eat emmet-mode envrc f gdshader-mode
-                 gptel kotlin-mode kotlin-ts-mode magit ob-async ob-http
-                 ob-kotlin ob-sql-mode ob-swift plantuml-mode prescient
-                 protobuf-mode protobuf-ts-mode rainbow-mode rg sql-cassandra
-                 surround swift-mode tango-plus-theme tempel terraform-mode
-                 treesit-fold utop vertico visual-replace vterm vundo))
- '(package-vc-selected-packages
-   '((neocaml :url "https://github.com/bbatsov/neocaml")))
+   '(acp avy base16-theme consult crux diff-hl doom-themes dumb-jump eat ef-themes
+         emmet-mode envrc gdshader-mode gptel kotlin-ts-mode magit ob-http
+         ob-kotlin ob-sql-mode pache-dark-theme prescient protobuf-mode
+         rainbow-mode rg shell-maker surround swift-mode tango-plus-theme tempel
+         terraform-mode treesit-fold vertico visual-replace vterm vundo))
+ '(package-vc-selected-packages '((neocaml :url "https://github.com/bbatsov/neocaml")))
  '(safe-local-variable-values
    '((checkdoc-allow-quoting-nil-and-t . t)
      (eval setenv "LIBRARY_PATH" "/opt/local/lib/mysql8/mysql")
@@ -238,5 +235,8 @@
  '(font-lock-comment-face ((t :slant normal)))
  '(font-lock-constant-face ((t :slant normal)))
  '(font-lock-string-face ((t :slant normal)))
+ '(fringe ((t :inherit line-number :background unspecified)))
+ '(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face)))
+ '(line-number-current-line ((t :slant normal :weight normal)))
  '(mode-line-buffer-id ((t :foreground "orange")))
  '(vertical-border ((t :foreground "#222"))))
