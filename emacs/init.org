@@ -213,9 +213,8 @@ buffers, .ie Eshell.
 
 ** Symbols
 
-I used to use =dumb-jumb=, but LSP has gotten good enough and it supported all
-of the languages that I use, so now I use the built-in =xref= and rely on LSP's
-=xref= integration.
+Using =dumb-jump= with =xref= integration. Fast, no server needed, works well
+with Claude for deeper code understanding.
 
 Default key bindings is
 
@@ -458,7 +457,7 @@ Buffer location customization
                  '("^\\*claude:"
                    (display-buffer-in-side-window)
                    (side . right)
-                   (window-width . 0.32)))
+                   (window-width . 81)))
     (add-to-list 'display-buffer-alist
                  '("\\*Warnings\\*" display-buffer-in-direction
                    (direction . bottom)
@@ -815,9 +814,9 @@ Some speedup for Tramp:
 
 * Programming
 
-Native LSP support via =Eglot= since Emacs 29.1
+Native LSP support via =Eglot= since Emacs 29.1 (disabled - using dumb-jump + Claude instead)
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package eglot
     :hook ((js-ts-mode . eglot-ensure)
            (typescript-ts-mode . eglot-ensure)
@@ -1535,10 +1534,10 @@ bold and ligatures support :(.
 
   (blink-cursor-mode -1)
   (tool-bar-mode -1)
+
   (setq-default
    cursor-in-non-selected-windows nil
-   line-spacing 0.1
-   )
+   line-spacing 0.1)
 
   (unless (display-graphic-p)
     (menu-bar-mode -1))
@@ -1593,10 +1592,14 @@ theme named =user= will always have the highest priority.
    :init (load-theme 'notink t))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
  (use-package pache-dark-theme
    :ensure t
    :init (load-theme 'pache-dark t))
+#+end_src
+
+#+begin_src emacs-lisp
+  (load-theme 'td t)
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1607,11 +1610,11 @@ theme named =user= will always have the highest priority.
    '(font-lock-string-face ((t :slant normal)))
    '(font-lock-constant-face ((t :slant normal)))
 
-   '(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face)))
-   '(line-number ((t :slant normal :background unspecified :foreground "#444" :inherit font-lock-comment-face)))
-   '(line-number-current-line ((t :slant normal :weight normal :foreground "#fff")))
-   '(fringe ((t :inherit line-number :background unspecified)))
-   '(vertical-border ((t :foreground "#222")))
+   ;'(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face)))
+   ;'(line-number ((t :slant normal :background unspecified :foreground "#444" :inherit font-lock-comment-face)))
+   ;'(line-number-current-line ((t :slant normal :weight normal :foreground "#fff")))
+   ;'(fringe ((t :inherit line-number :background unspecified)))
+   ;'(vertical-border ((t :foreground "#222")))
 
    ;'(mode-line-buffer-id ((t :foreground "orange")))
    ;'(cursor ((t :background "orange")))
@@ -1700,17 +1703,7 @@ kind of distracting, but it is really helpful sometimes.
 
 #+begin_src emacs-lisp
   (use-package eat
-    :ensure t
-    :custom
-    (eat-term-name "xterm-256color")
-    (eat-maximum-latency 0.008)
-    (eat-minimum-latency 0.002)
-    (eat-term-scrollback-size 400000)
-    (eat-enable-mouse nil)
-    :config
-    (add-hook 'eat-mode-hook
-              (lambda ()
-                (eldoc-mode -1))))
+    :ensure t)
 
   (setq use-default-font-for-symbols nil)
   (set-fontset-font t 'symbol "Menlo" nil 'prepend)

@@ -208,10 +208,11 @@
      "/usr/local/bin" "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
  '(package-selected-packages
    '(acp avy base16-theme consult crux diff-hl doom-themes dumb-jump eat ef-themes
-         emmet-mode envrc gdshader-mode gptel kotlin-ts-mode magit ob-http
-         ob-kotlin ob-sql-mode pache-dark-theme prescient protobuf-mode
-         rainbow-mode rg shell-maker surround swift-mode tango-plus-theme tempel
-         terraform-mode treesit-fold vertico visual-replace vterm vundo))
+         emmet-mode envrc gdshader-mode gptel gruber-darker-theme kotlin-ts-mode
+         magit ob-http ob-kotlin ob-sql-mode pache-dark-theme prescient
+         protobuf-mode rainbow-mode rg shell-maker surround swift-mode
+         tango-plus-theme tempel terraform-mode treesit-fold vertico
+         visual-replace vterm vundo))
  '(package-vc-selected-packages '((neocaml :url "https://github.com/bbatsov/neocaml")))
  '(safe-local-variable-values
    '((checkdoc-allow-quoting-nil-and-t . t)
