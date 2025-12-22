@@ -444,11 +444,6 @@ Buffer location customization
     (split-height-threshold nil)
     :config
     (add-to-list 'display-buffer-alist
-               '("^\\*claude\\*"
-                 (display-buffer-in-side-window)
-                 (side . right)
-                 (window-width . 0.32)))
-    (add-to-list 'display-buffer-alist
                  '("^\\*codex:"
                    (display-buffer-in-side-window)
                    (side . right)
@@ -457,7 +452,7 @@ Buffer location customization
                  '("^\\*claude:"
                    (display-buffer-in-side-window)
                    (side . right)
-                   (window-width . 81)))
+                   (window-width . 85)))
     (add-to-list 'display-buffer-alist
                  '("\\*Warnings\\*" display-buffer-in-direction
                    (direction . bottom)
