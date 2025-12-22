@@ -39,7 +39,7 @@
    `(fringe  ((,class (:background ,bg))))
    `(region  ((,class (:background "#3a3a3a"))))
    `(highlight ((,class (:background "#3a3a3a"))))
-   `(hl-line ((,class (:background ,bg-alt))))
+   `(hl-line ((,class (:background "#252525" :extend t))))
    `(vertical-border ((,class (:foreground ,border))))
    `(shadow  ((,class (:foreground ,fg-faint))))
    `(link    ((,class (:foreground ,kw :underline t))))

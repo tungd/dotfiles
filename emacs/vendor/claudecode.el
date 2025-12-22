@@ -161,22 +161,44 @@ Use this when the terminal display becomes corrupted."
       (claudecode-transcript-mode 1))
     buffer-name))
 
+(defun claudecode--synchronize-scroll (windows)
+  "Custom scroll sync to keep prompt at bottom of WINDOWS.
+Replaces eat's default scroll function to prevent jumping to buffer
+beginning when switching buffers."
+  (dolist (window windows)
+    (when (and (windowp window)
+               (not buffer-read-only)
+               (bound-and-true-p eat-terminal))
+      (let ((cursor-pos (eat-term-display-cursor eat-terminal)))
+        (set-window-point window cursor-pos)
+        (cond
+         ;; Cursor near end - keep at bottom
+         ((>= cursor-pos (- (point-max) 2))
+          (with-selected-window window
+            (goto-char cursor-pos)
+            (recenter -1)))
+         ;; Cursor not visible - recenter
+         ((not (pos-visible-in-window-p cursor-pos window))
+          (with-selected-window window
+            (goto-char cursor-pos)
+            (recenter))))))))
+
 (defun claudecode--setup-buffer-display ()
   "Configure buffer-local settings to minimize flickering and scroll issues."
   ;; Prevent terminal redraw/scroll reset on buffer switching (critical fix)
-  (setq-local window-adjust-process-window-size-function #'ignore)
+  ;; (setq-local window-adjust-process-window-size-function #'ignore)
   ;; Scroll settings to prevent recentering
-  (setq-local scroll-conservatively 10000)
-  (setq-local scroll-margin 0)
-  (setq-local maximum-scroll-margin 0)
+  ;; (setq-local scroll-conservatively 10000)
+  ;; (setq-local scroll-margin 0)
+  ;; (setq-local maximum-scroll-margin 0)
   ;; (setq-local scroll-preserve-screen-position t)
-  (setq-local auto-window-vscroll nil)
-  (setq-local scroll-step 1)
-  (setq-local hscroll-step 1)
-  (setq-local hscroll-margin 0)
+  ;; (setq-local auto-window-vscroll nil)
+  ;; (setq-local scroll-step 1)
+  ;; (setq-local hscroll-step 1)
+  ;; (setq-local hscroll-margin 0)
   ;; Display settings
   ;; (setq-local line-spacing 0)
-  (setq-local vertical-scroll-bar nil)
+  ;; (setq-local vertical-scroll-bar nil)
   (setq-local fringe-mode 0)
   ;; Disable blinking text (causes constant redraws)
   (when (boundp 'eat-enable-blinking-text)
@@ -196,28 +218,31 @@ Use this when the terminal display becomes corrupted."
   (when (bound-and-true-p blink-cursor-mode)
     (setq-local blink-cursor-mode nil))
 
-  ;; 3. Disable shell prompt overlay corrections (eat timer overhead)
-  ;; Cancel the timer that runs eat--correct-shell-prompt-mark-overlays
-  (when (boundp 'eat--shell-prompt-mark-overlays)
-    (setq-local eat--shell-prompt-mark-overlays nil))
-  ;; Cancel eat's prompt correction timer if it exists
-  (when (and (boundp 'eat--shell-prompt-mark-correction-timer)
-             (timerp eat--shell-prompt-mark-correction-timer))
-    (cancel-timer eat--shell-prompt-mark-correction-timer))
-  ;; Disable shell integration which drives these features
-  (when (boundp 'eat--shell-integration-enabled)
-    (setq-local eat--shell-integration-enabled nil))
-
-  ;; 4. Font cache optimization
+  ;; 3. Font cache optimization
   (setq-local inhibit-compacting-font-caches t)
 
-  ;; 5. Reduce redisplay frequency
+  ;; 4. Reduce redisplay frequency
   (setq-local redisplay-skip-fontification-on-input t)
   (setq-local fast-but-imprecise-scrolling t)
 
   ;; Use char-mode for more responsive input (bypasses Emacs key processing)
-  (when (fboundp 'eat-char-mode)
-    (eat-char-mode)))
+  ;; (when (fboundp 'eat-char-mode)
+  ;;   (eat-char-mode))
+
+  ;; === Eat terminal optimizations for Claude Code ===
+  ;; Disable eldoc (not useful in terminal)
+  (eldoc-mode -1)
+  ;; Higher latency tolerance reduces CPU usage during fast output
+  (setq-local eat-maximum-latency 0.032)
+  (setq-local eat-minimum-latency 0.001)
+  ;; Large scrollback for long conversations (2MB)
+  (setq-local eat-term-scrollback-size (* 2 1024 1024))
+  ;; Disable shell prompt annotations (not needed for Claude CLI)
+  (setq-local eat-enable-shell-prompt-annotation nil)
+  ;; Larger input chunks for better performance with large outputs
+  (setq-local eat-input-chunk-size 4096)
+  ;; Custom scroll sync to keep prompt at bottom (prevents jump to top)
+  (setq-local eat--synchronize-scroll-function #'claudecode--synchronize-scroll))
 
 ;;
 ;; Prompt helpers
