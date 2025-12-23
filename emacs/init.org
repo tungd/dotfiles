@@ -385,9 +385,7 @@ mini-buffer completion framework.
     :custom
     (claudecode-program "/Users/tung/.claude/local/claude")
     :bind* (("C-l x" . claudecode-start)
-            ("C-l c" . claudecode-command-menu)
-            :map claudecode-transcript-mode-map
-            ("M-c" . magit-stash)))
+            ("C-l c" . claudecode-command-menu)))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -450,8 +448,8 @@ Buffer location customization
                    (window-width . 0.32)))
     (add-to-list 'display-buffer-alist
                  '("^\\*claude:"
-                   (display-buffer-in-side-window)
-                   (side . right)
+                   (display-buffer-in-direction)
+                   (direction . right)
                    (window-width . 85)))
     (add-to-list 'display-buffer-alist
                  '("\\*Warnings\\*" display-buffer-in-direction
@@ -500,7 +498,17 @@ Buffer location customization
 #+begin_src emacs-lisp
   (use-package ibuffer
     :defer t
-    :bind ([remap list-buffers] . ibuffer))
+    :bind ([remap list-buffers] . ibuffer)
+    :custom
+    (ibuffer-saved-filter-groups
+     '(("default"
+        ("Claude" (name . "^\\*claude:"))
+        ("Dired" (mode . dired-mode))
+        ("Org" (mode . org-mode))
+        ("Magit" (name . "^magit"))
+        ("Help" (or (mode . help-mode)
+                    (mode . Info-mode))))))
+    :hook (ibuffer-mode . (lambda () (ibuffer-switch-to-saved-filter-groups "default"))))
 #+end_src
 
 #+begin_src emacs-lisp

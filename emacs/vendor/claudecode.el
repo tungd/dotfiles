@@ -24,6 +24,7 @@
 (declare-function eat-term-send-string "eat")
 (declare-function eat-self-input "eat")
 (declare-function eat-char-mode "eat")
+(declare-function eat--adjust-process-window-size "eat")
 
 (defgroup claudecode nil
   "Run Claude Code CLI in a per-project eat buffer."
@@ -50,88 +51,168 @@
   :type 'integer
   :group 'claudecode)
 
+(defcustom claudecode-min-window-width 85
+  "Minimum width of the Claude Code terminal to prevent autocomplete flickering."
+  :type 'integer
+  :group 'claudecode)
+
 ;;
-;; Transcript navigation
+;; Claude buffer minor mode
 ;;
 
-(defvar claudecode-transcript-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "M-n") #'claudecode-next-turn)
-    (define-key map (kbd "M-p") #'claudecode-previous-turn)
-    map)
-  "Keymap for `claudecode-transcript-mode'.")
+(defvar-local claudecode--resize-pending nil
+  "Non-nil when a terminal resize is pending.")
 
-(defvar-local claudecode--saved-local-map nil)
-(defvar-local claudecode--local-map nil)
+(defvar-local claudecode--last-window-size nil
+  "Last known window size as (width . height), to detect actual size changes.")
 
-(define-minor-mode claudecode-transcript-mode
-  "Minor mode for navigating Claude Code chat transcripts.
+(defvar-local claudecode--last-scroll-cursor nil
+  "Last cursor position used for scroll sync, to avoid redundant recentering.")
 
-Installs a buffer-local keymap that inherits from the current local
-map (usually eat's) and adds:
-- M-n/M-p to jump between chat turns"
+
+(defvar claudecode--resize-idle-timer nil
+  "Global idle timer for processing pending resizes.")
+
+(defcustom claudecode-resize-idle-delay 1.0
+  "Seconds of idle time before processing pending terminal resizes."
+  :type 'number
+  :group 'claudecode)
+
+
+(defun claudecode--do-resize (&optional min-width)
+  "Perform terminal resize.
+If MIN-WIDTH is provided, ensure terminal is at least that wide.
+Otherwise use current window dimensions."
+  (when-let* ((terminal (bound-and-true-p eat-terminal)))
+    (let* ((win-width (window-body-width))
+           (win-height (window-body-height))
+           (width (if min-width (max win-width min-width) win-width))
+           (height win-height)
+           (inhibit-read-only t))
+      (eat-term-resize terminal width height)
+      (when (fboundp 'eat-term-redisplay)
+        (eat-term-redisplay terminal))
+      (message "[Claude] Terminal resized to %dx%d (window was %dx%d)"
+               width height win-width win-height))))
+
+(defun claudecode--process-pending-resizes ()
+  "Process any pending resize requests in Claude buffers."
+  (dolist (buf (buffer-list))
+    (when (buffer-live-p buf)
+      (with-current-buffer buf
+        (when (and (bound-and-true-p claudecode-mode)
+                   claudecode--resize-pending)
+          (setq claudecode--resize-pending nil)
+          (claudecode--do-resize))))))
+
+(defun claudecode--request-resize (_process _windows)
+  "Request a deferred resize only if window size actually changed.
+Returns nil to skip resize, or the new size to resize immediately."
+  (let* ((width (window-body-width))
+         (height (window-body-height))
+         (new-size (cons width height))
+         (size-changed (not (equal new-size claudecode--last-window-size))))
+    (if size-changed
+        (progn
+          ;; Size actually changed - defer the resize
+          (setq claudecode--last-window-size new-size)
+          (setq claudecode--resize-pending t)
+          (unless claudecode--resize-idle-timer
+            (setq claudecode--resize-idle-timer
+                  (run-with-idle-timer claudecode-resize-idle-delay t
+                                       #'claudecode--process-pending-resizes)))
+          ;; Return nil to skip immediate resize
+          nil)
+      ;; Size unchanged - no resize needed, return nil
+      nil)))
+
+
+(define-minor-mode claudecode-mode
+  "Minor mode for Claude Code CLI buffers.
+
+Configures buffer-local settings optimized for the Claude Code terminal,
+including display settings, scroll behavior, and performance tweaks."
   :init-value nil
-  :lighter " ClaudeNav"
-  :keymap claudecode-transcript-mode-map
+  :lighter " Claude"
   :group 'claudecode
-  (if claudecode-transcript-mode
-      (progn
-        (setq claudecode--saved-local-map (current-local-map))
-        (setq claudecode--local-map (make-sparse-keymap))
-        (set-keymap-parent claudecode--local-map claudecode--saved-local-map)
-        (define-key claudecode--local-map (kbd "M-n") #'claudecode-next-turn)
-        (define-key claudecode--local-map (kbd "M-p") #'claudecode-previous-turn)
-        (use-local-map claudecode--local-map))
-    (when claudecode--saved-local-map (use-local-map claudecode--saved-local-map))
-    (setq claudecode--local-map nil
-          claudecode--saved-local-map nil)))
+  (when claudecode-mode
+    ;; Scroll settings - prevent recentering and smooth scrolling
+    (setq-local scroll-margin 0)
+    (setq-local scroll-conservatively 10000)
+    (setq-local maximum-scroll-margin 0)
+    (setq-local scroll-preserve-screen-position t)
+    (setq-local auto-window-vscroll nil)
+    (setq-local fringe-mode 0)
 
-(defun claudecode--goto-turn (direction)
-  "Move point to the start of the next/previous chat turn.
+    ;; Explicitly use default resize function (eat or something else might override)
+    (setq-local window-adjust-process-window-size-function
+                #'window-adjust-process-window-size-smallest)
 
-DIRECTION is 1 for next, -1 for previous. Returns non-nil if movement
-occurred, otherwise leaves point and returns nil."
-  (let* ((case-fold-search nil)
-         (bullet (char-to-string #x2022))
-         (regex (concat "^\\s-*\\(?:"
-                        (regexp-opt (list bullet ">" "╭─" "│"))
-                        "\\)")))
-    (cond
-     ((> direction 0)
-      (end-of-line)
-      (when (re-search-forward regex nil t)
-        (beginning-of-line)
-        t))
-     ((< direction 0)
-      (beginning-of-line)
-      (unless (bobp) (backward-char 1))
-      (when (re-search-backward regex nil t)
-        (beginning-of-line)
-        t))
-     (t nil))))
+    ;; Replace blinking indicator character to prevent height fluctuations
+    (let ((display-table (make-display-table)))
+      (aset display-table #x23fa [?✽])  ; Replace ⏺ (U+23FA) with ✽
+      (setq-local buffer-display-table display-table))
 
-(defun claudecode-next-turn ()
-  "Jump to the start of the next chat turn."
-  (interactive)
-  (unless (claudecode--goto-turn +1)
-    (message "No next chat turn")))
+    ;; Disable blinking text (causes constant redraws)
+    (when (boundp 'eat-enable-blinking-text)
+      (setq-local eat-enable-blinking-text nil))
 
-(defun claudecode-previous-turn ()
-  "Jump to the start of the previous chat turn."
-  (interactive)
-  (unless (claudecode--goto-turn -1)
-    (message "No previous chat turn")))
+    ;; Mode-line optimization (minimal mode-line to reduce redisplay cost)
+    (setq-local mode-line-format
+                '(" " mode-line-buffer-identification
+                  " " mode-line-misc-info))
+
+    ;; Disable cursor blinking
+    (setq-local cursor-type 'box)
+    (when (bound-and-true-p blink-cursor-mode)
+      (setq-local blink-cursor-mode nil))
+
+    ;; Font cache optimization
+    (setq-local inhibit-compacting-font-caches t)
+
+    ;; Reduce redisplay frequency
+    (setq-local redisplay-skip-fontification-on-input t)
+    (setq-local fast-but-imprecise-scrolling t)
+
+    ;; Disable expensive global minor modes
+    (when (bound-and-true-p hl-line-mode)
+      (hl-line-mode -1))
+    (when (bound-and-true-p display-line-numbers-mode)
+      (display-line-numbers-mode -1))
+    (when (bound-and-true-p diff-hl-mode)
+      (diff-hl-mode -1))
+    (when (bound-and-true-p show-paren-mode)
+      (show-paren-local-mode -1))
+    (when (bound-and-true-p pixel-scroll-precision-mode)
+      (setq-local pixel-scroll-precision-mode nil))
+
+    ;; Disable eldoc (not useful in terminal)
+    (eldoc-mode -1)
+
+    ;; Eat terminal optimizations
+    (setq-local eat-maximum-latency 0.064)
+    (setq-local eat-minimum-latency 0.001)
+    (setq-local eat-term-scrollback-size (* 2 1024 1024))
+    (setq-local eat-enable-shell-prompt-annotation nil)
+    (setq-local eat-input-chunk-size 4096)
+    ;; Custom scroll sync to prevent jumping
+    (setq-local eat--synchronize-scroll-function #'claudecode--synchronize-scroll)
+    ))
 
 (defun claudecode-unstick-terminal ()
   "Force redisplay to fix visual artifacts or stuck display.
 Use this when the terminal display becomes corrupted."
   (interactive)
-  (when-let* ((terminal (bound-and-true-p eat-terminal)))
-    ;; Reset terminal size to trigger redraw
-    (when (fboundp 'eat-term-resize)
-      (let ((width (window-body-width))
-            (height (window-body-height)))
-        (eat-term-resize terminal width height))))
+  (setq claudecode--resize-pending nil)
+  ;; Reset caches so next operations work properly
+  (setq claudecode--last-scroll-cursor nil)
+  (setq claudecode--last-window-size nil)
+  (claudecode--do-resize)
+  ;; Force a proper scroll sync after resize
+  (when (bound-and-true-p eat-terminal)
+    (let ((cursor-pos (eat-term-display-cursor eat-terminal)))
+      (goto-char cursor-pos)
+      (recenter -1)))
   (redisplay t)
   (message "[Claude] Terminal display reset"))
 
@@ -156,9 +237,15 @@ Use this when the terminal display becomes corrupted."
              claudecode-program
              nil
              args)
-      ;; Anti-flickering optimizations (from claudemacs)
-      (claudecode--setup-buffer-display)
-      (claudecode-transcript-mode 1))
+      (claudecode-mode 1)
+      ;; Force initial resize with minimum width to prevent autocomplete flickering
+      (let ((buf (current-buffer)))
+        (run-with-timer
+         0.5 nil
+         (lambda ()
+           (when (buffer-live-p buf)
+             (with-current-buffer buf
+               (claudecode--do-resize claudecode-min-window-width)))))))
     buffer-name))
 
 (defun claudecode--synchronize-scroll (windows)
@@ -166,83 +253,29 @@ Use this when the terminal display becomes corrupted."
 Replaces eat's default scroll function to prevent jumping to buffer
 beginning when switching buffers."
   (dolist (window windows)
-    (when (and (windowp window)
-               (not buffer-read-only)
-               (bound-and-true-p eat-terminal))
-      (let ((cursor-pos (eat-term-display-cursor eat-terminal)))
+    (cond
+     ;; Handle special 'buffer symbol (from eat's scroll-windows function)
+     ((eq window 'buffer)
+      (when (bound-and-true-p eat-terminal)
+        (goto-char (eat-term-display-cursor eat-terminal))))
+     ;; Handle actual windows
+     ((and (windowp window)
+           (bound-and-true-p eat-terminal))
+      (let* ((cursor-pos (eat-term-display-cursor eat-terminal))
+             (cursor-line (line-number-at-pos cursor-pos))
+             (last-line (and claudecode--last-scroll-cursor
+                             (line-number-at-pos claudecode--last-scroll-cursor)))
+             ;; Only recenter if cursor moved to a different line
+             (cursor-line-changed (or (null last-line)
+                                      (/= cursor-line last-line))))
         (set-window-point window cursor-pos)
-        (cond
-         ;; Cursor near end - keep at bottom
-         ((>= cursor-pos (- (point-max) 2))
+        ;; Only recenter when cursor line actually changed
+        ;; This prevents flickering when autocomplete menu changes height
+        (when cursor-line-changed
+          (setq claudecode--last-scroll-cursor cursor-pos)
           (with-selected-window window
-            (goto-char cursor-pos)
-            (recenter -1)))
-         ;; Cursor not visible - recenter
-         ((not (pos-visible-in-window-p cursor-pos window))
-          (with-selected-window window
-            (goto-char cursor-pos)
-            (recenter))))))))
-
-(defun claudecode--setup-buffer-display ()
-  "Configure buffer-local settings to minimize flickering and scroll issues."
-  ;; Prevent terminal redraw/scroll reset on buffer switching (critical fix)
-  ;; (setq-local window-adjust-process-window-size-function #'ignore)
-  ;; Scroll settings to prevent recentering
-  ;; (setq-local scroll-conservatively 10000)
-  ;; (setq-local scroll-margin 0)
-  ;; (setq-local maximum-scroll-margin 0)
-  ;; (setq-local scroll-preserve-screen-position t)
-  ;; (setq-local auto-window-vscroll nil)
-  ;; (setq-local scroll-step 1)
-  ;; (setq-local hscroll-step 1)
-  ;; (setq-local hscroll-margin 0)
-  ;; Display settings
-  ;; (setq-local line-spacing 0)
-  ;; (setq-local vertical-scroll-bar nil)
-  (setq-local fringe-mode 0)
-  ;; Disable blinking text (causes constant redraws)
-  (when (boundp 'eat-enable-blinking-text)
-    (setq-local eat-enable-blinking-text nil))
-
-  ;; === Performance optimizations based on profiling ===
-
-  ;; 1. Mode-line optimization (addresses 60% of redisplay cost)
-  ;; Use minimal mode-line to avoid mode-line--minor-modes, mode-line-eol-desc,
-  ;; and mode-line-default-help-echo overhead
-  (setq-local mode-line-format
-              '(" " mode-line-buffer-identification
-                " " mode-line-misc-info))
-
-  ;; 2. Disable cursor blinking (reduces redisplay triggers)
-  (setq-local cursor-type 'box)
-  (when (bound-and-true-p blink-cursor-mode)
-    (setq-local blink-cursor-mode nil))
-
-  ;; 3. Font cache optimization
-  (setq-local inhibit-compacting-font-caches t)
-
-  ;; 4. Reduce redisplay frequency
-  (setq-local redisplay-skip-fontification-on-input t)
-  (setq-local fast-but-imprecise-scrolling t)
-
-  ;; Use char-mode for more responsive input (bypasses Emacs key processing)
-  ;; (when (fboundp 'eat-char-mode)
-  ;;   (eat-char-mode))
-
-  ;; === Eat terminal optimizations for Claude Code ===
-  ;; Disable eldoc (not useful in terminal)
-  (eldoc-mode -1)
-  ;; Higher latency tolerance reduces CPU usage during fast output
-  (setq-local eat-maximum-latency 0.032)
-  (setq-local eat-minimum-latency 0.001)
-  ;; Large scrollback for long conversations (2MB)
-  (setq-local eat-term-scrollback-size (* 2 1024 1024))
-  ;; Disable shell prompt annotations (not needed for Claude CLI)
-  (setq-local eat-enable-shell-prompt-annotation nil)
-  ;; Larger input chunks for better performance with large outputs
-  (setq-local eat-input-chunk-size 4096)
-  ;; Custom scroll sync to keep prompt at bottom (prevents jump to top)
-  (setq-local eat--synchronize-scroll-function #'claudecode--synchronize-scroll))
+            (when (>= cursor-pos (- (point-max) 100))
+              (recenter -1)))))))))
 
 ;;
 ;; Prompt helpers
