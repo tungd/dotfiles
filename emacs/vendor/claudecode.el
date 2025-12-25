@@ -56,6 +56,20 @@
   :type 'integer
   :group 'claudecode)
 
+(defcustom claudecode-notify-on-await t
+  "Whether to show a system notification when Claude Code is awaiting the user.
+When non-nil, display an OS notification popup when Claude completes a task.
+When nil, no notification is shown (silent operation)."
+  :type 'boolean
+  :group 'claudecode)
+
+(defcustom claudecode-notification-sound "Submarine"
+  "The sound to use when displaying system notifications on macOS.
+System sounds include: Basso, Blow, Bottle, Frog, Funk, Glass, Hero,
+Morse, Ping, Pop, Purr, Sosumi, Submarine, Tink."
+  :type 'string
+  :group 'claudecode)
+
 ;;
 ;; Claude buffer minor mode
 ;;
@@ -69,6 +83,13 @@
 (defvar-local claudecode--last-scroll-cursor nil
   "Last cursor position used for scroll sync, to avoid redundant recentering.")
 
+(defvar-local claudecode--user-input-pending nil
+  "Non-nil when user recently typed input, cleared after scroll sync.")
+
+(defun claudecode--mark-user-input ()
+  "Mark that user input just happened, triggering scroll sync on next update."
+  (when (bound-and-true-p claudecode-mode)
+    (setq claudecode--user-input-pending t)))
 
 (defvar claudecode--resize-idle-timer nil
   "Global idle timer for processing pending resizes.")
@@ -197,6 +218,8 @@ including display settings, scroll behavior, and performance tweaks."
     (setq-local eat-input-chunk-size 4096)
     ;; Custom scroll sync to prevent jumping
     (setq-local eat--synchronize-scroll-function #'claudecode--synchronize-scroll)
+    ;; Track user input to only scroll sync when user types
+    (add-hook 'post-command-hook #'claudecode--mark-user-input nil t)
     ))
 
 (defun claudecode-unstick-terminal ()
@@ -215,6 +238,34 @@ Use this when the terminal display becomes corrupted."
       (recenter -1)))
   (redisplay t)
   (message "[Claude] Terminal display reset"))
+
+;;
+;; Notification system (bell handler)
+;;
+
+(defun claudecode--system-notification (message &optional title)
+  "Show a macOS system notification with MESSAGE and optional TITLE."
+  (let ((title (or title "Claude Code"))
+        (message (or message "Claude Code is awaiting your input")))
+    (call-process "osascript" nil nil nil
+                  "-e" (format "display notification \"%s\" with title \"%s\" sound name \"%s\""
+                               message title claudecode-notification-sound))))
+
+(defun claudecode--bell-handler (_terminal)
+  "Handle bell events from Claude Code.
+Called when Claude Code sends a bell character, indicating it's waiting for input."
+  (when claudecode-notify-on-await
+    (claudecode--system-notification "Claude finished and is awaiting your input")))
+
+;;;###autoload
+(defun claudecode-setup-bell-handler ()
+  "Set up the completion notification handler for the current Claude buffer.
+Use this interactively if notifications aren't working after starting a session."
+  (interactive)
+  (when-let* ((terminal (bound-and-true-p eat-terminal)))
+    (setf (eat-term-parameter terminal 'ring-bell-function)
+          #'claudecode--bell-handler)
+    (message "[Claude] Bell handler configured for notifications")))
 
 ;;; Helper commands
 
@@ -239,19 +290,22 @@ Use this when the terminal display becomes corrupted."
              args)
       (claudecode-mode 1)
       ;; Force initial resize with minimum width to prevent autocomplete flickering
+      ;; and set up bell handler for notifications
       (let ((buf (current-buffer)))
         (run-with-timer
          0.5 nil
          (lambda ()
            (when (buffer-live-p buf)
              (with-current-buffer buf
-               (claudecode--do-resize claudecode-min-window-width)))))))
+               (claudecode--do-resize claudecode-min-window-width)
+               (claudecode-setup-bell-handler)))))))
     buffer-name))
 
 (defun claudecode--synchronize-scroll (windows)
   "Custom scroll sync to keep prompt at bottom of WINDOWS.
 Replaces eat's default scroll function to prevent jumping to buffer
-beginning when switching buffers."
+beginning when switching buffers.
+Only recenters when user has typed (not when Claude updates output)."
   (dolist (window windows)
     (cond
      ;; Handle special 'buffer symbol (from eat's scroll-windows function)
@@ -269,10 +323,11 @@ beginning when switching buffers."
              (cursor-line-changed (or (null last-line)
                                       (/= cursor-line last-line))))
         (set-window-point window cursor-pos)
-        ;; Only recenter when cursor line actually changed
-        ;; This prevents flickering when autocomplete menu changes height
-        (when cursor-line-changed
+        ;; Only recenter when user typed AND cursor line changed
+        ;; This prevents flickering when Claude updates output
+        (when (and claudecode--user-input-pending cursor-line-changed)
           (setq claudecode--last-scroll-cursor cursor-pos)
+          (setq claudecode--user-input-pending nil)
           (with-selected-window window
             (when (>= cursor-pos (- (point-max) 100))
               (recenter -1)))))))))
@@ -587,7 +642,8 @@ The active region is treated as failure context and included in the prompt."
    ["Other"
     ("t" "Implement TODO" claudecode-implement-todo)
     ("f" "Fix tests" claudecode-fix-tests)
-    ("u" "Unstick terminal" claudecode-unstick-terminal)]])
+    ("u" "Unstick terminal" claudecode-unstick-terminal)
+    ("n" "Setup notifications" claudecode-setup-bell-handler)]])
 
 ;;;###autoload
 (defun claudecode-start (&optional restart)

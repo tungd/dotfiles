@@ -207,13 +207,15 @@
    '("/opt/local/bin" "~/.local/bin" "/usr/bin" "/bin" "/usr/sbin" "/sbin"
      "/usr/local/bin" "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
  '(package-selected-packages
-   '(acp avy base16-theme consult crux diff-hl doom-themes dumb-jump eat ef-themes
-         emmet-mode envrc gdshader-mode gptel gruber-darker-theme kotlin-ts-mode
-         magit ob-http ob-kotlin ob-sql-mode pache-dark-theme prescient
-         protobuf-mode rainbow-mode rg shell-maker surround swift-mode
-         tango-plus-theme tempel terraform-mode treesit-fold vertico
-         visual-replace vterm vundo))
- '(package-vc-selected-packages '((neocaml :url "https://github.com/bbatsov/neocaml")))
+   '(acp avy base16-theme claude-code-ide consult crux diff-hl doom-themes
+         dumb-jump eat ef-themes emmet-mode envrc gdshader-mode gptel
+         gruber-darker-theme kotlin-ts-mode magit ob-http ob-kotlin ob-sql-mode
+         pache-dark-theme prescient protobuf-mode rainbow-mode rg shell-maker
+         surround swift-mode tango-plus-theme tempel terraform-mode treesit-fold
+         vertico visual-replace vterm vundo))
+ '(package-vc-selected-packages
+   '((claude-code-ide :url "https://github.com/manzaltu/claude-code-ide.el")
+     (neocaml :url "https://github.com/bbatsov/neocaml")))
  '(safe-local-variable-values
    '((checkdoc-allow-quoting-nil-and-t . t)
      (eval setenv "LIBRARY_PATH" "/opt/local/lib/mysql8/mysql")

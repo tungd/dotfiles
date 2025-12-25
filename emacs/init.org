@@ -59,12 +59,12 @@ are stored in the =~/.emacs.d/vendor= directory.
 #+begin_src emacs-lisp
   (add-to-list 'custom-theme-load-path (concat user-emacs-directory "vendor/"))
   (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
-  (add-to-list 'load-path "~/Projects/personal/ellama")
-  (add-to-list 'exec-path "~/.local/bin")
   (add-to-list 'exec-path "/opt/local/bin")
-  (add-to-list 'exec-path "/Users/tung/Library/Python/3.12/bin/")
-  (add-to-list 'exec-path "/Users/tung/Library/pnpm")
-  (add-to-list 'exec-path "/Users/tung/.opam/default/bin/")
+  (add-to-list 'exec-path "~/Library/Python/3.12/bin/")
+  (add-to-list 'exec-path "~/Library/pnpm")
+  (add-to-list 'exec-path "~/.local/bin")
+  (add-to-list 'exec-path "~/.opam/default/bin/")
+  (add-to-list 'exec-path "~/.claude/local/")
   (setenv "PATH" (string-join exec-path ":"))
 #+end_src
 
@@ -379,13 +379,161 @@ mini-buffer completion framework.
     (add-hook 'codex-waiting-hook #'td/codex-notify))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package claudecode
     :commands (claudecode-start claudecode-command-menu claudecode-code-change)
     :custom
     (claudecode-program "/Users/tung/.claude/local/claude")
     :bind* (("C-l x" . claudecode-start)
             ("C-l c" . claudecode-command-menu)))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package claude-code-ide
+    :vc (:url "https://github.com/manzaltu/claude-code-ide.el" :rev :newest)
+    :bind ("C-c C-'" . claude-code-ide-menu) ; Set your favorite keybinding
+    :config
+    (claude-code-ide-emacs-tools-setup)  ; Optionally enable Emacs MCP tools
+
+    ;; Replace ediff with unified diff-mode for cleaner single-buffer diffs
+    (defvar-local claude-code-ide--diff-info nil
+      "Buffer-local storage for diff session info.")
+
+    (defun claude-code-ide--unified-diff-accept ()
+      "Accept the changes shown in this diff buffer."
+      (interactive)
+      (when-let* ((info claude-code-ide--diff-info)
+                  (session (alist-get 'session info))
+                  (tab-name (alist-get 'tab-name info))
+                  (buffer-B (alist-get 'buffer-B info))
+                  (new-content (with-current-buffer buffer-B (buffer-string))))
+        (claude-code-ide-mcp-complete-deferred
+         session "openDiff"
+         (list `((type . "text") (text . "FILE_SAVED"))
+               `((type . "text") (text . ,new-content)))
+         tab-name)
+        (claude-code-ide--unified-diff-cleanup info)))
+
+    (defun claude-code-ide--unified-diff-reject ()
+      "Reject the changes shown in this diff buffer."
+      (interactive)
+      (when-let* ((info claude-code-ide--diff-info)
+                  (session (alist-get 'session info))
+                  (tab-name (alist-get 'tab-name info)))
+        (claude-code-ide-mcp-complete-deferred
+         session "openDiff"
+         (list `((type . "text") (text . "DIFF_REJECTED"))
+               `((type . "text") (text . ,tab-name)))
+         tab-name)
+        (claude-code-ide--unified-diff-cleanup info)))
+
+    (defun claude-code-ide--unified-diff-cleanup (info)
+      "Clean up diff buffers from INFO."
+      (let ((buffer-A (alist-get 'buffer-A info))
+            (buffer-B (alist-get 'buffer-B info))
+            (diff-buffer (alist-get 'diff-buffer info))
+            (file-exists (alist-get 'file-exists info))
+            (session (alist-get 'session info))
+            (tab-name (alist-get 'tab-name info)))
+        ;; Kill temp buffer-B
+        (when (and buffer-B (buffer-live-p buffer-B))
+          (kill-buffer buffer-B))
+        ;; Kill buffer-A only if it was created for new file
+        (when (and buffer-A (buffer-live-p buffer-A) (not file-exists))
+          (kill-buffer buffer-A))
+        ;; Kill diff buffer
+        (when (and diff-buffer (buffer-live-p diff-buffer))
+          (kill-buffer diff-buffer))
+        ;; Remove from active diffs
+        (when session
+          (let ((active-diffs (claude-code-ide-mcp-session-active-diffs session)))
+            (remhash tab-name active-diffs)))))
+
+    (defvar claude-code-ide-unified-diff-mode-map
+      (let ((map (make-sparse-keymap)))
+        (define-key map (kbd "C-c C-c") #'claude-code-ide--unified-diff-accept)
+        (define-key map (kbd "C-c C-k") #'claude-code-ide--unified-diff-reject)
+        (define-key map (kbd "q") #'claude-code-ide--unified-diff-reject)
+        map)
+      "Keymap for claude-code-ide unified diff buffers.")
+
+    (define-minor-mode claude-code-ide-unified-diff-mode
+      "Minor mode for Claude Code unified diff buffers.
+\\{claude-code-ide-unified-diff-mode-map}"
+      :lighter " Claude-Diff"
+      :keymap claude-code-ide-unified-diff-mode-map)
+
+    (defun claude-code-ide--open-diff-unified (args)
+      "Open diff using unified diff-mode instead of ediff.
+ARGS contains the original arguments to openDiff handler."
+      (let ((old-file-path (alist-get 'old_file_path args))
+            (new-file-contents (alist-get 'new_file_contents args))
+            (tab-name (alist-get 'tab_name args))
+            session buffer-A buffer-B file-exists diff-buf)
+
+        ;; Find session
+        (setq session (or (claude-code-ide-mcp--find-session-for-file old-file-path)
+                          (claude-code-ide-mcp--get-current-session)))
+        (unless session
+          (signal 'mcp-error '("No active MCP session found")))
+
+        ;; Clean up existing diff with same tab-name
+        (let ((active-diffs (claude-code-ide-mcp-session-active-diffs session)))
+          (when-let ((existing (gethash tab-name active-diffs)))
+            (claude-code-ide--unified-diff-cleanup existing)))
+
+        ;; Create buffer-A (original)
+        (setq file-exists (file-exists-p old-file-path))
+        (if file-exists
+            (setq buffer-A (find-file-noselect old-file-path))
+          (setq buffer-A (generate-new-buffer
+                          (format "*New: %s*" (file-name-nondirectory old-file-path))))
+          (with-current-buffer buffer-A
+            (setq buffer-file-name old-file-path)))
+
+        ;; Create buffer-B (new content)
+        (setq buffer-B (generate-new-buffer (format "*Proposed: %s*" tab-name)))
+        (with-current-buffer buffer-B
+          (insert new-file-contents)
+          (let ((mode (assoc-default old-file-path auto-mode-alist 'string-match)))
+            (when mode (ignore-errors (funcall mode)))))
+
+        ;; Create unified diff
+        (setq diff-buf (diff-buffers buffer-A buffer-B nil 'noasync))
+
+        ;; Store info and set up diff buffer
+        (let ((info `((session . ,session)
+                      (tab-name . ,tab-name)
+                      (buffer-A . ,buffer-A)
+                      (buffer-B . ,buffer-B)
+                      (diff-buffer . ,diff-buf)
+                      (file-exists . ,file-exists)
+                      (old-file-path . ,old-file-path))))
+
+          ;; Store in active diffs
+          (puthash tab-name info (claude-code-ide-mcp-session-active-diffs session))
+
+          ;; Configure diff buffer
+          (with-current-buffer diff-buf
+            (setq claude-code-ide--diff-info info)
+            (claude-code-ide-unified-diff-mode 1)
+            (setq header-line-format
+                  (substitute-command-keys
+                   "Diff: \\[claude-code-ide--unified-diff-accept] accept, \\[claude-code-ide--unified-diff-reject] reject")))
+
+          ;; Display diff buffer
+          (pop-to-buffer diff-buf))
+
+        ;; Return deferred response
+        `((deferred . t)
+          (unique-key . ,tab-name)
+          (session . ,session))))
+
+    (advice-add 'claude-code-ide-mcp-handle-open-diff
+                :override #'claude-code-ide--open-diff-unified)
+
+    :custom
+    (claude-code-ide-use-side-window nil))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -441,16 +589,16 @@ Buffer location customization
     :custom
     (split-height-threshold nil)
     :config
-    (add-to-list 'display-buffer-alist
-                 '("^\\*codex:"
-                   (display-buffer-in-side-window)
-                   (side . right)
-                   (window-width . 0.32)))
-    (add-to-list 'display-buffer-alist
-                 '("^\\*claude:"
-                   (display-buffer-in-direction)
-                   (direction . right)
-                   (window-width . 85)))
+    ;; (add-to-list 'display-buffer-alist
+    ;;              '("^\\*codex:"
+    ;;                (display-buffer-in-side-window)
+    ;;                (side . right)
+    ;;                (window-width . 0.32)))
+    ;; (add-to-list 'display-buffer-alist
+    ;;              '("^\\*claude:"
+    ;;                (display-buffer-in-direction)
+    ;;                (direction . right)
+    ;;                (window-width . 85)))
     (add-to-list 'display-buffer-alist
                  '("\\*Warnings\\*" display-buffer-in-direction
                    (direction . bottom)
@@ -782,6 +930,12 @@ Tempo integration code for future reference:
     (comint-terminfo-terminal "dumb-emacs-ansi"))
 #+end_src
 
+#+begin_src emacs-lisp
+  (use-package vterm
+    :ensure t
+    :custom
+    (vterm-shell "/bin/zsh -l"))
+#+end_src
 
 ** Tramp
 
@@ -1488,17 +1642,15 @@ the way I liked.
           visible-bell nil
           ring-bell-function 'ignore
           scroll-preserve-screen-position t
-          scroll-margin 8
-          scroll-conservatively 101
+          scroll-margin 5
+          scroll-conservatively 0
           auto-window-vscroll nil)
-
-  (pixel-scroll-precision-mode t)
 #+end_src
 
 I have a 2k display, and used to run a HiDPI hack for macOS. Recently I got a
 new Mac and tired of running it. So here it goes:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package adaptive-font-size-mode
     :hook (after-init . adaptive-font-size-mode))
 #+end_src
@@ -1579,7 +1731,19 @@ Truncate lines:
 Some preferences that I set for all the theme. Per documentation, the custom
 theme named =user= will always have the highest priority.
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
+  (setq modus-themes-common-palette-overrides
+        '(;; Make the main background a soft dark gray instead of pure black
+          (bg-main "#1e1e1e")
+          ;; Make the "dim" background (used for line numbers/sidebar) slightly lighter
+          (bg-dim  "#282828")
+          ;; Optional: Soften the white text so it's not "piercing"
+          (fg-main "#dfdfdf"))
+        modus-themes-italic-constructs t
+        modus-themes-bold-constructs nil    ;; Bold text can sometimes "bleed" on 4K screens
+        modus-themes-mixed-fonts nil          ;; Use variable pitch for docs/org-mode
+        modus-themes-variable-pitch-ui nil)
+
   (load-theme 'modus-vivendi t)
 #+end_src
 
@@ -1601,7 +1765,7 @@ theme named =user= will always have the highest priority.
    :init (load-theme 'pache-dark t))
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (load-theme 'td t)
 #+end_src
 
@@ -1613,10 +1777,10 @@ theme named =user= will always have the highest priority.
    '(font-lock-string-face ((t :slant normal)))
    '(font-lock-constant-face ((t :slant normal)))
 
-   ;'(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face)))
-   ;'(line-number ((t :slant normal :background unspecified :foreground "#444" :inherit font-lock-comment-face)))
-   ;'(line-number-current-line ((t :slant normal :weight normal :foreground "#fff")))
-   ;'(fringe ((t :inherit line-number :background unspecified)))
+   '(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face)))
+   '(line-number ((t :slant normal :background unspecified :foreground "#444" :inherit font-lock-comment-face)))
+   '(line-number-current-line ((t :slant normal :weight normal :foreground "#fff")))
+   '(fringe ((t :inherit line-number :background unspecified)))
    ;'(vertical-border ((t :foreground "#222")))
 
    ;'(mode-line-buffer-id ((t :foreground "orange")))
