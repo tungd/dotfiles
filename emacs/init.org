@@ -651,11 +651,9 @@ Buffer location customization
     (ibuffer-saved-filter-groups
      '(("default"
         ("Claude" (name . "^\\*claude:"))
-        ("Dired" (mode . dired-mode))
         ("Org" (mode . org-mode))
-        ("Magit" (name . "^magit"))
-        ("Help" (or (mode . help-mode)
-                    (mode . Info-mode))))))
+        ("Dired" (mode . dired-mode))
+        ("Special" (name . "^\\*.*\\*$")))))
     :hook (ibuffer-mode . (lambda () (ibuffer-switch-to-saved-filter-groups "default"))))
 #+end_src
 
