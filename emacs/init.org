@@ -1648,7 +1648,7 @@ the way I liked.
 I have a 2k display, and used to run a HiDPI hack for macOS. Recently I got a
 new Mac and tired of running it. So here it goes:
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package adaptive-font-size-mode
     :hook (after-init . adaptive-font-size-mode))
 #+end_src
@@ -1676,7 +1676,7 @@ bold and ligatures support :(.
      ;; (font . "Monaco 16")
      ;; (font . "Iosevka Fixed SS07 16")
      ;; (font . "Iosevka Mono 16")
-     (font . "JetBrains Mono NL 14")
+     (font . "JetBrains Mono NL 15")
      ;; (font . "Fira Mono 16")
      ;; (font . "Ubuntu Mono 16")
      (tool-bar-lines . 0)
@@ -1690,7 +1690,8 @@ bold and ligatures support :(.
 
   (setq-default
    cursor-in-non-selected-windows nil
-   line-spacing 0.1)
+   ;line-spacing 0.1
+   )
 
   (unless (display-graphic-p)
     (menu-bar-mode -1))
@@ -1729,7 +1730,7 @@ Truncate lines:
 Some preferences that I set for all the theme. Per documentation, the custom
 theme named =user= will always have the highest priority.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (setq modus-themes-common-palette-overrides
         '(;; Make the main background a soft dark gray instead of pure black
           (bg-main "#1e1e1e")
@@ -1743,6 +1744,10 @@ theme named =user= will always have the highest priority.
         modus-themes-variable-pitch-ui nil)
 
   (load-theme 'modus-vivendi t)
+#+end_src
+
+#+begin_src emacs-lisp
+  (load-theme 'modus-operandi t)
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
@@ -1765,6 +1770,12 @@ theme named =user= will always have the highest priority.
 
 #+begin_src emacs-lisp :tangle no
   (load-theme 'td t)
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
+  (use-package amaranth-dark-theme
+    :ensure t
+    :init (load-theme 'amaranth-dark t))
 #+end_src
 
 #+begin_src emacs-lisp

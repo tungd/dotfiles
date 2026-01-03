@@ -9,8 +9,8 @@
          (geometry (alist-get 'geometry attrs))
          (ppi (/ (caddr geometry) (/ (car size) 25.4))))
     (if (> ppi 120)
-        (set-face-attribute 'default frame :height 135)
-      (set-face-attribute 'default frame :height 145))))
+        (set-face-attribute 'default frame :height 130)
+      (set-face-attribute 'default frame :height 150))))
 
 ;;;###autoload
 (define-minor-mode adaptive-font-size-mode
