@@ -1,0 +1,25 @@
+[package]
+name = "cc"
+version = "0.1.0"
+edition = "2021"
+description = "Claude Code wrapper with VSync buffering, profiles, and git worktree support"
+authors = ["Tung Dao"]
+
+[[bin]]
+name = "cc"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+tokio = { version = "1", features = ["full", "signal", "io-std"] }
+portable-pty = "0.8"
+crossterm = "0.28"
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+dirs = "5"
+anyhow = "1"
+shellexpand = "3"
+
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.29", features = ["signal", "process", "term"] }
+libc = "0.2"
