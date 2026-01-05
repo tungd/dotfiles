@@ -81,7 +81,7 @@ async fn main() -> Result<()> {
     // Verify claude exists
     if !claude_path.exists() {
         anyhow::bail!(
-            "Claude CLI not found at: {}\nSet claude_path in ~/.config/cc/profiles.toml",
+            "Claude CLI not found at: {}\nSet claude_path in ~/.config/cx/profiles.toml",
             claude_path.display()
         );
     }

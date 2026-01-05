@@ -48,11 +48,11 @@ pub struct Profile {
 
 impl Config {
     /// Load config from standard locations
-    /// Search order: ~/.config/cc/profiles.toml, ~/.cc.toml
+    /// Search order: ~/.config/cx/profiles.toml, ~/.cx.toml
     pub fn load() -> Result<Self> {
         let config_paths = [
-            dirs::config_dir().map(|p| p.join("cc/profiles.toml")),
-            dirs::home_dir().map(|p| p.join(".cc.toml")),
+            dirs::config_dir().map(|p| p.join("cx/profiles.toml")),
+            dirs::home_dir().map(|p| p.join(".cx.toml")),
         ];
 
         for path in config_paths.into_iter().flatten() {

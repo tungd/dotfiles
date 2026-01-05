@@ -92,6 +92,12 @@ pub async fn run_proxy(
     // Build command with environment
     let mut cmd = CommandBuilder::new(claude_path);
     cmd.args(args);
+
+    // Explicitly set the current working directory
+    if let Ok(cwd) = std::env::current_dir() {
+        cmd.cwd(cwd);
+    }
+
     for (key, value) in env_vars {
         cmd.env(key, value);
     }

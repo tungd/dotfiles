@@ -1,12 +1,12 @@
 [package]
-name = "cc"
+name = "cx"
 version = "0.1.0"
 edition = "2021"
 description = "Claude Code wrapper with VSync buffering, profiles, and git worktree support"
 authors = ["Tung Dao"]
 
 [[bin]]
-name = "cc"
+name = "cx"
 path = "src/main.rs"
 
 [dependencies]

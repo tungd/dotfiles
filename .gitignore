@@ -8,4 +8,4 @@ emacs/*
 emacs/vendor/copilot
 !emacs/snippets
 .yas-compiled-snippets.el
-cc/target
+cx/target

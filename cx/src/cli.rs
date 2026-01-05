@@ -1,11 +1,11 @@
 use clap::Parser;
 
 #[derive(Parser, Debug)]
-#[command(name = "cc")]
+#[command(name = "cx")]
 #[command(about = "Claude Code wrapper with VSync buffering, profiles, and git worktree support")]
 #[command(version)]
 pub struct Cli {
-    /// Profile to use (from ~/.config/cc/profiles.toml)
+    /// Profile to use (from ~/.config/cx/profiles.toml)
     #[arg(short, long)]
     pub profile: Option<String>,
 
