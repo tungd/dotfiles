@@ -94,6 +94,7 @@ export PATH=$HOME/.opam/default/bin/:$PATH
 alias g=git
 alias e="emacsclient -n"
 alias diff="diff --color -u"
+alias imgcat="wezterm imgcat"
 
 notify() {
   osascript -e "display notification \"$2\" with title \"$1\""
@@ -111,6 +112,7 @@ myip() {
 export PNPM_HOME="/Users/tung/Library/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 export PATH="$HOME/.claude/local:$PATH"
+export PATH="/Applications/WezTerm.app/Contents/MacOS/:$PATH"
 
 # Added by OrbStack: command-line tools and integration
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
