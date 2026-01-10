@@ -935,6 +935,21 @@ Tempo integration code for future reference:
     (vterm-shell "/bin/zsh -l"))
 #+end_src
 
+#+begin_src emacs-lisp
+  (use-package detached
+    :ensure t
+    :hook (after-init . detached-init)
+    :bind (;; Replace `async-shell-command' with `detached-shell-command'
+           ([remap async-shell-command] . detached-shell-command)
+           ;; Replace `compile' with `detached-compile'
+           ([remap compile] . detached-compile)
+           ([remap recompile] . detached-compile-recompile)
+           ;; Replace built in completion of sessions with `consult'
+           ([remap detached-open-session] . detached-consult-session))
+    :custom ((detached-show-output-on-attach t)
+             (detached-terminal-data-command system-type)))
+#+end_src
+
 ** Tramp
 
 #+begin_src emacs-lisp
@@ -1648,7 +1663,7 @@ the way I liked.
 I have a 2k display, and used to run a HiDPI hack for macOS. Recently I got a
 new Mac and tired of running it. So here it goes:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package adaptive-font-size-mode
     :hook (after-init . adaptive-font-size-mode))
 #+end_src
@@ -1681,8 +1696,8 @@ bold and ligatures support :(.
      ;; (font . "Ubuntu Mono 16")
      (tool-bar-lines . 0)
      (fullscreen . maximized)
-     (mac-appearance . dark)
-     (ns-appearance . dark)
+     (mac-appearance . light)
+     (ns-appearance . light)
      (vertical-scroll-bars . nil)))
 
   (blink-cursor-mode -1)
@@ -1811,7 +1826,7 @@ down compiler error :(.
 #+begin_src emacs-lisp
   (use-package display-line-numbers
     :hook ((prog-mode . display-line-numbers-mode)
-           (org-mode . display-line-numbers-mode)
+           ;(org-mode . display-line-numbers-mode)
            (yaml-mode . display-line-numbers-mode)
            (conf-mode . display-line-numbers-mode))
     :custom

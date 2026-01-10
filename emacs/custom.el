@@ -208,7 +208,7 @@
      "/usr/local/bin" "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
  '(package-selected-packages
    '(acp amaranth-dark-theme avy base16-theme claude-code-ide consult crux d2-mode
-         diff-hl doom-themes dumb-jump eat ef-themes emmet-mode envrc
+         detached diff-hl doom-themes dumb-jump eat ef-themes emmet-mode envrc
          gdshader-mode gptel gruber-darker-theme kotlin-ts-mode magit ob-http
          ob-kotlin ob-sql-mode pache-dark-theme prescient protobuf-mode
          rainbow-mode rg shell-maker surround swift-mode tango-plus-theme tempel
@@ -228,18 +228,5 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(diff-hl-change ((t (:inherit nil :background unspecified :foreground "#deae3e"))))
- '(diff-hl-delete ((t (:inherit nil :background unspecified :foreground "#ff0000"))))
- '(diff-hl-insert ((t (:inherit nil :background unspecified :foreground "#81af34"))))
  '(eglot-code-action-indicator-face ((t :weight normal)))
- '(eglot-highlight-symbol-face ((t :weight normal)))
- '(eglot-inlay-hint-face ((t :height 1.0)))
- '(font-lock-comment-delimiter-face ((t :slant normal)))
- '(font-lock-comment-face ((t :slant normal)))
- '(font-lock-constant-face ((t :slant normal)))
- '(font-lock-string-face ((t :slant normal)))
- '(fringe ((t :inherit line-number :background unspecified)))
- '(line-number ((t :slant normal :background unspecified :foreground "#444" :inherit font-lock-comment-face)))
- '(line-number-current-line ((t :slant normal :weight normal :foreground "#fff")))
- '(mode-line-buffer-id ((t :foreground "orange")))
- '(vertical-border ((t :foreground "#222"))))
+ '(eglot-inlay-hint-face ((t :height 1.0))))
