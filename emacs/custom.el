@@ -211,8 +211,9 @@
          detached diff-hl doom-themes dumb-jump eat ef-themes emmet-mode envrc
          gdshader-mode gptel gruber-darker-theme kotlin-ts-mode magit ob-http
          ob-kotlin ob-sql-mode pache-dark-theme prescient protobuf-mode
-         rainbow-mode rg shell-maker surround swift-mode tango-plus-theme tempel
-         terraform-mode treesit-fold vertico visual-replace vterm vundo))
+         rainbow-mode rg shell-maker surround svg-lib swift-mode
+         tango-plus-theme tempel terraform-mode treesit-fold vertico
+         visual-replace vterm vundo))
  '(package-vc-selected-packages
    '((claude-code-ide :url "https://github.com/manzaltu/claude-code-ide.el")
      (neocaml :url "https://github.com/bbatsov/neocaml")))
@@ -228,5 +229,16 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(diff-hl-change ((t (:inherit nil :background unspecified :foreground "#deae3e"))))
+ '(diff-hl-delete ((t (:inherit nil :background unspecified :foreground "#ff0000"))))
+ '(diff-hl-insert ((t (:inherit nil :background unspecified :foreground "#81af34"))))
  '(eglot-code-action-indicator-face ((t :weight normal)))
- '(eglot-inlay-hint-face ((t :height 1.0))))
+ '(eglot-highlight-symbol-face ((t :weight normal)))
+ '(eglot-inlay-hint-face ((t :height 1.0)))
+ '(font-lock-comment-delimiter-face ((t :slant normal)))
+ '(font-lock-comment-face ((t :slant normal)))
+ '(font-lock-constant-face ((t :slant normal)))
+ '(font-lock-string-face ((t :slant normal)))
+ '(fringe ((t :inherit line-number :background unspecified)))
+ '(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face)))
+ '(line-number-current-line ((t :slant normal :weight normal :foreground "#fff"))))
