@@ -144,7 +144,9 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 
 #+begin_src emacs-lisp
   (use-package midnight
-    :hook (after-init . midnight-mode))
+    :hook (after-init . midnight-mode)
+    :config
+    (add-hook 'midnight-hook #'td/trash-desktop-screenshots))
 #+end_src
 
 ** Server
@@ -167,6 +169,16 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
 
   (setopt trash-directory "~/.Trash"
         delete-by-moving-to-trash t)
+
+  (defun td/trash-desktop-screenshots ()
+    "Move screenshot files from Desktop to trash."
+    (interactive)
+    (let ((desktop-dir (expand-file-name "~/Desktop/")))
+      (when (file-directory-p desktop-dir)
+        (dolist (file (directory-files desktop-dir t "^Screenshot.*\\.png$"))
+          (when (file-regular-p file)
+            (move-file-to-trash file)
+            (message "Trashed: %s" file))))))
 #+end_src
 
 
@@ -942,23 +954,14 @@ Tempo integration code for future reference:
     :bind (;; Replace `async-shell-command' with `detached-shell-command'
            ([remap async-shell-command] . detached-shell-command)
            ;; Replace `compile' with `detached-compile'
-           ([remap compile] . detached-compile)
-           ([remap recompile] . detached-compile-recompile)
+           ;; ([remap compile] . detached-compile)
+           ;; ([remap recompile] . detached-recompile)
            ;; Replace `project-compile' with `detached-project-compile'
-           ([remap project-compile] . detached-project-compile)
+           ;; ([remap project-compile] . detached-project-compile)
            ;; Replace built in completion of sessions with `consult'
            ([remap detached-open-session] . detached-consult-session))
     :custom ((detached-show-output-on-attach t)
-             (detached-terminal-data-command system-type))
-    :config
-    (defun detached-project-compile ()
-      "Run `project-compile' in a `detached' session."
-      (interactive)
-      (let ((detached-enabled t)
-            (detached-session-origin 'project-compile)
-            (detached-session-action detached-compile-session-action)
-            (detached-session-mode 'attached))
-        (call-interactively #'project-compile))))
+             (detached-terminal-data-command system-type)))
 #+end_src
 
 ** Tramp
