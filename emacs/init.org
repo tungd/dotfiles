@@ -1732,8 +1732,8 @@ bold and ligatures support :(.
      ;; (font . "Ubuntu Mono 16")
      (tool-bar-lines . 0)
      (fullscreen . maximized)
-     (mac-appearance . light)
-     (ns-appearance . light)
+     (mac-appearance . dark)
+     (ns-appearance . dark)
      (vertical-scroll-bars . nil)))
 
   (blink-cursor-mode -1)
@@ -1781,7 +1781,7 @@ Truncate lines:
 Some preferences that I set for all the theme. Per documentation, the custom
 theme named =user= will always have the highest priority.
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (setq modus-themes-common-palette-overrides
         '(;; Make the main background a soft dark gray instead of pure black
           (bg-main "#1e1e1e")
@@ -1797,7 +1797,7 @@ theme named =user= will always have the highest priority.
   (load-theme 'modus-vivendi t)
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (load-theme 'modus-operandi t)
 #+end_src
 
@@ -1859,7 +1859,7 @@ down compiler error :(.
   (line-number-mode t)
 #+end_src
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package display-line-numbers
     :hook ((prog-mode . display-line-numbers-mode)
            ;(org-mode . display-line-numbers-mode)
@@ -1947,11 +1947,88 @@ https://github.com/radian-software/apheleia?tab=readme-ov-file
 This seems really cool
 
 ** https://github.com/daedsidog/evedel
-** https://github.com/sunflowerseastar/ob-llm
-** https://github.com/xenodium/chatgpt-shell
-** https://github.com/editor-code-assistant/eca
 ** Emacs cron job to watch github build of any of the opening project
-** https://tonsky.me/blog/syntax-highlighting/
+
+#+begin_src emacs-lisp
+  (use-package notmuch
+    :ensure t
+    :defer t
+    :config
+    ;; 1. Point to the MacPorts binary explicitly (avoids PATH issues)
+    (setq notmuch-command "~/.local/bin/notmuch")
+
+    ;; 2. Performance: asynchronous search to avoid blocking Emacs
+    (setq notmuch-search-oldest-first nil)
+
+    ;; 3. Theme Integration: notmuch usually works great with modus-vivendi-tinted,
+    ;;    but you can force specific faces if needed.
+    ;;    (setq notmuch-search-line-faces ...) ;; Usually not needed with Modus.
+
+    ;; 4. "The Sync Command"
+    ;;    This runs mbsync, then indexes with notmuch, then refreshes the buffer.
+    (defun my/notmuch-sync ()
+      "Sync email with mbsync, index with notmuch, and refresh the buffer."
+      (interactive)
+      (message "Syncing mail...")
+      ;; Run mbsync and notmuch new in the background
+      (start-process-shell-command
+       "notmuch-sync"
+       "*notmuch-sync*"
+       ;; Combine commands: fetch -> index
+       "mbsync -a && notmuch new")
+
+      ;; Set a sentinel to refresh the buffer once the process finishes
+      (set-process-sentinel
+       (get-process "notmuch-sync")
+       (lambda (proc event)
+         (when (string= event "finished\n")
+           (message "Mail sync completed.")
+           ;; Refresh the current notmuch buffer if it's open
+           (when (and (eq major-mode 'notmuch-search-mode)
+                      (get-buffer-window (current-buffer)))
+             (notmuch-refresh-this-buffer))))))
+
+    ;; Keybinding for sync (e.g., 'S' in search mode)
+    (define-key notmuch-search-mode-map "S" 'my/notmuch-sync)
+    (define-key notmuch-hello-mode-map "S" 'my/notmuch-sync)
+
+    (defun my/find-first-html-part (parts)
+      "Recursively search for a text/html part in a list of parts."
+      (cl-loop for part in parts
+               if (string= (plist-get part :content-type) "text/html")
+               return part
+               else if (string= (plist-get part :content-type) "multipart/alternative")
+               return (my/find-first-html-part (plist-get part :content))
+               else if (string= (plist-get part :content-type) "multipart/related")
+               return (my/find-first-html-part (plist-get part :content))
+               else if (string= (plist-get part :content-type) "multipart/mixed")
+               return (my/find-first-html-part (plist-get part :content))))
+
+    (defun my/notmuch-show-view-html-xwidget ()
+      "Find the HTML part, render in xwidget-webkit, and MAXIMIZE the window."
+      (interactive)
+      (let* ((msg (notmuch-show-get-message-properties))
+             (body (plist-get msg :body))
+             (html-part (my/find-first-html-part body)))
+
+        (if html-part
+            (let ((coding-system-for-write 'utf-8)
+                  (file (make-temp-file "notmuch-xwidget-" nil ".html")))
+
+              ;; FIX: Use 'notmuch-get-bodypart-text' and pass the full 'msg' object
+              (let ((content (notmuch-get-bodypart-text msg html-part notmuch-show-process-crypto)))
+
+                (with-temp-file file
+                  (insert content))
+
+                (xwidget-webkit-browse-url (concat "file://" file))
+                (delete-other-windows)
+                (message "Opened HTML view.")))
+          (message "No HTML part found."))))
+
+    ;; Keybinding: Press 'H' in the thread view to open the graphical view
+    (define-key notmuch-show-mode-map "H" 'my/notmuch-show-view-html-xwidget))
+#+end_src
 
 * Init file generation
 

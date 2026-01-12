@@ -124,15 +124,15 @@ if {$subport eq "emacs-devel" || $subport eq "emacs-app-devel"} {
 
     # do not forget to check that configure hasn't introduce some suprises via
     # git diff [old]..[new] -- '**/configure.ac'
-    github.setup    emacs-mirror emacs d5b9fc55792399e4b6565f83967a5a2363925bdc
+    github.setup    emacs-mirror emacs ec3ade22fcc495cffbe054b1a407f99864ed7c80
     github.tarball_from archive
     epoch           5
-    version         20260108
+    version         20260112
     revision        0
 
     master_sites    ${github.master_sites}
 
-    checksums       sha256  4cf7d66ce9a7107de9a10d1aae4255c8bb240185d10f7806e2e8b05e8eb22b9e
+    checksums       sha256  d8cbd490ec961ad8c029e62ef89a8c29edcc57b6a824112c03f164a8b9eac8ec
 
     livecheck.type none
 
@@ -339,6 +339,10 @@ etc/NEWS or the Emacs Lisp reference manual.
 }
 
 default_variants-append     +treesitter
+
+if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
+    default_variants-append +xwidgets
+}
 
 # JIT not supported in gcc for i386, so configure will fail.
 # On ppc it is supported, but the build with +nativecomp segfaults.

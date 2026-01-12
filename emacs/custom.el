@@ -206,14 +206,18 @@
  '(exec-path
    '("/opt/local/bin" "~/.local/bin" "/usr/bin" "/bin" "/usr/sbin" "/sbin"
      "/usr/local/bin" "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
+ '(notmuch-hello-sections
+   '(notmuch-hello-insert-saved-searches notmuch-hello-insert-search
+                                         notmuch-hello-insert-recent-searches
+                                         notmuch-hello-insert-alltags
+                                         notmuch-hello-insert-footer))
  '(package-selected-packages
-   '(acp amaranth-dark-theme avy base16-theme claude-code-ide consult crux d2-mode
-         detached diff-hl doom-themes dumb-jump eat ef-themes emmet-mode envrc
-         gdshader-mode gptel gruber-darker-theme kotlin-ts-mode magit ob-http
-         ob-kotlin ob-sql-mode pache-dark-theme prescient protobuf-mode
-         rainbow-mode rg shell-maker surround svg-lib swift-mode
-         tango-plus-theme tempel terraform-mode treesit-fold vertico
-         visual-replace vterm vundo))
+   '(avy claude-code-ide consult consult-notmuch crux d2-mode detached diff-hl
+         dumb-jump eat emmet-mode envrc gdshader-mode gptel gptel-agent
+         kotlin-ts-mode magit notmuch notmuch-transient ob-http ob-kotlin
+         ob-sql-mode prescient protobuf-mode rainbow-mode rg surround svg-lib
+         swift-mode tempel terraform-mode treesit-fold vertico visual-replace
+         vterm vundo))
  '(package-vc-selected-packages
    '((claude-code-ide :url "https://github.com/manzaltu/claude-code-ide.el")
      (neocaml :url "https://github.com/bbatsov/neocaml")))

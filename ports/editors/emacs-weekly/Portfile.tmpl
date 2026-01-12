@@ -340,6 +340,10 @@ etc/NEWS or the Emacs Lisp reference manual.
 
 default_variants-append     +treesitter
 
+if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
+    default_variants-append +xwidgets
+}
+
 # JIT not supported in gcc for i386, so configure will fail.
 # On ppc it is supported, but the build with +nativecomp segfaults.
 # https://trac.macports.org/ticket/69677
