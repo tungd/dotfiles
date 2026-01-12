@@ -146,7 +146,8 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
   (use-package midnight
     :hook (after-init . midnight-mode)
     :config
-    (add-hook 'midnight-hook #'td/trash-desktop-screenshots))
+    (add-hook 'midnight-hook #'td/trash-desktop-screenshots)
+    (add-hook 'midnight-hook #'td/trash-stale-node-modules))
 #+end_src
 
 ** Server
@@ -179,6 +180,27 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
           (when (file-regular-p file)
             (move-file-to-trash file)
             (message "Trashed: %s" file))))))
+
+  (defun td/trash-stale-node-modules ()
+    "Trash node_modules folders whose parent hasn't been touched in 7 days.
+Expects structure: ~/Projects/<org>/<project>/node_modules"
+    (interactive)
+    (let ((projects-dir (expand-file-name "~/Projects/"))
+          (stale-days 7))
+      (when (file-directory-p projects-dir)
+        (dolist (org-dir (directory-files projects-dir t "^[^.]"))
+          (when (file-directory-p org-dir)
+            (dolist (project-dir (directory-files org-dir t "^[^.]"))
+              (when (file-directory-p project-dir)
+                (let ((node-modules (expand-file-name "node_modules" project-dir)))
+                  (when (and (file-directory-p node-modules)
+                             (> (time-to-seconds
+                                 (time-subtract (current-time)
+                                                (file-attribute-modification-time
+                                                 (file-attributes project-dir))))
+                                (* stale-days 24 60 60)))
+                    (move-file-to-trash node-modules)
+                    (message "Trashed: %s" node-modules))))))))))
 #+end_src
 
 
