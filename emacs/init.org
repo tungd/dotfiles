@@ -1223,10 +1223,37 @@ I use auto completion sparingly.
   (use-package gptel
     :ensure t
     :bind ("C-l a" . gptel-menu)
-    :hook (gptel-mode . visual-line-mode)
+    :hook ((gptel-mode . visual-line-mode)
+           (gptel-mode . td/gptel-setup-directory-indicator))
     :custom
-    (gptel-model 'glm-4.6)
+    (gptel-model 'glm-4.7)
     (gptel-default-mode 'org-mode)
+    :config
+    (defun td/gptel-directory-name ()
+      "Get a shortened directory name for gptel header."
+      (let ((dir default-directory))
+        (cond
+         ;; Check if in a project
+         ((bound-and-true-p project-current)
+          (file-name-nondirectory (directory-file-name 
+                                   (cdr (project-current)))))
+         ;; Show last 2 directory components
+         (t
+          (let ((dirs (split-string (directory-file-name dir) "/")))
+            (if (> (length dirs) 1)
+                (string-join (last dirs 2) "/")
+              (car dirs)))))))
+
+    (defun td/gptel-setup-directory-indicator ()
+      "Add current working directory to gptel header line."
+      (when gptel-use-header-line
+        (setq-local header-line-format
+                    (append header-line-format
+                            (list
+                             (propertize " • " 'face 'font-lock-comment-face)
+                             (propertize (td/gptel-directory-name)
+                                         'face 'font-lock-string-face
+                                         'help-echo (expand-file-name default-directory)))))))
     :config
     (setopt gptel-backend
             (gptel-make-anthropic
@@ -1234,19 +1261,26 @@ I use auto completion sparingly.
               :stream t
               :host "api.z.ai"
               :endpoint "/api/anthropic/v1/messages"
-              :models '((glm-4.5-air
-                         :description "General Language Model 4.5 Air"
+              :models '((glm-4.7
+                         :description "General Language Model 4.7 (latest)"
                          :capabilities (media tool-use cache)
                          :context-window 128
-                         :input-cost 0.2
-                         :output-cost 1.1
-                         :cutoff-date "2024-12")
+                         :input-cost 0.6
+                         :output-cost 2.2
+                         :cutoff-date "2025-01")
                         (glm-4.6
                          :description "General Language Model 4.6"
                          :capabilities (media tool-use cache)
                          :context-window 128
                          :input-cost 0.6
                          :output-cost 2.2
+                         :cutoff-date "2025-01")
+                        (glm-4.5-air
+                         :description "General Language Model 4.5 Air"
+                         :capabilities (media tool-use cache)
+                         :context-window 128
+                         :input-cost 0.2
+                         :output-cost 1.1
                          :cutoff-date "2024-12")
                         (glm-4.5-x
                          :description "General Language Model 4.5 (fast response)"
