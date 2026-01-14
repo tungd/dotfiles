@@ -1818,11 +1818,11 @@ theme named =user= will always have the highest priority.
 #+begin_src emacs-lisp
   (setq modus-themes-common-palette-overrides
         '(;; Make the main background a soft dark gray instead of pure black
-          (bg-main "#1e1e1e")
+          ;; (bg-main "#1e1e1e")
           ;; Make the "dim" background (used for line numbers/sidebar) slightly lighter
-          (bg-dim  "#282828")
+          ;; (bg-dim  "#282828")
           ;; Optional: Soften the white text so it's not "piercing"
-          (fg-main "#dfdfdf"))
+          (fg-main "#cfcfcf"))
         modus-themes-italic-constructs t
         modus-themes-bold-constructs nil    ;; Bold text can sometimes "bleed" on 4K screens
         modus-themes-mixed-fonts nil          ;; Use variable pitch for docs/org-mode
