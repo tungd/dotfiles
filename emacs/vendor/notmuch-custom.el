@@ -15,7 +15,7 @@
    "notmuch-sync"
    "*notmuch-sync*"
    ;; Combine commands: fetch -> index
-   "mbsync -a && notmuch new")
+   (format "mbsync -a && %s new" notmuch-command))
 
   ;; Set a sentinel to refresh the buffer once the process finishes
   (set-process-sentinel
@@ -106,11 +106,10 @@
       (dolist (file files)
         (when (file-exists-p file)
           (move-file-to-trash file)))
-      (message "Trashed %d archived inbox mails." (length files))
-                                        ;(notmuch-new)
-      )))
+      (shell-command (concat notmuch-command " new"))
+      (message "Trashed %d archived inbox mails and updated index." (length files)))))
 
-;; Run at midnight
-(run-at-time "00:00" 86400 'td/trash-archived-inbox-mails)
+;; Add to midnight hook
+(add-hook 'midnight-hook #'td/trash-archived-inbox-mails)
 
 (provide 'notmuch-custom)
