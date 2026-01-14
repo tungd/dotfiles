@@ -1215,21 +1215,34 @@ I use auto completion sparingly.
 #+end_src
 
 #+begin_src emacs-lisp
-  (use-package gptel-openai
-    :functions gptel-make-openai)
-
-  (use-package gptel-org)
-
   (use-package gptel
     :ensure t
     :bind ("C-l a" . gptel-menu)
     :hook (gptel-mode . visual-line-mode)
-    :custom
-    (gptel-model 'glm-4.7)
-    (gptel-default-mode 'org-mode)
     :config
+    (require 'gptel-org)
     (require 'gptel-zai)
-    (gptel-zai-setup))
+    (gptel-zai-setup)
+    (setopt
+    gptel-default-mode 'org-mode
+    gptel-model 'glm-4.7))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
+  (use-package gptel
+    :ensure t
+    :bind ("C-l a" . gptel-menu)
+    :hook (gptel-mode . visual-line-mode)
+    :config
+    (require 'gptel-org)
+    (require 'gptel-gemini)
+    (setopt
+    gptel-model 'gemini-3-pro-preview
+    gptel-default-mode 'org-mode
+    gptel-backend
+     (gptel-make-gemini "Gemini"
+       :key (auth-source-pick-first-password :host "gemini" :max 1)
+       :stream t)))
 #+end_src
 
 ** Error checking
