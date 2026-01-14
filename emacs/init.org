@@ -1215,8 +1215,8 @@ I use auto completion sparingly.
 #+end_src
 
 #+begin_src emacs-lisp
-  (use-package gptel-anthropic
-    :functions gptel-make-anthropic)
+  (use-package gptel-openai
+    :functions gptel-make-openai)
 
   (use-package gptel-org)
 
@@ -1256,11 +1256,11 @@ I use auto completion sparingly.
                                          'help-echo (expand-file-name default-directory)))))))
     :config
     (setopt gptel-backend
-            (gptel-make-anthropic
+            (gptel-make-openai
                 "GLM"
               :stream t
               :host "api.z.ai"
-              :endpoint "/api/anthropic/v1/messages"
+              :endpoint "/api/coding/paas/v4/chat/completions"
               :models '((glm-4.7
                          :description "General Language Model 4.7 (latest)"
                          :capabilities (media tool-use cache)
