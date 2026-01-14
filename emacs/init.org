@@ -2039,7 +2039,7 @@ This seems really cool
                return (my/find-first-html-part (plist-get part :content))))
 
     (defun my/notmuch-show-view-html-xwidget ()
-      "Find the HTML part, render in xwidget-webkit, and MAXIMIZE the window."
+      "Find the HTML part, wrap it with a UTF-8 header, render in xwidget-webkit."
       (interactive)
       (let* ((msg (notmuch-show-get-message-properties))
              (body (plist-get msg :body))
@@ -2049,11 +2049,23 @@ This seems really cool
             (let ((coding-system-for-write 'utf-8)
                   (file (make-temp-file "notmuch-xwidget-" nil ".html")))
 
-              ;; FIX: Use 'notmuch-get-bodypart-text' and pass the full 'msg' object
+              ;; Fetch the content (notmuch usually handles QP/Base64 decoding automatically)
               (let ((content (notmuch-get-bodypart-text msg html-part notmuch-show-process-crypto)))
 
                 (with-temp-file file
-                  (insert content))
+                  ;; 1. Insert a proper HTML doctype and charset meta tag
+                  (insert "<!DOCTYPE html>\n")
+                  (insert "<html>\n<head>\n")
+                  (insert "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n")
+                  ;; Optional: Add viewport meta for better scaling
+                  (insert "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n")
+                  (insert "</head>\n<body>\n")
+
+                  ;; 2. Insert the actual email body
+                  (insert content)
+
+                  ;; 3. Close tags
+                  (insert "\n</body>\n</html>"))
 
                 (xwidget-webkit-browse-url (concat "file://" file))
                 (delete-other-windows)
