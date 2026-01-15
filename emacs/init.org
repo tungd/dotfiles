@@ -1214,6 +1214,8 @@ I use auto completion sparingly.
   (bind-key "C-x C-l" #'td/expand-lines)
 #+end_src
 
+TODO: continue using my GLM subscription for now. Switch back to Gemini when the subscription is over <2026-04-02 Thu>
+
 #+begin_src emacs-lisp
   (use-package gptel
     :ensure t

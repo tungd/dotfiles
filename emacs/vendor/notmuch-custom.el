@@ -3,30 +3,26 @@
 (require 'cl-lib)
 (require 'notmuch)
 (require 'subr-x)
+(require 'detached)
 
 ;;; Custom Sync Function
 
 (defun td/notmuch-sync ()
   "Sync email with mbsync, index with notmuch, and refresh the buffer."
   (interactive)
-  (message "Syncing mail...")
-  ;; Run mbsync and notmuch new in the background
-  (start-process-shell-command
-   "notmuch-sync"
-   "*notmuch-sync*"
-   ;; Combine commands: fetch -> index
-   (format "mbsync -a && %s new" notmuch-command))
-
-  ;; Set a sentinel to refresh the buffer once the process finishes
-  (set-process-sentinel
-   (get-process "notmuch-sync")
-   (lambda (proc event)
-     (when (string= event "finished\n")
-       (message "Mail sync completed.")
-       ;; Refresh the current notmuch buffer if it's open
-       (when (and (eq major-mode 'notmuch-search-mode)
-                  (get-buffer-window (current-buffer)))
-         (notmuch-refresh-this-buffer))))))
+  (let ((detached-session-action
+         (list :callback
+               (lambda (session)
+                 (if (zerop (detached-session-exit-code session))
+                     (progn
+                       (message "Mail sync completed.")
+                       (dolist (buffer (buffer-list))
+                         (with-current-buffer buffer
+                           (when (and (derived-mode-p 'notmuch-search-mode 'notmuch-hello-mode)
+                                      (get-buffer-window buffer))
+                             (notmuch-refresh-this-buffer)))))
+                   (message "Mail sync failed! Check detached session %s" (detached-session-id session)))))))
+    (detached-shell-command (format "mbsync -a && %s new" notmuch-command))))
 
 (define-key notmuch-search-mode-map "S" 'td/notmuch-sync)
 (define-key notmuch-hello-mode-map "S" 'td/notmuch-sync)
@@ -93,7 +89,7 @@
                                  (directory-files mail-root)))
          (files nil))
     (dolist (account accounts)
-      (let* ((query (format "folder:%s/Inbox and not tag:inbox" account))
+      (let* ((query (format "folder:%s/Inbox and not tag:inbox and not tag:papertrail" account))
              (account-files (split-string (shell-command-to-string
                                            (format "%s search --output=files %s"
                                                    notmuch-command
