@@ -90,6 +90,7 @@ export PATH=$HOME/.opam/default/bin/:$PATH
 [[ -e /opt/local/etc/profile.d/z.sh ]] && . /opt/local/etc/profile.d/z.sh
 [[ $+commands[direnv] ]] && eval "$(direnv hook zsh)"
 # [[ $+commands[thrash] ]] && alias rm=trash
+[[ ! -r '/Users/tung/.opam/opam-init/init.zsh' ]] || source '/Users/tung/.opam/opam-init/init.zsh' > /dev/null 2> /dev/null
 
 alias g=git
 alias e="emacsclient -n"

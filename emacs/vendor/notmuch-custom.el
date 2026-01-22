@@ -108,4 +108,36 @@
 ;; Add to midnight hook
 (add-hook 'midnight-hook #'td/trash-archived-inbox-mails)
 
+;;; Papertrail Tagging
+
+(defvar td/notmuch-papertrail-tags '("-inbox" "-unread" "+papertrail")
+  "List of tag changes to apply when moving to papertrail.")
+
+(defun td/notmuch-search-papertrail (&optional unpapertrail beg end)
+  "Tag thread with papertrail tags (default: -inbox -unread +papertrail).
+This functions similar to `notmuch-search-archive-thread`."
+  (interactive (cons current-prefix-arg (notmuch-interactive-region)))
+  (notmuch-search-tag
+   (notmuch-tag-change-list td/notmuch-papertrail-tags unpapertrail) beg end)
+  (when (eq beg end)
+    (notmuch-search-next-thread)))
+
+(defun td/notmuch-show-papertrail (&optional unpapertrail)
+  "Tag current thread with papertrail tags and show next thread.
+This functions similar to `notmuch-show-archive-thread-then-next`."
+  (interactive "P")
+  (notmuch-show-tag-all (notmuch-tag-change-list td/notmuch-papertrail-tags unpapertrail))
+  (notmuch-show-next-thread t))
+
+(defun td/notmuch-tree-papertrail (&optional unpapertrail)
+  "Tag current message with papertrail tags and next matching message.
+This functions similar to `notmuch-tree-archive-message-then-next`."
+  (interactive "P")
+  (notmuch-tree-tag (notmuch-tag-change-list td/notmuch-papertrail-tags unpapertrail))
+  (notmuch-tree-next-matching-message))
+
+(define-key notmuch-search-mode-map "P" 'td/notmuch-search-papertrail)
+(define-key notmuch-show-mode-map "P" 'td/notmuch-show-papertrail)
+(define-key notmuch-tree-mode-map "P" 'td/notmuch-tree-papertrail)
+
 (provide 'notmuch-custom)

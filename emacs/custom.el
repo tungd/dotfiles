@@ -214,10 +214,10 @@
  '(package-selected-packages
    '(avy claude-code-ide consult consult-notmuch crux d2-mode detached diff-hl
          dumb-jump eat emmet-mode envrc gdshader-mode gptel gptel-agent
-         kotlin-ts-mode magit notmuch notmuch-transient ob-http ob-kotlin
-         ob-sql-mode prescient protobuf-mode rainbow-mode rg surround svg-lib
-         swift-mode tempel terraform-mode treesit-fold vertico visual-replace
-         vterm vundo))
+         kotlin-ts-mode magit markdown-mode meson-mode notmuch notmuch-transient
+         ob-http ob-kotlin ob-sql-mode prescient protobuf-mode rainbow-mode rg
+         surround svg-lib swift-mode tempel terraform-mode treesit-fold tuareg
+         vertico visual-replace vterm vundo))
  '(package-vc-selected-packages
    '((claude-code-ide :url "https://github.com/manzaltu/claude-code-ide.el")
      (neocaml :url "https://github.com/bbatsov/neocaml")))

@@ -1782,34 +1782,6 @@ theme named =user= will always have the highest priority.
   (load-theme 'modus-operandi t)
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
-  (use-package tango-plus-theme
-    :ensure t
-    :init (load-theme 'tango-plus t))
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
- (use-package notink-theme
-   :ensure t
-   :init (load-theme 'notink t))
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
- (use-package pache-dark-theme
-   :ensure t
-   :init (load-theme 'pache-dark t))
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (load-theme 'td t)
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (use-package amaranth-dark-theme
-    :ensure t
-    :init (load-theme 'amaranth-dark t))
-#+end_src
-
 #+begin_src emacs-lisp
   (custom-theme-set-faces
    'user
@@ -1840,7 +1812,7 @@ down compiler error :(.
   (line-number-mode t)
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package display-line-numbers
     :hook ((prog-mode . display-line-numbers-mode)
            ;(org-mode . display-line-numbers-mode)

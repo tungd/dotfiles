@@ -124,15 +124,15 @@ if {$subport eq "emacs-devel" || $subport eq "emacs-app-devel"} {
 
     # do not forget to check that configure hasn't introduce some suprises via
     # git diff [old]..[new] -- '**/configure.ac'
-    github.setup    emacs-mirror emacs ec3ade22fcc495cffbe054b1a407f99864ed7c80
+    github.setup    emacs-mirror emacs a0197aef96e091b2bb4e317669a8ad5c9108f269
     github.tarball_from archive
     epoch           5
-    version         20260112
+    version         20260122
     revision        0
 
     master_sites    ${github.master_sites}
 
-    checksums       sha256  d8cbd490ec961ad8c029e62ef89a8c29edcc57b6a824112c03f164a8b9eac8ec
+    checksums       sha256  e6c2ae3307a20514a5b76f7340d490da0971760d5d83e48205c2faff2870d05c
 
     livecheck.type none
 
