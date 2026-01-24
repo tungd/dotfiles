@@ -150,6 +150,37 @@ Performance stuffs, I'm not sure how relevant these are, since I've moved to =na
     (add-hook 'midnight-hook #'td/trash-stale-node-modules))
 #+end_src
 
+** Scratch Buffer
+
+Make the scratch buffer persistent and use org-mode by default.
+
+#+begin_src emacs-lisp
+  (defconst td/scratch-file
+    (expand-file-name "scratch.org" user-emacs-directory)
+    "File where scratch buffer content is persisted.")
+
+  (defun td/scratch-restore ()
+    "Restore scratch buffer content from file."
+    (when (file-exists-p td/scratch-file)
+      (with-current-buffer "*scratch*"
+        (erase-buffer)
+        (insert-file-contents td/scratch-file)
+        (set-buffer-modified-p nil))))
+
+  (defun td/scratch-save ()
+    "Save scratch buffer content to file."
+    (with-current-buffer "*scratch*"
+      (write-region (point-min) (point-max) td/scratch-file nil 'quietly)
+      (set-buffer-modified-p nil)))
+
+  (setopt initial-scratch-message nil
+          initial-major-mode 'org-mode)
+
+  (add-hook 'after-init-hook #'td/scratch-restore)
+  (add-hook 'kill-emacs-hook #'td/scratch-save)
+  (add-hook 'save-buffers-kill-terminal-hook #'td/scratch-save)
+#+end_src
+
 ** Server
 
 #+begin_src emacs-lisp
@@ -1540,7 +1571,6 @@ Here's my basic Org setup:
     (org-agenda-files `(,org-directory))
     (org-agenda-skip-unavailable-files t)
     (org-hide-leading-stars t)
-    (org-clock-persist 'history)
     ;; (org-refile-targets '(("~/Desktop/archive.org" . (:level . 1))))
     (org-startup-with-inline-images t)
     (org-startup-folded t)
