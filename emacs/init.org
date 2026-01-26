@@ -1014,7 +1014,19 @@ Tempo integration code for future reference:
            ;; Replace built in completion of sessions with `consult'
            ([remap detached-open-session] . detached-consult-session))
     :custom ((detached-show-output-on-attach t)
-             (detached-terminal-data-command system-type)))
+             (detached-terminal-data-command system-type)
+             (detached-notification-function #'td/detached-macos-notification))
+    :config
+    (defun td/detached-macos-notification (session)
+        "Send macOS native notification when SESSION completes."
+        (let* ((status (detached-session-status session))
+               (host (detached-session-host-name session))
+               (command (detached-session-command session))
+               (title (if (eq status 'success)
+                          (format "Detached finished [%s]" host)
+                        (format "Detached failed [%s]" host))))
+          (ns-do-applescript
+           (format "display notification %S with title %S" command title)))))
 #+end_src
 
 ** Tramp
@@ -1738,7 +1750,8 @@ bold and ligatures support :(.
      ;; (font . "Monaco 16")
      ;; (font . "Iosevka Fixed SS07 16")
      ;; (font . "Iosevka Mono 16")
-     (font . "JetBrains Mono NL 15")
+     ;; (font . "JetBrains Mono NL 15")
+     (font . "Menlo 16")
      ;; (font . "Fira Mono 16")
      ;; (font . "Ubuntu Mono 16")
      (tool-bar-lines . 0)
