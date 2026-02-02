@@ -422,185 +422,6 @@ mini-buffer completion framework.
     :bind ("M-g e" . consult-flymake))
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
-  (use-package codex
-    :commands (codex-start codex-command-menu codex-code-change)
-    :bind* (("C-l x" . codex-start)
-            ("C-l c" . codex-command-menu)
-            :map codex-transcript-mode-map
-            ("M-c" . magit-stash))
-    :config
-    (defun td/codex-notify ()
-      (let* ((title "Codex")
-             (body (format "Waiting for input in %s" (buffer-name)))
-             (script (format "display notification %S with title %S sound name \"Funk\"" body title)))
-        (make-process :name "codex-notify"
-                      :buffer nil
-                      :noquery t
-                      :command (list "osascript" "-e" script)
-                      :sentinel (lambda (_proc _event) nil))
-        ;(message "[Codex] %s" body)
-        ))
-    (add-hook 'codex-waiting-hook #'td/codex-notify))
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (use-package claudecode
-    :commands (claudecode-start claudecode-command-menu claudecode-code-change)
-    :custom
-    (claudecode-program "/Users/tung/.claude/local/claude")
-    :bind* (("C-l x" . claudecode-start)
-            ("C-l c" . claudecode-command-menu)))
-#+end_src
-
-#+begin_src emacs-lisp
-  (use-package claude-code-ide
-    :vc (:url "https://github.com/manzaltu/claude-code-ide.el" :rev :newest)
-    :bind ("C-c C-'" . claude-code-ide-menu) ; Set your favorite keybinding
-    :config
-    (claude-code-ide-emacs-tools-setup)  ; Optionally enable Emacs MCP tools
-
-    ;; Replace ediff with unified diff-mode for cleaner single-buffer diffs
-    (defvar-local claude-code-ide--diff-info nil
-      "Buffer-local storage for diff session info.")
-
-    (defun claude-code-ide--unified-diff-accept ()
-      "Accept the changes shown in this diff buffer."
-      (interactive)
-      (when-let* ((info claude-code-ide--diff-info)
-                  (session (alist-get 'session info))
-                  (tab-name (alist-get 'tab-name info))
-                  (buffer-B (alist-get 'buffer-B info))
-                  (new-content (with-current-buffer buffer-B (buffer-string))))
-        (claude-code-ide-mcp-complete-deferred
-         session "openDiff"
-         (list `((type . "text") (text . "FILE_SAVED"))
-               `((type . "text") (text . ,new-content)))
-         tab-name)
-        (claude-code-ide--unified-diff-cleanup info)))
-
-    (defun claude-code-ide--unified-diff-reject ()
-      "Reject the changes shown in this diff buffer."
-      (interactive)
-      (when-let* ((info claude-code-ide--diff-info)
-                  (session (alist-get 'session info))
-                  (tab-name (alist-get 'tab-name info)))
-        (claude-code-ide-mcp-complete-deferred
-         session "openDiff"
-         (list `((type . "text") (text . "DIFF_REJECTED"))
-               `((type . "text") (text . ,tab-name)))
-         tab-name)
-        (claude-code-ide--unified-diff-cleanup info)))
-
-    (defun claude-code-ide--unified-diff-cleanup (info)
-      "Clean up diff buffers from INFO."
-      (let ((buffer-A (alist-get 'buffer-A info))
-            (buffer-B (alist-get 'buffer-B info))
-            (diff-buffer (alist-get 'diff-buffer info))
-            (file-exists (alist-get 'file-exists info))
-            (session (alist-get 'session info))
-            (tab-name (alist-get 'tab-name info)))
-        ;; Kill temp buffer-B
-        (when (and buffer-B (buffer-live-p buffer-B))
-          (kill-buffer buffer-B))
-        ;; Kill buffer-A only if it was created for new file
-        (when (and buffer-A (buffer-live-p buffer-A) (not file-exists))
-          (kill-buffer buffer-A))
-        ;; Kill diff buffer
-        (when (and diff-buffer (buffer-live-p diff-buffer))
-          (kill-buffer diff-buffer))
-        ;; Remove from active diffs
-        (when session
-          (let ((active-diffs (claude-code-ide-mcp-session-active-diffs session)))
-            (remhash tab-name active-diffs)))))
-
-    (defvar claude-code-ide-unified-diff-mode-map
-      (let ((map (make-sparse-keymap)))
-        (define-key map (kbd "C-c C-c") #'claude-code-ide--unified-diff-accept)
-        (define-key map (kbd "C-c C-k") #'claude-code-ide--unified-diff-reject)
-        (define-key map (kbd "q") #'claude-code-ide--unified-diff-reject)
-        map)
-      "Keymap for claude-code-ide unified diff buffers.")
-
-    (define-minor-mode claude-code-ide-unified-diff-mode
-      "Minor mode for Claude Code unified diff buffers.
-\\{claude-code-ide-unified-diff-mode-map}"
-      :lighter " Claude-Diff"
-      :keymap claude-code-ide-unified-diff-mode-map)
-
-    (defun claude-code-ide--open-diff-unified (args)
-      "Open diff using unified diff-mode instead of ediff.
-ARGS contains the original arguments to openDiff handler."
-      (let ((old-file-path (alist-get 'old_file_path args))
-            (new-file-contents (alist-get 'new_file_contents args))
-            (tab-name (alist-get 'tab_name args))
-            session buffer-A buffer-B file-exists diff-buf)
-
-        ;; Find session
-        (setq session (or (claude-code-ide-mcp--find-session-for-file old-file-path)
-                          (claude-code-ide-mcp--get-current-session)))
-        (unless session
-          (signal 'mcp-error '("No active MCP session found")))
-
-        ;; Clean up existing diff with same tab-name
-        (let ((active-diffs (claude-code-ide-mcp-session-active-diffs session)))
-          (when-let ((existing (gethash tab-name active-diffs)))
-            (claude-code-ide--unified-diff-cleanup existing)))
-
-        ;; Create buffer-A (original)
-        (setq file-exists (file-exists-p old-file-path))
-        (if file-exists
-            (setq buffer-A (find-file-noselect old-file-path))
-          (setq buffer-A (generate-new-buffer
-                          (format "*New: %s*" (file-name-nondirectory old-file-path))))
-          (with-current-buffer buffer-A
-            (setq buffer-file-name old-file-path)))
-
-        ;; Create buffer-B (new content)
-        (setq buffer-B (generate-new-buffer (format "*Proposed: %s*" tab-name)))
-        (with-current-buffer buffer-B
-          (insert new-file-contents)
-          (let ((mode (assoc-default old-file-path auto-mode-alist 'string-match)))
-            (when mode (ignore-errors (funcall mode)))))
-
-        ;; Create unified diff
-        (setq diff-buf (diff-buffers buffer-A buffer-B nil 'noasync))
-
-        ;; Store info and set up diff buffer
-        (let ((info `((session . ,session)
-                      (tab-name . ,tab-name)
-                      (buffer-A . ,buffer-A)
-                      (buffer-B . ,buffer-B)
-                      (diff-buffer . ,diff-buf)
-                      (file-exists . ,file-exists)
-                      (old-file-path . ,old-file-path))))
-
-          ;; Store in active diffs
-          (puthash tab-name info (claude-code-ide-mcp-session-active-diffs session))
-
-          ;; Configure diff buffer
-          (with-current-buffer diff-buf
-            (setq claude-code-ide--diff-info info)
-            (claude-code-ide-unified-diff-mode 1)
-            (setq header-line-format
-                  (substitute-command-keys
-                   "Diff: \\[claude-code-ide--unified-diff-accept] accept, \\[claude-code-ide--unified-diff-reject] reject")))
-
-          ;; Display diff buffer
-          (pop-to-buffer diff-buf))
-
-        ;; Return deferred response
-        `((deferred . t)
-          (unique-key . ,tab-name)
-          (session . ,session))))
-
-    (advice-add 'claude-code-ide-mcp-handle-open-diff
-                :override #'claude-code-ide--open-diff-unified)
-
-    :custom
-    (claude-code-ide-use-side-window nil))
-#+end_src
-
 #+begin_src emacs-lisp
   (use-package recentf
     :hook (after-init . recentf-mode)
@@ -676,6 +497,11 @@ Buffer location customization
                  '("\\*Org-Babel Error Output\\*" display-buffer-in-direction
                    (direction . bottom)
                    (window-height . 8))))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package winner
+    :hook (after-init . winner-mode))
 #+end_src
 
 
@@ -1751,7 +1577,7 @@ bold and ligatures support :(.
      ;; (font . "Iosevka Fixed SS07 16")
      ;; (font . "Iosevka Mono 16")
      ;; (font . "JetBrains Mono NL 15")
-     (font . "Menlo 16")
+     (font . "Menlo 15")
      ;; (font . "Fira Mono 16")
      ;; (font . "Ubuntu Mono 16")
      (tool-bar-lines . 0)
