@@ -214,10 +214,11 @@
  '(package-selected-packages
    '(avy claude-code-ide consult consult-notmuch crux d2-mode detached diff-hl
          dumb-jump eat emmet-mode envrc gdshader-mode gptel gptel-agent
-         kotlin-ts-mode magit markdown-mode meson-mode notmuch notmuch-transient
-         ob-http ob-kotlin ob-sql-mode prescient protobuf-mode rainbow-mode rg
-         surround svg-lib swift-mode tempel terraform-mode treesit-fold tuareg
-         vertico visual-replace vterm vundo))
+         kotlin-ts-mode magit markdown-mode meson-mode neocaml notmuch
+         notmuch-transient ob-duckdb ob-http ob-kotlin ob-sql-mode
+         pi-coding-agent prescient protobuf-mode rainbow-mode rg surround
+         svg-lib swift-mode tempel terraform-mode treesit-fold tuareg
+         ultra-scroll utop vertico visual-replace vterm vundo))
  '(package-vc-selected-packages
    '((claude-code-ide :url "https://github.com/manzaltu/claude-code-ide.el")
      (neocaml :url "https://github.com/bbatsov/neocaml")))
@@ -233,16 +234,19 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(cursor ((t :background "orange")))
  '(diff-hl-change ((t (:inherit nil :background unspecified :foreground "#deae3e"))))
  '(diff-hl-delete ((t (:inherit nil :background unspecified :foreground "#ff0000"))))
  '(diff-hl-insert ((t (:inherit nil :background unspecified :foreground "#81af34"))))
  '(eglot-code-action-indicator-face ((t :weight normal)))
  '(eglot-highlight-symbol-face ((t :weight normal)))
- '(eglot-inlay-hint-face ((t :height 1.0)))
+ '(eglot-inlay-hint-face ((t :height 1.0 :inherit font-lock-comment-face)))
  '(font-lock-comment-delimiter-face ((t :slant normal)))
  '(font-lock-comment-face ((t :slant normal)))
  '(font-lock-constant-face ((t :slant normal)))
  '(font-lock-string-face ((t :slant normal)))
  '(fringe ((t :inherit line-number :background unspecified)))
  '(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face)))
- '(line-number-current-line ((t :slant normal :weight normal :foreground "#fff"))))
+ '(line-number-current-line ((t :slant normal :weight normal :foreground "#fff")))
+ '(mode-line-buffer-id ((t :foreground "orange")))
+ '(vertical-border ((t :foreground "#222"))))

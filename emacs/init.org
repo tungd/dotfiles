@@ -1292,9 +1292,10 @@ Python or Haskell:
         Haskell world seems to be a one-off experiment, or an one-time job then
         abandoned at best. (I'm talking about iCalendar, and there are many other cases).
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
   (use-package neocaml
-    :vc (:url "https://github.com/bbatsov/neocaml" :rev :newest)
+    :ensure t
+    :defer t
     :custom
     (neocaml-repl-program-name "dune")
     (neocaml-repl-program-args '("utop" "." "--" "-short-paths")))
@@ -1663,10 +1664,10 @@ theme named =user= will always have the highest priority.
    '(line-number ((t :slant normal :background unspecified :foreground "#444" :inherit font-lock-comment-face)))
    '(line-number-current-line ((t :slant normal :weight normal :foreground "#fff")))
    '(fringe ((t :inherit line-number :background unspecified)))
-   ;'(vertical-border ((t :foreground "#222")))
+   '(vertical-border ((t :foreground "#222")))
 
-   ;'(mode-line-buffer-id ((t :foreground "orange")))
-   ;'(cursor ((t :background "orange")))
+   '(mode-line-buffer-id ((t :foreground "orange")))
+   '(cursor ((t :background "orange")))
    '(eglot-highlight-symbol-face ((t :weight normal)))
    '(eglot-code-action-indicator-face ((t :weight normal)))
    '(eglot-inlay-hint-face ((t :height 1.0 :inherit font-lock-comment-face)))
