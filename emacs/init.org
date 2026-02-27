@@ -1578,7 +1578,8 @@ bold and ligatures support :(.
      ;; (font . "Iosevka Fixed SS07 16")
      ;; (font . "Iosevka Mono 16")
      ;; (font . "JetBrains Mono NL 15")
-     (font . "Menlo 15")
+     ;; (font . "Menlo 15")
+     (font . "Google Sans Code 14")
      ;; (font . "Fira Mono 16")
      ;; (font . "Ubuntu Mono 16")
      (tool-bar-lines . 0)
@@ -1592,8 +1593,10 @@ bold and ligatures support :(.
 
   (setq-default
    cursor-in-non-selected-windows nil
-   ;line-spacing 0.1
+   line-spacing nil
    )
+
+  (setq ns-use-thin-smoothing t)
 
   (unless (display-graphic-p)
     (menu-bar-mode -1))
