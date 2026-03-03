@@ -803,6 +803,13 @@ Tempo integration code for future reference:
     (ediff-split-window-function 'split-window-horizontally))
 #+end_src
 
+#+begin_src emacs-lisp
+  (use-package conflict-buttons
+    :ensure t
+    :defer t
+    :hook (smerge-mode . conflict-buttons-mode))
+#+end_src
+
 
 * Shell and remote
 
@@ -810,6 +817,12 @@ Tempo integration code for future reference:
   (use-package envrc
     :ensure t
     :hook (after-init . envrc-global-mode))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package opam-env-mode
+    :ensure nil
+    :hook (after-init . opam-env-mode))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1579,7 +1592,7 @@ bold and ligatures support :(.
      ;; (font . "Iosevka Mono 16")
      ;; (font . "JetBrains Mono NL 15")
      ;; (font . "Menlo 15")
-     (font . "Google Sans Code 14")
+     (font . "Google Sans Code 16")
      ;; (font . "Fira Mono 16")
      ;; (font . "Ubuntu Mono 16")
      (tool-bar-lines . 0)
