@@ -889,6 +889,27 @@ Tempo integration code for future reference:
      'remote-direct-async-process))
 #+end_src
 
+#+begin_src emacs-lisp
+  (use-package msgpack
+    :ensure t)
+
+  (use-package tramp-rpc
+    :vc (:url "https://github.com/ArthurHeymans/emacs-tramp-rpc"
+         :branch "master"
+         :rev :newest)
+    :after tramp
+    :init
+    (require 'tramp-rpc-python-backend)
+    :custom
+    (td/tramp-rpc-python-command "python3")
+    (td/tramp-rpc-python-local-script
+     (expand-file-name "vendor/tramp-rpc/server/tramp-rpc-server.py" user-emacs-directory))
+    ;; Keep nil by default; set via connection-local vars for host-specific commands.
+    (td/tramp-rpc-python-force-server-command nil)
+    :config
+    (td/tramp-rpc-python-enable))
+#+end_src
+
 Some speedup for Tramp:
 
 #+begin_src emacs-lisp
@@ -1590,9 +1611,9 @@ bold and ligatures support :(.
      ;; (font . "Monaco 16")
      ;; (font . "Iosevka Fixed SS07 16")
      ;; (font . "Iosevka Mono 16")
-     ;; (font . "JetBrains Mono NL 15")
+     (font . "JetBrains Mono NL 16")
      ;; (font . "Menlo 15")
-     (font . "Google Sans Code 16")
+     ;; (font . "Google Sans Code 16")
      ;; (font . "Fira Mono 16")
      ;; (font . "Ubuntu Mono 16")
      (tool-bar-lines . 0)
