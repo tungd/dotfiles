@@ -215,7 +215,7 @@
                                          notmuch-hello-insert-alltags
                                          notmuch-hello-insert-footer))
  '(package-selected-packages
-   '(avy conflict-buttons consult consult-notmuch crux d2-mode detached diff-hl
+   '(acp avy conflict-buttons consult consult-notmuch crux d2-mode detached diff-hl
          dumb-jump eat emmet-mode envrc gdshader-mode gptel gptel-agent
          kotlin-ts-mode magit markdown-mode meson-mode msgpack neocaml notmuch
          notmuch-transient ob-duckdb ob-http ob-kotlin ob-sql-mode

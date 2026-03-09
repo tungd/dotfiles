@@ -250,9 +250,10 @@ Expects structure: ~/Projects/<org>/<project>/node_modules"
 ;; mini-buffer completion framework.
 
 (use-package minibuffer
-  :hook (minibuffer-setup . td/setup-minibuffer-auto-complete)
   :custom
   (minibuffer-visible-completions t)
+  (completion-eager-display t)
+  (completion-eager-update t)
   (completion-auto-help 'always)
   (completion-show-help nil)
     ;(completion-auto-select 'second-tab)
@@ -273,19 +274,6 @@ Expects structure: ~/Projects/<org>/<project>/node_modules"
 (bind-key "C-n" #'minibuffer-next-completion completion-in-region-mode-map)
 
 (ido-mode -1)
-
-(defun td/minibuffer-auto-complete ()
-  "Show completions if minibuffer has 2+ characters."
-  (when (and (minibufferp)
-             (>= (length (minibuffer-contents)) 2)
-             (memq this-command '(self-insert-command
-                                  delete-backward-char
-                                  backward-delete-char-untabify)))
-    (minibuffer-completion-help)))
-
-(defun td/setup-minibuffer-auto-complete ()
-  "Set up auto-completion for this minibuffer session."
-  (add-hook 'post-command-hook #'td/minibuffer-auto-complete nil t))
 
 (use-package prescient
   :ensure t
@@ -797,6 +785,14 @@ Uses project root if in a project, otherwise current directory."
               treesit-node-end
               treesit-node-prev-sibling)
   :config
+  (add-to-list 'treesit-language-source-alist
+               '(ocaml . ("https://github.com/tree-sitter/tree-sitter-ocaml"
+                          "v0.24.2"
+                          "grammars/ocaml/src")))
+  (add-to-list 'treesit-language-source-alist
+               '(ocaml-interface . ("https://github.com/tree-sitter/tree-sitter-ocaml"
+                                    "v0.24.2"
+                                    "grammars/interface/src")))
   (add-to-list 'treesit-language-source-alist '(kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git")))
   (add-to-list 'treesit-language-source-alist '(protobuf . ("https://github.com/casouri/tree-sitter-module.git")))
   (add-to-list 'treesit-language-source-alist '(swift . ("https://github.com/alex-pinkus/tree-sitter-swift.git"))))
@@ -901,6 +897,13 @@ Uses project root if in a project, otherwise current directory."
   (setopt
   gptel-default-mode 'org-mode
   gptel-model 'glm-4.7))
+
+(use-package acp
+  :ensure t)
+
+(use-package td-acp
+  :after acp
+  :bind ("C-l c" . td-acp-session-list))
 
 ;;;; Error checking
 (use-package flymake
