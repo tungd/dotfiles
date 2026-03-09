@@ -221,7 +221,7 @@
          notmuch-transient ob-duckdb ob-http ob-kotlin ob-sql-mode
          pi-coding-agent prescient protobuf-mode rainbow-mode rg surround
          svg-lib swift-mode tempel terraform-mode tramp-rpc treesit-fold tuareg
-         ultra-scroll utop vertico visual-replace vterm vundo))
+         ultra-scroll utop visual-replace vterm vundo))
  '(package-vc-selected-packages
    '((tramp-rpc :url "https://github.com/ArthurHeymans/emacs-tramp-rpc" :branch
                 "master")

@@ -259,7 +259,7 @@ Expects structure: ~/Projects/<org>/<project>/node_modules"
     ;(completion-auto-select nil)
   (completion-auto-select t)
   (completions-max-height 20)
-  (completions-sort 'historical)
+  (completions-sort #'prescient-completion-sort)
   (completions-format 'one-column)
   (completions-detailed t)
   (completions-group t))
@@ -328,6 +328,7 @@ Uses project root if in a project, otherwise current directory."
          ("M-g t" . consult-theme)
          ("M-g m" . consult-mode-command)
          ("M-g r" . consult-ripgrep)
+         ("M-g o" . consult-outline)
          ([remap goto-line] . consult-goto-line)
          ([remap switch-to-buffer] . consult-buffer)
          ([remap imenu] . consult-imenu)
@@ -744,6 +745,19 @@ Uses project root if in a project, otherwise current directory."
 
 (use-package swift-mode
   :ensure t)
+
+;; Keep Emacs Lisp outlines focused on comment headings so `consult-outline'
+;; navigates section markers instead of every top-level form.
+(defun td/emacs-lisp-outline-level ()
+  "Return the outline level for an Emacs Lisp comment heading."
+  (- (match-end 0) (match-beginning 0) 2))
+
+(defun td/setup-emacs-lisp-outline ()
+  "Use comment-only outlines in `emacs-lisp-mode' buffers."
+  (setq-local outline-regexp ";;;+ ")
+  (setq-local outline-level #'td/emacs-lisp-outline-level))
+
+(add-hook 'emacs-lisp-mode-hook #'td/setup-emacs-lisp-outline)
 
 ;; Native Tree-sitter support since Emacs 29
 
