@@ -135,8 +135,9 @@ REQUEST-HANDLER."
             "#+PROPERTY: TD_ACP_UPDATED_AT 2026-03-09T00:00:00+0700\n"
             "#+PROPERTY: TD_ACP_AGENT_COMMAND test-agent\n"
             "#+PROPERTY: TD_ACP_LOAD_SESSION true\n\n"
-            "* Turn 1\n"
-            "** User\n#+begin_src text\nhi\n#+end_src\n")))
+            "* User: hi\n\n"
+            "* Agent\n"
+            "hello\n")))
 
 (ert-deftest td-acp-session-new-bootstraps-and-persists ()
   (td-acp-test-with-project (project-root)
@@ -168,7 +169,9 @@ REQUEST-HANDLER."
           (with-temp-buffer
             (insert-file-contents file)
             (should (search-forward "TD_ACP_SESSION_ID session-1" nil t))
-            (should (search-forward "** Tool Calls" nil t))))))))
+            (should (search-forward "* User" nil t))
+            (should (search-forward "* Agent" nil t))
+            (should-not (search-forward "#+begin_src text" nil t))))))))
 
 (ert-deftest td-acp-session-update-persists-turn-data ()
   (td-acp-test-with-project (project-root)
@@ -189,6 +192,16 @@ REQUEST-HANDLER."
       (td-acp--apply-session-update
        session
        '((sessionUpdate . "tool_call")
+         (toolCallId . "task-1")
+         (title . "Explore crash game codebase")
+         (kind . "think")
+         (status . "pending")
+         (content . [((type . "content")
+                      (content . ((type . "text")
+                                  (text . "Look at build files"))))])))
+      (td-acp--apply-session-update
+       session
+       '((sessionUpdate . "tool_call")
          (toolCallId . "tool-1")
          (title . "Read file")
          (kind . "read")
@@ -198,8 +211,19 @@ REQUEST-HANDLER."
       (with-temp-buffer
         (insert-file-contents file)
         (should (search-forward "hello" nil t))
+        (goto-char (point-min))
+        (should (search-forward "** Thoughts" nil t))
         (should (search-forward "thinking" nil t))
-        (should (search-forward "*** Read file" nil t))))))
+        (goto-char (point-min))
+        (should (search-forward "** Tasks" nil t))
+        (should (search-forward "*** Explore crash game codebase" nil t))
+        (should (search-forward ":TOOL_CALL_ID: task-1" nil t))
+        (goto-char (point-min))
+        (should (search-forward "** Tool calls" nil t))
+        (should (search-forward "*** Read file" nil t))
+        (should (search-forward ":TOOL_CALL_ID: tool-1" nil t))
+        (should (search-forward "Content:" nil t))
+        (should (search-forward "#+begin_src text" nil t))))))
 
 (ert-deftest td-acp-open-existing-session-loads-when-supported ()
   (td-acp-test-with-project (project-root)
@@ -325,29 +349,49 @@ REQUEST-HANDLER."
                                             :title "Permissions")))
            (responses nil)
            (file (td-acp-test--session-file project-root "session-perm"))
-           (td-acp-permission-policy
-            (lambda (_request _session) "allow_once")))
+           (td-acp-permission-policy 'ask-risky)
+           (completion-collection nil)
+           (completion-prompt nil))
       (setf (td-acp-session-id session) "session-perm")
       (setf (td-acp-session-transcript-file session) file)
       (cl-letf (((symbol-function 'acp-send-response)
                  (lambda (&rest args)
-                   (push (plist-get args :response) responses))))
+                   (push (plist-get args :response) responses)))
+                ((symbol-function 'completing-read)
+                 (lambda (prompt collection &rest _args)
+                   (setq completion-prompt prompt)
+                   (setq completion-collection collection)
+                   (caar collection))))
         (td-acp--handle-request
          session
          '((id . 11)
            (method . "session/request_permission")
-           (params . ((options . [((optionId . "allow_once")
+           (params . ((message . "Choose execution permission")
+                      (options . [((optionId . "allow_always")
+                                   (name . "Always Allow")
+                                   (kind . "allow_always"))
+                                  ((optionId . "allow_once")
                                    (name . "Allow once")
-                                   (kind . "allow_once"))])
-                      (toolCall . ((title . "Write file")
-                                   (kind . "write")))))))
-        (should (equal (alist-get 'optionId
-                                  (alist-get 'outcome (alist-get :result (car responses))))
-                       "allow_once"))
+                                   (kind . "allow_once")
+                                   (description . "Run this command one time"))
+                                  ((optionId . "reject")
+                                   (name . "Reject")
+                                   (kind . "reject"))])
+                      (toolCall . ((title . "Run command")
+                                   (rawInput . ((command . "find /tmp -name \"*.yml\"")
+                                                (description . "List YAML files")))))))))
+        (should (equal completion-prompt
+                       "Choose execution permission for `find /tmp -name \"*.yml\"`: "))
+        (should (equal (caar completion-collection)
+                       "Always Allow - [allow_always]"))
+        (should (equal (alist-get 'outcome (alist-get :result (car responses)))
+                       "selected"))
+        (should (equal (alist-get 'optionId (alist-get :result (car responses)))
+                       "allow_always"))
         (with-temp-buffer
           (insert-file-contents file)
-          (should (search-forward "Permissions" nil t))
-          (should (search-forward "allow_once" nil t)))))))
+          (should (search-forward "** Permissions" nil t))
+          (should (search-forward "allow_always" nil t)))))))
 
 (provide 'td-acp-tests)
 

@@ -72,6 +72,11 @@ The format string accepts:
   :type 'string
   :group 'td-acp)
 
+(defcustom td-acp-prompt-window-height 8
+  "Height of the dedicated bottom prompt window."
+  :type 'integer
+  :group 'td-acp)
+
 (defcustom td-acp-permission-policy 'ask-risky
   "How `td-acp' should handle ACP permission requests.
 
@@ -360,6 +365,19 @@ When CREATE is non-nil, create the first turn if needed."
           language
           (string-trim-right (or content ""))))
 
+(defun td-acp--org-heading-text (text)
+  "Return TEXT escaped for use in an Org heading."
+  (replace-regexp-in-string "[\r\n]+" " " (string-trim (or text ""))))
+
+(defun td-acp--org-body-text (text)
+  "Return TEXT escaped for use as Org body content."
+  (let ((body (string-trim-right (or text ""))))
+    (replace-regexp-in-string "^\\*" ",*" body)))
+
+(defun td-acp--single-line-text-p (text)
+  "Return non-nil when TEXT is a single logical line."
+  (not (string-match-p "\n" (or text ""))))
+
 (defun td-acp--format-session-metadata (session)
   "Return Org metadata block for SESSION."
   (string-join
@@ -367,7 +385,7 @@ When CREATE is non-nil, create the first turn if needed."
          (list (format "#+TITLE: %s" (or (td-acp-session-title session)
                                          (td-acp-session-id session)
                                          "ACP Session"))
-               "#+STARTUP: overview"
+               "#+STARTUP: showall"
                (format "#+PROPERTY: TD_ACP_SESSION_ID %s"
                        (or (td-acp-session-id session) ""))
                (format "#+PROPERTY: TD_ACP_PROJECT_ROOT %s"
@@ -395,17 +413,34 @@ When CREATE is non-nil, create the first turn if needed."
         (format "- %s:%s" path line)
       (format "- %s" path))))
 
+(defun td-acp--render-tool-call-block (label language content)
+  "Render a labeled tool-call block using LANGUAGE and CONTENT."
+  (concat (format "%s\n" label)
+          (td-acp--org-src-block language content)))
+
+(defun td-acp--render-inline-block (label language content)
+  "Render LABEL and a source block with LANGUAGE and CONTENT."
+  (when (and content (not (string-empty-p (string-trim (format "%s" content)))))
+    (concat (format "%s\n" label)
+            (td-acp--org-src-block language content)
+            "\n")))
+
 (defun td-acp--render-tool-call-content (content)
   "Render tool CONTENT into Org text."
   (let ((kind (td-acp--field content 'type)))
     (cond
      ((string= kind "content")
-      (td-acp--render-content (td-acp--field content 'content)))
+      (td-acp--render-tool-call-block
+       "Content:"
+       "text"
+       (td-acp--render-content (td-acp--field content 'content))))
      ((string= kind "diff")
-      (td-acp--org-src-block "diff"
-                             (or (td-acp--field content 'diff)
-                                 (td-acp--field content 'content)
-                                 (td-acp--json-string content))))
+      (td-acp--render-tool-call-block
+       "Diff:"
+       "diff"
+       (or (td-acp--field content 'diff)
+           (td-acp--field content 'content)
+           (td-acp--json-string content))))
      ((string= kind "terminal")
       (let* ((terminal-id (or (td-acp--field content 'terminalId)
                               (td-acp--field content 'terminal_id)))
@@ -415,11 +450,41 @@ When CREATE is non-nil, create the first turn if needed."
                   (td-acp--org-src-block "text"
                                          (or (td-acp-terminal-output terminal) ""))))))
      (t
-      (td-acp--org-src-block "json" (td-acp--json-string content))))))
+      (td-acp--render-tool-call-block
+       "Payload:"
+       "json"
+       (td-acp--json-string content))))))
 
-(defun td-acp--render-tool-call (tool-call)
-  "Render TOOL-CALL into Org."
+(defun td-acp--tool-call-command (tool-call)
+  "Return command string for TOOL-CALL, when present."
+  (let ((raw-input (td-acp--field tool-call 'rawInput)))
+    (or (td-acp--field raw-input 'command)
+        (td-acp--field raw-input 'cmd))))
+
+(defun td-acp--task-tool-call-p (tool-call)
+  "Return non-nil when TOOL-CALL should be grouped under Tasks."
+  (member (or (td-acp--field tool-call 'kind) "")
+          '("think" "task" "plan")))
+
+(defun td-acp--tool-call-heading (tool-call)
+  "Return heading title for TOOL-CALL."
+  (let ((command (td-acp--tool-call-command tool-call))
+        (title (td-acp--field tool-call 'title))
+        (raw-input (td-acp--field tool-call 'rawInput)))
+    (cond
+     ((and command (not (string-empty-p (string-trim command))))
+      (format "`%s`" command))
+     ((and title (not (string-empty-p (string-trim title))))
+      title)
+     ((td-acp--field raw-input 'description))
+     ((td-acp--field tool-call 'kind))
+     (t "Tool call"))))
+
+(defun td-acp--render-tool-call (tool-call &optional level)
+  "Render TOOL-CALL into Org at heading LEVEL."
   (let* ((title (or (td-acp--field tool-call 'title) "Tool call"))
+         (heading-level (or level 2))
+         (stars (make-string heading-level ?*))
          (tool-call-id (or (td-acp--field tool-call 'toolCallId)
                            (td-acp--field tool-call 'tool_call_id)))
          (status (or (td-acp--field tool-call 'status) ""))
@@ -429,37 +494,48 @@ When CREATE is non-nil, create the first turn if needed."
          (raw-input (td-acp--field tool-call 'rawInput))
          (raw-output (td-acp--field tool-call 'rawOutput)))
     (concat
-     (format "*** %s\n" title)
-     ":PROPERTIES:\n"
-     (format ":TOOL_CALL_ID: %s\n" (or tool-call-id ""))
-     (format ":STATUS: %s\n" status)
-     (format ":KIND: %s\n" kind)
-     ":END:\n"
+     (format "%s %s\n" stars (td-acp--org-heading-text (td-acp--tool-call-heading tool-call)))
+     (when (or tool-call-id status kind)
+       (concat
+        ":PROPERTIES:\n"
+        (when tool-call-id
+          (format ":TOOL_CALL_ID: %s\n" tool-call-id))
+        (when (and status (not (string-empty-p status)))
+          (format ":STATUS: %s\n" status))
+        (when (and kind (not (string-empty-p kind)))
+          (format ":KIND: %s\n" kind))
+        ":END:\n"))
      (when locations
        (concat "Affected locations:\n"
                (string-join (mapcar #'td-acp--render-location locations) "\n")
-               "\n"))
+               "\n\n"))
      (when content
-       (mapconcat #'td-acp--render-tool-call-content content "\n"))
+       (concat (mapconcat #'td-acp--render-tool-call-content content "\n") "\n"))
      (when raw-input
-       (td-acp--org-src-block "json" (td-acp--json-string raw-input)))
+       (td-acp--render-tool-call-block
+        "Raw input:"
+        "json"
+        (td-acp--json-string raw-input)))
      (when raw-output
-       (td-acp--org-src-block "json" (td-acp--json-string raw-output)))
+       (td-acp--render-tool-call-block
+        "Raw output:"
+        "json"
+        (td-acp--json-string raw-output)))
      "\n")))
 
 (defun td-acp--render-permission (permission)
   "Render PERMISSION event into Org."
-  (format "- %s\n%s"
-          (or (plist-get permission :summary) "Permission request")
-          (td-acp--org-src-block "json"
-                                 (td-acp--json-string (plist-get permission :raw)))))
+  (td-acp--render-inline-block
+   (format "Permission: %s" (or (plist-get permission :summary) "Permission request"))
+   "json"
+   (td-acp--json-string (plist-get permission :raw))))
 
 (defun td-acp--render-terminal-event (event)
   "Render terminal EVENT into Org."
-  (format "- %s\n%s"
-          (or (plist-get event :summary) "Terminal event")
-          (td-acp--org-src-block "json"
-                                 (td-acp--json-string (plist-get event :raw)))))
+  (td-acp--render-inline-block
+   (format "Terminal: %s" (or (plist-get event :summary) "Terminal event"))
+   "json"
+   (td-acp--json-string (plist-get event :raw))))
 
 (defun td-acp--render-content (content)
   "Render ACP CONTENT into Org text."
@@ -482,46 +558,85 @@ When CREATE is non-nil, create the first turn if needed."
      (t
       (td-acp--json-string content)))))
 
+(defun td-acp--render-user-section (turn index)
+  "Render user-facing section for TURN and INDEX."
+  (let* ((user-text (or (td-acp-turn-user turn) ""))
+         (heading (if (td-acp--single-line-text-p user-text)
+                      (format "* User: %s" (td-acp--org-heading-text user-text))
+                    "* User"))
+         (body (unless (td-acp--single-line-text-p user-text)
+                 (td-acp--org-body-text user-text))))
+    (concat heading
+            "\n"
+            (when body
+              (concat body "\n"))
+            "\n")))
+
+(defun td-acp--render-agent-section (turn index)
+  "Render agent-facing section for TURN and INDEX."
+  (let* ((tool-calls (td-acp-turn-tool-calls turn))
+         (tasks (cl-remove-if-not #'td-acp--task-tool-call-p tool-calls))
+         (non-task-tool-calls (cl-remove-if #'td-acp--task-tool-call-p tool-calls)))
+    (concat
+     "* Agent\n"
+     (let ((assistant-text (td-acp--org-body-text (or (td-acp-turn-assistant turn) ""))))
+       (if (string-empty-p (string-trim assistant-text))
+           ""
+         (concat assistant-text "\n\n")))
+     (let ((thoughts (string-trim (or (td-acp-turn-thoughts turn) ""))))
+       (unless (string-empty-p thoughts)
+         (concat "** Thoughts\n"
+                 (td-acp--org-body-text thoughts)
+                 "\n\n")))
+     (when tasks
+       (concat
+        "** Tasks\n"
+        (mapconcat (lambda (tool-call)
+                     (td-acp--render-tool-call tool-call 3))
+                   tasks
+                   "\n")
+        "\n"))
+     (when non-task-tool-calls
+       (concat
+        "** Tool calls\n"
+        (mapconcat (lambda (tool-call)
+                     (td-acp--render-tool-call tool-call 3))
+                   non-task-tool-calls
+                   "\n")
+        "\n"))
+     (when (td-acp-turn-permissions turn)
+       (concat "** Permissions\n"
+               (mapconcat #'td-acp--render-permission
+                          (td-acp-turn-permissions turn)
+                          "\n")
+               "\n"))
+     (when (td-acp-turn-terminal-events turn)
+       (concat "** Terminal\n"
+               (mapconcat #'td-acp--render-terminal-event
+                          (td-acp-turn-terminal-events turn)
+                          "\n")
+               "\n"))
+     (when-let ((prompt-response (td-acp-turn-prompt-response turn)))
+       (concat "** Prompt response\n"
+               (td-acp--org-src-block "json"
+                                      (td-acp--json-string prompt-response))
+               "\n"))
+     (when (td-acp-turn-unknown-updates turn)
+       (concat "** Raw updates\n"
+               (mapconcat (lambda (update)
+                            (td-acp--render-inline-block
+                             "Raw update:"
+                             "json"
+                             (td-acp--json-string update)))
+                          (td-acp-turn-unknown-updates turn)
+                          "\n")
+               "\n")))))
+
 (defun td-acp--render-turn (turn index)
   "Render TURN number INDEX into Org."
   (concat
-   (format "* Turn %d\n" index)
-   ":PROPERTIES:\n"
-   (format ":CREATED_AT: %s\n" (or (td-acp-turn-created-at turn) ""))
-   (format ":UPDATED_AT: %s\n" (or (td-acp-turn-updated-at turn) ""))
-   ":END:\n\n"
-   (format "** User\n%s\n\n"
-           (td-acp--org-src-block "text" (or (td-acp-turn-user turn) "")))
-   (format "** Assistant\n%s\n\n"
-           (td-acp--org-src-block "text" (or (td-acp-turn-assistant turn) "")))
-   (format "** Thoughts\n:PROPERTIES:\n:VISIBILITY: folded\n:END:\n%s\n\n"
-           (td-acp--org-src-block "text" (or (td-acp-turn-thoughts turn) "")))
-   (concat "** Tool Calls\n"
-           (if (td-acp-turn-tool-calls turn)
-               (mapconcat #'td-acp--render-tool-call (td-acp-turn-tool-calls turn) "\n")
-             "- None\n")
-           "\n")
-   (concat "** Permissions\n"
-           (if (td-acp-turn-permissions turn)
-               (mapconcat #'td-acp--render-permission (td-acp-turn-permissions turn) "\n")
-             "- None\n")
-           "\n")
-   (concat "** Terminal\n"
-           (if (td-acp-turn-terminal-events turn)
-               (mapconcat #'td-acp--render-terminal-event (td-acp-turn-terminal-events turn) "\n")
-             "- None\n")
-           "\n")
-   (when-let ((prompt-response (td-acp-turn-prompt-response turn)))
-     (concat "** Prompt Response\n"
-             (td-acp--org-src-block "json" (td-acp--json-string prompt-response))
-             "\n"))
-   (when (td-acp-turn-unknown-updates turn)
-     (concat "** Raw Updates\n"
-             (mapconcat (lambda (update)
-                          (td-acp--org-src-block "json" (td-acp--json-string update)))
-                        (td-acp-turn-unknown-updates turn)
-                        "\n")
-             "\n"))))
+   (td-acp--render-user-section turn index)
+   (td-acp--render-agent-section turn index)))
 
 (defun td-acp--session-org (session)
   "Render SESSION to an Org string."
@@ -561,7 +676,9 @@ When CREATE is non-nil, create the first turn if needed."
       (td-acp--ensure-sessions-dir (td-acp-session-project-root session))
       (let ((content (td-acp--session-org session))
             (buffer (and (buffer-live-p (td-acp-session-transcript-buffer session))
-                         (td-acp-session-transcript-buffer session))))
+                         (td-acp-session-transcript-buffer session)))
+            (following (td-acp--following-windows
+                        (td-acp-session-transcript-buffer session))))
         (if (and buffer (equal (buffer-file-name buffer) file))
             (with-current-buffer buffer
               (let ((inhibit-read-only t)
@@ -579,17 +696,36 @@ When CREATE is non-nil, create the first turn if needed."
           (with-current-buffer buffer
             (let ((inhibit-read-only t))
               (set-buffer-modified-p nil)
-              (org-mode))))
+              (org-mode)
+              (td-acp--fold-detail-blocks buffer))))
+        (td-acp--follow-transcript-buffer session following)
         (td-acp--refresh-session-list-buffers)))))
 
-(defun td-acp--fold-thoughts (buffer)
-  "Fold thoughts subtrees in transcript BUFFER."
+(defun td-acp--fold-detail-blocks (buffer)
+  "Fold thought and tool-call subtrees in transcript BUFFER."
   (when (buffer-live-p buffer)
     (with-current-buffer buffer
       (when (derived-mode-p 'org-mode)
         (goto-char (point-min))
-        (while (re-search-forward "^\\*\\* Thoughts$" nil t)
-          (outline-hide-subtree))))))
+        (while (re-search-forward "^\\*+ " nil t)
+          (beginning-of-line)
+          (let* ((element (org-element-at-point))
+                 (title (org-element-property :raw-value element))
+                 (level (org-element-property :level element))
+                 (should-fold
+                  (cond
+                   ((and (= level 2) (string= title "Thoughts"))
+                    t)
+                   ((= level 3)
+                    (save-excursion
+                      (and (org-up-heading-safe)
+                           (member (org-get-heading t t t t)
+                                   '("Tasks" "Tool calls")))))
+                   (t nil))))
+            (when should-fold
+              (org-cycle-hide-drawers 'children)
+              (outline-hide-subtree)))
+          (forward-line 1))))))
 
 (defun td-acp--open-transcript-buffer (session)
   "Return transcript buffer for SESSION."
@@ -602,19 +738,148 @@ When CREATE is non-nil, create the first turn if needed."
         (org-mode)
         (setq buffer-read-only t))
       (setf (td-acp-session-transcript-buffer session) buffer)
-      (td-acp--fold-thoughts buffer)
+      (td-acp--fold-detail-blocks buffer)
+      (with-current-buffer buffer
+        (setq-local window-point-insertion-type t))
       buffer)))
+
+(defun td-acp--following-windows (buffer)
+  "Return BUFFER windows that are currently following output."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (let ((max-pos (point-max)))
+        (cl-remove-if-not
+         (lambda (window)
+           (and (window-live-p window)
+                (>= (window-point window) (max (point-min) (- max-pos 2)))))
+         (get-buffer-window-list buffer nil t))))))
+
+(defun td-acp--follow-transcript-buffer (session &optional windows)
+  "Scroll transcript WINDOWS for SESSION to the end.
+
+When WINDOWS is nil, all visible transcript windows are updated."
+  (when-let ((buffer (td-acp-session-transcript-buffer session)))
+    (when (buffer-live-p buffer)
+      (with-current-buffer buffer
+        (dolist (window (or windows (get-buffer-window-list buffer nil t)))
+          (when (window-live-p window)
+            (set-window-point window (point-max))
+            (with-selected-window window
+              (goto-char (point-max))
+              (recenter -1))))))))
+
+(defun td-acp--window-can-split-for-prompt-p (window)
+  "Return non-nil if WINDOW can be split into transcript and prompt panes."
+  (>= (window-total-height window)
+      (* 2 window-min-height)))
+
+(defun td-acp--prompt-height-for-window (window)
+  "Return prompt pane height to use when splitting WINDOW."
+  (let* ((window-height (window-total-height window))
+         (max-prompt-height (- window-height window-min-height)))
+    (max window-min-height
+         (min td-acp-prompt-window-height
+              max-prompt-height))))
+
+(defun td-acp--windows-by-height (&optional windows)
+  "Return live WINDOWS sorted by descending height.
+
+When WINDOWS is nil, use all non-minibuffer windows in the selected frame."
+  (sort (cl-remove-if-not #'window-live-p
+                          (copy-sequence (or windows (window-list nil 'no-mini))))
+        (lambda (left right)
+          (> (window-total-height left)
+             (window-total-height right)))))
+
+(defun td-acp--window-with-most-height (&optional windows)
+  "Return the tallest window from WINDOWS."
+  (car (td-acp--windows-by-height windows)))
+
+(defun td-acp--best-display-window (&optional preferred)
+  "Return best window for transcript plus prompt.
+
+Use PREFERRED when it can be split, else pick the tallest splittable
+window in the frame. Fall back to PREFERRED or selected window."
+  (or (and preferred
+           (window-live-p preferred)
+           (td-acp--window-can-split-for-prompt-p preferred)
+           preferred)
+      (cl-find-if #'td-acp--window-can-split-for-prompt-p
+                  (td-acp--windows-by-height))
+      preferred
+      (selected-window)))
+
+(defun td-acp--preferred-display-window (transcript-wins prompt-wins selected)
+  "Return preferred base window for displaying a SESSION pair."
+  (cond
+   ((and prompt-wins (not transcript-wins)
+         (not (memq selected prompt-wins))
+         (td-acp--window-can-split-for-prompt-p selected))
+    selected)
+   (transcript-wins (td-acp--window-with-most-height transcript-wins))
+   (prompt-wins (td-acp--window-with-most-height prompt-wins))
+   (t selected)))
+
+(defun td-acp--delete-extra-prompt-windows (prompt-wins target)
+  "Delete windows in PROMPT-WINS except TARGET."
+  (dolist (window prompt-wins)
+    (unless (eq window target)
+      (ignore-errors (delete-window window)))))
+
+(defun td-acp--paired-prompt-window (transcript-win prompt-buf)
+  "Return prompt window below TRANSCRIPT-WIN showing PROMPT-BUF, or nil."
+  (when (window-live-p transcript-win)
+    (let ((below (window-in-direction 'below transcript-win)))
+      (and below
+           (eq (window-buffer below) prompt-buf)
+           below))))
+
+(defun td-acp--best-prompt-window (transcript-buf prompt-buf)
+  "Return best visible window for PROMPT-BUF in current frame."
+  (let* ((prompt-wins (get-buffer-window-list prompt-buf nil))
+         (selected (selected-window))
+         (selected-transcript-win (and (eq (window-buffer selected) transcript-buf)
+                                       selected)))
+    (or (td-acp--paired-prompt-window selected-transcript-win prompt-buf)
+        (and (memq selected prompt-wins) selected)
+        (td-acp--window-with-most-height prompt-wins))))
+
+(defun td-acp--focus-prompt-window (transcript-buf prompt-buf)
+  "Select a visible PROMPT-BUF window for the TRANSCRIPT-BUF session."
+  (when-let ((window (td-acp--best-prompt-window transcript-buf prompt-buf)))
+    (select-window window)))
 
 (defun td-acp--display-session (session)
   "Display prompt and transcript buffers for SESSION."
   (let ((prompt (td-acp--ensure-prompt-buffer session))
         (transcript (td-acp--open-transcript-buffer session)))
-    (pop-to-buffer-same-window prompt)
-    (when transcript
-      (display-buffer transcript
-                      '((display-buffer-reuse-window display-buffer-in-side-window)
-                        (side . right)
-                        (window-width . 0.5))))))
+    (if (not transcript)
+        (pop-to-buffer-same-window prompt)
+      (let* ((transcript-wins (get-buffer-window-list transcript nil))
+             (prompt-wins (get-buffer-window-list prompt nil))
+             (selected (selected-window)))
+        (if (and transcript-wins prompt-wins)
+            (td-acp--focus-prompt-window transcript prompt)
+          (let* ((preferred (td-acp--preferred-display-window
+                             transcript-wins prompt-wins selected))
+                 (target (td-acp--best-display-window preferred))
+                 (prompt-win nil))
+            (when (and prompt-wins (not transcript-wins))
+              (td-acp--delete-extra-prompt-windows prompt-wins target))
+            (with-selected-window target
+              (unless (td-acp--window-can-split-for-prompt-p target)
+                (delete-other-windows target))
+              (unless (td-acp--window-can-split-for-prompt-p target)
+                (user-error "Window too small for transcript + prompt layout"))
+              (switch-to-buffer transcript)
+              (with-current-buffer transcript
+                (goto-char (point-max)))
+              (let ((prompt-height (td-acp--prompt-height-for-window target)))
+                (setq prompt-win (split-window nil (- prompt-height) 'below))
+                (set-window-buffer prompt-win prompt)))
+            (when (window-live-p prompt-win)
+              (select-window prompt-win))))
+        (td-acp--follow-transcript-buffer session)))))
 
 (defun td-acp--append-text (old text)
   "Append TEXT to OLD, handling nil values."
@@ -831,11 +1096,18 @@ transcript rendering."
                        (td-acp--normalize-path (td-acp-session-project-root session))))
 
 (defun td-acp--allow-option (options)
-  "Return first allow option from OPTIONS."
-  (cl-find-if
-   (lambda (option)
-     (string-prefix-p "allow" (or (td-acp--field option 'kind) "")))
-   options))
+  "Return preferred allow option from OPTIONS.
+
+Prefer one-shot allow options over persistent allow options."
+  (or (cl-find-if
+       (lambda (option)
+         (member (or (td-acp--field option 'kind) "")
+                 '("allow_once" "allow")))
+       options)
+      (cl-find-if
+       (lambda (option)
+         (string-prefix-p "allow" (or (td-acp--field option 'kind) "")))
+       options)))
 
 (defun td-acp--reject-option (options)
   "Return first reject option from OPTIONS."
@@ -844,13 +1116,72 @@ transcript rendering."
      (string-prefix-p "reject" (or (td-acp--field option 'kind) "")))
    options))
 
+(defun td-acp--permission-options (params)
+  "Return normalized permission options from PARAMS."
+  (let ((options (td-acp--field params 'options)))
+    (cond
+     ((vectorp options) (append options nil))
+     ((listp options) options)
+     (t nil))))
+
+(defun td-acp--permission-option-id (option)
+  "Return stable option id for OPTION."
+  (cond
+   ((stringp option) option)
+   (t
+    (or (td-acp--field option 'optionId)
+        (td-acp--field option 'id)
+        (td-acp--field option 'name)
+        (td-acp--field option 'kind)))))
+
+(defun td-acp--permission-option-label (option)
+  "Return display label for permission OPTION."
+  (let* ((name (or (td-acp--field option 'name)
+                   (td-acp--field option 'title)
+                   (td-acp--permission-option-id option)
+                   "Option"))
+         (kind (td-acp--field option 'kind))
+         (description (or (td-acp--field option 'description)
+                          (td-acp--field option 'message)
+                          (td-acp--field option 'summary))))
+    (string-join
+     (delq nil
+           (list name
+                 (when (and kind (not (string-empty-p (string-trim kind))))
+                   (format "[%s]" kind))
+                 (when (and description (not (string-empty-p (string-trim description))))
+                   description)))
+     " - ")))
+
+(defun td-acp--permission-request-prompt (request)
+  "Return minibuffer prompt for permission REQUEST."
+  (let* ((params (td-acp--field request 'params))
+         (tool-call (td-acp--field params 'toolCall))
+         (message (or (td-acp--field params 'message)
+                      (td-acp--field params 'title)))
+         (subject (or (td-acp--tool-call-heading tool-call)
+                      (td-acp--field tool-call 'title)
+                      (td-acp--field tool-call 'kind)
+                      "request")))
+    (format "%s for %s: "
+            (or message "ACP permission")
+            subject)))
+
 (defun td-acp--permission-request-risky-p (request session)
   "Return non-nil if REQUEST should be confirmed for SESSION."
   (let* ((params (td-acp--field request 'params))
          (tool-call (td-acp--field params 'toolCall))
+         (raw-input (td-acp--field tool-call 'rawInput))
          (kind (or (td-acp--field tool-call 'kind) ""))
-         (locations (td-acp--field tool-call 'locations)))
+         (locations (td-acp--field tool-call 'locations))
+         (command (or (td-acp--field raw-input 'command)
+                      (td-acp--field raw-input 'cmd)))
+         (path (or (td-acp--field raw-input 'path)
+                   (td-acp--field raw-input 'file_path))))
     (or (member kind '("execute" "terminal" "edit" "write"))
+        (and command (not (string-empty-p (string-trim command))))
+        (and path
+             (not (td-acp--in-project-p session path)))
         (cl-some (lambda (location)
                    (let ((path (td-acp--field location 'path)))
                      (and path (not (td-acp--in-project-p session path)))))
@@ -859,32 +1190,35 @@ transcript rendering."
 (defun td-acp--select-permission-option (request session)
   "Resolve permission REQUEST for SESSION."
   (let* ((params (td-acp--field request 'params))
-         (options (append (or (td-acp--field params 'options) []) nil))
+         (options (td-acp--permission-options params))
          (policy td-acp-permission-policy))
     (cond
      ((functionp policy)
       (funcall policy request session))
      ((eq policy 'allow-all)
-      (or (td-acp--field (or (td-acp--allow-option options) (car options)) 'optionId)
+      (or (td-acp--permission-option-id
+           (or (td-acp--allow-option options) (car options)))
           'cancel))
      ((eq policy 'deny-all)
-      (or (td-acp--field (or (td-acp--reject-option options) (car options)) 'optionId)
+      (or (td-acp--permission-option-id
+           (or (td-acp--reject-option options) (car options)))
           'cancel))
      ((and (eq policy 'ask-risky)
            (not (td-acp--permission-request-risky-p request session)))
-      (or (td-acp--field (or (td-acp--allow-option options) (car options)) 'optionId)
+      (or (td-acp--permission-option-id
+           (or (td-acp--allow-option options) (car options)))
           'cancel))
      (t
       (let* ((choices
               (mapcar (lambda (option)
-                        (cons (format "%s (%s)"
-                                      (or (td-acp--field option 'name) "Option")
-                                      (or (td-acp--field option 'kind) ""))
+                        (cons (td-acp--permission-option-label option)
                               option))
                       options))
-             (selection (cdr (assoc (completing-read "ACP permission: " choices nil t)
+             (selection (cdr (assoc (completing-read
+                                     (td-acp--permission-request-prompt request)
+                                     choices nil t)
                                     choices))))
-        (or (td-acp--field selection 'optionId) 'cancel))))))
+        (or (td-acp--permission-option-id selection) 'cancel))))))
 
 (defun td-acp--make-error (message &optional data)
   "Return an ACP-compatible error object with MESSAGE and DATA."
@@ -896,6 +1230,15 @@ transcript rendering."
   "Build generic response object for REQUEST-ID and RESULT."
   `((:request-id . ,request-id)
     (:result . ,result)))
+
+(defun td-acp--permission-response (request-id choice)
+  "Build a correct ACP permission response for REQUEST-ID and CHOICE."
+  (if (eq choice 'cancel)
+      `((:request-id . ,request-id)
+        (:result . ((outcome . "cancelled"))))
+    `((:request-id . ,request-id)
+      (:result . ((outcome . "selected")
+                  (optionId . ,choice))))))
 
 (defun td-acp--terminal-exit-status (terminal)
   "Return ACP exit status object for TERMINAL."
@@ -1167,7 +1510,7 @@ transcript rendering."
     (cond
      ((equal method "session/request_permission")
       (cl-pushnew request-id (td-acp-session-pending-permission-ids session) :test #'equal)
-      (let ((choice (td-acp--select-permission-option request session)))
+     (let ((choice (td-acp--select-permission-option request session)))
         (setf (td-acp-session-pending-permission-ids session)
               (delete request-id (td-acp-session-pending-permission-ids session)))
         (td-acp--record-permission-event
@@ -1175,16 +1518,7 @@ transcript rendering."
         (td-acp--persist-session session)
         (td-acp--acp-send-response
          session
-         (if (fboundp 'acp-make-session-request-permission-response)
-             (acp-make-session-request-permission-response
-              :request-id request-id
-              :option-id (unless (eq choice 'cancel) choice)
-              :cancelled (eq choice 'cancel))
-           `((:request-id . ,request-id)
-             (:result . ((outcome . ,(if (eq choice 'cancel)
-                                         '((outcome . "cancelled"))
-                                       `((outcome . "selected")
-                                         (optionId . ,choice)))))))))))
+         (td-acp--permission-response request-id choice))))
      ((equal method "fs/read_text_file")
       (let ((path (td-acp--field params 'path)))
         (condition-case err
