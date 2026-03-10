@@ -206,10 +206,10 @@ Expects structure: ~/Projects/<org>/<project>/node_modules"
   :commands (project-find-file project-vc-dir project-current)
   :custom
   (project-file-history-behavior 'relativize)
+  (project-switch-commands 'magit-project-status)
   :config
   (autoload 'magit-project-status "magit-extras" nil t)
-  (keymap-set project-prefix-map "m" #'magit-project-status)
-  (add-to-list 'project-switch-commands '(magit-project-status "Magit") t))
+  (keymap-set project-prefix-map "m" #'magit-project-status))
 
 (use-package rg
   :ensure t
@@ -260,7 +260,8 @@ Expects structure: ~/Projects/<org>/<project>/node_modules"
     ;(completion-auto-select nil)
   (completion-auto-select t)
   (completions-max-height 20)
-  (completions-sort #'prescient-completion-sort)
+  ;(completions-sort #'prescient-completion-sort)
+  (completions-sort 'historical)
   (completions-format 'one-column)
   (completions-detailed t)
   (completions-group t))
@@ -466,7 +467,26 @@ Uses project root if in a project, otherwise current directory."
 
 ;; Make the file executable if starting with "shebang":
 
+(defun td/byte-compile-user-emacs-file-after-save ()
+  "Byte-compile `init.el' and files under `user-emacs-directory'/vendor."
+  (when (and buffer-file-name
+             (derived-mode-p 'emacs-lisp-mode)
+             (string-suffix-p ".el" buffer-file-name)
+             (or (equal (file-truename buffer-file-name)
+                        (file-truename (expand-file-name "init.el" user-emacs-directory)))
+                 (file-in-directory-p
+                  buffer-file-name
+                  (expand-file-name "vendor/" user-emacs-directory)))
+             (not (string-prefix-p "." (file-name-nondirectory buffer-file-name))))
+    (condition-case err
+        (byte-compile-file buffer-file-name)
+      (error
+       (message "Byte compile failed for %s: %s"
+                (file-name-nondirectory buffer-file-name)
+                (error-message-string err))))))
+
 (add-hook 'after-save-hook #'executable-make-buffer-file-executable-if-script-p)
+(add-hook 'after-save-hook #'td/byte-compile-user-emacs-file-after-save)
 
 ;;;; Search and replace
 (use-package isearch
@@ -1425,24 +1445,5 @@ Uses project root if in a project, otherwise current directory."
 (set-fontset-font t 'emoji "Menlo" nil 'prepend)
 
 ;;; Ideas
-
-;;;; Emacs cron job to watch github build of any of the opening project
-(use-package notmuch
-  :ensure t
-  :defer t
-  :config
-  (setq notmuch-archive-tags '("-inbox" "-unread"))
-    ;; 1. Point to the MacPorts binary explicitly (avoids PATH issues)
-  (setq notmuch-command "~/.local/bin/notmuch")
-
-    ;; 2. Performance: asynchronous search to avoid blocking Emacs
-  (setq notmuch-search-oldest-first nil)
-
-    ;; 3. Theme Integration: notmuch usually works great with modus-vivendi-tinted,
-    ;;    but you can force specific faces if needed.
-    ;;    (setq notmuch-search-line-faces ...) ;; Usually not needed with Modus.
-
-    ;; Load custom extensions
-  (load (expand-file-name "vendor/notmuch-custom.el" user-emacs-directory) t))
 
 ;;; init.el ends here

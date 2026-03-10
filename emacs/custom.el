@@ -209,19 +209,14 @@
  '(exec-path
    '("/opt/local/bin" "~/.local/bin" "/usr/bin" "/bin" "/usr/sbin" "/sbin"
      "/usr/local/bin" "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
- '(notmuch-hello-sections
-   '(notmuch-hello-insert-saved-searches notmuch-hello-insert-search
-                                         notmuch-hello-insert-recent-searches
-                                         notmuch-hello-insert-alltags
-                                         notmuch-hello-insert-footer))
  '(package-selected-packages
-   '(acp avy conflict-buttons consult consult-notmuch crux d2-mode detached diff-hl
+   '(acp avy conflict-buttons consult crux d2-mode detached diff-hl
          dumb-jump eat emmet-mode envrc gdshader-mode gptel gptel-agent
-         kotlin-ts-mode magit markdown-mode meson-mode msgpack neocaml notmuch
-         notmuch-transient ob-duckdb ob-http ob-kotlin ob-sql-mode
-         pi-coding-agent prescient protobuf-mode rainbow-mode rg surround
-         svg-lib swift-mode tempel terraform-mode tramp-rpc treesit-fold tuareg
-         ultra-scroll utop visual-replace vterm vundo))
+         kotlin-ts-mode magit markdown-mode meson-mode msgpack neocaml
+         ob-duckdb ob-http ob-kotlin ob-sql-mode pi-coding-agent prescient
+         protobuf-mode rainbow-mode rg surround svg-lib swift-mode tempel
+         terraform-mode tramp-rpc treesit-fold tuareg ultra-scroll utop
+         visual-replace vterm vundo))
  '(package-vc-selected-packages
    '((tramp-rpc :url "https://github.com/ArthurHeymans/emacs-tramp-rpc" :branch
                 "master")
