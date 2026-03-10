@@ -202,6 +202,9 @@ Expects structure: ~/Projects/<org>/<project>/node_modules"
 ;; Emacs built-in =project.el= has gone a long way so I'm using that now. There are
 ;; still some missing features coming from =projectile=, but I can live with that.
 
+(use-package magit-extras
+  :functions (magit-project-status))
+
 (use-package project
   :commands (project-find-file project-vc-dir project-current)
   :custom
@@ -256,12 +259,8 @@ Expects structure: ~/Projects/<org>/<project>/node_modules"
   (completion-eager-update t)
   (completion-auto-help 'always)
   (completion-show-help nil)
-    ;(completion-auto-select 'second-tab)
-    ;(completion-auto-select nil)
   (completion-auto-select t)
-  (completions-max-height 20)
-  ;(completions-sort #'prescient-completion-sort)
-  (completions-sort 'historical)
+  (completions-max-height 16)
   (completions-format 'one-column)
   (completions-detailed t)
   (completions-group t))
@@ -721,6 +720,9 @@ Uses project root if in a project, otherwise current directory."
 (use-package msgpack
   :ensure t)
 
+(use-package tramp-rpc-python-backend
+  :functions (td/tramp-rpc-python-enable))
+
 (use-package tramp-rpc
   :vc (:url "https://github.com/ArthurHeymans/emacs-tramp-rpc"
        :branch "master"
@@ -905,6 +907,9 @@ Uses project root if in a project, otherwise current directory."
 (bind-key "C-x C-l" #'td/expand-lines)
 
 ;; TODO: continue using my GLM subscription for now. Switch back to Gemini when the subscription is over <2026-04-02 Thu>
+
+(use-package gptel-zai
+  :functions (gptel-zai-setup))
 
 (use-package gptel
   :ensure t
