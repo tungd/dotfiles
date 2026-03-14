@@ -1357,7 +1357,12 @@ Uses project root if in a project, otherwise current directory."
       modus-themes-mixed-fonts nil          ;; Use variable pitch for docs/org-mode
       modus-themes-variable-pitch-ui nil)
 
-(load-theme 'modus-vivendi t)
+;; (load-theme 'modus-vivendi t)
+
+(use-package doom-themes
+  :ensure t
+  :config
+  (load-theme 'doom-sourcerer t))
 
 (custom-theme-set-faces
  'user
