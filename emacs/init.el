@@ -12,14 +12,6 @@
 
 ;; Make things a little bit faster. For context: https://www.emacswiki.org/emacs/DynamicBindingVsLexicalBinding
 
-(setenv
- "LIBRARY_PATH"
- (string-join
-  '("/opt/local/lib/gcc14"
-    "/opt/local/lib/gcc14/gcc/aarch64-apple-darwin24/14.2.0"
-    "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib")
-  ":"))
-
 ;;; Packages and initialization
 
 ;; All the packages I used are from MELPA (https://melpa.org). However, I install them automatically
@@ -775,37 +767,25 @@ Uses project root if in a project, otherwise current directory."
 
 ;; TODO: automating the entire process
 
-(defun td/treesit-mark-node (node)
-  (goto-char (treesit-node-start node))
-  (call-interactively #'set-mark-command)
-  (goto-char (treesit-node-end node)))
+(use-package expreg
+  :ensure nil
+  :custom
+  (expreg-restore-point-on-quit t)
+  :bind (("M--" . expreg-expand)
+         ("M-_" . expreg-contract)))
 
-(defun td/tressit-expand-region ()
-  "Poor man's expand-region, worked surprisingly well for me"
-  (interactive)
-  (if (treesit-language-at (point))
-      (let ((start (if (region-active-p) (region-beginning) 1))
-            (end (if (region-active-p) (region-end) 1))
-            (node (if (region-active-p)
-                      (treesit-node-parent
-                       (treesit-node-on (region-beginning) (region-end)))
-                    (treesit-node-at (point)))))
-        (if (or (/= start (treesit-node-start node))
-                (/= end (treesit-node-end node)))
-            (td/treesit-mark-node node)
-          (forward-char)
-          (td/tressit-expand-region)))
-    (mark-sexp 1 t)))
+(require 'treesit)
 
-(bind-key "M--" #'td/tressit-expand-region)
+(add-to-list 'treesit-language-source-alist
+             '(markdown . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+                           "v0.5.3"
+                           "tree-sitter-markdown/src")))
+(add-to-list 'treesit-language-source-alist
+             '(markdown-inline . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+                                  "v0.5.3"
+                                  "tree-sitter-markdown-inline/src")))
 
 (use-package treesit
-  :functions (treesit-node-on
-              treesit-node-at
-              treesit-node-parent
-              treesit-node-start
-              treesit-node-end
-              treesit-node-prev-sibling)
   :config
   (add-to-list 'treesit-language-source-alist
                '(ocaml . ("https://github.com/tree-sitter/tree-sitter-ocaml"
@@ -886,6 +866,8 @@ Uses project root if in a project, otherwise current directory."
    (typescript-mode . typescript-ts-mode)
    (json-mode . json-ts-mode)
    (css-mode . css-ts-mode)
+   (markdown-mode . markdown-ts-mode)
+   (gfm-mode . markdown-ts-mode)
      ;; (python-mode . python-ts-mode)
    ))
 
@@ -1440,19 +1422,6 @@ Uses project root if in a project, otherwise current directory."
   (dired-listing-switches "-lah")
   (dired-auto-revert-buffer t)
   (dired-kill-when-opening-new-dired-buffer t))
-
-(defun td/refresh-front-most-tab ()
-  (interactive)
-  (shell-command "osascript -e 'tell application \"Firefox\" to reload active tab of window 1'"))
-
-(bind-key* "C-M-r" #'td/refresh-front-most-tab)
-
-(use-package eat
-  :ensure t)
-
-(setq use-default-font-for-symbols nil)
-(set-fontset-font t 'symbol "Menlo" nil 'prepend)
-(set-fontset-font t 'emoji "Menlo" nil 'prepend)
 
 ;;; Ideas
 
