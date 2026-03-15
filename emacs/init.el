@@ -767,24 +767,6 @@ Uses project root if in a project, otherwise current directory."
 
 ;; TODO: automating the entire process
 
-(use-package expreg
-  :ensure nil
-  :custom
-  (expreg-restore-point-on-quit t)
-  :bind (("M--" . expreg-expand)
-         ("M-_" . expreg-contract)))
-
-(require 'treesit)
-
-(add-to-list 'treesit-language-source-alist
-             '(markdown . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-                           "v0.5.3"
-                           "tree-sitter-markdown/src")))
-(add-to-list 'treesit-language-source-alist
-             '(markdown-inline . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-                                  "v0.5.3"
-                                  "tree-sitter-markdown-inline/src")))
-
 (use-package treesit
   :config
   (add-to-list 'treesit-language-source-alist
@@ -797,62 +779,26 @@ Uses project root if in a project, otherwise current directory."
                                     "grammars/interface/src")))
   (add-to-list 'treesit-language-source-alist '(kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git")))
   (add-to-list 'treesit-language-source-alist '(protobuf . ("https://github.com/casouri/tree-sitter-module.git")))
-  (add-to-list 'treesit-language-source-alist '(swift . ("https://github.com/alex-pinkus/tree-sitter-swift.git"))))
+  (add-to-list 'treesit-language-source-alist '(swift . ("https://github.com/alex-pinkus/tree-sitter-swift.git")))
+  (add-to-list 'treesit-language-source-alist
+               '(markdown . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+                             "v0.5.3"
+                             "tree-sitter-markdown/src")))
+  (add-to-list 'treesit-language-source-alist
+               '(markdown-inline . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+                                    "v0.5.3"
+                                    "tree-sitter-markdown-inline/src"))))
 
-(defun td/treesit-indent-debug (n p _bol)
-  (message
-   "treesit-indent-debug: %s %s %s"
-   n p (treesit-node-prev-sibling n)))
-
-(defun td/treesit-tag-start (_n p _bol)
-  (save-excursion
-    (goto-char (treesit-node-start p))
-    (search-forward "<")
-    (- (point) 1)))
-
-(defun td/treesit-tag-sibling (n p bol)
-  (when treesit--indent-verbose
-    (td/treesit-indent-debug n p bol))
-  (let* ((tag (treesit-parent-until
-               p
-               (rx (or "jsx_closing_element" "jsx_element" "jsx_self_closing_element"))))
-         (prev (treesit-node-prev-sibling tag)))
-    (when treesit--indent-verbose
-      (message "tag: %s, prev: %s" tag prev))
-    (cond
-     ((treesit-node-match-p prev (rx "jsx_opening_element"))
-        ;; This is the first child, need to check the parent tag
-      (let ((parent-tag (treesit-parent-until tag "jsx_element")))
-        (+ (td/treesit-tag-start tag parent-tag 0) typescript-ts-mode-indent-offset)))
-     ((treesit-node-match-p tag (rx "jsx_closing_element"))
-      (let ((parent-tag (treesit-parent-until tag "jsx_element")))
-        (td/treesit-tag-start tag parent-tag 0)))
-     (t (save-excursion
-          (goto-char (treesit-node-start prev))
-          (while (and (<= (point) (point-max))
-                      (looking-at (rx (| whitespace control)) t))
-            (forward-char))
-          (point))))))
-
-(defvar td/tsx-additional-indent-rules
-  '(((match nil "<") td/treesit-tag-sibling 0)
-    ((parent-is "jsx_text") parent-bol 2)
-    ((node-is "jsx_closing_element") td/treesit-tag-start 0)
-    ((match "/" "jsx_self_closing_element") td/treesit-tag-start 0)
-    ((match ">" "jsx_opening_element") td/treesit-tag-start 0)
-    ((parent-is "jsx_opening_element") td/treesit-tag-start 2)
-    ((parent-is "jsx_self_closing_element") td/treesit-tag-start 2)))
-
-(defun td/fix-tsx-indentation ()
-  (setq-local
-   treesit-simple-indent-rules
-   (list (cons 'tsx (append td/tsx-additional-indent-rules (cdar (typescript-ts-mode--indent-rules 'tsx)))))))
+(use-package expreg
+  :ensure nil
+  :custom
+  (expreg-restore-point-on-quit t)
+  :bind (("M--" . expreg-expand)
+         ("M-_" . expreg-contract)))
 
 (use-package typescript-ts-mode
   :mode (("\\.ts\\'" . typescript-ts-mode)
-         ("\\.tsx\\'" . tsx-ts-mode))
-    ;:hook ((tsx-ts-mode . td/fix-tsx-indentation))
-  )
+         ("\\.tsx\\'" . tsx-ts-mode)))
 
 (use-package go-ts-mode
   :mode (("go.mod$" . go-mod-ts-mode)
@@ -888,10 +834,11 @@ Uses project root if in a project, otherwise current directory."
 
 (bind-key "C-x C-l" #'td/expand-lines)
 
-;; TODO: continue using my GLM subscription for now. Switch back to Gemini when the subscription is over <2026-04-02 Thu>
+;; Alibaba Coding Plan via DashScope's OpenAI-compatible endpoint.
 
-(use-package gptel-zai
-  :functions (gptel-zai-setup))
+(use-package gptel-alibaba-coding-plan
+  :load-path "vendor"
+  :functions (gptel-alibaba-coding-plan-setup))
 
 (use-package gptel
   :ensure t
@@ -899,11 +846,11 @@ Uses project root if in a project, otherwise current directory."
   :hook (gptel-mode . visual-line-mode)
   :config
   (require 'gptel-org)
-  (require 'gptel-zai)
-  (gptel-zai-setup)
+  (require 'gptel-alibaba-coding-plan)
+  (gptel-alibaba-coding-plan-setup)
   (setopt
   gptel-default-mode 'org-mode
-  gptel-model 'glm-4.7))
+  gptel-model 'qwen3-coder-next))
 
 (use-package acp
   :ensure t)
