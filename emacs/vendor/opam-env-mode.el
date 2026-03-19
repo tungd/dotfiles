@@ -46,6 +46,9 @@ lookups, so repeated hook events do not re-run `opam env' until context changes.
 (defvar opam-env--last-status nil
   "Last status message emitted by opam-env-mode.")
 
+(defvar opam-env--session-switch-overrides (make-hash-table :test #'equal)
+  "Session-only OPAM switch overrides keyed by project root.")
+
 (defconst opam-env--root-markers '("dune-project" "_opam" ".opam-switch")
   "Files/directories used to identify likely OCaml project roots.")
 
@@ -118,9 +121,13 @@ Returns nil when project.el does not identify a project."
 (defun opam-env--resolve-switch (root)
   "Resolve OPAM switch for ROOT using configured precedence."
   (let ((override (and (stringp opam-env-switch)
-                       (string-trim opam-env-switch))))
+                       (string-trim opam-env-switch)))
+        (session-override (gethash root opam-env--session-switch-overrides)))
     (cond
      ((and override (not (string-empty-p override))) override)
+     ((and (stringp session-override)
+           (not (string-empty-p session-override)))
+      session-override)
      ((opam-env--local-switch-p root) root)
      (t opam-env-default-switch))))
 
@@ -154,6 +161,33 @@ Returns plist:
               (error
                (list :error (format "failed to parse opam env output: %s"
                                     (error-message-string err)))))))))))
+
+(defun opam-env--current-switch (root)
+  "Return the active OPAM switch for ROOT, or nil when unavailable."
+  (let ((opam (executable-find "opam")))
+    (when opam
+      (with-temp-buffer
+        (let ((default-directory root)
+              (exit-code (process-file opam nil (current-buffer) nil
+                                       "switch" "show")))
+          (when (eq exit-code 0)
+            (let ((switch (string-trim (buffer-string))))
+              (unless (string-empty-p switch)
+                switch))))))))
+
+(defun opam-env--list-switches (root)
+  "Return installed OPAM switches for ROOT."
+  (let ((opam (executable-find "opam")))
+    (when opam
+      (with-temp-buffer
+        (let ((default-directory root)
+              (exit-code (process-file opam nil (current-buffer) nil
+                                       "switch" "list" "--short")))
+          (when (eq exit-code 0)
+            (seq-filter
+             (lambda (switch) (not (string-empty-p switch)))
+             (mapcar #'string-trim
+                     (split-string (buffer-string) "\n" t)))))))))
 
 (defun opam-env--apply-env (env)
   "Apply OPAM ENV list from `opam env --sexp`."
@@ -193,25 +227,67 @@ When FORCE is non-nil, bypass the cache key check."
            root))))
 
      (t
-      (let* ((switch (opam-env--resolve-switch root))
+     (let* ((switch (opam-env--resolve-switch root))
              (key (list :applied root switch)))
         (unless (and (not force) (equal key opam-env--last-applied))
-          (pcase (opam-env--read-opam-env root switch)
-            (`(:ok ,env)
-             (opam-env--apply-env env)
-             (setq opam-env--last-applied key)
-             (opam-env--message-once
-              "[opam-env] Activated switch %s for %s"
-              switch root))
-            (`(:error ,msg)
-             (setq opam-env--last-applied key)
-             (opam-env--message-once "[opam-env] %s" msg)))))))))
+          (let* ((result (opam-env--read-opam-env root switch))
+                 (fallback-switch
+                  (and (string= switch opam-env-default-switch)
+                       (string= switch "default")
+                       (opam-env--current-switch root))))
+            (when (and fallback-switch
+                       (not (equal fallback-switch switch))
+                       (equal (plist-get result :error)
+                              (format "opam env failed for switch %s (exit %s)"
+                                      switch 2)))
+              (setq switch fallback-switch
+                    key (list :applied root switch)
+                    result (opam-env--read-opam-env root switch)))
+            (pcase result
+              (`(:ok ,env)
+               (opam-env--apply-env env)
+               (setq opam-env--last-applied key)
+               (opam-env--message-once
+                "[opam-env] Activated switch %s for %s"
+                switch root))
+              (`(:error ,msg)
+               (setq opam-env--last-applied key)
+               (opam-env--message-once "[opam-env] %s" msg))))))))))
 
 ;;;###autoload
 (defun opam-env-refresh ()
   "Force refresh OPAM environment for current buffer context."
   (interactive)
   (opam-env--maybe-activate t))
+
+;;;###autoload
+(defun opam-env-select-switch (switch)
+  "Interactively select SWITCH for the current project and apply its OPAM env."
+  (interactive
+   (let* ((root (or (opam-env--project-root)
+                    (user-error "No OCaml project root found")))
+          (switches (or (opam-env--list-switches root)
+                        (user-error "Unable to list installed OPAM switches")))
+          (current (or (gethash root opam-env--session-switch-overrides)
+                       (opam-env--resolve-switch root))))
+     (list (completing-read
+            (format "OPAM switch for %s: " root)
+            switches nil t nil nil current))))
+  (let ((root (or (opam-env--project-root)
+                  (user-error "No OCaml project root found"))))
+    (puthash root switch opam-env--session-switch-overrides)
+    (setq opam-env--last-applied nil)
+    (opam-env--maybe-activate t)))
+
+;;;###autoload
+(defun opam-env-clear-switch-override ()
+  "Clear the session switch override for the current project and refresh."
+  (interactive)
+  (let ((root (or (opam-env--project-root)
+                  (user-error "No OCaml project root found"))))
+    (remhash root opam-env--session-switch-overrides)
+    (setq opam-env--last-applied nil)
+    (opam-env--maybe-activate t)))
 
 ;;;###autoload
 (define-minor-mode opam-env-mode
