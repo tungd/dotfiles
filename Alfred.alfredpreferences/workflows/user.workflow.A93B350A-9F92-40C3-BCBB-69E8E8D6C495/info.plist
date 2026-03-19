@@ -1,0 +1,2678 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.github.vanstrouble.alfred.safaricontrol</string>
+	<key>connections</key>
+	<dict>
+		<key>01001352-2F59-4048-BD76-8F04EA0DB93C</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>B2D0D742-988B-49EC-847C-F417B43F2D17</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>1D4C6BB9-BA76-41B7-992D-7F19CABEE18A</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>602EAC80-191A-467F-B80C-81B446282D93</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>20CD379D-47F1-4088-9B9D-C6A6CBE06494</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>D5ED6DD9-7505-49B0-A894-0EA3864C44EF</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>sourceoutputuid</key>
+				<string>42BC34F7-2E3B-443E-8129-476F3496A37D</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>D5ED6DD9-7505-49B0-A894-0EA3864C44EF</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>95B61381-F13D-41D6-BF13-BED5ECA31336</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>2673B9ED-527A-4236-8E32-4D7CE0254EC7</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>9DCF1028-BBF5-4835-B3B7-ADD54BBA2E0B</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>4049C14F-9A18-4043-B030-55B08A84C530</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>6514914D-1C3C-49EE-890C-4D2A88431164</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>5D2F3F28-6933-4F61-A54B-C5BE3DE8BDA2</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>D8C1A439-9D17-44D3-8373-B18CC74D034E</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>602EAC80-191A-467F-B80C-81B446282D93</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>A93307AE-4989-4020-B8DA-23BA4DD2D694</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>644DF6CB-6567-4669-A18E-E6F20522F971</key>
+		<array/>
+		<key>6514914D-1C3C-49EE-890C-4D2A88431164</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>EB0955E2-2C04-4A3F-AF6E-46B130A756A7</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>68D995D6-24B3-4050-8B5C-F35356084F1A</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>6514914D-1C3C-49EE-890C-4D2A88431164</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>7300F7C6-7BF0-40EF-8D51-C6BA358A3EF1</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>915A7477-2B5D-4BA0-89B8-CC152D1E4B34</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>73D53F1A-48DF-4FF0-81AF-123CC3BC43B2</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>B089445C-98C4-4D45-83F0-41890DA17FE1</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>7CFCCF42-AF12-4E20-B2DB-C248D64704D6</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>AA836E7E-FA59-409B-86BB-AAF54674B9FA</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>7D36A7E8-4ECD-429C-9B27-54C8B825C00F</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>B5EC0573-F436-455F-A31B-1B337ADD77B1</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>816E61B1-CB0C-4646-B7F2-521E406A177F</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>7D36A7E8-4ECD-429C-9B27-54C8B825C00F</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>887F9BC0-EF38-4D5B-9F39-E1EAD51CA6ED</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>D5ED6DD9-7505-49B0-A894-0EA3864C44EF</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>8D4CCF05-9C1B-4D6A-81D5-70F1D5FF5715</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>9DCF1028-BBF5-4835-B3B7-ADD54BBA2E0B</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>915A7477-2B5D-4BA0-89B8-CC152D1E4B34</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>6514914D-1C3C-49EE-890C-4D2A88431164</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>D5ED6DD9-7505-49B0-A894-0EA3864C44EF</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string>⌘ New private Safari window</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>B5EC0573-F436-455F-A31B-1B337ADD77B1</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>95B61381-F13D-41D6-BF13-BED5ECA31336</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>644DF6CB-6567-4669-A18E-E6F20522F971</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>9DCF1028-BBF5-4835-B3B7-ADD54BBA2E0B</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>FD7BA2BA-60BF-4242-87F4-05EDBCCE3A08</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>A5210FAD-2267-4FFA-AE84-08A5AFD05E1B</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>D5ED6DD9-7505-49B0-A894-0EA3864C44EF</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>A93307AE-4989-4020-B8DA-23BA4DD2D694</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>57ABCA48-275B-4846-B5D2-0AB21F883A66</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>AA836E7E-FA59-409B-86BB-AAF54674B9FA</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>73D53F1A-48DF-4FF0-81AF-123CC3BC43B2</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>B089445C-98C4-4D45-83F0-41890DA17FE1</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>2673B9ED-527A-4236-8E32-4D7CE0254EC7</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>B10ECF9C-AD62-420D-A216-639C8D77028C</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>A93307AE-4989-4020-B8DA-23BA4DD2D694</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>B089445C-98C4-4D45-83F0-41890DA17FE1</string>
+				<key>modifiers</key>
+				<integer>1179648</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>9DCF1028-BBF5-4835-B3B7-ADD54BBA2E0B</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>1D4C6BB9-BA76-41B7-992D-7F19CABEE18A</string>
+				<key>modifiers</key>
+				<integer>524288</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>B2D0D742-988B-49EC-847C-F417B43F2D17</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>B089445C-98C4-4D45-83F0-41890DA17FE1</string>
+				<key>modifiers</key>
+				<integer>1179648</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>EBDF6B83-46B7-46DE-B0B7-FA02254F981C</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>9DCF1028-BBF5-4835-B3B7-ADD54BBA2E0B</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>1D4C6BB9-BA76-41B7-992D-7F19CABEE18A</string>
+				<key>modifiers</key>
+				<integer>524288</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>95B61381-F13D-41D6-BF13-BED5ECA31336</string>
+				<key>modifiers</key>
+				<integer>262144</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>B5EC0573-F436-455F-A31B-1B337ADD77B1</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>20CD379D-47F1-4088-9B9D-C6A6CBE06494</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>B864E5D5-DC5B-4DFD-BE27-FA2794119EBF</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>6514914D-1C3C-49EE-890C-4D2A88431164</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>C0594021-B985-4211-BB72-0BC83EC76733</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>B5EC0573-F436-455F-A31B-1B337ADD77B1</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>7D36A7E8-4ECD-429C-9B27-54C8B825C00F</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string>⌘ Close current tab</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>C572515A-54FA-4EFB-B461-DF5E2B3C638D</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>6514914D-1C3C-49EE-890C-4D2A88431164</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>D5ED6DD9-7505-49B0-A894-0EA3864C44EF</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string>⌘ New private Safari window in current space {query}</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>D5ED6DD9-7505-49B0-A894-0EA3864C44EF</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>EE8DC6F5-2650-44C8-B60A-477A3A08AEB8</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>DDD5FD69-5FB3-4DDA-84C6-23519C113218</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>B10ECF9C-AD62-420D-A216-639C8D77028C</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>E3791CED-D768-402A-A13A-C41FA9E013F6</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>8D4CCF05-9C1B-4D6A-81D5-70F1D5FF5715</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>AA836E7E-FA59-409B-86BB-AAF54674B9FA</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string>⌘ Copy the URL using Markdown format</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>EB0955E2-2C04-4A3F-AF6E-46B130A756A7</key>
+		<array/>
+		<key>EB381D0C-914A-4944-ACEB-60B3DBA95B65</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>8D4CCF05-9C1B-4D6A-81D5-70F1D5FF5715</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>EBDF6B83-46B7-46DE-B0B7-FA02254F981C</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>B864E5D5-DC5B-4DFD-BE27-FA2794119EBF</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>sourceoutputuid</key>
+				<string>414BA58E-11E0-4471-80E3-4545FC83C593</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>FD06A976-DBC4-4F13-AA73-0DC8A7A08503</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>FD7BA2BA-60BF-4242-87F4-05EDBCCE3A08</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>5D2F3F28-6933-4F61-A54B-C5BE3DE8BDA2</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>vanstrouble</string>
+	<key>description</key>
+	<string>Open windows, switch tabs, browse history, and manage Safari profiles.</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Safari Control</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>keyword</key>
+				<string>{var:sw_keyword}</string>
+				<key>subtext</key>
+				<string>Open Safari window in current space {query}</string>
+				<key>text</key>
+				<string>New Safari Window</string>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.keyword</string>
+			<key>uid</key>
+			<string>C572515A-54FA-4EFB-B461-DF5E2B3C638D</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>action</key>
+				<integer>0</integer>
+				<key>argument</key>
+				<integer>0</integer>
+				<key>focusedappvariable</key>
+				<false/>
+				<key>focusedappvariablename</key>
+				<string></string>
+				<key>leftcursor</key>
+				<false/>
+				<key>modsmode</key>
+				<integer>0</integer>
+				<key>relatedAppsMode</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.hotkey</string>
+			<key>uid</key>
+			<string>68D995D6-24B3-4050-8B5C-F35356084F1A</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>acceptsfiles</key>
+				<false/>
+				<key>acceptsmulti</key>
+				<integer>1</integer>
+				<key>acceptstext</key>
+				<false/>
+				<key>acceptsurls</key>
+				<true/>
+				<key>name</key>
+				<string>Open in Safari window</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.universalaction</string>
+			<key>uid</key>
+			<string>4049C14F-9A18-4043-B030-55B08A84C530</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<true/>
+				<key>escaping</key>
+				<integer>68</integer>
+				<key>script</key>
+				<string>#!/usr/bin/env osascript -l JavaScript
+
+// JXA script to open new Safari windows with profile and URL support.
+//
+// Usage:
+// ./new_window.js [x&lt;count&gt;] || [p&lt;profile&gt;] || [url]
+//
+// Examples:
+// ./new_window.js                  -&gt; Opens 1 new window.
+// ./new_window.js example.com      -&gt; Opens 1 new window with URL.
+// ./new_window.js x3               -&gt; Opens 3 new windows.
+// ./new_window.js p2               -&gt; Opens 1 new window in profile 2.
+
+/**
+ * Parses script arguments to determine window count, profile, or URL.
+ * @param {string[]} argv - The script arguments.
+ * @returns {{windowCount: number, profile: string|null, url: string|null}}
+ */
+function parseArgs(argv) {
+	const config = {
+		windowCount: 1,
+		profile: null,
+		url: null,
+	};
+
+	if (!argv || argv.length === 0) {
+		return config;
+	}
+
+	const firstArg = argv[0];
+
+	if (/^x[0-9]+$/.test(firstArg)) {
+		// Parse window count (e.g., "x3"), capped at 10.
+		const count = parseInt(firstArg.substring(1), 10);
+		config.windowCount = Math.max(1, Math.min(count, 10));
+	} else if (/^p[1-5]$/.test(firstArg)) {
+		// Parse profile (e.g., "p2")
+		config.profile = firstArg.substring(1);
+	} else {
+		// The rest is the URL
+		const rawUrl = argv.join(" ");
+		// Basic validation and formatting
+		if (!rawUrl.includes(" ") &amp;&amp; rawUrl.includes(".")) {
+			if (!/^(https?:\/\/)/i.test(rawUrl)) {
+				config.url = "http://" + rawUrl;
+			} else {
+				config.url = rawUrl;
+			}
+		}
+	}
+
+	return config;
+}
+
+function run(argv) {
+	"use strict";
+
+	// Initialize applications
+	const Safari = Application("Safari");
+	const SystemEvents = Application("System Events");
+	Safari.includeStandardAdditions = true;
+
+	// --- Argument Parsing ---
+	const { windowCount, profile, url } = parseArgs(argv);
+
+	// --- Safari Automation ---
+
+	const safariWasRunning = Safari.running();
+
+	// Ensure Safari is running and activate it
+	if (!safariWasRunning) {
+		Safari.activate(); // This will open one window
+		delay(0.5);
+	} else {
+		Safari.activate();
+	}
+
+	const openInProfile = (p) =&gt; {
+		// Use keyboard shortcut to switch to the selected profile
+		// Option + Shift + Command + n
+		SystemEvents.keystroke(p, {
+			using: ["option down", "shift down", "command down"],
+		});
+		delay(0.5); // Wait for the new window to appear
+	};
+
+	const openStandardWindow = (u) =&gt; {
+		const doc = Safari.Document().make();
+		if (u) {
+			doc.url = u;
+		}
+	};
+
+	// --- Main Logic ---
+
+	let windowsToCreate = windowCount;
+
+	// If Safari wasn't running, it was just launched, creating one window.
+	if (!safariWasRunning) {
+		if (profile) {
+			// The auto-opened window is in the default profile. Close it.
+			try {
+				Safari.windows[0].close();
+				delay(0.2);
+			} catch (e) {
+				/* Ignore */
+			}
+		} else {
+			// One window is already open. Set its URL if provided.
+			if (url) {
+				try {
+					Safari.windows[0].currentTab.url = url;
+				} catch (e) {
+					/* Ignore */
+				}
+			}
+			windowsToCreate--; // Account for the already-opened window.
+		}
+	}
+
+	// Create the required number of windows.
+	for (let i = 0; i &lt; windowsToCreate; i++) {
+		if (profile) {
+			openInProfile(profile);
+		} else {
+			openStandardWindow(url);
+		}
+		// Small delay between multiple windows
+		if (windowsToCreate &gt; 1 &amp;&amp; i &lt; windowsToCreate - 1) {
+			delay(0.2);
+		}
+	}
+}</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>7</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>EB0955E2-2C04-4A3F-AF6E-46B130A756A7</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict/>
+			<key>type</key>
+			<string>alfred.workflow.utility.junction</string>
+			<key>uid</key>
+			<string>6514914D-1C3C-49EE-890C-4D2A88431164</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>action</key>
+				<integer>0</integer>
+				<key>argument</key>
+				<integer>0</integer>
+				<key>focusedappvariable</key>
+				<false/>
+				<key>focusedappvariablename</key>
+				<string></string>
+				<key>leftcursor</key>
+				<false/>
+				<key>modsmode</key>
+				<integer>0</integer>
+				<key>relatedAppsMode</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.hotkey</string>
+			<key>uid</key>
+			<string>A5210FAD-2267-4FFA-AE84-08A5AFD05E1B</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<true/>
+				<key>escaping</key>
+				<integer>68</integer>
+				<key>script</key>
+				<string>#!/usr/bin/env osascript -l JavaScript
+
+/**
+ * Opens new safari private windows with optional URL.
+ *
+ * Usage:
+ * ./new_private_window.js [url]
+ *
+ * Examples:
+ * ./new_private_window.js          -&gt; Opens 1 new private window.
+ * ./new_private_window.js google.com -&gt; Opens 1 new private window with URL.
+ */
+
+/**
+ * Parses and validates a URL from script arguments.
+ * @param {string[]} argv - The script arguments.
+ * @returns {string|null} The formatted URL or null if invalid.
+ */
+function parseUrl(argv) {
+	if (!argv || argv.length === 0) {
+		return null;
+	}
+
+	const rawUrl = argv.join(" ");
+
+	// Basic validation: reject multi-word inputs, require a dot for it to be a URL.
+	if (rawUrl.includes(" ") || !rawUrl.includes(".")) {
+		return null;
+	}
+
+	// Add http protocol if it's missing.
+	if (!/^(https?:\/\/)/i.test(rawUrl)) {
+		return "http://" + rawUrl;
+	}
+
+	return rawUrl;
+}
+
+function run(argv) {
+	"use strict";
+
+	const url = parseUrl(argv);
+
+	const safari = Application("Safari");
+	safari.includeStandardAdditions = true;
+
+	const safariWasRunning = safari.running();
+	safari.activate();
+
+	// If Safari wasn't running, it opens a new window by default. Close it.
+	if (!safariWasRunning &amp;&amp; safari.windows.length &gt; 0) {
+		// A small delay might be needed for the window to be ready to close.
+		delay(0.1);
+		safari.windows[0].close();
+	}
+
+	const sysEvents = Application("System Events");
+	sysEvents.keystroke("n", { using: ["command down", "shift down"] });
+
+	if (url) {
+		delay(0.5);
+		safari.windows[0].currentTab.url = url;
+	}
+}</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>7</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>EE8DC6F5-2650-44C8-B60A-477A3A08AEB8</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>acceptsfiles</key>
+				<false/>
+				<key>acceptsmulti</key>
+				<integer>1</integer>
+				<key>acceptstext</key>
+				<false/>
+				<key>acceptsurls</key>
+				<true/>
+				<key>name</key>
+				<string>Open in private Safari window</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.universalaction</string>
+			<key>uid</key>
+			<string>887F9BC0-EF38-4D5B-9F39-E1EAD51CA6ED</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict/>
+			<key>type</key>
+			<string>alfred.workflow.utility.junction</string>
+			<key>uid</key>
+			<string>D5ED6DD9-7505-49B0-A894-0EA3864C44EF</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<true/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>3</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>{var:shi_keyword}</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Loading tabs…</string>
+				<key>script</key>
+				<string>#!/bin/zsh
+
+/usr/bin/sqlite3 \
+    "${HOME}/Library/Safari/History.db" \
+    ".parameter set :max_items '${max_items}'" \
+    "SELECT JSON_OBJECT(
+        'cache', JSON_OBJECT('seconds', 5, 'loosereload', true),
+        'items', JSON_GROUP_ARRAY(
+            JSON_OBJECT(
+                'title', IIF(title IS NULL OR title IS '', url, title),
+                'subtitle', url,
+                'autocomplete', IIF(title IS NULL OR title IS '', url, title),
+                'match', title || ' ' || url,
+                'arg', url,
+                'quicklookurl', url,
+                'mods', JSON_OBJECT(
+                    'cmd', JSON_OBJECT(
+                        'subtitle', '⌘ Copy URL to clipboard'
+                    ),
+                    'alt', JSON_OBJECT(
+                        'subtitle', '⌥ Edit URL'
+                    ),
+                    'cmd+shift', JSON_OBJECT(
+                        'subtitle', '⇧⌘ Copy markdown URL to clipboard',
+                        'arg', JSON_OBJECT('url', url, 'title', IIF(title IS NULL OR title IS '', url, title))
+                    )
+                )
+            )
+        )
+    ) AS JSON_RESULT
+    FROM (
+        SELECT DISTINCT url, title
+        FROM history_items
+        INNER JOIN history_visits ON history_visits.history_item = history_items.id
+        ORDER BY visit_time DESC
+        LIMIT (:max_items * 100)
+    )"
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>List the Safary history</string>
+				<key>title</key>
+				<string>Safari History</string>
+				<key>type</key>
+				<integer>5</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>B10ECF9C-AD62-420D-A216-639C8D77028C</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>action</key>
+				<integer>0</integer>
+				<key>argument</key>
+				<integer>0</integer>
+				<key>focusedappvariable</key>
+				<false/>
+				<key>focusedappvariablename</key>
+				<string></string>
+				<key>leftcursor</key>
+				<false/>
+				<key>modsmode</key>
+				<integer>0</integer>
+				<key>relatedAppsMode</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.hotkey</string>
+			<key>uid</key>
+			<string>DDD5FD69-5FB3-4DDA-84C6-23519C113218</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>browser</key>
+				<string></string>
+				<key>skipqueryencode</key>
+				<false/>
+				<key>skipvarencode</key>
+				<false/>
+				<key>spaces</key>
+				<string></string>
+				<key>url</key>
+				<string>{query}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.openurl</string>
+			<key>uid</key>
+			<string>57ABCA48-275B-4846-B5D2-0AB21F883A66</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict/>
+			<key>type</key>
+			<string>alfred.workflow.utility.junction</string>
+			<key>uid</key>
+			<string>A93307AE-4989-4020-B8DA-23BA4DD2D694</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>2</integer>
+				<key>fixedorder</key>
+				<false/>
+				<key>items</key>
+				<string>[{"title":"{var:profile1}","arg":"p1","subtitle":"Open Safari window in {var:profile1}"},{"title":"{var:profile2}","arg":"p2","subtitle":"Open Safari window in {var:profile2}"},{"title":"{var:profile3}","arg":"p3","subtitle":"Open Safari window in {var:profile3}"},{"title":"{var:profile4}","arg":"p4","subtitle":"Open Safari window in {var:profile5}"},{"title":"{var:profile5}","arg":"p5","subtitle":"Open Safari window in {var:profile5}"}]</string>
+				<key>keyword</key>
+				<string>{var:swp_keyword}</string>
+				<key>matchmode</key>
+				<integer>0</integer>
+				<key>runningsubtext</key>
+				<string></string>
+				<key>subtext</key>
+				<string>List the profile to open new window</string>
+				<key>title</key>
+				<string>Open Safari windows using profiles</string>
+				<key>withspace</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.listfilter</string>
+			<key>uid</key>
+			<string>915A7477-2B5D-4BA0-89B8-CC152D1E4B34</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>action</key>
+				<integer>0</integer>
+				<key>argument</key>
+				<integer>0</integer>
+				<key>focusedappvariable</key>
+				<false/>
+				<key>focusedappvariablename</key>
+				<string></string>
+				<key>leftcursor</key>
+				<false/>
+				<key>modsmode</key>
+				<integer>0</integer>
+				<key>relatedAppsMode</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.hotkey</string>
+			<key>uid</key>
+			<string>7300F7C6-7BF0-40EF-8D51-C6BA358A3EF1</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>tasksettings</key>
+				<dict/>
+				<key>taskuid</key>
+				<string>com.alfredapp.automation.core/safari/safari.tabs.current</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.automation.task</string>
+			<key>uid</key>
+			<string>B5EC0573-F436-455F-A31B-1B337ADD77B1</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>2</integer>
+				<key>keyword</key>
+				<string>{var:stp_keyword}</string>
+				<key>subtext</key>
+				<string>Open current tab in private window</string>
+				<key>text</key>
+				<string>Tab to private window</string>
+				<key>withspace</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.keyword</string>
+			<key>uid</key>
+			<string>C0594021-B985-4211-BB72-0BC83EC76733</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>conditions</key>
+				<array>
+					<dict>
+						<key>inputstring</key>
+						<string>{var:close_tab}</string>
+						<key>matchcasesensitive</key>
+						<false/>
+						<key>matchmode</key>
+						<integer>6</integer>
+						<key>matchstring</key>
+						<string></string>
+						<key>outputlabel</key>
+						<string>Create priv tab</string>
+						<key>uid</key>
+						<string>42BC34F7-2E3B-443E-8129-476F3496A37D</string>
+					</dict>
+				</array>
+				<key>elselabel</key>
+				<string>Also close tabs</string>
+				<key>hideelse</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.conditional</string>
+			<key>uid</key>
+			<string>20CD379D-47F1-4088-9B9D-C6A6CBE06494</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argument</key>
+				<string></string>
+				<key>passthroughargument</key>
+				<false/>
+				<key>variables</key>
+				<dict/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.argument</string>
+			<key>uid</key>
+			<string>B864E5D5-DC5B-4DFD-BE27-FA2794119EBF</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>action</key>
+				<integer>0</integer>
+				<key>argument</key>
+				<integer>0</integer>
+				<key>focusedappvariable</key>
+				<false/>
+				<key>focusedappvariablename</key>
+				<string></string>
+				<key>leftcursor</key>
+				<false/>
+				<key>modsmode</key>
+				<integer>0</integer>
+				<key>relatedAppsMode</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.hotkey</string>
+			<key>uid</key>
+			<string>816E61B1-CB0C-4646-B7F2-521E406A177F</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argument</key>
+				<string>{query}</string>
+				<key>passthroughargument</key>
+				<true/>
+				<key>variables</key>
+				<dict>
+					<key>close_tab</key>
+					<string>true</string>
+				</dict>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.argument</string>
+			<key>uid</key>
+			<string>7D36A7E8-4ECD-429C-9B27-54C8B825C00F</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>action</key>
+				<integer>0</integer>
+				<key>argument</key>
+				<integer>0</integer>
+				<key>focusedappvariable</key>
+				<false/>
+				<key>focusedappvariablename</key>
+				<string></string>
+				<key>leftcursor</key>
+				<false/>
+				<key>modsmode</key>
+				<integer>0</integer>
+				<key>relatedAppsMode</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.hotkey</string>
+			<key>uid</key>
+			<string>EB381D0C-914A-4944-ACEB-60B3DBA95B65</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>tasksettings</key>
+				<dict/>
+				<key>taskuid</key>
+				<string>com.alfredapp.automation.core/safari/safari.tabs.current</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.automation.task</string>
+			<key>uid</key>
+			<string>8D4CCF05-9C1B-4D6A-81D5-70F1D5FF5715</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>2</integer>
+				<key>keyword</key>
+				<string>{var:swc_keyword}</string>
+				<key>subtext</key>
+				<string>Copy the URL of the tab in focus to your clipboard</string>
+				<key>text</key>
+				<string>Copy URL tab</string>
+				<key>withspace</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.keyword</string>
+			<key>uid</key>
+			<string>E3791CED-D768-402A-A13A-C41FA9E013F6</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>action</key>
+				<integer>0</integer>
+				<key>argument</key>
+				<integer>0</integer>
+				<key>focusedappvariable</key>
+				<false/>
+				<key>focusedappvariablename</key>
+				<string></string>
+				<key>leftcursor</key>
+				<false/>
+				<key>modsmode</key>
+				<integer>0</integer>
+				<key>relatedAppsMode</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.hotkey</string>
+			<key>uid</key>
+			<string>7CFCCF42-AF12-4E20-B2DB-C248D64704D6</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>68</integer>
+				<key>script</key>
+				<string>function run(argv) {
+    const query = argv[0];
+
+    const createLink = (title, url) =&gt; `[${title}](${url})`;
+    const createListItem = (title, url) =&gt; `- ${createLink(title, url)}`;
+
+    const processItems = (items) =&gt; {
+        if (!Array.isArray(items)) return null;
+        const links = items
+            .filter(item =&gt; item.url &amp;&amp; item.title)
+            .map(item =&gt; createListItem(item.title, item.url));
+        return links.length &gt; 0 ? links.join('\n') : null;
+    };
+
+    try {
+        const data = JSON.parse(query);
+
+        if (data.url &amp;&amp; data.title) {
+            return createLink(data.title, data.url);
+        }
+
+        if (Array.isArray(data)) {
+            return processItems(data) || query;
+        }
+
+        if (data.items &amp;&amp; Array.isArray(data.items)) {
+            return processItems(data.items) || query;
+        }
+
+        return query;
+    } catch {
+        if (query.includes('=') &amp;&amp; query.includes(';')) {
+            const titleMatch = query.match(/title\s*=\s*"([^"]+)"/);
+            const urlMatch = query.match(/url\s*=\s*"([^"]+)"/);
+
+            if (titleMatch &amp;&amp; urlMatch) {
+                const title = titleMatch[1].replace(/\\U([0-9A-Fa-f]{4})/g,
+                    (_, code) =&gt; String.fromCharCode(parseInt(code, 16)));
+                return createLink(title, urlMatch[1]);
+            }
+        }
+
+    }
+}</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>7</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>2673B9ED-527A-4236-8E32-4D7CE0254EC7</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>tasksettings</key>
+				<dict>
+					<key>out_format</key>
+					<string>json</string>
+				</dict>
+				<key>taskuid</key>
+				<string>com.alfredapp.automation.core/safari/safari.tabs.current</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.automation.task</string>
+			<key>uid</key>
+			<string>73D53F1A-48DF-4FF0-81AF-123CC3BC43B2</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict/>
+			<key>type</key>
+			<string>alfred.workflow.utility.junction</string>
+			<key>uid</key>
+			<string>B089445C-98C4-4D45-83F0-41890DA17FE1</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argument</key>
+				<string></string>
+				<key>passthroughargument</key>
+				<false/>
+				<key>variables</key>
+				<dict>
+					<key>md_format</key>
+					<string>1</string>
+				</dict>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.argument</string>
+			<key>uid</key>
+			<string>AA836E7E-FA59-409B-86BB-AAF54674B9FA</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<true/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>3</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>{var:swt_keyword}</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Loading tabs…</string>
+				<key>script</key>
+				<string>/**
+ * Executes a command and returns its standard output.
+ * @param {...string} args The command and its arguments to execute.
+ * @returns {string} The standard output (stdout) of the command as a string.
+ */
+function runCommand(...args) {
+	const task = $.NSTask.alloc.init;
+	const stdout = $.NSPipe.pipe;
+
+	task.executableURL = $.NSURL.fileURLWithPath("/usr/bin/env");
+	task.arguments = args;
+	task.standardOutput = stdout;
+	task.launchAndReturnError(false);
+
+	const dataOut =
+		stdout.fileHandleForReading.readDataToEndOfFileAndReturnError(false);
+	const stringOut = $.NSString.alloc.initWithDataEncoding(
+		dataOut,
+		$.NSUTF8StringEncoding
+	).js;
+
+	return stringOut;
+}
+
+// --- Script Main ---
+
+let output;
+
+try {
+	const browserRaw = runCommand(
+		$(
+			"~/Library/Application Support/Alfred/Automation/Tasks/com.alfredapp.automation.core/safari/.common/tabs"
+		).stringByExpandingTildeInPath.js,
+		"Safari",
+		"1",
+		"0",
+		"json"
+	);
+
+	// The command returns a JSON string where the actual tab data is itself a stringified JSON array.
+	// Therefore, we need to parse it twice.
+	const browserParsed = JSON.parse(
+		JSON.parse(browserRaw)["alfredworkflow"]["arg"]
+	);
+
+	if (!browserParsed || browserParsed.length === 0) {
+		output = {
+			items: [
+				{
+					title: "No tabs found",
+					subtitle: "No open tabs in Safari",
+					valid: false,
+				},
+			],
+		};
+	} else {
+		const uniqueTabs = new Map();
+
+		for (const item of browserParsed) {
+			const url = item.url || "";
+			if (!url) continue;
+
+			if (uniqueTabs.has(url)) {
+				uniqueTabs.get(url).count++;
+			} else {
+				const title = item.title || "Untitled";
+				uniqueTabs.set(url, {
+					item: {
+						title: title,
+						subtitle: url,
+						autocomplete: title,
+						match: `${title} ${url}`,
+						arg: url,
+						valid: true,
+						quicklookurl: url,
+						mods: {
+							cmd: {
+								subtitle: "⌘ Copy URL to clipboard",
+							},
+							alt: {
+								subtitle: "⌥ Edit URL",
+							},
+							ctrl: {
+								subtitle: "⌃ Close all tabs with this URL",
+							},
+							"cmd+shift": {
+								subtitle: "⇧⌘ Copy markdown URL to clipboard",
+								arg: JSON.stringify({ url: url, title: title }),
+							},
+						},
+					},
+					count: 1,
+				});
+			}
+		}
+
+		const sfItems = Array.from(uniqueTabs.values()).map((entry) =&gt; {
+			if (entry.count &gt; 1) {
+				entry.item.title += ` · (${entry.count} tabs)`;
+			}
+			return entry.item;
+		});
+
+		output = {
+			cache: { seconds: 5, loosereload: true },
+			items: sfItems,
+		};
+	}
+} catch (e) {
+	let items;
+	if (e.message.includes("Unexpected EOF")) {
+		items = [
+			{
+				title: "No Safari tabs found",
+				subtitle:
+					"Press ↩ to open a new Safari window or Esc to cancel",
+				valid: true,
+				arg: "1",
+				mods: {
+					cmd: {
+						valid: false,
+						subtitle: "These actions require a selected tab",
+					},
+					ctrl: {
+						valid: false,
+						subtitle: "These actions require a selected tab",
+					},
+				},
+			},
+		];
+	} else {
+		items = [
+			{
+				title: "Error getting Safari tabs",
+				subtitle: e.message,
+				valid: false,
+			},
+		];
+	}
+	output = { items };
+}
+
+JSON.stringify(output);
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>List all the Safari Tabs</string>
+				<key>title</key>
+				<string>Safari Tabs</string>
+				<key>type</key>
+				<integer>7</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>B2D0D742-988B-49EC-847C-F417B43F2D17</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>action</key>
+				<integer>0</integer>
+				<key>argument</key>
+				<integer>0</integer>
+				<key>focusedappvariable</key>
+				<false/>
+				<key>focusedappvariablename</key>
+				<string></string>
+				<key>leftcursor</key>
+				<false/>
+				<key>modsmode</key>
+				<integer>0</integer>
+				<key>relatedAppsMode</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.hotkey</string>
+			<key>uid</key>
+			<string>01001352-2F59-4048-BD76-8F04EA0DB93C</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>#!/usr/bin/env osascript -l JavaScript
+
+/**
+ * Focuses a Safari tab by URL or opens it in a new tab if not found
+ */
+function run(argv) {
+    const targetUrl = argv[0];
+
+    try {
+        const safari = Application("Safari");
+        const windows = safari.windows();
+
+        for (let i = 0; i &lt; windows.length; i++) {
+            const window = windows[i];
+
+            try {
+                const matchingTabs = window.tabs.whose({ url: targetUrl })();
+
+                if (matchingTabs.length &gt; 0) {
+                    window.currentTab = matchingTabs[0];
+                    safari.activate();
+                    window.index = 1;
+                    return "Tab focused successfully";
+                }
+            } catch (e) {
+                continue;
+            }
+        }
+
+        return "URL not found in open tabs";
+    } catch (e) {
+        return `Error: ${e.message}`;
+    }
+}</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>7</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>FD06A976-DBC4-4F13-AA73-0DC8A7A08503</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>conditions</key>
+				<array>
+					<dict>
+						<key>inputstring</key>
+						<string></string>
+						<key>matchcasesensitive</key>
+						<false/>
+						<key>matchmode</key>
+						<integer>5</integer>
+						<key>matchstring</key>
+						<string></string>
+						<key>outputlabel</key>
+						<string>New window</string>
+						<key>uid</key>
+						<string>414BA58E-11E0-4471-80E3-4545FC83C593</string>
+					</dict>
+				</array>
+				<key>elselabel</key>
+				<string>else</string>
+				<key>hideelse</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.conditional</string>
+			<key>uid</key>
+			<string>EBDF6B83-46B7-46DE-B0B7-FA02254F981C</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>lastpathcomponent</key>
+				<false/>
+				<key>onlyshowifquerypopulated</key>
+				<false/>
+				<key>removeextension</key>
+				<false/>
+				<key>text</key>
+				<string>{query}</string>
+				<key>title</key>
+				<string>Copied to clipboard</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.notification</string>
+			<key>uid</key>
+			<string>D8C1A439-9D17-44D3-8373-B18CC74D034E</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>autopaste</key>
+				<false/>
+				<key>clipboardtext</key>
+				<string>{query.trim}</string>
+				<key>ignoredynamicplaceholders</key>
+				<false/>
+				<key>transient</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.clipboard</string>
+			<key>uid</key>
+			<string>FD7BA2BA-60BF-4242-87F4-05EDBCCE3A08</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict/>
+			<key>type</key>
+			<string>alfred.workflow.utility.junction</string>
+			<key>uid</key>
+			<string>9DCF1028-BBF5-4835-B3B7-ADD54BBA2E0B</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict/>
+			<key>type</key>
+			<string>alfred.workflow.utility.junction</string>
+			<key>uid</key>
+			<string>5D2F3F28-6933-4F61-A54B-C5BE3DE8BDA2</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>subtext</key>
+				<string></string>
+				<key>text</key>
+				<string></string>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.keyword</string>
+			<key>uid</key>
+			<string>602EAC80-191A-467F-B80C-81B446282D93</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict/>
+			<key>type</key>
+			<string>alfred.workflow.utility.junction</string>
+			<key>uid</key>
+			<string>1D4C6BB9-BA76-41B7-992D-7F19CABEE18A</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<true/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>#!/usr/bin/env osascript -l JavaScript
+
+/**
+ * Closes all Safari tabs matching a given URL
+ */
+function run(argv) {
+	if (!argv?.[0]) {
+		return "Error: No URL was provided.";
+	}
+	const targetUrl = argv[0];
+
+	try {
+		const safari = Application("Safari");
+		const allWindows = safari.windows();
+
+		let closedCount = 0;
+
+		for (let i = 0; i &lt; allWindows.length; i++) {
+			const window = allWindows[i];
+
+			try {
+				const matchingTabs = window.tabs.whose({ url: targetUrl })();
+
+				// Close all matching tabs in reverse order
+				for (let j = matchingTabs.length - 1; j &gt;= 0; j--) {
+					try {
+						matchingTabs[j].close();
+						closedCount++;
+					} catch (e) {
+						continue;
+					}
+				}
+			} catch (e) {
+				continue;
+			}
+		}
+
+		if (closedCount &gt; 0) {
+			return `Successfully closed ${closedCount} tab${
+				closedCount &gt; 1 ? "s" : ""
+			}.`;
+		} else {
+			return "No tabs found with the provided URL.";
+		}
+	} catch (e) {
+		return `An error occurred: ${e.message}`;
+	}
+}</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>7</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>644DF6CB-6567-4669-A18E-E6F20522F971</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict/>
+			<key>type</key>
+			<string>alfred.workflow.utility.junction</string>
+			<key>uid</key>
+			<string>95B61381-F13D-41D6-BF13-BED5ECA31336</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string># Safari Control | Alfred Workflow
+
+## Usage
+
+### New window (`sw`)
+- Opens a new Safari window in the current space.
+- `⌘` + `↩` opens a new private window.
+- Examples:
+  - `sw`: Opens a new window.
+  - `sw x3`: Opens 3 new windows.
+  - `sw URL`: Opens a window with the specified URL.
+
+### Copy current tab URL (`swu`)
+- Copies the URL of the currently focused Safari tab to your clipboard.
+- Keyword: `swu`
+- Actions
+	- `⇧` + `⌘` Copy the URL using Markdown format.
+
+
+### Open current tab in private mode (`stp`)
+- Opens the current tab in a new private browsing window.
+- Keyword: `stp`
+- `⌘` + `↩` also closes the tab in the normal window.
+
+### List Safari tabs (`swt`)
+- Lists all open Safari tabs, searchable by title or URL.
+- Keyword: `swt`
+- Actions:
+  - `⌘` + `↩`: Copy tab URL
+  - `⇧` `⌘` Copy the MD URL.
+  - `⌃` + `↩`: Close tab
+  - `⌥` + `↩`: Modify URL
+
+### List Safari history (`shi`)
+- Browse and search your recent Safari history by title or URL.
+- Keyword: `shi`
+- Actions:
+  - `↩`: Open history item
+  - `⌘` + `↩`: Copy URL
+  - `⇧` `⌘` Copy the MD URL.
+  - `⌥` + `↩`: Modify URL
+
+### Open Safari window profiles (`swp`)
+- List and open Safari windows using up to 5 customizable profiles (work, personal, etc).
+- Examples:
+  - `swp`: Lists available profiles.
+  - `sw p1`: Opens a window with Profile 1.
+  - `sw p2`: Opens a window with Profile 2.
+  - `sw p3`: Opens a window with Profile 3.
+
+**Note:** Profiles without assigned names in Alfred will not appear in the list.
+
+---
+
+Created by **Pedro Vázquez** (vanstrouble).</string>
+	<key>uidata</key>
+	<dict>
+		<key>01001352-2F59-4048-BD76-8F04EA0DB93C</key>
+		<dict>
+			<key>colorindex</key>
+			<integer>8</integer>
+			<key>note</key>
+			<string>List Safari Tabs</string>
+			<key>xpos</key>
+			<real>30</real>
+			<key>ypos</key>
+			<real>1220</real>
+		</dict>
+		<key>1D4C6BB9-BA76-41B7-992D-7F19CABEE18A</key>
+		<dict>
+			<key>xpos</key>
+			<real>935</real>
+			<key>ypos</key>
+			<real>1525</real>
+		</dict>
+		<key>20CD379D-47F1-4088-9B9D-C6A6CBE06494</key>
+		<dict>
+			<key>xpos</key>
+			<real>630</real>
+			<key>ypos</key>
+			<real>700</real>
+		</dict>
+		<key>2673B9ED-527A-4236-8E32-4D7CE0254EC7</key>
+		<dict>
+			<key>colorindex</key>
+			<integer>4</integer>
+			<key>note</key>
+			<string>Generate MD links</string>
+			<key>xpos</key>
+			<real>730</real>
+			<key>ypos</key>
+			<real>1070</real>
+		</dict>
+		<key>4049C14F-9A18-4043-B030-55B08A84C530</key>
+		<dict>
+			<key>xpos</key>
+			<real>215</real>
+			<key>ypos</key>
+			<real>125</real>
+		</dict>
+		<key>57ABCA48-275B-4846-B5D2-0AB21F883A66</key>
+		<dict>
+			<key>xpos</key>
+			<real>1450</real>
+			<key>ypos</key>
+			<real>415</real>
+		</dict>
+		<key>5D2F3F28-6933-4F61-A54B-C5BE3DE8BDA2</key>
+		<dict>
+			<key>xpos</key>
+			<real>1265</real>
+			<key>ypos</key>
+			<real>1410</real>
+		</dict>
+		<key>602EAC80-191A-467F-B80C-81B446282D93</key>
+		<dict>
+			<key>xpos</key>
+			<real>1075</real>
+			<key>ypos</key>
+			<real>1495</real>
+		</dict>
+		<key>644DF6CB-6567-4669-A18E-E6F20522F971</key>
+		<dict>
+			<key>colorindex</key>
+			<integer>1</integer>
+			<key>note</key>
+			<string>Close Tabs</string>
+			<key>xpos</key>
+			<real>1075</real>
+			<key>ypos</key>
+			<real>1610</real>
+		</dict>
+		<key>6514914D-1C3C-49EE-890C-4D2A88431164</key>
+		<dict>
+			<key>note</key>
+			<string>New Window</string>
+			<key>xpos</key>
+			<real>1345</real>
+			<key>ypos</key>
+			<real>155</real>
+		</dict>
+		<key>68D995D6-24B3-4050-8B5C-F35356084F1A</key>
+		<dict>
+			<key>colorindex</key>
+			<integer>8</integer>
+			<key>note</key>
+			<string>New Safari Window</string>
+			<key>xpos</key>
+			<real>30</real>
+			<key>ypos</key>
+			<real>125</real>
+		</dict>
+		<key>7300F7C6-7BF0-40EF-8D51-C6BA358A3EF1</key>
+		<dict>
+			<key>colorindex</key>
+			<integer>8</integer>
+			<key>note</key>
+			<string>List Safari Profiles</string>
+			<key>xpos</key>
+			<real>30</real>
+			<key>ypos</key>
+			<real>545</real>
+		</dict>
+		<key>73D53F1A-48DF-4FF0-81AF-123CC3BC43B2</key>
+		<dict>
+			<key>xpos</key>
+			<real>480</real>
+			<key>ypos</key>
+			<real>1070</real>
+		</dict>
+		<key>7CFCCF42-AF12-4E20-B2DB-C248D64704D6</key>
+		<dict>
+			<key>colorindex</key>
+			<integer>8</integer>
+			<key>note</key>
+			<string>Copy URL Tab to Markdown</string>
+			<key>xpos</key>
+			<real>30</real>
+			<key>ypos</key>
+			<real>1070</real>
+		</dict>
+		<key>7D36A7E8-4ECD-429C-9B27-54C8B825C00F</key>
+		<dict>
+			<key>xpos</key>
+			<real>220</real>
+			<key>ypos</key>
+			<real>825</real>
+		</dict>
+		<key>816E61B1-CB0C-4646-B7F2-521E406A177F</key>
+		<dict>
+			<key>colorindex</key>
+			<integer>8</integer>
+			<key>note</key>
+			<string>Tab to Private Window</string>
+			<key>xpos</key>
+			<real>30</real>
+			<key>ypos</key>
+			<real>795</real>
+		</dict>
+		<key>887F9BC0-EF38-4D5B-9F39-E1EAD51CA6ED</key>
+		<dict>
+			<key>xpos</key>
+			<real>215</real>
+			<key>ypos</key>
+			<real>260</real>
+		</dict>
+		<key>8D4CCF05-9C1B-4D6A-81D5-70F1D5FF5715</key>
+		<dict>
+			<key>xpos</key>
+			<real>480</real>
+			<key>ypos</key>
+			<real>935</real>
+		</dict>
+		<key>915A7477-2B5D-4BA0-89B8-CC152D1E4B34</key>
+		<dict>
+			<key>xpos</key>
+			<real>215</real>
+			<key>ypos</key>
+			<real>545</real>
+		</dict>
+		<key>95B61381-F13D-41D6-BF13-BED5ECA31336</key>
+		<dict>
+			<key>xpos</key>
+			<real>935</real>
+			<key>ypos</key>
+			<real>1640</real>
+		</dict>
+		<key>9DCF1028-BBF5-4835-B3B7-ADD54BBA2E0B</key>
+		<dict>
+			<key>xpos</key>
+			<real>935</real>
+			<key>ypos</key>
+			<real>1410</real>
+		</dict>
+		<key>A5210FAD-2267-4FFA-AE84-08A5AFD05E1B</key>
+		<dict>
+			<key>colorindex</key>
+			<integer>8</integer>
+			<key>note</key>
+			<string>New Private Safari Window</string>
+			<key>xpos</key>
+			<real>30</real>
+			<key>ypos</key>
+			<real>260</real>
+		</dict>
+		<key>A93307AE-4989-4020-B8DA-23BA4DD2D694</key>
+		<dict>
+			<key>xpos</key>
+			<real>1345</real>
+			<key>ypos</key>
+			<real>445</real>
+		</dict>
+		<key>AA836E7E-FA59-409B-86BB-AAF54674B9FA</key>
+		<dict>
+			<key>xpos</key>
+			<real>395</real>
+			<key>ypos</key>
+			<real>1100</real>
+		</dict>
+		<key>B089445C-98C4-4D45-83F0-41890DA17FE1</key>
+		<dict>
+			<key>xpos</key>
+			<real>650</real>
+			<key>ypos</key>
+			<real>1100</real>
+		</dict>
+		<key>B10ECF9C-AD62-420D-A216-639C8D77028C</key>
+		<dict>
+			<key>xpos</key>
+			<real>215</real>
+			<key>ypos</key>
+			<real>410</real>
+		</dict>
+		<key>B2D0D742-988B-49EC-847C-F417B43F2D17</key>
+		<dict>
+			<key>xpos</key>
+			<real>215</real>
+			<key>ypos</key>
+			<real>1220</real>
+		</dict>
+		<key>B5EC0573-F436-455F-A31B-1B337ADD77B1</key>
+		<dict>
+			<key>xpos</key>
+			<real>480</real>
+			<key>ypos</key>
+			<real>680</real>
+		</dict>
+		<key>B864E5D5-DC5B-4DFD-BE27-FA2794119EBF</key>
+		<dict>
+			<key>xpos</key>
+			<real>1075</real>
+			<key>ypos</key>
+			<real>770</real>
+		</dict>
+		<key>C0594021-B985-4211-BB72-0BC83EC76733</key>
+		<dict>
+			<key>xpos</key>
+			<real>30</real>
+			<key>ypos</key>
+			<real>680</real>
+		</dict>
+		<key>C572515A-54FA-4EFB-B461-DF5E2B3C638D</key>
+		<dict>
+			<key>xpos</key>
+			<real>30</real>
+			<key>ypos</key>
+			<real>15</real>
+		</dict>
+		<key>D5ED6DD9-7505-49B0-A894-0EA3864C44EF</key>
+		<dict>
+			<key>note</key>
+			<string>Private Window</string>
+			<key>xpos</key>
+			<real>1345</real>
+			<key>ypos</key>
+			<real>290</real>
+		</dict>
+		<key>D8C1A439-9D17-44D3-8373-B18CC74D034E</key>
+		<dict>
+			<key>xpos</key>
+			<real>1335</real>
+			<key>ypos</key>
+			<real>1380</real>
+		</dict>
+		<key>DDD5FD69-5FB3-4DDA-84C6-23519C113218</key>
+		<dict>
+			<key>colorindex</key>
+			<integer>8</integer>
+			<key>note</key>
+			<string>List Safari History</string>
+			<key>xpos</key>
+			<real>30</real>
+			<key>ypos</key>
+			<real>410</real>
+		</dict>
+		<key>E3791CED-D768-402A-A13A-C41FA9E013F6</key>
+		<dict>
+			<key>xpos</key>
+			<real>215</real>
+			<key>ypos</key>
+			<real>935</real>
+		</dict>
+		<key>EB0955E2-2C04-4A3F-AF6E-46B130A756A7</key>
+		<dict>
+			<key>colorindex</key>
+			<integer>5</integer>
+			<key>note</key>
+			<string>Create new window</string>
+			<key>xpos</key>
+			<real>1450</real>
+			<key>ypos</key>
+			<real>125</real>
+		</dict>
+		<key>EB381D0C-914A-4944-ACEB-60B3DBA95B65</key>
+		<dict>
+			<key>colorindex</key>
+			<integer>8</integer>
+			<key>note</key>
+			<string>Copy URL Tab</string>
+			<key>xpos</key>
+			<real>30</real>
+			<key>ypos</key>
+			<real>935</real>
+		</dict>
+		<key>EBDF6B83-46B7-46DE-B0B7-FA02254F981C</key>
+		<dict>
+			<key>xpos</key>
+			<real>935</real>
+			<key>ypos</key>
+			<real>1245</real>
+		</dict>
+		<key>EE8DC6F5-2650-44C8-B60A-477A3A08AEB8</key>
+		<dict>
+			<key>colorindex</key>
+			<integer>2</integer>
+			<key>note</key>
+			<string>Create new private window</string>
+			<key>xpos</key>
+			<real>1450</real>
+			<key>ypos</key>
+			<real>260</real>
+		</dict>
+		<key>FD06A976-DBC4-4F13-AA73-0DC8A7A08503</key>
+		<dict>
+			<key>colorindex</key>
+			<integer>3</integer>
+			<key>note</key>
+			<string>Focus Tab</string>
+			<key>xpos</key>
+			<real>1075</real>
+			<key>ypos</key>
+			<real>1240</real>
+		</dict>
+		<key>FD7BA2BA-60BF-4242-87F4-05EDBCCE3A08</key>
+		<dict>
+			<key>xpos</key>
+			<real>1075</real>
+			<key>ypos</key>
+			<real>1380</real>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>sw</string>
+				<key>placeholder</key>
+				<string></string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Open a new Safari window.</string>
+			<key>label</key>
+			<string>New Safari Window</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>sw_keyword</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>swc</string>
+				<key>placeholder</key>
+				<string></string>
+				<key>required</key>
+				<true/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Copy the URL of the currently active Safari tab to the clipboard.</string>
+			<key>label</key>
+			<string>Copy Current Tab URL</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>swc_keyword</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>stp</string>
+				<key>placeholder</key>
+				<string></string>
+				<key>required</key>
+				<true/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Reopen the current Safari tab in a new private browsing window.</string>
+			<key>label</key>
+			<string>Open Tab in Private Mode</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>stp_keyword</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>swt</string>
+				<key>placeholder</key>
+				<string></string>
+				<key>required</key>
+				<true/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Browse and switch between all open Safari tabs.</string>
+			<key>label</key>
+			<string>List Open Safari Tabs</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>swt_keyword</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>shi</string>
+				<key>placeholder</key>
+				<string></string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Browse and open recently visited Safari pages.</string>
+			<key>label</key>
+			<string>Safari History</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>shi_keyword</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>defaultvalue</key>
+				<integer>5</integer>
+				<key>markercount</key>
+				<integer>15</integer>
+				<key>maxvalue</key>
+				<integer>15</integer>
+				<key>minvalue</key>
+				<integer>1</integer>
+				<key>onlystoponmarkers</key>
+				<true/>
+				<key>showmarkers</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Set how many Safari history items are shown. 100 items per step.</string>
+			<key>label</key>
+			<string>History Items Limit</string>
+			<key>type</key>
+			<string>slider</string>
+			<key>variable</key>
+			<string>max_items</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>swp</string>
+				<key>placeholder</key>
+				<string></string>
+				<key>required</key>
+				<true/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Open Safari windows using specific profiles.</string>
+			<key>label</key>
+			<string>Safari Profiles</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>swp_keyword</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>Define a name</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<false/>
+			</dict>
+			<key>description</key>
+			<string>Set a custom name for Safari profile 1.</string>
+			<key>label</key>
+			<string>Profile 1 Name</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>profile1</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>Define a name</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<false/>
+			</dict>
+			<key>description</key>
+			<string>Set a custom name for Safari profile 2.</string>
+			<key>label</key>
+			<string>Profile 2 Name</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>profile2</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>Define a name</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<false/>
+			</dict>
+			<key>description</key>
+			<string>Set a custom name for Safari profile 3.</string>
+			<key>label</key>
+			<string>Profile 3 Name</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>profile3</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>Define a name</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<false/>
+			</dict>
+			<key>description</key>
+			<string>Set a custom name for Safari profile 4.</string>
+			<key>label</key>
+			<string>Profile 4 Name</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>profile4</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>Define a name</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<false/>
+			</dict>
+			<key>description</key>
+			<string>Set a custom name for Safari profile 5.</string>
+			<key>label</key>
+			<string>Profile 5 Name</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>profile5</string>
+		</dict>
+	</array>
+	<key>variablesdontexport</key>
+	<array/>
+	<key>version</key>
+	<string>2.6.0</string>
+	<key>webaddress</key>
+	<string>https://github.com/vanstrouble/new-safari-window-alfred-workflow</string>
+</dict>
+</plist>
