@@ -1274,24 +1274,19 @@ Uses project root if in a project, otherwise current directory."
 ;; Some preferences that I set for all the theme. Per documentation, the custom
 ;; theme named =user= will always have the highest priority.
 
-(setq modus-themes-common-palette-overrides
-      '(;; Make the main background a soft dark gray instead of pure black
-          ;; (bg-main "#1e1e1e")
-          ;; Make the "dim" background (used for line numbers/sidebar) slightly lighter
-          ;; (bg-dim  "#282828")
-          ;; Optional: Soften the white text so it's not "piercing"
-        (fg-main "#cfcfcf"))
-      modus-themes-italic-constructs t
-      modus-themes-bold-constructs nil    ;; Bold text can sometimes "bleed" on 4K screens
-      modus-themes-mixed-fonts nil          ;; Use variable pitch for docs/org-mode
-      modus-themes-variable-pitch-ui nil)
+;; (use-package tango-plus-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'tango-plus t))
 
-;; (load-theme 'modus-vivendi t)
+;; (use-package alabaster-themes
+;;   :ensure t
+;;   :config
+;;   (load-theme 'tango-plus t))
 
-(use-package doom-themes
+(use-package amaranth-dark-theme
   :ensure t
-  :config
-  (load-theme 'doom-sourcerer t))
+  :config (load-theme 'amaranth-dark t))
 
 (custom-theme-set-faces
  'user
@@ -1299,14 +1294,16 @@ Uses project root if in a project, otherwise current directory."
  '(font-lock-comment-delimiter-face ((t :slant normal)))
  '(font-lock-string-face ((t :slant normal)))
  '(font-lock-constant-face ((t :slant normal)))
+ '(completions-highlight ((t :inherit region)))
 
- '(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face)))
- '(line-number ((t :slant normal :background unspecified :foreground "#444" :inherit font-lock-comment-face)))
- '(line-number-current-line ((t :slant normal :weight normal :foreground "#fff")))
- '(fringe ((t :inherit line-number :background unspecified)))
- '(vertical-border ((t :foreground "#222")))
+ ;; '(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face :foreground "#888")))
+ ;; '(line-number ((t :slant normal :background unspecified :foreground "#444" :inherit font-lock-comment-face)))
+ ;; '(line-number-current-line ((t :slant normal :weight bold)))
+ ;; '(line-number-current-line ((t :slant normal :weight normal :foreground "#fff")))
+ ;; '(fringe ((t :inherit line-number :background unspecified)))
+ ;; '(vertical-border ((t :foreground "#222")))
 
- '(mode-line-buffer-id ((t :foreground "orange")))
+ ;; '(mode-line-buffer-id ((t :foreground "orange")))
  '(cursor ((t :background "orange")))
  '(eglot-highlight-symbol-face ((t :weight normal)))
  '(eglot-code-action-indicator-face ((t :weight normal)))

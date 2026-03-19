@@ -209,14 +209,15 @@
  '(exec-path
    '("/opt/local/bin" "~/.local/bin" "/usr/bin" "/bin" "/usr/sbin" "/sbin"
      "/usr/local/bin" "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
+ '(go-ts-indent-offset 2 nil nil "Customized with use-package go-ts-mode")
  '(package-selected-packages
-   '(acp avy conflict-buttons consult crux d2-mode detached diff-hl doom-themes
-         dumb-jump eat emmet-mode envrc gdshader-mode gptel gptel-agent
-         kotlin-ts-mode magit meson-mode msgpack neocaml ob-duckdb ob-http
-         ob-kotlin ob-sql-mode pache-dark-theme pi-coding-agent prescient
-         protobuf-mode rainbow-mode rg surround svg-lib swift-mode tempel
-         terraform-mode tramp-rpc treesit-fold tuareg ultra-scroll utop
-         visual-replace vterm vundo))
+   '(acp alabaster-themes amaranth-dark-theme avy conflict-buttons consult crux
+         d2-mode detached diff-hl dumb-jump eat emmet-mode envrc gdshader-mode
+         gptel gptel-agent kotlin-ts-mode magit meson-mode msgpack neocaml
+         ob-duckdb ob-http ob-kotlin ob-sql-mode pache-dark-theme
+         pi-coding-agent prescient protobuf-mode rainbow-mode rg surround
+         svg-lib swift-mode tango-plus-theme tempel terraform-mode tramp-rpc
+         treesit-fold tuareg ultra-scroll utop visual-replace vterm vundo))
  '(package-vc-selected-packages
    '((tramp-rpc :url "https://github.com/ArthurHeymans/emacs-tramp-rpc" :branch
                 "master")
@@ -243,9 +244,4 @@
  '(font-lock-comment-delimiter-face ((t :slant normal)))
  '(font-lock-comment-face ((t :slant normal)))
  '(font-lock-constant-face ((t :slant normal)))
- '(font-lock-string-face ((t :slant normal)))
- '(fringe ((t :inherit line-number :background unspecified)))
- '(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face)))
- '(line-number-current-line ((t :slant normal :weight normal :foreground "#fff")))
- '(mode-line-buffer-id ((t :foreground "orange")))
- '(vertical-border ((t :foreground "#222"))))
+ '(font-lock-string-face ((t :slant normal))))
