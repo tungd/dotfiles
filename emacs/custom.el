@@ -187,7 +187,8 @@
                                                     (null-device . "/dev/null")
                                                     (exec-suffixes ""))))
  '(custom-safe-themes
-   '("5541d412c46ad24030fd34348ce1a5fa5e9030dd335e6d8322aba28fc9ceccc3"
+   '("68e9ab92a95e1ab84478c94a912766b00cf2b492b6b56db39f7e5d31c65498a2"
+     "5541d412c46ad24030fd34348ce1a5fa5e9030dd335e6d8322aba28fc9ceccc3"
      "5b4fc448d0fb588fdad7c86ab5bb9baaa358488f4b6e4a3d1ff2aca7b293651f"
      "a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e"
      "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa"
@@ -234,6 +235,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(completions-highlight ((t :inherit region)))
  '(cursor ((t :background "orange")))
  '(diff-hl-change ((t (:inherit nil :background unspecified :foreground "#deae3e"))))
  '(diff-hl-delete ((t (:inherit nil :background unspecified :foreground "#ff0000"))))
@@ -244,4 +246,7 @@
  '(font-lock-comment-delimiter-face ((t :slant normal)))
  '(font-lock-comment-face ((t :slant normal)))
  '(font-lock-constant-face ((t :slant normal)))
- '(font-lock-string-face ((t :slant normal))))
+ '(font-lock-string-face ((t :slant normal)))
+ '(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face :foreground "#ddd")))
+ '(line-number-current-line ((t :slant normal :weight normal :foreground "#444")))
+ '(mode-line-buffer-id ((t :foreground "orange"))))

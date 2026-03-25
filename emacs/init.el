@@ -98,6 +98,10 @@
 
 (setopt enable-recursive-minibuffers t)
 
+(use-package eldoc
+  :config
+  (global-eldoc-mode -1))
+
 (use-package midnight
   :hook (after-init . midnight-mode)
   :config
@@ -246,16 +250,91 @@ Expects structure: ~/Projects/<org>/<project>/node_modules"
 
 (use-package minibuffer
   :custom
+  ;; Eager display works well for most categories. `execute-extended-command'
+  ;; gets special handling below so its large command set opens only after a
+  ;; short input prefix.
   (minibuffer-visible-completions t)
   (completion-eager-display t)
   (completion-eager-update t)
-  (completion-auto-help 'always)
+  (completion-auto-help 'lazy)
   (completion-show-help nil)
-  (completion-auto-select t)
+  (completion-auto-select 'second-tab)
+  (completion-cycle-threshold 3)
+  (completions-sort #'prescient-completion-sort)
   (completions-max-height 16)
   (completions-format 'one-column)
   (completions-detailed t)
   (completions-group t))
+
+(defvar-local td/delayed-completions-enabled nil
+  "Non-nil when the current minibuffer should reveal completions after a prefix.")
+
+(defun td/extended-command-completion-threshold ()
+  "Open *Completions* after two characters for selected minibuffer sessions."
+  (when td/delayed-completions-enabled
+    (let ((input-length (- (point-max) (minibuffer-prompt-end))))
+      (cond
+       ((>= input-length 2)
+        (unless (get-buffer-window "*Completions*" 0)
+          (minibuffer-completion-help)))
+       ((get-buffer-window "*Completions*" 0)
+        (minibuffer-hide-completions))))))
+
+(defun td/extended-command-minibuffer-setup ()
+  "Use delayed completion display for `execute-extended-command'."
+  (when (eq minibuffer-history-variable 'extended-command-history)
+    (setq-local td/delayed-completions-enabled t)
+    (setq-local completion-eager-display nil)
+    (add-hook 'post-command-hook
+              #'td/extended-command-completion-threshold
+              nil t)))
+
+(defun td/project-switch-minibuffer-setup ()
+  "Delay *Completions* while choosing a project until input is specific enough."
+  (when (memq this-command '(project-switch-project project-switch-to-buffer))
+    (setq-local td/delayed-completions-enabled t)
+    (setq-local completion-eager-display nil)
+    (add-hook 'post-command-hook
+              #'td/extended-command-completion-threshold
+              nil t)))
+
+(defun td/minibuffer-quit ()
+  "Abort the active minibuffer and close *Completions* in one step."
+  (interactive)
+  (when (get-buffer-window "*Completions*" 0)
+    (minibuffer-hide-completions))
+  (abort-recursive-edit))
+
+(defun td/completion-list-quit ()
+  "Close *Completions* and abort the active minibuffer when present."
+  (interactive)
+  (when-let ((window (get-buffer-window "*Completions*" 0)))
+    (quit-window nil window))
+  (when (active-minibuffer-window)
+    (abort-recursive-edit)))
+
+(dolist (map (list minibuffer-mode-map
+                   minibuffer-local-map
+                   minibuffer-local-ns-map
+                   minibuffer-local-completion-map
+                   minibuffer-local-must-match-map
+                   completion-in-region-mode-map))
+  (bind-key "C-g" #'minibuffer-keyboard-quit map)
+  (bind-key [remap keyboard-quit] #'minibuffer-keyboard-quit map))
+
+(bind-key "C-g" #'td/completion-list-quit completion-list-mode-map)
+(bind-key [remap keyboard-quit] #'td/completion-list-quit completion-list-mode-map)
+
+;; `minibuffer-visible-completions` uses its own transient keymap in newer
+;; Emacs builds, so override `keyboard-quit` there as well when available.
+(when (boundp 'minibuffer-visible-completions-map)
+  (bind-key "C-g" #'minibuffer-keyboard-quit minibuffer-visible-completions-map)
+  (bind-key [remap keyboard-quit]
+            #'minibuffer-keyboard-quit
+            minibuffer-visible-completions-map))
+
+(add-hook 'minibuffer-setup-hook #'td/extended-command-minibuffer-setup)
+(add-hook 'minibuffer-setup-hook #'td/project-switch-minibuffer-setup)
 
 (bind-key "TAB" #'minibuffer-complete minibuffer-mode-map)
 
@@ -272,7 +351,16 @@ Expects structure: ~/Projects/<org>/<project>/node_modules"
   :hook (after-init . prescient-persist-mode)
   :init
   (add-to-list 'completion-styles 'prescient)
-  (setq completion-preview-sort-function #'prescient-completion-sort))
+  ;; `M-x` uses the `command` completion category, which can bypass global
+  ;; completion settings via category metadata. Wire `prescient` in explicitly
+  ;; so command matching and recency sorting both apply there.
+  (setf (alist-get 'command completion-category-overrides)
+        '((styles . (prescient basic))
+          (display-sort-function . prescient-completion-sort)
+          (cycle . t)))
+  ;; Keep recency/frequency ahead of the old shortest-first behavior.
+  (setq prescient-sort-length-enable nil
+        prescient-aggressive-file-save t))
 
 (defun td/minibuffer-smart-tilde ()
   (interactive)
@@ -337,6 +425,9 @@ Uses project root if in a project, otherwise current directory."
 (bind-key* "C-;" #'execute-extended-command)
 (global-set-key (kbd "C-l") ctl-x-map)
 
+;; Use consult for completion-in-region (more efficient than default)
+(setopt completion-in-region-function #'consult-completion-in-region)
+
 ;;;; Bookmark
 (use-package bookmark
   :custom
@@ -365,16 +456,16 @@ Uses project root if in a project, otherwise current directory."
   :custom
   (split-height-threshold nil)
   :config
-    ;; (add-to-list 'display-buffer-alist
-    ;;              '("^\\*codex:"
-    ;;                (display-buffer-in-side-window)
-    ;;                (side . right)
-    ;;                (window-width . 0.32)))
-    ;; (add-to-list 'display-buffer-alist
-    ;;              '("^\\*claude:"
-    ;;                (display-buffer-in-direction)
-    ;;                (direction . right)
-    ;;                (window-width . 85)))
+  ;; (add-to-list 'display-buffer-alist
+  ;;              '("^\\*codex:"
+  ;;                (display-buffer-in-side-window)
+  ;;                (side . right)
+  ;;                (window-width . 0.32)))
+  ;; (add-to-list 'display-buffer-alist
+  ;;              '("^\\*claude:"
+  ;;                (display-buffer-in-direction)
+  ;;                (direction . right)
+  ;;                (window-width . 85)))
   (add-to-list 'display-buffer-alist
                '("\\*Warnings\\*" display-buffer-in-direction
                  (direction . bottom)
@@ -1296,14 +1387,14 @@ Uses project root if in a project, otherwise current directory."
  '(font-lock-constant-face ((t :slant normal)))
  '(completions-highlight ((t :inherit region)))
 
- ;; '(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face :foreground "#888")))
+ '(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face :foreground "#222")))
  ;; '(line-number ((t :slant normal :background unspecified :foreground "#444" :inherit font-lock-comment-face)))
  ;; '(line-number-current-line ((t :slant normal :weight bold)))
- ;; '(line-number-current-line ((t :slant normal :weight normal :foreground "#fff")))
+ '(line-number-current-line ((t :slant normal :weight normal :foreground "#444")))
  ;; '(fringe ((t :inherit line-number :background unspecified)))
  ;; '(vertical-border ((t :foreground "#222")))
 
- ;; '(mode-line-buffer-id ((t :foreground "orange")))
+ '(mode-line-buffer-id ((t :foreground "orange")))
  '(cursor ((t :background "orange")))
  '(eglot-highlight-symbol-face ((t :weight normal)))
  '(eglot-code-action-indicator-face ((t :weight normal)))
