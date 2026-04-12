@@ -113,21 +113,7 @@ myip() {
 export PNPM_HOME="/Users/tung/Library/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 export PATH="$HOME/.claude/local:$PATH"
-export PATH="/Applications/WezTerm.app/Contents/MacOS/:$PATH"
+# export PATH="/Applications/WezTerm.app/Contents/MacOS/:$PATH"
 
 # Added by OrbStack: command-line tools and integration
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
-
-preexec() {
-  # Store the command being executed
-  WEZTERM_CURRENT_COMMAND="$1"
-  printf "\e]1337;SetUserVar=WEZTERM_COMMAND_STATUS=running\007"
-}
-
-precmd() {
-  # Command finished - send notification trigger
-  if [[ -n "$WEZTERM_CURRENT_COMMAND" ]]; then
-    printf "\e]1337;SetUserVar=WEZTERM_COMMAND_STATUS=finished:%s\007" "$WEZTERM_CURRENT_COMMAND"
-    unset WEZTERM_CURRENT_COMMAND
-  fi
-}

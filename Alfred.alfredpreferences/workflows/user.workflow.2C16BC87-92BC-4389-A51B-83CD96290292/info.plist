@@ -73,19 +73,6 @@
 				<false/>
 			</dict>
 		</array>
-		<key>463B3D32-6EE1-4457-BCF4-D3D181A6A0FA</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>36F11C7E-857F-445D-932B-9A98F2ADD4A1</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
 		<key>5B1834AE-A30A-4F86-B123-7C52B74711FE</key>
 		<array>
 			<dict>
@@ -175,54 +162,6 @@
 	<string>Launchpad</string>
 	<key>objects</key>
 	<array>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>paths</key>
-				<array>
-					<string>/Applications/IntelliJ IDEA CE.app</string>
-				</array>
-				<key>toggle</key>
-				<false/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.launchfiles</string>
-			<key>uid</key>
-			<string>36F11C7E-857F-445D-932B-9A98F2ADD4A1</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>action</key>
-				<integer>0</integer>
-				<key>argument</key>
-				<integer>0</integer>
-				<key>focusedappvariable</key>
-				<false/>
-				<key>focusedappvariablename</key>
-				<string></string>
-				<key>hotkey</key>
-				<integer>0</integer>
-				<key>hotmod</key>
-				<integer>0</integer>
-				<key>hotstring</key>
-				<string></string>
-				<key>leftcursor</key>
-				<false/>
-				<key>modsmode</key>
-				<integer>0</integer>
-				<key>relatedAppsMode</key>
-				<integer>0</integer>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.trigger.hotkey</string>
-			<key>uid</key>
-			<string>463B3D32-6EE1-4457-BCF4-D3D181A6A0FA</string>
-			<key>version</key>
-			<integer>2</integer>
-		</dict>
 		<dict>
 			<key>config</key>
 			<dict>
@@ -562,7 +501,7 @@ end alfred_script</string>
 			<dict>
 				<key>paths</key>
 				<array>
-					<string>/Applications/MacPorts/WezTerm.app</string>
+					<string>/Applications/WezTerm.app</string>
 				</array>
 				<key>toggle</key>
 				<true/>
@@ -625,6 +564,23 @@ end alfred_script</string>
 		<dict>
 			<key>config</key>
 			<dict>
+				<key>applescript</key>
+				<string>on alfred_script(q)
+  choose color
+end alfred_script</string>
+				<key>cachescript</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.applescript</string>
+			<key>uid</key>
+			<string>A127EB99-8550-4EEA-9FAB-0323CB5FD886</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
 				<key>action</key>
 				<integer>0</integer>
 				<key>argument</key>
@@ -652,23 +608,6 @@ end alfred_script</string>
 			<string>82D27BCC-C703-4C17-B847-127B410FAEA3</string>
 			<key>version</key>
 			<integer>2</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>applescript</key>
-				<string>on alfred_script(q)
-  choose color
-end alfred_script</string>
-				<key>cachescript</key>
-				<true/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.applescript</string>
-			<key>uid</key>
-			<string>A127EB99-8550-4EEA-9FAB-0323CB5FD886</string>
-			<key>version</key>
-			<integer>1</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -758,13 +697,6 @@ end alfred_script</string>
 			<key>ypos</key>
 			<real>205</real>
 		</dict>
-		<key>36F11C7E-857F-445D-932B-9A98F2ADD4A1</key>
-		<dict>
-			<key>xpos</key>
-			<real>680</real>
-			<key>ypos</key>
-			<real>45</real>
-		</dict>
 		<key>3DEC19CE-AEF0-46EF-9DBA-86AFE21880BA</key>
 		<dict>
 			<key>xpos</key>
@@ -792,13 +724,6 @@ end alfred_script</string>
 			<real>60</real>
 			<key>ypos</key>
 			<real>490</real>
-		</dict>
-		<key>463B3D32-6EE1-4457-BCF4-D3D181A6A0FA</key>
-		<dict>
-			<key>xpos</key>
-			<real>445</real>
-			<key>ypos</key>
-			<real>45</real>
 		</dict>
 		<key>4DCC5EE4-D928-477B-A366-126AD9EBC990</key>
 		<dict>

@@ -1,33 +1,45 @@
-# -*- mode: shell-script -*-
+# -*- mode: zsh -*-
+
+# Fast virtualenv using Zsh native tail modifier
 virtualenv_info() {
-  [ $VIRTUAL_ENV ] && echo '('`basename $VIRTUAL_ENV`') '
-}
-
-prompt_tungd_setup() {
-  autoload -Uz colors
-  colors
-
-  autoload -Uz vcs_info
-  zstyle ':vcs_info:*' enable git
-  zstyle ':vcs_info:*' check-for-changes true
-  zstyle ':vcs_info:*' get-revision true
-  zstyle ':vcs_info:*' stagedstr "%{$fg[green]%}+"
-  zstyle ':vcs_info:*' unstagedstr "%{$fg[red]%}+"
-  zstyle ':vcs_info:*' formats "%u%c[%b:%7.7i]%m%{$reset_color%}"
-
-  add-zsh-hook precmd prompt_tungd_precmd
+  [[ -n "$VIRTUAL_ENV" ]] && echo "(${VIRTUAL_ENV:t}) "
 }
 
 prompt_tungd_precmd() {
   vcs_info
 
-  if [[ $CLICOLOR == 1 ]]; then
-    PROMPT=$'\n%{$fg[red]%}%n%{$reset_color%}@%{$fg[yellow]%}%m%{$reset_color%} in %{$fg[green]%}%~/%{$reset_color%} $vcs_info_msg_0_\n› '
-    RPROMPT="%{$fg[cyan]%}$(virtualenv_info)%{$reset_color%}"
+  local git_segment=
+  if [[ -n "$vcs_info_msg_0_" ]]; then
+    local git_info="$vcs_info_msg_0_"
+    git_info="${git_info/#!!/*}"
+    git_info="${git_info/#!/*}"
+    git_segment=" %F{8}${git_info}%f"
+  fi
+
+  if [[ ${terminfo[colors]:-0} -ge 8 ]]; then
+    PROMPT=$'\n'"%F{red}%n%f@%F{yellow}%m%f in %F{green}%~/%f${git_segment}"$'\n› '
+    RPROMPT=''
   else
-    PROMPT=$'\n%~/ $vcs_info_msg_0_\n› '
-    # export RPROMPT="$(vcs_prompt_info)"
+    PROMPT=$'\n'"%~/${git_segment}"$'\n› '
+    RPROMPT=''
   fi
 }
 
-prompt_tungd_setup "$@"
+prompt_tungd_setup() {
+  autoload -Uz vcs_info
+  autoload -Uz add-zsh-hook
+
+  zstyle ':vcs_info:*' enable git
+  zstyle ':vcs_info:*' check-for-changes false
+  zstyle ':vcs_info:*' stagedstr "!"
+  zstyle ':vcs_info:*' unstagedstr "!"
+  zstyle ':vcs_info:*' formats "[%b]"
+
+  add-zsh-hook -d precmd vcs_info 2>/dev/null
+  add-zsh-hook -d precmd prompt_tungd_precmd 2>/dev/null
+  add-zsh-hook precmd prompt_tungd_precmd
+
+  prompt_tungd_precmd
+}
+
+prompt_tungd_setup

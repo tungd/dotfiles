@@ -1,6 +1,6 @@
 [user]
-	name = Tung Dao
-	email = me@tungdao.com
+  name = Tung Dao
+  email = me@tungdao.com
   signingkey = me@tungdao.com
 [alias]
   cl = clone
@@ -15,6 +15,7 @@
   undo = reset --soft HEAD^
   df = diff
   dfc = diff --cached
+  td = commit --amend --author="TD <t.d@revenge.games>" --no-edit
 [url "git@github.com:"]
   insteadOf = gh:
 [push]
@@ -27,6 +28,6 @@
 [commit]
   gpgsign = true
 [init]
-	defaultBranch = main
+  defaultBranch = main
 [pull]
-	ff = only
+  ff = only

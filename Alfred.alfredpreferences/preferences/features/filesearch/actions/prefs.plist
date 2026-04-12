@@ -18,11 +18,13 @@
 	<key>finderSelectionHotkey</key>
 	<dict>
 		<key>key</key>
-		<integer>1</integer>
+		<integer>44</integer>
 		<key>mod</key>
-		<integer>786432</integer>
+		<integer>1048576</integer>
 		<key>string</key>
-		<string>S</string>
+		<string>/</string>
 	</dict>
+	<key>sortByUsage</key>
+	<true/>
 </dict>
 </plist>

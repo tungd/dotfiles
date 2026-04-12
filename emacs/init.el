@@ -289,52 +289,7 @@ Expects structure: ~/Projects/<org>/<project>/node_modules"
               #'td/extended-command-completion-threshold
               nil t)))
 
-(defun td/project-switch-minibuffer-setup ()
-  "Delay *Completions* while choosing a project until input is specific enough."
-  (when (memq this-command '(project-switch-project project-switch-to-buffer))
-    (setq-local td/delayed-completions-enabled t)
-    (setq-local completion-eager-display nil)
-    (add-hook 'post-command-hook
-              #'td/extended-command-completion-threshold
-              nil t)))
-
-(defun td/minibuffer-quit ()
-  "Abort the active minibuffer and close *Completions* in one step."
-  (interactive)
-  (when (get-buffer-window "*Completions*" 0)
-    (minibuffer-hide-completions))
-  (abort-recursive-edit))
-
-(defun td/completion-list-quit ()
-  "Close *Completions* and abort the active minibuffer when present."
-  (interactive)
-  (when-let ((window (get-buffer-window "*Completions*" 0)))
-    (quit-window nil window))
-  (when (active-minibuffer-window)
-    (abort-recursive-edit)))
-
-(dolist (map (list minibuffer-mode-map
-                   minibuffer-local-map
-                   minibuffer-local-ns-map
-                   minibuffer-local-completion-map
-                   minibuffer-local-must-match-map
-                   completion-in-region-mode-map))
-  (bind-key "C-g" #'minibuffer-keyboard-quit map)
-  (bind-key [remap keyboard-quit] #'minibuffer-keyboard-quit map))
-
-(bind-key "C-g" #'td/completion-list-quit completion-list-mode-map)
-(bind-key [remap keyboard-quit] #'td/completion-list-quit completion-list-mode-map)
-
-;; `minibuffer-visible-completions` uses its own transient keymap in newer
-;; Emacs builds, so override `keyboard-quit` there as well when available.
-(when (boundp 'minibuffer-visible-completions-map)
-  (bind-key "C-g" #'minibuffer-keyboard-quit minibuffer-visible-completions-map)
-  (bind-key [remap keyboard-quit]
-            #'minibuffer-keyboard-quit
-            minibuffer-visible-completions-map))
-
 (add-hook 'minibuffer-setup-hook #'td/extended-command-minibuffer-setup)
-(add-hook 'minibuffer-setup-hook #'td/project-switch-minibuffer-setup)
 
 (bind-key "TAB" #'minibuffer-complete minibuffer-mode-map)
 
@@ -349,15 +304,42 @@ Expects structure: ~/Projects/<org>/<project>/node_modules"
 (use-package prescient
   :ensure t
   :hook (after-init . prescient-persist-mode)
+  :preface
+  (defun td/set-completion-category-overrides (category overrides)
+    "Merge OVERRIDES into completion CATEGORY overrides."
+    (let ((current (copy-tree (alist-get category completion-category-overrides))))
+      (dolist (entry overrides)
+        (setf (alist-get (car entry) current) (cdr entry)))
+      (setf (alist-get category completion-category-overrides) current)))
   :init
   (add-to-list 'completion-styles 'prescient)
+  ;; Consult uses its own completion categories for many commands, and some
+  ;; commands like `consult-buffer' route through `multi-category'. Re-state
+  ;; eager behavior per category so those commands stay eager even when
+  ;; category metadata would otherwise override global defaults.
+  (dolist (category '(multi-category
+                      project
+                      consult-compile-error
+                      consult-flymake-error
+                      consult-grep
+                      consult-info
+                      consult-isearch-history
+                      consult-kmacro
+                      consult-location
+                      consult-man
+                      consult-xref))
+    (td/set-completion-category-overrides
+     category
+     '((eager-display . t)
+       (eager-update . t))))
   ;; `M-x` uses the `command` completion category, which can bypass global
   ;; completion settings via category metadata. Wire `prescient` in explicitly
   ;; so command matching and recency sorting both apply there.
-  (setf (alist-get 'command completion-category-overrides)
-        '((styles . (prescient basic))
-          (display-sort-function . prescient-completion-sort)
-          (cycle . t)))
+  (td/set-completion-category-overrides
+   'command
+   '((styles . (prescient basic))
+     (display-sort-function . prescient-completion-sort)
+     (cycle . t)))
   ;; Keep recency/frequency ahead of the old shortest-first behavior.
   (setq prescient-sort-length-enable nil
         prescient-aggressive-file-save t))
@@ -542,7 +524,6 @@ Uses project root if in a project, otherwise current directory."
 
 (bind-key* "C-x C-k" #'kill-current-buffer)
 (bind-key* "C-c r" #'rename-visited-file)
-(bind-key* [remap keyboard-quit] #'crux-keyboard-quit-dwim)
 (bind-key* [remap kill-line] #'crux-smart-kill-line)
 (bind-key* "s-n" #'next-buffer)
 (bind-key* "s-p" #'previous-buffer)
@@ -755,6 +736,56 @@ Uses project root if in a project, otherwise current directory."
   :custom
   (vterm-shell "/bin/zsh -l"))
 
+(use-package ghostel
+  :vc (:url "https://github.com/dakra/ghostel"
+       :rev :newest)
+  :preface
+  (defun td/ghostel-library-file ()
+    "Return the installed Ghostel library file, or nil if not found."
+    (let* ((elpa-dir (if (boundp 'package-user-dir)
+                         package-user-dir
+                       (expand-file-name "elpa" user-emacs-directory)))
+           (direct-file (expand-file-name "ghostel/ghostel.el" elpa-dir))
+           (versioned-files
+            (when (file-directory-p elpa-dir)
+              (mapcar (lambda (dir)
+                        (expand-file-name "ghostel.el" dir))
+                      (directory-files elpa-dir t "^ghostel\\($\\|-\\)")))))
+      (or (and (file-exists-p direct-file) direct-file)
+          (catch 'ghostel-file
+            (dolist (file versioned-files)
+              (when (file-exists-p file)
+                (throw 'ghostel-file file)))))))
+  (defun td/locate-ghostel-library-fallback (orig-fn library &rest args)
+    "Resolve Ghostel's library path even when `locate-library' returns nil."
+    (or (apply orig-fn library args)
+        (when (equal library "ghostel")
+          (td/ghostel-library-file))))
+  :init
+  (let ((ghostel-file (td/ghostel-library-file)))
+    (when ghostel-file
+      (let ((ghostel-dir (file-name-directory ghostel-file)))
+        (unless (member ghostel-dir load-path)
+          (add-to-list 'load-path ghostel-dir)))))
+  (unless (advice-member-p #'td/locate-ghostel-library-fallback 'locate-library)
+    (advice-add 'locate-library :around #'td/locate-ghostel-library-fallback))
+  :commands (ghostel ghostel-other ghostel-download-module ghostel-module-compile)
+  :custom
+  (ghostel-shell "/bin/zsh")
+  (ghostel-module-auto-install 'download)
+  :config
+  (defun td/ghostel-module-platform-tag-fallback (orig-fn &rest args)
+    "Map Ghostel's macOS ARM platform tag to the published release asset."
+    (let ((tag (apply orig-fn args)))
+      (if (equal tag "arm64-macos")
+          "aarch64-macos"
+        tag)))
+  (unless (advice-member-p #'td/ghostel-module-platform-tag-fallback
+                           'ghostel--module-platform-tag)
+    (advice-add 'ghostel--module-platform-tag
+                :around
+                #'td/ghostel-module-platform-tag-fallback)))
+
 (use-package detached
   :ensure t
   :hook (after-init . detached-init)
@@ -879,6 +910,38 @@ Uses project root if in a project, otherwise current directory."
                '(markdown-inline . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
                                     "v0.5.3"
                                     "tree-sitter-markdown-inline/src"))))
+
+(with-eval-after-load 'md-ts-mode
+  ;; `md-ts-mode' advises `treesit-update-ranges' globally on Emacs 31.
+  ;; Keep that workaround scoped to md-ts buffers and ignore stale
+  ;; overlay parsers so regular Markdown buffers don't die in redisplay.
+  (defun td/md-ts--refresh-local-parsers (&optional beg end)
+    "Refresh stale `md-ts-mode' local parsers between BEG and END."
+    (when (derived-mode-p 'md-ts-mode)
+      (let ((tick (buffer-chars-modified-tick))
+            (beg (or beg (point-min)))
+            (end (or end (point-max))))
+        (dolist (ov (overlays-in beg end))
+          (let ((parser (overlay-get ov 'treesit-parser))
+                (ov-tick (overlay-get ov 'treesit-parser-ov-timestamp)))
+            (when parser
+              (condition-case nil
+                  (when (not (eql ov-tick tick))
+                    (treesit-parser-language parser)
+                    (when-let* ((new-parser
+                                 (md-ts--recreate-local-parser ov parser)))
+                      (treesit-parser-set-included-ranges
+                       new-parser
+                       `((,(overlay-start ov) . ,(overlay-end ov))))))
+                (treesit-parser-deleted
+                 (overlay-put ov 'treesit-parser nil)
+                 (delete-overlay ov))))))))
+  (when (advice-member-p #'md-ts--refresh-local-parsers
+                         'treesit-update-ranges)
+    (advice-remove 'treesit-update-ranges
+                   #'md-ts--refresh-local-parsers))
+  (advice-add 'treesit-update-ranges :before
+              #'td/md-ts--refresh-local-parsers))
 
 (use-package expreg
   :ensure nil
