@@ -1,0 +1,101 @@
+--- src/nsterm.m.orig
++++ src/nsterm.m
+@@ -31,6 +31,7 @@
+ #include <config.h>
+ 
+ #include <fcntl.h>
++#include <stdlib.h>
+ #include <math.h>
+ #include <pthread.h>
+ #include <sys/types.h>
+@@ -70,6 +71,7 @@
+ #ifdef NS_IMPL_COCOA
+ #include "macfont.h"
+ #include <Carbon/Carbon.h>
++#include <mach-o/dyld.h>
+ #include <IOSurface/IOSurface.h>
+ /* ApplicationServices provides the macOS accessibility Zoom API
+    UAZoomEnabled and UAZoomChangeFocus (UniversalAccess framework).
+@@ -518,8 +520,55 @@
+ {
+   return nconc2 (list, list (item));
+ }
++
++
++#ifdef NS_IMPL_COCOA
++static NSString *
++ns_bundle_path_from_executable (void)
++/* Return the containing .app bundle path based on the real executable.
++
++   NSBundle's main bundle is not reliable when Contents/MacOS/Emacs is
++   invoked through a symlink outside Emacs.app.  Resolve the executable path
++   so symlinked command-line launchers still find bundled resources.  */
++{
++  uint32_t size = 0;
++
++  if (_NSGetExecutablePath (NULL, &size) != -1 || size == 0)
++    return nil;
++
++  char *path = malloc (size);
++  if (!path)
++    return nil;
+ 
++  NSString *bundle_path = nil;
+ 
++  if (_NSGetExecutablePath (path, &size) == 0)
++    {
++      char *resolved = realpath (path, NULL);
++      const char *executable = resolved ? resolved : path;
++      NSString *executable_path = [NSString stringWithUTF8String:executable];
++
++      if (executable_path)
++        {
++          NSString *macos_path = [executable_path stringByDeletingLastPathComponent];
++          NSString *contents_path = [macos_path stringByDeletingLastPathComponent];
++          NSString *candidate = [contents_path stringByDeletingLastPathComponent];
++
++          if ([[macos_path lastPathComponent] isEqualToString:@"MacOS"]
++              && [[contents_path lastPathComponent] isEqualToString:@"Contents"]
++              && [[candidate pathExtension] isEqualToString:@"app"])
++            bundle_path = candidate;
++        }
++
++      free (resolved);
++    }
++
++  free (path);
++  return bundle_path;
++}
++#endif
++
++
+ const char *
+ ns_relocate (const char *epath)
+ /* If we're running in a self-contained app bundle some hard-coded
+@@ -538,9 +587,23 @@
+                                                root, original, nil]];
+   NSFileManager *fileManager = [NSFileManager defaultManager];
+ 
+-  if (![original isAbsolutePath]
+-      && [fileManager fileExistsAtPath:fixedPath isDirectory:NULL])
+-    return [fixedPath UTF8String];
++  if (![original isAbsolutePath])
++    {
++      if ([fileManager fileExistsAtPath:fixedPath isDirectory:NULL])
++        return [fixedPath UTF8String];
++
++#ifdef NS_IMPL_COCOA
++      NSString *executableRoot = ns_bundle_path_from_executable ();
++      if (executableRoot && ![executableRoot isEqualToString:root])
++        {
++          fixedPath = [NSString pathWithComponents:
++                                  [NSArray arrayWithObjects:
++                                             executableRoot, original, nil]];
++          if ([fileManager fileExistsAtPath:fixedPath isDirectory:NULL])
++            return [fixedPath UTF8String];
++        }
++#endif
++    }
+ 
+   /* If we reach here either the path is absolute and therefore we
+      don't need to complete it, or we're unable to relocate the

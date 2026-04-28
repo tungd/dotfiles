@@ -228,6 +228,12 @@ if {$subport eq $name || $subport eq "emacs-devel"} {
 if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
     categories-append   aqua
 
+    if {$subport eq "emacs-app"} {
+        revision 2
+    } else {
+        revision 1
+    }
+
     configure.args-append  --with-ns \
         --with-lcms2 \
         --without-harfbuzz \
@@ -241,7 +247,8 @@ if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
 
     universal_variant   no
 
-    patchfiles-append   patch-Info.plist.in.diff
+    patchfiles-append   patch-Info.plist.in.diff \
+                        patch-ns-resolve-bundle-from-executable.diff
 
     post-patch {
         reinplace "s,@PATH@,${prefix}/bin:${prefix}/sbin:/usr/bin:/bin:/usr/sbin:/sbin," ${worksrcpath}/nextstep/templates/Info.plist.in

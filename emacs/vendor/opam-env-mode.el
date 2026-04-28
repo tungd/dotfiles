@@ -70,7 +70,11 @@ lookups, so repeated hook events do not re-run `opam env' until context changes.
 (defun opam-env--root-has-opam-file-p (root)
   "Return non-nil when ROOT contains at least one .opam file."
   (when (file-directory-p root)
-    (directory-files root nil "\\.opam\\'" t)))
+    (seq-some
+     (lambda (name)
+       (and (string-match-p "\\.opam\\'" name)
+            (file-regular-p (expand-file-name name root))))
+     (file-name-all-completions "" root))))
 
 (defun opam-env--ocaml-root-p (root)
   "Return non-nil when ROOT appears to be an OCaml project root."
@@ -97,8 +101,9 @@ Returns nil when project.el does not identify a project."
 (defun opam-env--locate-ocaml-root (dir)
   "Walk up from DIR to locate a directory that looks like an OCaml root."
   (let ((current (file-name-as-directory (expand-file-name dir)))
+        (home (file-name-as-directory (expand-file-name "~")))
         found)
-    (while (and current (not found))
+    (while (and current (not found) (not (equal current home)))
       (when (opam-env--ocaml-root-p current)
         (setq found current))
       (unless found

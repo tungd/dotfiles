@@ -110,32 +110,8 @@
 
 ;;;; Scratch Buffer
 
-;; Make the scratch buffer persistent and use org-mode by default.
-
-(defconst td/scratch-file
-  (expand-file-name "scratch.org" user-emacs-directory)
-  "File where scratch buffer content is persisted.")
-
-(defun td/scratch-restore ()
-  "Restore scratch buffer content from file."
-  (when (file-exists-p td/scratch-file)
-    (with-current-buffer "*scratch*"
-      (erase-buffer)
-      (insert-file-contents td/scratch-file)
-      (set-buffer-modified-p nil))))
-
-(defun td/scratch-save ()
-  "Save scratch buffer content to file."
-  (with-current-buffer "*scratch*"
-    (write-region (point-min) (point-max) td/scratch-file nil 'quietly)
-    (set-buffer-modified-p nil)))
-
 (setopt initial-scratch-message nil
         initial-major-mode 'org-mode)
-
-(add-hook 'after-init-hook #'td/scratch-restore)
-(add-hook 'kill-emacs-hook #'td/scratch-save)
-(add-hook 'save-buffers-kill-terminal-hook #'td/scratch-save)
 
 ;;;; Server
 (use-package server
@@ -398,7 +374,9 @@ Uses project root if in a project, otherwise current directory."
   :hook (after-init . recentf-mode)
   :custom
   (recentf-max-saved-items 256)
+  (recentf-auto-cleanup 'never)
   :config
+  (add-to-list 'recentf-exclude #'file-remote-p)
   (add-to-list 'recentf-exclude "elpa/.*")
   (add-to-list 'recentf-exclude "__init__.py")
   (add-to-list 'recentf-exclude "_build/*")
@@ -724,7 +702,14 @@ Uses project root if in a project, otherwise current directory."
 
 (use-package opam-env-mode
   :ensure nil
-  :hook (after-init . opam-env-mode))
+  :config
+  (defun td/opam-env-maybe-activate ()
+    "Activate OPAM env for file and Dired buffers."
+    (when (or buffer-file-name
+              (derived-mode-p 'dired-mode))
+      (opam-env--maybe-activate)))
+  (add-hook 'find-file-hook #'td/opam-env-maybe-activate)
+  (add-hook 'dired-mode-hook #'td/opam-env-maybe-activate))
 
 (use-package comint
   :bind ("C-c C-l" . comint-clear-buffer)
@@ -911,37 +896,37 @@ Uses project root if in a project, otherwise current directory."
                                     "v0.5.3"
                                     "tree-sitter-markdown-inline/src"))))
 
-(with-eval-after-load 'md-ts-mode
-  ;; `md-ts-mode' advises `treesit-update-ranges' globally on Emacs 31.
-  ;; Keep that workaround scoped to md-ts buffers and ignore stale
-  ;; overlay parsers so regular Markdown buffers don't die in redisplay.
-  (defun td/md-ts--refresh-local-parsers (&optional beg end)
-    "Refresh stale `md-ts-mode' local parsers between BEG and END."
-    (when (derived-mode-p 'md-ts-mode)
-      (let ((tick (buffer-chars-modified-tick))
-            (beg (or beg (point-min)))
-            (end (or end (point-max))))
-        (dolist (ov (overlays-in beg end))
-          (let ((parser (overlay-get ov 'treesit-parser))
-                (ov-tick (overlay-get ov 'treesit-parser-ov-timestamp)))
-            (when parser
-              (condition-case nil
-                  (when (not (eql ov-tick tick))
-                    (treesit-parser-language parser)
-                    (when-let* ((new-parser
-                                 (md-ts--recreate-local-parser ov parser)))
-                      (treesit-parser-set-included-ranges
-                       new-parser
-                       `((,(overlay-start ov) . ,(overlay-end ov))))))
-                (treesit-parser-deleted
-                 (overlay-put ov 'treesit-parser nil)
-                 (delete-overlay ov))))))))
-  (when (advice-member-p #'md-ts--refresh-local-parsers
-                         'treesit-update-ranges)
-    (advice-remove 'treesit-update-ranges
-                   #'md-ts--refresh-local-parsers))
-  (advice-add 'treesit-update-ranges :before
-              #'td/md-ts--refresh-local-parsers))
+;; (with-eval-after-load 'md-ts-mode
+;;   ;; `md-ts-mode' advises `treesit-update-ranges' globally on Emacs 31.
+;;   ;; Keep that workaround scoped to md-ts buffers and ignore stale
+;;   ;; overlay parsers so regular Markdown buffers don't die in redisplay.
+;;   (defun td/md-ts--refresh-local-parsers (&optional beg end)
+;;     "Refresh stale `md-ts-mode' local parsers between BEG and END."
+;;     (when (derived-mode-p 'md-ts-mode)
+;;       (let ((tick (buffer-chars-modified-tick))
+;;             (beg (or beg (point-min)))
+;;             (end (or end (point-max))))
+;;         (dolist (ov (overlays-in beg end))
+;;           (let ((parser (overlay-get ov 'treesit-parser))
+;;                 (ov-tick (overlay-get ov 'treesit-parser-ov-timestamp)))
+;;             (when parser
+;;               (condition-case nil
+;;                   (when (not (eql ov-tick tick))
+;;                     (treesit-parser-language parser)
+;;                     (when-let* ((new-parser
+;;                                  (md-ts--recreate-local-parser ov parser)))
+;;                       (treesit-parser-set-included-ranges
+;;                        new-parser
+;;                        `((,(overlay-start ov) . ,(overlay-end ov))))))
+;;                 (treesit-parser-deleted
+;;                  (overlay-put ov 'treesit-parser nil)
+;;                  (delete-overlay ov)))))))))
+;;   (when (advice-member-p #'md-ts--refresh-local-parsers
+;;                          'treesit-update-ranges)
+;;     (advice-remove 'treesit-update-ranges
+;;                    #'md-ts--refresh-local-parsers))
+;;   (advice-add 'treesit-update-ranges :before
+;;               #'td/md-ts--refresh-local-parsers))
 
 (use-package expreg
   :ensure nil
@@ -1438,9 +1423,10 @@ Uses project root if in a project, otherwise current directory."
 ;;   :config
 ;;   (load-theme 'tango-plus t))
 
-(use-package amaranth-dark-theme
+(use-package pache-dark-theme
   :ensure t
-  :config (load-theme 'amaranth-dark t))
+  :config
+  (load-theme 'pache-dark t))
 
 (custom-theme-set-faces
  'user

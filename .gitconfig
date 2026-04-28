@@ -15,7 +15,7 @@
   undo = reset --soft HEAD^
   df = diff
   dfc = diff --cached
-  td = commit --amend --author="TD <t.d@revenge.games>" --no-edit
+  td = commit --amend --author='TD <t.d@revenge.games>' --no-edit
 [url "git@github.com:"]
   insteadOf = gh:
 [push]

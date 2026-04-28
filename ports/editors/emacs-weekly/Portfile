@@ -124,15 +124,15 @@ if {$subport eq "emacs-devel" || $subport eq "emacs-app-devel"} {
 
     # do not forget to check that configure hasn't introduce some suprises via
     # git diff [old]..[new] -- '**/configure.ac'
-    github.setup    emacs-mirror emacs ee9b2db1cf036d6f511d7e6eea0189073076e7c0
+    github.setup    emacs-mirror emacs 09f8ce0f52953772095bbb4322fc2d08d34ac2c7
     github.tarball_from archive
     epoch           5
-    version         20260411
+    version         20260428
     revision        0
 
     master_sites    ${github.master_sites}
 
-    checksums       sha256  23ff967add80e1da237566039492cb933eeba5329c3c3eed15a32e152c33ce0d
+    checksums       sha256  23919b8a14efede6e5702d3681aaff3247191ed0aa8bda40e17bb3105f5f9645
 
     livecheck.type none
 
@@ -228,6 +228,12 @@ if {$subport eq $name || $subport eq "emacs-devel"} {
 if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
     categories-append   aqua
 
+    if {$subport eq "emacs-app"} {
+        revision 2
+    } else {
+        revision 1
+    }
+
     configure.args-append  --with-ns \
         --with-lcms2 \
         --without-harfbuzz \
@@ -241,7 +247,8 @@ if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
 
     universal_variant   no
 
-    patchfiles-append   patch-Info.plist.in.diff
+    patchfiles-append   patch-Info.plist.in.diff \
+                        patch-ns-resolve-bundle-from-executable.diff
 
     post-patch {
         reinplace "s,@PATH@,${prefix}/bin:${prefix}/sbin:/usr/bin:/bin:/usr/sbin:/sbin," ${worksrcpath}/nextstep/templates/Info.plist.in
