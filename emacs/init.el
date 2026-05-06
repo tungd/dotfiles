@@ -40,11 +40,18 @@
 (add-to-list 'custom-theme-load-path (concat user-emacs-directory "vendor/"))
 (add-to-list 'load-path (concat user-emacs-directory "vendor/"))
 (add-to-list 'exec-path "/opt/local/bin")
-(add-to-list 'exec-path "~/Library/Python/3.12/bin/")
-(add-to-list 'exec-path "~/Library/pnpm")
-(add-to-list 'exec-path "~/.local/bin")
-(add-to-list 'exec-path "~/.opam/default/bin/")
-(add-to-list 'exec-path "~/.claude/local/")
+(add-to-list 'exec-path (expand-file-name "~/Library/Python/3.12/bin/"))
+(add-to-list 'exec-path (expand-file-name "~/Library/pnpm"))
+(add-to-list 'exec-path (expand-file-name "~/.local/bin"))
+(add-to-list 'exec-path (expand-file-name "~/.opam/default/bin/"))
+(add-to-list 'exec-path (expand-file-name "~/.claude/local/"))
+(setq exec-path
+      (delete-dups
+       (mapcar (lambda (path)
+                 (if (string-prefix-p "~" path)
+                     (expand-file-name path)
+                   path))
+               exec-path)))
 (setenv "PATH" (string-join exec-path ":"))
 
 ;;; Defaults
@@ -245,13 +252,23 @@ Expects structure: ~/Projects/<org>/<project>/node_modules"
 (defvar-local td/delayed-completions-enabled nil
   "Non-nil when the current minibuffer should reveal completions after a prefix.")
 
+(defun td/minibuffer-completions-available-p ()
+  "Return non-nil when current minibuffer contents have completions."
+  (let ((contents (minibuffer-contents)))
+    (consp (completion-all-completions
+            contents
+            minibuffer-completion-table
+            minibuffer-completion-predicate
+            (length contents)))))
+
 (defun td/extended-command-completion-threshold ()
   "Open *Completions* after two characters for selected minibuffer sessions."
   (when td/delayed-completions-enabled
     (let ((input-length (- (point-max) (minibuffer-prompt-end))))
       (cond
        ((>= input-length 2)
-        (unless (get-buffer-window "*Completions*" 0)
+        (unless (or (get-buffer-window "*Completions*" 0)
+                    (not (td/minibuffer-completions-available-p)))
           (minibuffer-completion-help)))
        ((get-buffer-window "*Completions*" 0)
         (minibuffer-hide-completions))))))
@@ -383,7 +400,11 @@ Uses project root if in a project, otherwise current directory."
   (add-to-list 'recentf-exclude "node_modules/.*"))
 
 (bind-key* "C-;" #'execute-extended-command)
-(global-set-key (kbd "C-l") ctl-x-map)
+
+(defvar td/leader-map (make-sparse-keymap)
+  "Personal prefix map used from `C-l'.")
+(set-keymap-parent td/leader-map ctl-x-map)
+(global-set-key (kbd "C-l") td/leader-map)
 
 ;; Use consult for completion-in-region (more efficient than default)
 (setopt completion-in-region-function #'consult-completion-in-region)
@@ -700,103 +721,89 @@ Uses project root if in a project, otherwise current directory."
   :ensure t
   :hook (after-init . envrc-global-mode))
 
+(declare-function opam-env--maybe-activate "opam-env-mode")
+
+(defun td/opam-env-maybe-activate ()
+  "Activate OPAM env for file and Dired buffers."
+  (when (or buffer-file-name
+            (derived-mode-p 'dired-mode))
+    (when (require 'opam-env-mode nil t)
+      (opam-env--maybe-activate))))
+
 (use-package opam-env-mode
   :ensure nil
-  :config
-  (defun td/opam-env-maybe-activate ()
-    "Activate OPAM env for file and Dired buffers."
-    (when (or buffer-file-name
-              (derived-mode-p 'dired-mode))
-      (opam-env--maybe-activate)))
-  (add-hook 'find-file-hook #'td/opam-env-maybe-activate)
-  (add-hook 'dired-mode-hook #'td/opam-env-maybe-activate))
+  :hook ((find-file . td/opam-env-maybe-activate)
+         (dired-mode . td/opam-env-maybe-activate)))
 
 (use-package comint
   :bind ("C-c C-l" . comint-clear-buffer)
   :custom
   (comint-terminfo-terminal "dumb-emacs-ansi"))
 
+(defvar display-comint-buffer-action
+  (append display-buffer--same-window-action '((category . comint)))
+  "Display action for Comint buffers.
+Compatibility binding for packages that still reference this
+variable on Emacs builds where it is no longer predefined.")
+
+(use-package drepl
+  :ensure t
+  :defer t
+  :bind (("C-l r a" . drepl-associate)
+         ("C-l r b" . drepl-eval-buffer)
+         ("C-l r p" . drepl-pop-to-repl)
+         ("C-l r r" . drepl-restart)))
+
+(use-package code-cells
+  :ensure t
+  :defer t
+  :hook (prog-mode . code-cells-mode-maybe)
+  :bind (:map code-cells-mode-map
+              ("C-c C-c" . code-cells-eval)))
+
+(use-package drepl-smolagent
+  :ensure nil
+  :after (drepl code-cells)
+  :custom
+  (drepl-smolagent-environment #'drepl-smolagent-alibaba-coding-plan-environment)
+  :bind (("C-l s" . drepl-smolagent-cells)
+         ("C-l S" . drepl-smolagent)))
+
 (use-package vterm
   :ensure t
+  :defer t
+  :commands (vterm vterm-other-window)
   :custom
   (vterm-shell "/bin/zsh -l"))
 
-(use-package ghostel
-  :vc (:url "https://github.com/dakra/ghostel"
-       :rev :newest)
-  :preface
-  (defun td/ghostel-library-file ()
-    "Return the installed Ghostel library file, or nil if not found."
-    (let* ((elpa-dir (if (boundp 'package-user-dir)
-                         package-user-dir
-                       (expand-file-name "elpa" user-emacs-directory)))
-           (direct-file (expand-file-name "ghostel/ghostel.el" elpa-dir))
-           (versioned-files
-            (when (file-directory-p elpa-dir)
-              (mapcar (lambda (dir)
-                        (expand-file-name "ghostel.el" dir))
-                      (directory-files elpa-dir t "^ghostel\\($\\|-\\)")))))
-      (or (and (file-exists-p direct-file) direct-file)
-          (catch 'ghostel-file
-            (dolist (file versioned-files)
-              (when (file-exists-p file)
-                (throw 'ghostel-file file)))))))
-  (defun td/locate-ghostel-library-fallback (orig-fn library &rest args)
-    "Resolve Ghostel's library path even when `locate-library' returns nil."
-    (or (apply orig-fn library args)
-        (when (equal library "ghostel")
-          (td/ghostel-library-file))))
-  :init
-  (let ((ghostel-file (td/ghostel-library-file)))
-    (when ghostel-file
-      (let ((ghostel-dir (file-name-directory ghostel-file)))
-        (unless (member ghostel-dir load-path)
-          (add-to-list 'load-path ghostel-dir)))))
-  (unless (advice-member-p #'td/locate-ghostel-library-fallback 'locate-library)
-    (advice-add 'locate-library :around #'td/locate-ghostel-library-fallback))
-  :commands (ghostel ghostel-other ghostel-download-module ghostel-module-compile)
-  :custom
-  (ghostel-shell "/bin/zsh")
-  (ghostel-module-auto-install 'download)
-  :config
-  (defun td/ghostel-module-platform-tag-fallback (orig-fn &rest args)
-    "Map Ghostel's macOS ARM platform tag to the published release asset."
-    (let ((tag (apply orig-fn args)))
-      (if (equal tag "arm64-macos")
-          "aarch64-macos"
-        tag)))
-  (unless (advice-member-p #'td/ghostel-module-platform-tag-fallback
-                           'ghostel--module-platform-tag)
-    (advice-add 'ghostel--module-platform-tag
-                :around
-                #'td/ghostel-module-platform-tag-fallback)))
+(defvar td/vterm-agent-prefix-map (make-sparse-keymap)
+  "Prefix map for Vterm Agent commands.")
+(define-key td/vterm-agent-prefix-map (kbd "l")
+            #'vterm-agent-list-sessions)
+(define-key td/vterm-agent-prefix-map (kbd "n")
+            #'vterm-agent-new-session)
+(define-key td/vterm-agent-prefix-map (kbd "a")
+            #'vterm-agent-attach)
+(define-key td/vterm-agent-prefix-map (kbd "c")
+            #'vterm-agent-cells)
+(define-key td/vterm-agent-prefix-map (kbd "k")
+            #'vterm-agent-kill-session)
+(define-key td/vterm-agent-prefix-map (kbd "s")
+            #'vterm-agent-send-cell)
+(define-key td/vterm-agent-prefix-map (kbd "r")
+            #'vterm-agent-refresh-output)
+(define-key td/leader-map (kbd "g") td/vterm-agent-prefix-map)
 
-(use-package detached
-  :ensure t
-  :hook (after-init . detached-init)
-  :bind (;; Replace `async-shell-command' with `detached-shell-command'
-         ([remap async-shell-command] . detached-shell-command)
-           ;; Replace `compile' with `detached-compile'
-           ;; ([remap compile] . detached-compile)
-           ;; ([remap recompile] . detached-recompile)
-           ;; Replace `project-compile' with `detached-project-compile'
-           ;; ([remap project-compile] . detached-project-compile)
-           ;; Replace built in completion of sessions with `consult'
-         ([remap detached-open-session] . detached-consult-session))
-  :custom ((detached-show-output-on-attach t)
-           (detached-terminal-data-command system-type)
-           (detached-notification-function #'td/detached-macos-notification))
-  :config
-  (defun td/detached-macos-notification (session)
-      "Send macOS native notification when SESSION completes."
-      (let* ((status (detached-session-status session))
-             (host (detached-session-host-name session))
-             (command (detached-session-command session))
-             (title (if (eq status 'success)
-                        (format "Detached finished [%s]" host)
-                      (format "Detached failed [%s]" host))))
-        (ns-do-applescript
-         (format "display notification %S with title %S" command title)))))
+(use-package vterm-agent
+  :ensure nil
+  :defer t
+  :commands (vterm-agent-list-sessions
+             vterm-agent-new-session
+             vterm-agent-attach
+             vterm-agent-cells
+             vterm-agent-kill-session
+             vterm-agent-send-cell
+             vterm-agent-refresh-output))
 
 ;;;; Tramp
 (use-package tramp
@@ -990,13 +997,6 @@ Uses project root if in a project, otherwise current directory."
   (setopt
   gptel-default-mode 'org-mode
   gptel-model 'qwen3-coder-next))
-
-(use-package acp
-  :ensure t)
-
-(use-package td-acp
-  :after acp
-  :bind ("C-l c" . td-acp-session-list))
 
 ;;;; Error checking
 (use-package flymake
@@ -1318,9 +1318,17 @@ Uses project root if in a project, otherwise current directory."
 
 ;; Org Babel for literate programming and API documentation.
 
+(declare-function org-link-preview-region "ol" (&optional include-linked refresh beg end))
+
+(defun td/org-babel-preview-inline-images ()
+  "Refresh Org inline image previews after Babel execution."
+  (if (fboundp 'org-link-preview-region)
+      (org-link-preview-region nil t (point-min) (point-max))
+    (funcall (intern "org-display-inline-images"))))
+
 (use-package ob-core
   :defer t
-  :hook (org-babel-after-execute . org-display-inline-images)
+  :hook (org-babel-after-execute . td/org-babel-preview-inline-images)
   :custom
   (org-confirm-babel-evaluate nil))
 
@@ -1370,9 +1378,9 @@ Uses project root if in a project, otherwise current directory."
  `((left-fringe . 8) (right-fringe . 4)
    (border-width . 0) (internal-border-width . 0)
      ;; (font . "Monaco 16")
-     ;; (font . "Iosevka Fixed SS07 16")
+     (font . "Iosevka Fixed SS07 16")
      ;; (font . "Iosevka Mono 16")
-   (font . "JetBrains Mono NL 16")
+     ;; (font . "JetBrains Mono NL 16")
      ;; (font . "Menlo 15")
      ;; (font . "Google Sans Code 16")
      ;; (font . "Fira Mono 16")
@@ -1389,6 +1397,7 @@ Uses project root if in a project, otherwise current directory."
 (setq-default
  cursor-in-non-selected-windows nil
  line-spacing nil
+ cursor-type 'bar
  )
 
 (setq ns-use-thin-smoothing t)
@@ -1400,7 +1409,9 @@ Uses project root if in a project, otherwise current directory."
 
 ;; Hide unnecessary long mode line mode list
 
-(setopt mode-line-collapse-minor-modes t)
+(setopt mode-line-collapse-minor-modes t
+        mode-line-front-space " "
+        mode-line-end-spaces " ")
 
 (use-package hl-line
   :hook ((prog-mode . hl-line-mode)

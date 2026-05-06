@@ -49,6 +49,8 @@ lookups, so repeated hook events do not re-run `opam env' until context changes.
 (defvar opam-env--session-switch-overrides (make-hash-table :test #'equal)
   "Session-only OPAM switch overrides keyed by project root.")
 
+(defvar opam-env-mode)
+
 (defconst opam-env--root-markers '("dune-project" "_opam" ".opam-switch")
   "Files/directories used to identify likely OCaml project roots.")
 
@@ -89,7 +91,7 @@ lookups, so repeated hook events do not re-run `opam env' until context changes.
 
 Returns nil when project.el does not identify a project."
   (let ((default-directory dir))
-    (when-let ((project (project-current nil)))
+    (when-let* ((project (project-current nil)))
       (file-name-as-directory (expand-file-name (project-root project))))))
 
 (defun opam-env--parent-directory (dir)
@@ -112,7 +114,7 @@ Returns nil when project.el does not identify a project."
 
 (defun opam-env--project-root ()
   "Return OCaml project root for current context, or nil."
-  (when-let ((dir (opam-env--context-directory)))
+  (when-let* ((dir (opam-env--context-directory)))
     (let ((project-root (opam-env--project-root-via-project-el dir)))
       (cond
        ((and project-root (opam-env--ocaml-root-p project-root)) project-root)
