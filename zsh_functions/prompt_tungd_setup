@@ -17,10 +17,10 @@ prompt_tungd_precmd() {
   fi
 
   if [[ ${terminfo[colors]:-0} -ge 8 ]]; then
-    PROMPT=$'\n'"%F{red}%n%f@%F{yellow}%m%f in %F{green}%~/%f${git_segment}"$'\n› '
+    PROMPT="%F{red}%n%f@%F{yellow}%m%f in %F{green}%~/%f${git_segment}"$'\n› '
     RPROMPT=''
   else
-    PROMPT=$'\n'"%~/${git_segment}"$'\n› '
+    PROMPT="%~/${git_segment}"$'\n› '
     RPROMPT=''
   fi
 }
