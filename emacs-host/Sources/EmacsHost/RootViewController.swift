@@ -103,6 +103,31 @@ final class RootViewController: NSViewController {
         chromeModel.updateTitle(id: tab.id, title: title)
     }
 
+    func removeTab(for controller: EmacsTabViewController) {
+        guard let index = tabs.firstIndex(where: { $0.controller === controller }) else {
+            return
+        }
+
+        let removed = tabs.remove(at: index)
+        let removedWasSelected = removed.id == selectedTabID
+
+        removed.controller.session.delegate = nil
+        removed.controller.view.removeFromSuperview()
+        removed.controller.removeFromParent()
+        chromeModel.removeTab(id: removed.id)
+
+        if tabs.isEmpty {
+            selectedTabID = nil
+            view.window?.close()
+            return
+        }
+
+        if removedWasSelected {
+            let nextIndex = min(index, tabs.count - 1)
+            select(tabID: tabs[nextIndex].id)
+        }
+    }
+
     private func select(tabID: UUID) {
         selectedTabID = tabID
         chromeModel.selectedTabID = tabID

@@ -14,6 +14,13 @@ final class TabChromeModel: ObservableObject {
         tabs.append(TabChromeItem(id: id, title: title))
     }
 
+    func removeTab(id: UUID) {
+        tabs.removeAll { $0.id == id }
+        if selectedTabID == id {
+            selectedTabID = nil
+        }
+    }
+
     func updateTitle(id: UUID, title: String) {
         guard let index = tabs.firstIndex(where: { $0.id == id }) else {
             return

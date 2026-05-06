@@ -41,7 +41,7 @@ final class EmacsTabViewController: NSViewController, TerminalSessionDelegate, G
     }
 
     func terminalSessionDidExit(_ session: TerminalSession) {
-        terminalView.append(Array("\r\n[emacsclient exited]\r\n".utf8))
+        (parent as? RootViewController)?.removeTab(for: self)
     }
 
     func ghosttyTerminalView(_ view: GhosttyTerminalView, didSend bytes: [UInt8]) {
