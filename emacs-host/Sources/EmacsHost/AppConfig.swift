@@ -4,6 +4,7 @@ struct AppConfig {
     let emacsPath: String
     let emacsclientPath: String
     let serverName: String
+    let terminalType: String
     let initialRows: Int
     let initialCols: Int
 
@@ -16,12 +17,15 @@ struct AppConfig {
             ?? findExecutable("emacsclient")
             ?? "/usr/bin/emacsclient"
         let serverName = environment["EMACS_HOST_SERVER"].flatMap(nonEmpty)
-            ?? "emacs-host"
+            ?? "emacs-host-\(ProcessInfo.processInfo.processIdentifier)"
+        let terminalType = environment["EMACS_HOST_TERM"].flatMap(nonEmpty)
+            ?? "xterm-direct"
 
         return .init(
             emacsPath: emacsPath,
             emacsclientPath: emacsclientPath,
             serverName: serverName,
+            terminalType: terminalType,
             initialRows: 40,
             initialCols: 120
         )

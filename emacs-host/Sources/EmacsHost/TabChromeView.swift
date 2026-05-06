@@ -39,7 +39,7 @@ struct TabChromeView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
-                leadingControls
+                leadingSpacer
 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 0) {
@@ -69,13 +69,9 @@ struct TabChromeView: View {
         .background(Self.chromeBackground)
     }
 
-    private var leadingControls: some View {
-        HStack(spacing: 14) {
-            chromeIconButton("rectangle.split.2x1", action: {})
-            chromeIconButton("square.grid.2x2", action: onNewTab)
-        }
-        .padding(.leading, 92)
-        .frame(width: 146, height: WarpTitlebarMetrics.tabBarHeight, alignment: .leading)
+    private var leadingSpacer: some View {
+        Color.clear
+            .frame(width: 76, height: WarpTitlebarMetrics.tabBarHeight)
     }
 
     private func chromeIconButton(_ symbolName: String, action: @escaping () -> Void) -> some View {
@@ -110,10 +106,11 @@ private struct WarpTabSegment: View {
                 .truncationMode(.tail)
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 16)
+                .frame(width: 178, height: WarpTitlebarMetrics.tabBarHeight)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .foregroundStyle(isSelected ? Self.activeText : Self.inactiveText)
-        .frame(width: 178, height: WarpTitlebarMetrics.tabBarHeight)
         .background(backgroundColor)
         .overlay(alignment: .leading) {
             Rectangle()

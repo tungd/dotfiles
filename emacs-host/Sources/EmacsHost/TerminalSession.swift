@@ -21,7 +21,7 @@ final class TerminalSession {
         title = "Emacs \(index)"
         let argv = [
             "/usr/bin/env",
-            "TERM=xterm-256color",
+            "TERM=\(config.terminalType)",
             "COLORTERM=truecolor",
             "EMACS_HOST=1",
             "EMACS_HOST_OSC=777",

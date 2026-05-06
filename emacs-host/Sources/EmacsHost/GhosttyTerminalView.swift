@@ -4,28 +4,44 @@ import GhosttyKit
 import Metal
 import QuartzCore
 
+typealias TerminalInputHandler = ([UInt8]) -> Void
+
 @MainActor
 protocol GhosttyTerminalViewHost: AnyObject {
     func ghosttyTerminalView(_ view: GhosttyTerminalView, didSend bytes: [UInt8])
-    func ghosttyTerminalView(_ view: GhosttyTerminalView, didResize rows: Int, cols: Int)
+    func ghosttyTerminalView(
+        _ view: GhosttyTerminalView,
+        didUpdateGrid rows: Int,
+        cols: Int,
+        cellWidthPx: UInt32,
+        cellHeightPx: UInt32
+    )
     func ghosttyTerminalView(_ view: GhosttyTerminalView, didSetTitle title: String)
 }
 
 private final class GhosttySurfaceContext {
     weak var view: GhosttyTerminalView?
+    let inputHandler: TerminalInputHandler?
 
-    init(view: GhosttyTerminalView) {
+    init(view: GhosttyTerminalView, inputHandler: TerminalInputHandler?) {
         self.view = view
+        self.inputHandler = inputHandler
     }
 }
 
 private final class GhosttyRuntime {
     static let shared = GhosttyRuntime()
 
+    private static var defaultProfile = EmacsServerProfile.empty
+
     private(set) var app: ghostty_app_t?
     private var config: ghostty_config_t?
     private var tickScheduled = false
     private let tickLock = NSLock()
+
+    static func configureDefaultProfile(_ profile: EmacsServerProfile) {
+        defaultProfile = profile
+    }
 
     private init() {
         initialize()
@@ -47,7 +63,7 @@ private final class GhosttyRuntime {
             return
         }
 
-        guard let primaryConfig = makeConfig(loadUserDefaults: true) else {
+        guard let primaryConfig = makeConfig() else {
             return
         }
 
@@ -66,8 +82,13 @@ private final class GhosttyRuntime {
         runtimeConfig.read_clipboard_cb = { userdata, _, state in
             GhosttyRuntime.readClipboard(userdata: userdata, state: state)
         }
-        runtimeConfig.confirm_read_clipboard_cb = { userdata, text, state, _ in
-            GhosttyRuntime.confirmClipboardRead(userdata: userdata, text: text, state: state)
+        runtimeConfig.confirm_read_clipboard_cb = { userdata, text, state, request in
+            GhosttyRuntime.confirmClipboardRead(
+                userdata: userdata,
+                text: text,
+                state: state,
+                request: request
+            )
         }
         runtimeConfig.write_clipboard_cb = { _, _, contents, count, _ in
             GhosttyRuntime.writeClipboard(contents: contents, count: count)
@@ -76,41 +97,51 @@ private final class GhosttyRuntime {
             GhosttyRuntime.closeSurface(userdata: userdata)
         }
 
-        if let app = ghostty_app_new(&runtimeConfig, primaryConfig) {
-            self.app = app
-            self.config = primaryConfig
-            return
-        }
-
-        ghostty_config_free(primaryConfig)
-
-        guard let fallbackConfig = makeConfig(loadUserDefaults: false),
-              let fallbackApp = ghostty_app_new(&runtimeConfig, fallbackConfig) else {
+        guard let app = ghostty_app_new(&runtimeConfig, primaryConfig) else {
+            ghostty_config_free(primaryConfig)
             fputs("ghostty_app_new failed\n", stderr)
             return
         }
 
-        self.app = fallbackApp
-        self.config = fallbackConfig
+        self.app = app
+        self.config = primaryConfig
     }
 
-    private func makeConfig(loadUserDefaults: Bool) -> ghostty_config_t? {
+    private func makeConfig() -> ghostty_config_t? {
         guard let config = ghostty_config_new() else {
             fputs("ghostty_config_new failed\n", stderr)
             return nil
         }
 
-        if loadUserDefaults {
-            ghostty_config_load_default_files(config)
-        }
+        let defaultBackground = Self.defaultProfile.defaultBackgroundColor ?? "#000000"
+        let defaultForeground = Self.defaultProfile.defaultForegroundColor
 
-        let overrides = """
-        macos-background-from-layer = true
-        shell-integration = none
-        window-padding-x = 0
-        window-padding-y = 0
-        confirm-close-surface = false
-        """
+        var overrideLines = [
+            "shell-integration = none",
+            "window-padding-x = 0",
+            "window-padding-y = 0",
+            "background = \(defaultBackground)",
+            "background-opacity = 1",
+            "minimum-contrast = 1",
+            "palette = 0=\(defaultBackground)",
+            "confirm-close-surface = false",
+            "clipboard-read = deny",
+            "clipboard-write = allow",
+        ]
+        if let foregroundColor = defaultForeground {
+            overrideLines.append("foreground = \(foregroundColor)")
+            overrideLines.append("palette = 7=\(foregroundColor)")
+            overrideLines.append("palette = 15=\(foregroundColor)")
+        }
+        if let fontFamily = Self.defaultProfile.defaultFontFamily?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !fontFamily.isEmpty {
+            overrideLines.append("font-family = \"\"")
+            overrideLines.append("font-family = \(fontFamily)")
+        }
+        if let fontSize = Self.defaultProfile.defaultFontSize {
+            overrideLines.append(String(format: "font-size = %.1f", locale: Locale(identifier: "en_US_POSIX"), fontSize))
+        }
+        let overrides = overrideLines.joined(separator: "\n")
 
         overrides.withCString { ptr in
             ghostty_config_load_string(
@@ -121,7 +152,23 @@ private final class GhosttyRuntime {
             )
         }
         ghostty_config_finalize(config)
+        logDiagnostics(config)
         return config
+    }
+
+    private func logDiagnostics(_ config: ghostty_config_t) {
+        let count = ghostty_config_diagnostics_count(config)
+        guard count > 0 else {
+            return
+        }
+
+        for index in 0..<count {
+            let diagnostic = ghostty_config_get_diagnostic(config, index)
+            guard let message = diagnostic.message else {
+                continue
+            }
+            fputs("ghostty config: \(String(cString: message))\n", stderr)
+        }
     }
 
     private func scheduleTick() {
@@ -220,7 +267,8 @@ private final class GhosttyRuntime {
     private static func confirmClipboardRead(
         userdata: UnsafeMutableRawPointer?,
         text: UnsafePointer<CChar>?,
-        state: UnsafeMutableRawPointer?
+        state: UnsafeMutableRawPointer?,
+        request: ghostty_clipboard_request_e
     ) {
         guard let context = context(from: userdata),
               let text,
@@ -230,7 +278,8 @@ private final class GhosttyRuntime {
 
         DispatchQueue.main.async {
             guard let surface = context.view?.surface else { return }
-            ghostty_surface_complete_clipboard_request(surface, text, state, true)
+            let confirmed = request != GHOSTTY_CLIPBOARD_REQUEST_OSC_52_READ
+            ghostty_surface_complete_clipboard_request(surface, text, state, confirmed)
         }
     }
 
@@ -276,13 +325,20 @@ private final class GhosttyRuntime {
 
 final class GhosttyTerminalView: NSView {
     weak var host: GhosttyTerminalViewHost?
+    var inputHandler: TerminalInputHandler?
 
     fileprivate private(set) var surface: ghostty_surface_t?
+
+    static func configureDefaultProfile(_ profile: EmacsServerProfile) {
+        GhosttyRuntime.configureDefaultProfile(profile)
+    }
 
     private var context: Unmanaged<GhosttySurfaceContext>?
     private var pendingOutput: [[UInt8]] = []
     private var lastRows = 0
     private var lastCols = 0
+    private var lastCellWidthPx: UInt32 = 0
+    private var lastCellHeightPx: UInt32 = 0
     private var lastPixelWidth: UInt32 = 0
     private var lastPixelHeight: UInt32 = 0
     private var lastXScale: CGFloat = 0
@@ -346,6 +402,23 @@ final class GhosttyTerminalView: NSView {
         return true
     }
 
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if performHostKeyEquivalent(with: event) {
+            return true
+        }
+
+        return super.performKeyEquivalent(with: event)
+    }
+
+    func performHostKeyEquivalent(with event: NSEvent) -> Bool {
+        guard event.type == .keyDown,
+              event.modifierFlags.contains(.command) else {
+            return false
+        }
+
+        return sendCommandKeyAsMeta(event)
+    }
+
     func append(_ bytes: [UInt8]) {
         guard let surface = ensureSurface() else {
             pendingOutput.append(bytes)
@@ -373,7 +446,9 @@ final class GhosttyTerminalView: NSView {
             return nil
         }
 
-        let context = Unmanaged.passRetained(GhosttySurfaceContext(view: self))
+        let context = Unmanaged.passRetained(
+            GhosttySurfaceContext(view: self, inputHandler: inputHandler)
+        )
         self.context = context
 
         var config = ghostty_surface_config_new()
@@ -393,6 +468,10 @@ final class GhosttyTerminalView: NSView {
                 .takeUnretainedValue()
             let bytes = Array(UnsafeBufferPointer(start: pointer, count: Int(length))).map {
                 UInt8(bitPattern: $0)
+            }
+            if let inputHandler = context.inputHandler {
+                inputHandler(bytes)
+                return
             }
             DispatchQueue.main.async {
                 guard let view = context.view else { return }
@@ -485,10 +564,24 @@ final class GhosttyTerminalView: NSView {
         let rows = Int(size.rows)
         let cols = Int(size.columns)
         guard rows > 0, cols > 0 else { return }
-        guard rows != lastRows || cols != lastCols else { return }
+        guard rows != lastRows
+            || cols != lastCols
+            || size.cell_width_px != lastCellWidthPx
+            || size.cell_height_px != lastCellHeightPx
+        else {
+            return
+        }
         lastRows = rows
         lastCols = cols
-        host?.ghosttyTerminalView(self, didResize: rows, cols: cols)
+        lastCellWidthPx = size.cell_width_px
+        lastCellHeightPx = size.cell_height_px
+        host?.ghosttyTerminalView(
+            self,
+            didUpdateGrid: rows,
+            cols: cols,
+            cellWidthPx: size.cell_width_px,
+            cellHeightPx: size.cell_height_px
+        )
     }
 
     private func pixelDimension(_ value: CGFloat) -> UInt32 {
@@ -730,6 +823,46 @@ final class GhosttyTerminalView: NSView {
             return nil
         }
         return active ? GHOSTTY_ACTION_PRESS : GHOSTTY_ACTION_RELEASE
+    }
+
+    private func sendCommandKeyAsMeta(_ event: NSEvent) -> Bool {
+        guard let inputHandler else {
+            return false
+        }
+
+        let characters = event.charactersIgnoringModifiers ?? event.characters ?? ""
+        guard let scalar = characters.unicodeScalars.first else {
+            return false
+        }
+
+        let value = scalar.value
+        guard value >= 0x20, value <= 0x7E else {
+            return false
+        }
+
+        if event.modifierFlags.contains(.control),
+           let controlByte = controlByte(for: value) {
+            inputHandler([0x1B, controlByte])
+            return true
+        }
+
+        inputHandler([0x1B] + Array(String(scalar).utf8))
+        return true
+    }
+
+    private func controlByte(for value: UInt32) -> UInt8? {
+        switch value {
+        case 0x40...0x5F:
+            UInt8(value - 0x40)
+        case 0x61...0x7A:
+            UInt8(value - 0x60)
+        case 0x20:
+            0
+        case 0x3F:
+            0x7F
+        default:
+            nil
+        }
     }
 
     private func shouldSendText(_ text: String) -> Bool {

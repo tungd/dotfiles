@@ -8,9 +8,22 @@ final class RootViewController: NSViewController {
         let controller: EmacsTabViewController
     }
 
+    private struct GridMetrics {
+        let rows: Int
+        let cols: Int
+        let cellWidthPx: UInt32
+        let cellHeightPx: UInt32
+    }
+
     private final class ChromeHostingView<Content: View>: NSHostingView<Content> {
         override var mouseDownCanMoveWindow: Bool { true }
 
+        override var safeAreaInsets: NSEdgeInsets {
+            NSEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        }
+    }
+
+    private final class RootContainerView: NSView {
         override var safeAreaInsets: NSEdgeInsets {
             NSEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         }
@@ -21,7 +34,9 @@ final class RootViewController: NSViewController {
     private let contentContainer = NSView()
     private var tabs: [Tab] = []
     private var selectedTabID: UUID?
+    private var gridMetricsByTabID: [UUID: GridMetrics] = [:]
     private var tabCounter = 0
+    private var isApplyingGridSize = false
 
     init(config: AppConfig) {
         self.config = config
@@ -34,10 +49,30 @@ final class RootViewController: NSViewController {
     }
 
     override func loadView() {
-        let root = NSView()
+        let root = RootContainerView()
         root.wantsLayer = true
         root.layer?.backgroundColor = NSColor.black.cgColor
 
+        contentContainer.translatesAutoresizingMaskIntoConstraints = false
+        contentContainer.wantsLayer = true
+        contentContainer.layer?.backgroundColor = NSColor.black.cgColor
+
+        root.addSubview(contentContainer)
+
+        NSLayoutConstraint.activate([
+            contentContainer.leadingAnchor.constraint(equalTo: root.leadingAnchor),
+            contentContainer.trailingAnchor.constraint(equalTo: root.trailingAnchor),
+            contentContainer.topAnchor.constraint(
+                equalTo: root.topAnchor,
+                constant: TabChromeView.height
+            ),
+            contentContainer.bottomAnchor.constraint(equalTo: root.bottomAnchor),
+        ])
+
+        view = root
+    }
+
+    func makeTitlebarChromeView() -> NSView {
         let chromeView = TabChromeView(
             model: chromeModel,
             onSelect: { [weak self] tabID in
@@ -49,27 +84,7 @@ final class RootViewController: NSViewController {
         ).ignoresSafeArea()
         let chromeHost = ChromeHostingView(rootView: chromeView)
         chromeHost.translatesAutoresizingMaskIntoConstraints = false
-
-        contentContainer.translatesAutoresizingMaskIntoConstraints = false
-        contentContainer.wantsLayer = true
-        contentContainer.layer?.backgroundColor = NSColor.black.cgColor
-
-        root.addSubview(chromeHost)
-        root.addSubview(contentContainer)
-
-        NSLayoutConstraint.activate([
-            chromeHost.leadingAnchor.constraint(equalTo: root.leadingAnchor),
-            chromeHost.trailingAnchor.constraint(equalTo: root.trailingAnchor),
-            chromeHost.topAnchor.constraint(equalTo: root.topAnchor),
-            chromeHost.heightAnchor.constraint(equalToConstant: TabChromeView.height),
-
-            contentContainer.leadingAnchor.constraint(equalTo: root.leadingAnchor),
-            contentContainer.trailingAnchor.constraint(equalTo: root.trailingAnchor),
-            contentContainer.topAnchor.constraint(equalTo: chromeHost.bottomAnchor),
-            contentContainer.bottomAnchor.constraint(equalTo: root.bottomAnchor),
-        ])
-
-        view = root
+        return chromeHost
     }
 
     @objc func openNewTab(_ sender: Any?) {
@@ -103,6 +118,30 @@ final class RootViewController: NSViewController {
         chromeModel.updateTitle(id: tab.id, title: title)
     }
 
+    func updateGridMetrics(
+        for controller: EmacsTabViewController,
+        rows: Int,
+        cols: Int,
+        cellWidthPx: UInt32,
+        cellHeightPx: UInt32
+    ) {
+        guard let tab = tabs.first(where: { $0.controller === controller }) else {
+            return
+        }
+
+        let metrics = GridMetrics(
+            rows: rows,
+            cols: cols,
+            cellWidthPx: cellWidthPx,
+            cellHeightPx: cellHeightPx
+        )
+        gridMetricsByTabID[tab.id] = metrics
+
+        if tab.id == selectedTabID {
+            applyWindowGridSizing(metrics)
+        }
+    }
+
     func removeTab(for controller: EmacsTabViewController) {
         guard let index = tabs.firstIndex(where: { $0.controller === controller }) else {
             return
@@ -115,6 +154,7 @@ final class RootViewController: NSViewController {
         removed.controller.view.removeFromSuperview()
         removed.controller.removeFromParent()
         chromeModel.removeTab(id: removed.id)
+        gridMetricsByTabID.removeValue(forKey: removed.id)
 
         if tabs.isEmpty {
             selectedTabID = nil
@@ -128,6 +168,15 @@ final class RootViewController: NSViewController {
         }
     }
 
+    func performHostKeyEquivalent(with event: NSEvent) -> Bool {
+        guard let selectedTabID,
+              let tab = tabs.first(where: { $0.id == selectedTabID }) else {
+            return false
+        }
+
+        return tab.controller.performHostKeyEquivalent(with: event)
+    }
+
     private func select(tabID: UUID) {
         selectedTabID = tabID
         chromeModel.selectedTabID = tabID
@@ -136,8 +185,47 @@ final class RootViewController: NSViewController {
             tab.controller.view.isHidden = !selected
             if selected {
                 view.window?.makeFirstResponder(tab.controller.view)
+                if let metrics = gridMetricsByTabID[tab.id] {
+                    applyWindowGridSizing(metrics)
+                }
             }
         }
+    }
+
+    private func applyWindowGridSizing(_ metrics: GridMetrics) {
+        guard !isApplyingGridSize,
+              metrics.rows > 0,
+              metrics.cols > 0,
+              metrics.cellWidthPx > 0,
+              metrics.cellHeightPx > 0,
+              let window = view.window,
+              let contentView = window.contentView else {
+            return
+        }
+
+        let scale = max(window.backingScaleFactor, 1)
+        let cellWidth = CGFloat(metrics.cellWidthPx) / scale
+        let cellHeight = CGFloat(metrics.cellHeightPx) / scale
+        let targetSize = NSSize(
+            width: CGFloat(metrics.cols) * cellWidth,
+            height: TabChromeView.height + CGFloat(metrics.rows) * cellHeight
+        )
+        let currentSize = contentView.bounds.size
+
+        window.contentResizeIncrements = NSSize(width: cellWidth, height: cellHeight)
+        window.contentMinSize = NSSize(
+            width: cellWidth * 40,
+            height: TabChromeView.height + cellHeight * 10
+        )
+
+        guard abs(currentSize.width - targetSize.width) > 0.5
+            || abs(currentSize.height - targetSize.height) > 0.5 else {
+            return
+        }
+
+        isApplyingGridSize = true
+        window.setContentSize(targetSize)
+        isApplyingGridSize = false
     }
 
     private func present(error: Error) {
