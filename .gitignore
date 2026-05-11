@@ -6,6 +6,8 @@ emacs/*
 !emacs/authinfo.gpg
 !emacs/vendor
 !emacs/td-command-workspace.el
+!emacs/td-command-workspace-tests.el
+!emacs/td-command-workspace-code-cells-smoke.el
 emacs/vendor/copilot
 !emacs/snippets
 .yas-compiled-snippets.el
