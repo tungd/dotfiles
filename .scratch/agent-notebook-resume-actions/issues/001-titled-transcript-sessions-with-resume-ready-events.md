@@ -2,9 +2,10 @@
 title: "Titled Transcript Sessions with resume-ready events"
 labels:
   - enhancement
-  - ready-for-agent
-status: ready-for-agent
+  - complete
+status: complete
 type: AFK
+workspace: /Users/tung/Projects/personal/td-agent
 ---
 
 ## Parent

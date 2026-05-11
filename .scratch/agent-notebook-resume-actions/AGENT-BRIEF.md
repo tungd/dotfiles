@@ -3,42 +3,53 @@
 ## Agent Brief
 
 **Category:** enhancement
-**Summary:** Implement Agent Resume, Agent Notebook projection, and Emacs-native action handling for the Workflow Agent CLI.
+**Summary:** Build a usable standalone Workflow Agent CLI before returning to Emacs Agent Notebook integration.
 
 **Current behavior:**
 The Command Workspace has durable Project Workspaces and EAT/tmux-backed
 Project Terminals. The Workflow Agent CLI can run a real Responses-style tool
 loop, use Codex OAuth, execute core coding tools, emit Warp-compatible CLI Agent
-Events, and write a global transcript log plus SQLite index. Emacs can launch
-the agent and show an early notebook/transcript prototype, but each agent run
-creates a new Transcript Session, resume is not a first-class CLI operation,
-provider-normalized conversation state is not yet sufficient for exact replay,
-permission requests do not block tool execution through an Emacs decision path,
-and missed agent activity is not collected in an Agent Action Queue.
+Events, and write a global transcript log plus SQLite index. Recent CLI work has
+started Agent Resume, permission flow, and provider streaming hardening. Emacs
+can launch the agent and show an early notebook/transcript prototype, but the
+Emacs projection is surfacing UI bugs before the CLI product surface is strong
+enough to carry daily standalone work.
 
 **Desired behavior:**
-The Workflow Agent CLI should support Agent Resume as a first-class operation.
-New runs create titled Agent Tasks and Transcript Sessions. Resume continues an
-existing Transcript Session by session id, either with an immediate prompt or
-with an interactive line-oriented prompt loop. Resume reconstructs provider
-input exactly from Provider Conversation Items stored in the Canonical Event Log
-and reports a clear error if exact reconstruction is impossible.
+`td-agent` should become a usable standalone Workflow Agent CLI before Emacs
+depends on it as the primary Agent Notebook backend. New runs create titled
+Agent Tasks and Transcript Sessions. Resume continues an existing Transcript
+Session by session id, either with an immediate prompt or with an interactive
+line-oriented prompt loop. Resume reconstructs provider input exactly from
+Provider Conversation Items stored in the Canonical Event Log and reports a
+clear error if exact reconstruction is impossible.
 
-Emacs should provide an Agent Notebook for one Transcript Session. The notebook
-is a disposable Notebook Projection: prior Notebook Cells are read-only, exactly
-one Draft Notebook Cell is editable, submitting the draft runs one
-non-interactive Agent Resume invocation, and completed cells reconcile from the
-Canonical Event Log. Prompt and response text are visible by default; tool
-activity is present but collapsed by default; permission requests and questions
-are prominent.
+The standalone CLI should add a simplified operator surface: list sessions,
+open compact transcript views, resume sessions, inspect pending actions,
+approve/deny permissions, answer questions, and show memory/browser/multi-agent
+status without high-frequency full-screen terminal repainting.
 
-Agent Permission Flow should move into this slice. Permissioned Agent Tools
-emit `permission_request`, block until an operator decision, record
-`permission_replied`, and continue only after approval or denial. Permission
-Decisions are delivered by a Permission Reply Command, not terminal stdin.
-Questions are answered as normal Agent Resume prompts. Emacs surfaces
-questions and permissions through Agent Action Transients, tracks actionable
-events in an Agent Action Queue, and shows only Emacs-local notifications.
+The standalone CLI should also grow the jcode-inspired capabilities that matter
+for this workflow: semantic Agent Memory with extraction and consolidation,
+browser automation through a permissioned browser tool or bridge, session-aware
+multi-agent collaboration, and explicit self-development commands for editing,
+building, testing, and reloading `td-agent`.
+
+Emacs integration remains the desired Command Workspace experience, but it is a
+later projection over stable standalone contracts: Agent Notebook, Agent Action
+Transient, Agent Action Queue, and Emacs-local notifications consume the same
+Canonical Event Log and Universal Agent Support Channel.
+
+**Implementation workspaces:**
+This is a coupled multi-workspace slice. The issue queue lives in this dotfiles
+repo, but CLI-owned issues declare:
+
+```yaml
+workspace: /Users/tung/Projects/personal/td-agent
+```
+
+AFK should run those issues in the declared workspace while keeping the issue
+body and product context in this coordinator repo.
 
 **Key interfaces:**
 - `td-agent run` — should accept an optional Agent Task title and create a new
@@ -60,18 +71,21 @@ events in an Agent Action Queue, and shows only Emacs-local notifications.
 - Permission coordinator — should create pending permission requests, wait for
   decisions, consume replies, and preserve blocked state across live process
   churn.
-- Agent Event Ingestion — should parse and validate Warp v1 `warp://cli-agent`
-  events from notebook-launched processes and later Terminal Surfaces.
-- Agent Notebook projection — should open existing sessions, create new tasks,
-  render Draft/Running/Complete/Blocked Notebook Cells, and submit the current
-  Draft Notebook Cell.
-- Agent Action Transient — should expose answer, approve, deny, open notebook,
-  and dismiss/review actions as appropriate for the event type.
-- Agent Action Queue — should list pending permission requests, questions,
-  completed cells, and errored sessions and activate the relevant Project
-  Workspace and Agent Notebook.
-- Emacs-local notification presenter — should show minimal in-Emacs
-  notifications and fall back to Emacs messages plus Agent Action Queue entries.
+- Standalone operator UI — should list sessions, open compact transcript views,
+  resume sessions, list pending actions, approve/deny permissions, answer
+  questions, and show memory/browser/multi-agent/self-dev status.
+- Semantic memory subsystem — should remember, search, extract from Transcript
+  Sessions, consolidate duplicate memories, and expose auditable retrieval.
+- Browser automation tool/bridge — should navigate, observe, screenshot, extract
+  page text/DOM, perform simple interactions, and record artifacts as transcript
+  events.
+- Multi-agent collaboration — should support bounded sideagents/delegated
+  sessions linked to a parent Agent Task or Transcript Session.
+- Self-development commands — should support explicit build/test/reload
+  workflows for `td-agent` while respecting permission policy.
+- Later Emacs integration — Agent Event Ingestion, Agent Notebook projection,
+  Agent Action Transient, Agent Action Queue, and Emacs-local notification
+  presenter should consume the standalone CLI contracts after they stabilize.
 
 **Acceptance criteria:**
 - [ ] New agent runs can create titled Agent Tasks and titled Transcript Sessions.
@@ -84,12 +98,6 @@ events in an Agent Action Queue, and shows only Emacs-local notifications.
 - [ ] Compact live CLI Agent Events remain Warp v1-compatible and do not send full Provider Conversation Items through OSC 777.
 - [ ] `stop` completes the current Notebook Cell without permanently closing the Agent Task.
 - [ ] `idle_prompt` makes the same Transcript Session ready for the next operator prompt.
-- [ ] Emacs can open an Agent Notebook for an existing Transcript Session.
-- [ ] Emacs can create a new Agent Notebook that starts a new Agent Task and binds to the emitted Transcript Session id.
-- [ ] Agent Notebook rendering makes prior cells read-only and leaves only one Draft Notebook Cell editable.
-- [ ] Submitting a Draft Notebook Cell invokes non-interactive Agent Resume with the correct session id and prompt.
-- [ ] Running cells stream live output and then reconcile the completed cell from the Canonical Event Log.
-- [ ] Tool activity is preserved but collapsed by default in the Agent Notebook.
 - [ ] Read-only Agent Tools run without permission prompts.
 - [ ] Permissioned Agent Tools emit `permission_request` and do not execute until approved.
 - [ ] Unknown or unclassified tools require permission by default.
@@ -97,14 +105,26 @@ events in an Agent Action Queue, and shows only Emacs-local notifications.
 - [ ] Denying a permission request records `permission_replied` and returns a denial result to the Agent Tool Loop.
 - [ ] Pending permissions remain blocked indefinitely and are not auto-approved or auto-denied.
 - [ ] A blocked Transcript Session remains recoverable through Agent Resume if the live process exits.
-- [ ] `question_asked` opens an Agent Action Transient and answering submits a normal Agent Resume prompt.
-- [ ] Agent Action Queue lists pending permissions, questions, completed cells, and errored sessions.
-- [ ] Selecting an Agent Action Queue item opens the relevant Project Workspace and Agent Notebook.
-- [ ] Selecting an actionable queue item opens the appropriate Agent Action Transient.
-- [ ] Agent Notifications stay inside Emacs and do not use desktop notifications.
-- [ ] Opening a Transcript Session marks relevant Agent Notifications as read.
+- [ ] `question_asked` is visible in the standalone pending action surface and answering submits a normal Agent Resume prompt.
+- [ ] Standalone CLI can list recent Transcript Sessions by project/title/time.
+- [ ] Standalone CLI can open a compact transcript view for one Transcript Session.
+- [ ] Standalone CLI can list pending permission requests and questions.
+- [ ] Standalone CLI can approve, deny, and answer pending actions without Emacs.
+- [ ] Standalone UI avoids high-frequency full-screen redraw/spinner behavior.
+- [ ] Semantic Agent Memory can remember, search, extract from a completed Transcript Session, consolidate duplicates, and show retrieval provenance.
+- [ ] Browser automation can navigate, observe, screenshot, extract text/DOM, perform simple interactions, and record artifacts in the Transcript Session.
+- [ ] Browser automation is permissioned when it interacts with pages or sensitive data.
+- [ ] Multi-agent collaboration can start a bounded sideagent/delegated session and link its events/results to the parent Transcript Session.
+- [ ] Self-development commands can run explicit build/test/reload workflows and record their results.
+- [ ] Later Emacs integration can open an Agent Notebook for an existing Transcript Session.
+- [ ] Later Emacs integration can create a new Agent Notebook that starts a new Agent Task and binds to the emitted Transcript Session id.
+- [ ] Later Agent Notebook rendering makes prior cells read-only and leaves only one Draft Notebook Cell editable.
+- [ ] Later Agent Notebook submission invokes non-interactive Agent Resume with the correct session id and prompt.
+- [ ] Later Agent Notebook running cells stream live output and reconcile completed cells from the Canonical Event Log.
+- [ ] Later Agent Notebook tool activity is preserved but collapsed by default.
 - [ ] CLI tests cover resume reconstruction, permission classification, permission coordination, event compatibility, and command behavior without network calls.
-- [ ] Emacs tests cover event ingestion, notebook rendering/editability/submission, action transient dispatch, queue activation, and local notification behavior.
+- [ ] CLI tests cover standalone UI commands, semantic memory, browser automation, multi-agent linkage, and self-development workflows without requiring Emacs.
+- [ ] Later Emacs tests cover event ingestion, notebook rendering/editability/submission, action transient dispatch, queue activation, and local notification behavior.
 
 **Out of scope:**
 - Full-screen terminal UI for the Workflow Agent CLI.
@@ -115,8 +135,8 @@ events in an Agent Action Queue, and shows only Emacs-local notifications.
 - Remote Execution Handoff.
 - Org export for Agent Skills.
 - Project Dashboard, weekly summaries, or project-management views.
-- Semantic Agent Memory, embeddings, graph retrieval, clustering, sidecar verification, or async memory agents.
-- Browser automation, web search, MCP, subagents, batch execution, ambient work, self-development, side panels, or Gmail tools.
+- Full jcode-style rich side panels.
+- Gmail tools.
 - Desktop notifications.
 - Full autonomy presets or a rich permission policy editor.
 - Background bash jobs, stdin interaction for bash tools, or long-running tool supervision.

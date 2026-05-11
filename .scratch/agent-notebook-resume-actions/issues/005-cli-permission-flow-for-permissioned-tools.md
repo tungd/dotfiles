@@ -5,6 +5,7 @@ labels:
   - ready-for-agent
 status: ready-for-agent
 type: AFK
+workspace: /Users/tung/Projects/personal/td-agent
 ---
 
 ## Parent

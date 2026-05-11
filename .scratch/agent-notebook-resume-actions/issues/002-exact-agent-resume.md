@@ -2,9 +2,10 @@
 title: "Exact Agent Resume"
 labels:
   - enhancement
-  - ready-for-agent
-status: ready-for-agent
+  - complete
+status: complete
 type: AFK
+workspace: /Users/tung/Projects/personal/td-agent
 ---
 
 ## Parent
@@ -27,14 +28,14 @@ Transcript Session.
 
 ## Acceptance criteria
 
-- [ ] `td-agent resume SESSION_ID PROMPT` appends a new prompt to the existing Transcript Session.
-- [ ] Promptless `td-agent resume SESSION_ID` starts a line-oriented Interactive Agent Resume.
-- [ ] Agent Resume reconstructs provider input from Provider Conversation Items, not rendered notebook text.
-- [ ] Agent Resume reports a clear error for missing sessions.
-- [ ] Agent Resume reports a clear error when exact reconstruction is impossible.
-- [ ] `stop` completes the current continuation without permanently closing the Agent Task.
-- [ ] `idle_prompt` indicates the same Transcript Session is ready for another prompt.
-- [ ] Tests cover successful resume, promptless resume, missing session errors, malformed reconstruction errors, and continuation event semantics.
+- [x] `td-agent resume SESSION_ID PROMPT` appends a new prompt to the existing Transcript Session.
+- [x] Promptless `td-agent resume SESSION_ID` starts a line-oriented Interactive Agent Resume.
+- [x] Agent Resume reconstructs provider input from Provider Conversation Items, not rendered notebook text.
+- [x] Agent Resume reports a clear error for missing sessions.
+- [x] Agent Resume reports a clear error when exact reconstruction is impossible.
+- [x] `stop` completes the current continuation without permanently closing the Agent Task.
+- [x] `idle_prompt` indicates the same Transcript Session is ready for another prompt.
+- [x] Tests cover successful resume, promptless resume, missing session errors, malformed reconstruction errors, and continuation event semantics.
 
 ## Blocked by
 
