@@ -240,6 +240,12 @@ The transfer of an Agent Task from a local Agent Session to a remote runner whil
 preserving task and transcript identity.
 _Avoid_: SSH session, remote shell
 
+**Remote AFK Runner**:
+A pragmatic remote machine path for running local AFK issue work through the
+existing Codex CLI without preserving Workflow Agent CLI task or transcript
+identity.
+_Avoid_: Remote Execution Handoff, SSH session
+
 **CLI Agent Event**:
 A structured event emitted by a Workflow Agent CLI to describe session state,
 prompts, tool activity, permission flow, questions, and completion.
@@ -502,6 +508,9 @@ _Avoid_: agent workspace
   tool loop are reliable.
 - A **Remote Execution Handoff** keeps the same **Agent Task** and **Transcript
   Session** identity across local and remote execution.
+- A **Remote AFK Runner** may use SSH, git, and tmux as a pragmatic execution
+  substrate, but it is not a **Remote Execution Handoff** until it preserves
+  **Agent Task** and **Transcript Session** identity.
 - The **CLI Agent Event Transport** follows Warp's structured OSC 777 shape:
   title `warp://cli-agent`, JSON body, protocol version, agent identity, session
   identity, project context, and event-specific fields.
