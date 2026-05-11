@@ -1,4 +1,5 @@
 .DS_Store
+.scratch/afk-runs/
 emacs/*
 *.elc
 !emacs/init.el
