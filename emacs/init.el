@@ -950,6 +950,15 @@ With prefix argument FORCE, rebuild every configured grammar."
 
 ;; Alibaba Coding Plan via DashScope's OpenAI-compatible endpoint.
 
+(defconst td/llm-bench-root "/Users/tung/Projects/personal/llm-bench"
+  "Local llm-bench checkout used by the MLX gptel backend.")
+
+(defun td/load-mlx-local-gptel ()
+  "Load the local MLX E2B gptel backend from `td/llm-bench-root'."
+  (let ((file (expand-file-name "docs/gptel-mlx-local.el" td/llm-bench-root)))
+    (when (file-readable-p file)
+      (load-file file))))
+
 (use-package gptel-alibaba-coding-plan
   :load-path "vendor"
   :functions (gptel-alibaba-coding-plan-setup))
@@ -962,9 +971,8 @@ With prefix argument FORCE, rebuild every configured grammar."
   (require 'gptel-org)
   (require 'gptel-alibaba-coding-plan)
   (gptel-alibaba-coding-plan-setup)
-  (setopt
-  gptel-default-mode 'org-mode
-  gptel-model 'qwen3-coder-next))
+  (setopt gptel-default-mode 'org-mode)
+  (td/load-mlx-local-gptel))
 
 ;;;; Error checking
 (use-package flymake
