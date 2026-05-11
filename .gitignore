@@ -5,6 +5,7 @@ emacs/*
 !emacs/early-init.el
 !emacs/authinfo.gpg
 !emacs/vendor
+!emacs/td-command-workspace.el
 emacs/vendor/copilot
 !emacs/snippets
 .yas-compiled-snippets.el

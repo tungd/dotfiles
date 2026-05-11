@@ -25,6 +25,7 @@
 (use-package package
   :config
   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+  (add-to-list 'package-archives '("nongnu" . "https://elpa.nongnu.org/nongnu/") t)
   :custom
   (package-quickstart t))
 
@@ -377,6 +378,7 @@ Uses project root if in a project, otherwise current directory."
   "Personal prefix map used from `C-l'.")
 (set-keymap-parent td/leader-map ctl-x-map)
 (global-set-key (kbd "C-l") td/leader-map)
+(bind-key* "C-l" td/leader-map)
 
 ;; Use consult for completion-in-region (more efficient than default)
 (setopt completion-in-region-function #'consult-completion-in-region)
@@ -727,21 +729,17 @@ variable on Emacs builds where it is no longer predefined.")
          ("C-l r p" . drepl-pop-to-repl)
          ("C-l r r" . drepl-restart)))
 
+(use-package eat
+  :ensure t
+  :defer t
+  :commands (eat))
+
 (use-package code-cells
   :ensure t
   :defer t
   :hook (prog-mode . code-cells-mode-maybe)
   :bind (:map code-cells-mode-map
               ("C-c C-c" . code-cells-eval)))
-
-(use-package drepl-smolagent
-  :ensure nil
-  :load-path "vendor"
-  :after (drepl code-cells)
-  :custom
-  (drepl-smolagent-environment #'drepl-smolagent-alibaba-coding-plan-environment)
-  :bind (("C-l s" . drepl-smolagent-cells)
-         ("C-l S" . drepl-smolagent)))
 
 (use-package vterm
   :ensure t
@@ -751,35 +749,8 @@ variable on Emacs builds where it is no longer predefined.")
   :custom
   (vterm-shell "/bin/zsh -l"))
 
-(defvar td/vterm-agent-prefix-map (make-sparse-keymap)
-  "Prefix map for Vterm Agent commands.")
-(define-key td/vterm-agent-prefix-map (kbd "l")
-            #'vterm-agent-list-sessions)
-(define-key td/vterm-agent-prefix-map (kbd "n")
-            #'vterm-agent-new-session)
-(define-key td/vterm-agent-prefix-map (kbd "a")
-            #'vterm-agent-attach)
-(define-key td/vterm-agent-prefix-map (kbd "c")
-            #'vterm-agent-cells)
-(define-key td/vterm-agent-prefix-map (kbd "k")
-            #'vterm-agent-kill-session)
-(define-key td/vterm-agent-prefix-map (kbd "s")
-            #'vterm-agent-send-cell)
-(define-key td/vterm-agent-prefix-map (kbd "r")
-            #'vterm-agent-refresh-output)
-(define-key td/leader-map (kbd "g") td/vterm-agent-prefix-map)
-
-(use-package vterm-agent
-  :ensure nil
-  :load-path "vendor"
-  :defer t
-  :commands (vterm-agent-list-sessions
-             vterm-agent-new-session
-             vterm-agent-attach
-             vterm-agent-cells
-             vterm-agent-kill-session
-             vterm-agent-send-cell
-             vterm-agent-refresh-output))
+(load (expand-file-name "td-command-workspace.el" user-emacs-directory))
+(td/command-workspace-install td/leader-map)
 
 ;;;; Tramp
 (use-package tramp
@@ -1214,7 +1185,7 @@ With prefix argument FORCE, rebuild every configured grammar."
 
 ;; Here's my basic Org setup:
 
-;; - A default =inbox.org= on Desktop for tasks capturing and project management
+;; - A default =INBOX.org= in Documents for task capture and project management
 ;; - Nicer display with inline images
 ;; - Enable GTD todo keyword sequence and time logging
 
@@ -1222,7 +1193,28 @@ With prefix argument FORCE, rebuild every configured grammar."
   :custom
   (org-plantuml-jar-path "/opt/local/share/java/plantuml/plantuml.jar"))
 
+(defconst td/org-inbox-file (expand-file-name "~/Documents/INBOX.org")
+  "Path to the main Org inbox file.")
+
+(defun td/org-open-inbox ()
+  "Open the main Org inbox file."
+  (interactive)
+  (find-file td/org-inbox-file))
+
+(defun td/org-open-inbox-workspace ()
+  "Open the main Org inbox file in a command workspace."
+  (interactive)
+  (td/command-workspace-open-project-workspace
+   (file-name-directory td/org-inbox-file)
+   td/org-inbox-file))
+
+(with-eval-after-load 'td-command-workspace
+  (define-key td/command-workspace-prefix-map
+              (kbd "i")
+              #'td/org-open-inbox-workspace))
+
 (defun td/org-electric-pair ()
+  (require 'elec-pair)
   (setq-local
    electric-pair-inhibit-predicate
    `(lambda (c)
@@ -1234,8 +1226,8 @@ With prefix argument FORCE, rebuild every configured grammar."
          (org-mode . td/org-electric-pair))
   :custom
   (org-directory "~/Documents/Journal")
-  (org-default-notes-file (expand-file-name "inbox.org" org-directory))
-  (org-agenda-files `(,org-directory))
+  (org-default-notes-file td/org-inbox-file)
+  (org-agenda-files `(,td/org-inbox-file ,org-directory))
   (org-agenda-skip-unavailable-files t)
   (org-hide-leading-stars t)
     ;; (org-refile-targets '(("~/Desktop/archive.org" . (:level . 1))))
@@ -1285,6 +1277,7 @@ With prefix argument FORCE, rebuild every configured grammar."
 
 (use-package org-agenda
   :bind (("C-c o a" . org-agenda)
+         ("C-c o i" . td/org-open-inbox)
          ("C-c o t" . org-todo-list))
   :custom
   (org-agenda-restore-windows-after-quit t)
@@ -1295,7 +1288,7 @@ With prefix argument FORCE, rebuild every configured grammar."
 ;;;; Note taking
 
 ;; As stated earlier, I practice GTD. Working projects and new stuffs go to
-;; =inbox.org= file. Old tasks are archived to =archive.org=. Here's my
+;; =INBOX.org= file. Old tasks are archived to =archive.org=. Here's my
 ;; =org-capture= templates to dump stuffs to =inbox/note=
 
 (use-package org-capture
@@ -1303,12 +1296,12 @@ With prefix argument FORCE, rebuild every configured grammar."
   :custom
   (org-capture-templates
    `(("t" "Inbox item" entry
-      (file+headline "~/Desktop/inbox.org" "Inbox") nil)
+      (file ,td/org-inbox-file) nil)
      ("l" "TIL" entry
-      (file+olp+datetree "~/Desktop/inbox.org" "TIL") nil
+      (file+olp+datetree ,td/org-inbox-file "TIL") nil
       :jump-to-captured t)
      ("b" "Blog" entry
-      (file+olp+datetree "~/Desktop/inbox.org" "Blog") nil
+      (file+olp+datetree ,td/org-inbox-file "Blog") nil
       :jump-to-captured t))))
 
 ;;;; Literate programming
@@ -1375,7 +1368,7 @@ With prefix argument FORCE, rebuild every configured grammar."
  `((left-fringe . 8) (right-fringe . 4)
    (border-width . 0) (internal-border-width . 0)
      ;; (font . "Monaco 16")
-     (font . "Iosevka Fixed SS07 18")
+     (font . "Iosevka Fixed SS07 16")
      ;; (font . "Iosevka Mono 16")
      ;; (font . "JetBrains Mono NL 16")
      ;; (font . "Menlo 15")

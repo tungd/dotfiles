@@ -117,3 +117,5 @@ export PATH="$HOME/.claude/local:$PATH"
 
 # Added by OrbStack: command-line tools and integration
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
+
+export AGENTCTL_DATABASE_URL='postgres://agentctl:t680wj3zre10s4vsquzfodin@100.84.248.34:55432/agentctl?sslmode=disable'

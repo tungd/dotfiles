@@ -1,0 +1,3 @@
+# Agent Tool Surface Starts With Core Coding Tools
+
+The Workflow Agent CLI will follow jcode's tool conventions but implement the first slice around core coding tools: file read/write/edit, grep/glob/ls, bash, todos, memory, and transcript/session search. Skills are deferred until the org export backend exists. Larger integration tools such as browser automation, web search, MCP, subagents, batch execution, ambient work, self-development, side panels, and Gmail are also deferred so the first OCaml runtime proves the provider loop, transcript events, and local coding workflow before expanding outward.
