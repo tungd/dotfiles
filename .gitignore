@@ -3,7 +3,6 @@ emacs/*
 *.elc
 !emacs/init.el
 !emacs/early-init.el
-!emacs/custom.el
 !emacs/authinfo.gpg
 !emacs/vendor
 emacs/vendor/copilot

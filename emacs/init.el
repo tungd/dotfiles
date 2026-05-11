@@ -1,5 +1,6 @@
 ;;; init.el --- Tung Dao's Emacs Setup -*- lexical-binding: t; -*-
 
+(require 'subr-x)
 
 ;; So, as an effort to improve the responsiveness, I'm going to reboot my Emacs
 ;; configuration. Hope it is better this time.
@@ -14,9 +15,9 @@
 
 ;;; Packages and initialization
 
-;; All the packages I used are from MELPA (https://melpa.org). However, I install them automatically
-;; with =use-package.el= instead of using =package.el= directly. Since Emacs 29.1,
-;; =use-package.el= has been bundled with Emacs.
+;; All the packages I used are from ELPA archives. However, I install them
+;; automatically with =use-package.el= instead of using =package.el= directly.
+;; Since Emacs 29.1, =use-package.el= has been bundled with Emacs.
 
 ;; Also, Emacs 29.1 added the =package-vc-install= command, which is really handy as
 ;; quite a few of the packages I used are not available on MELPA yet.
@@ -37,22 +38,30 @@
 ;; Sometimes I write my own package, or download package from Emacs wiki; they
 ;; are stored in the =~/.emacs.d/vendor= directory.
 
-(add-to-list 'custom-theme-load-path (concat user-emacs-directory "vendor/"))
-(add-to-list 'load-path (concat user-emacs-directory "vendor/"))
-(add-to-list 'exec-path "/opt/local/bin")
-(add-to-list 'exec-path (expand-file-name "~/Library/Python/3.12/bin/"))
-(add-to-list 'exec-path (expand-file-name "~/Library/pnpm"))
-(add-to-list 'exec-path (expand-file-name "~/.local/bin"))
-(add-to-list 'exec-path (expand-file-name "~/.opam/default/bin/"))
-(add-to-list 'exec-path (expand-file-name "~/.claude/local/"))
-(setq exec-path
-      (delete-dups
-       (mapcar (lambda (path)
-                 (if (string-prefix-p "~" path)
-                     (expand-file-name path)
-                   path))
-               exec-path)))
-(setenv "PATH" (string-join exec-path ":"))
+(add-to-list 'custom-theme-load-path (expand-file-name "vendor/" user-emacs-directory))
+(add-to-list 'load-path (expand-file-name "vendor/" user-emacs-directory))
+
+(defconst td/extra-exec-path
+  '("/opt/local/bin"
+    "~/Library/Python/3.12/bin/"
+    "~/Library/pnpm"
+    "~/.local/bin"
+    "~/.opam/default/bin/"
+    "~/.claude/local/")
+  "Executable directories to prepend to Emacs' process search paths.")
+
+(defun td/prepend-exec-paths (paths)
+  "Prepend PATHS to `exec-path' and inherited PATH."
+  (let* ((extra-paths (mapcar (lambda (path)
+                                (directory-file-name (expand-file-name path)))
+                              paths))
+         (inherited-path (split-string (or (getenv "PATH") "") path-separator t)))
+    (setq exec-path (delete-dups (append extra-paths exec-path)))
+    (setenv "PATH"
+            (string-join (delete-dups (append extra-paths inherited-path))
+                         path-separator))))
+
+(td/prepend-exec-paths td/extra-exec-path)
 
 ;;; Defaults
 
@@ -109,12 +118,6 @@
   :config
   (global-eldoc-mode -1))
 
-(use-package midnight
-  :hook (after-init . midnight-mode)
-  :config
-  (add-hook 'midnight-hook #'td/trash-desktop-screenshots)
-  (add-hook 'midnight-hook #'td/trash-stale-node-modules))
-
 ;;;; Scratch Buffer
 
 (setopt initial-scratch-message nil
@@ -134,37 +137,6 @@
 
 (setopt trash-directory "~/.Trash"
       delete-by-moving-to-trash t)
-
-(defun td/trash-desktop-screenshots ()
-  "Move screenshot files from Desktop to trash."
-  (interactive)
-  (let ((desktop-dir (expand-file-name "~/Desktop/")))
-    (when (file-directory-p desktop-dir)
-      (dolist (file (directory-files desktop-dir t "^Screenshot.*\\.png$"))
-        (when (file-regular-p file)
-          (move-file-to-trash file)
-          (message "Trashed: %s" file))))))
-
-(defun td/trash-stale-node-modules ()
-  "Trash node_modules folders whose parent hasn't been touched in 7 days.
-Expects structure: ~/Projects/<org>/<project>/node_modules"
-  (interactive)
-  (let ((projects-dir (expand-file-name "~/Projects/"))
-        (stale-days 7))
-    (when (file-directory-p projects-dir)
-      (dolist (org-dir (directory-files projects-dir t "^[^.]"))
-        (when (file-directory-p org-dir)
-          (dolist (project-dir (directory-files org-dir t "^[^.]"))
-            (when (file-directory-p project-dir)
-              (let ((node-modules (expand-file-name "node_modules" project-dir)))
-                (when (and (file-directory-p node-modules)
-                           (> (time-to-seconds
-                               (time-subtract (current-time)
-                                              (file-attribute-modification-time
-                                               (file-attributes project-dir))))
-                              (* stale-days 24 60 60)))
-                  (move-file-to-trash node-modules)
-                  (message "Trashed: %s" node-modules))))))))))
 
 ;;; Navigation
 
@@ -732,6 +704,7 @@ Uses project root if in a project, otherwise current directory."
 
 (use-package opam-env-mode
   :ensure nil
+  :load-path "vendor"
   :hook ((find-file . td/opam-env-maybe-activate)
          (dired-mode . td/opam-env-maybe-activate)))
 
@@ -763,6 +736,7 @@ variable on Emacs builds where it is no longer predefined.")
 
 (use-package drepl-smolagent
   :ensure nil
+  :load-path "vendor"
   :after (drepl code-cells)
   :custom
   (drepl-smolagent-environment #'drepl-smolagent-alibaba-coding-plan-environment)
@@ -772,6 +746,7 @@ variable on Emacs builds where it is no longer predefined.")
 (use-package vterm
   :ensure t
   :defer t
+  :no-require t
   :commands (vterm vterm-other-window)
   :custom
   (vterm-shell "/bin/zsh -l"))
@@ -796,6 +771,7 @@ variable on Emacs builds where it is no longer predefined.")
 
 (use-package vterm-agent
   :ensure nil
+  :load-path "vendor"
   :defer t
   :commands (vterm-agent-list-sessions
              vterm-agent-new-session
@@ -827,12 +803,13 @@ variable on Emacs builds where it is no longer predefined.")
   :ensure t)
 
 (use-package tramp-rpc-python-backend
+  :load-path "vendor"
   :functions (td/tramp-rpc-python-enable))
 
 (use-package tramp-rpc
   :vc (:url "https://github.com/ArthurHeymans/emacs-tramp-rpc"
        :branch "master"
-       :rev :newest)
+       :rev "38a5f1cc08fb812c727ba97f11ad0c8fcbbc981d")
   :after tramp
   :init
   (require 'tramp-rpc-python-backend)
@@ -875,33 +852,52 @@ variable on Emacs builds where it is no longer predefined.")
 
 (add-hook 'emacs-lisp-mode-hook #'td/setup-emacs-lisp-outline)
 
-;; Native Tree-sitter support since Emacs 29
+;; Native Tree-sitter support since Emacs 29.
 
-;; The swift one is a bit tricky. The =parser.c= and =grammar.json= files are auto-generated, we need to download them from the CI build (https://github.com/alex-pinkus/tree-sitter-swift), then copy them to the source folder. After that we can use the following function call to build it:
+(defconst td/treesit-grammar-directory
+  (expand-file-name "tree-sitter/" user-emacs-directory)
+  "Directory for locally built tree-sitter grammars.")
 
-;; TODO: automating the entire process
+(defconst td/treesit-language-source-alist
+  '((kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git"
+               "0.3.8"))
+    (markdown . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+                 "v0.5.3"
+                 "tree-sitter-markdown/src"))
+    (markdown-inline . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+                        "v0.5.3"
+                        "tree-sitter-markdown-inline/src"))
+    (ocaml . ("https://github.com/tree-sitter/tree-sitter-ocaml"
+              "v0.24.2"
+              "grammars/ocaml/src"))
+    (ocaml-interface . ("https://github.com/tree-sitter/tree-sitter-ocaml"
+                        "v0.24.2"
+                        "grammars/interface/src"))
+    (protobuf . ("https://github.com/casouri/tree-sitter-module.git"
+                 "v2.5"))
+    (swift . ("https://github.com/alex-pinkus/tree-sitter-swift.git"
+              "0.7.2-with-generated-files")))
+  "Pinned tree-sitter grammar recipes used by this configuration.")
+
+(defun td/bootstrap-treesit-grammars (&optional force)
+  "Install missing tree-sitter grammars into `td/treesit-grammar-directory'.
+With prefix argument FORCE, rebuild every configured grammar."
+  (interactive "P")
+  (require 'treesit)
+  (make-directory td/treesit-grammar-directory t)
+  (let ((treesit-language-source-alist td/treesit-language-source-alist))
+    (dolist (language (mapcar #'car treesit-language-source-alist))
+      (when (or force
+                (not (treesit-language-available-p language)))
+        (treesit-install-language-grammar
+         language
+         td/treesit-grammar-directory)))))
 
 (use-package treesit
+  :custom
+  (treesit-extra-load-path (list td/treesit-grammar-directory))
   :config
-  (add-to-list 'treesit-language-source-alist
-               '(ocaml . ("https://github.com/tree-sitter/tree-sitter-ocaml"
-                          "v0.24.2"
-                          "grammars/ocaml/src")))
-  (add-to-list 'treesit-language-source-alist
-               '(ocaml-interface . ("https://github.com/tree-sitter/tree-sitter-ocaml"
-                                    "v0.24.2"
-                                    "grammars/interface/src")))
-  (add-to-list 'treesit-language-source-alist '(kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git")))
-  (add-to-list 'treesit-language-source-alist '(protobuf . ("https://github.com/casouri/tree-sitter-module.git")))
-  (add-to-list 'treesit-language-source-alist '(swift . ("https://github.com/alex-pinkus/tree-sitter-swift.git")))
-  (add-to-list 'treesit-language-source-alist
-               '(markdown . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-                             "v0.5.3"
-                             "tree-sitter-markdown/src")))
-  (add-to-list 'treesit-language-source-alist
-               '(markdown-inline . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-                                    "v0.5.3"
-                                    "tree-sitter-markdown-inline/src"))))
+  (setq treesit-language-source-alist td/treesit-language-source-alist))
 
 ;; (with-eval-after-load 'md-ts-mode
 ;;   ;; `md-ts-mode' advises `treesit-update-ranges' globally on Emacs 31.
@@ -937,6 +933,7 @@ variable on Emacs builds where it is no longer predefined.")
 
 (use-package expreg
   :ensure nil
+  :load-path "vendor"
   :custom
   (expreg-restore-point-on-quit t)
   :bind (("M--" . expreg-expand)
@@ -1035,7 +1032,7 @@ variable on Emacs builds where it is no longer predefined.")
   (compilation-ask-about-save nil)
   (compilation-scroll-output t)
   :config
-  (remove-hook 'compilation-mode-hook #'tramp-compile-disable-ssh-controlmaster-options))
+  (remove-hook 'compilation-mode-hook 'tramp-compile-disable-ssh-controlmaster-options))
 
 ;;;; Code folding
 (use-package treesit-fold
@@ -1378,7 +1375,7 @@ variable on Emacs builds where it is no longer predefined.")
  `((left-fringe . 8) (right-fringe . 4)
    (border-width . 0) (internal-border-width . 0)
      ;; (font . "Monaco 16")
-     (font . "Iosevka Fixed SS07 16")
+     (font . "Iosevka Fixed SS07 18")
      ;; (font . "Iosevka Mono 16")
      ;; (font . "JetBrains Mono NL 16")
      ;; (font . "Menlo 15")
