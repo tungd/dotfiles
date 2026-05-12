@@ -71,6 +71,22 @@ _Avoid_: TUI session, terminal-rendered agent
 A coherent unit of agent work with an explicit title and one Transcript Session.
 _Avoid_: prompt, chat
 
+**Ambient Agent Work**:
+Background or sidecar agent activity that follows jcode-shaped lifecycle
+semantics and may continue without being driven by the foreground
+Notebook Cell loop.
+_Avoid_: shell background job, hidden daemon
+
+**Ambient Agent Run**:
+The stable identity for one ambient agent conversation or task, following
+jcode's run/task shape.
+_Avoid_: notebook cell, execution attempt
+
+**Ambient Agent Execution**:
+One execution attempt inside an Ambient Agent Run, with execution-scoped session
+transport, conversation state, runtime status, and resource usage.
+_Avoid_: Ambient Agent Run, Transcript Session
+
 **Task Anchor**:
 An optional link from an Agent Task to external planning context such as an org
 heading, PRD, issue, or pull request.
@@ -204,11 +220,41 @@ A Core Coding Tool that may change files, memory, todos, processes, or external
 systems and therefore requires Agent Permission Flow.
 _Avoid_: dangerous tool
 
+**Supervised Command Process**:
+A long-running command process launched by the Workflow Agent CLI and tracked
+through status, output tail, stdin, and signal controls.
+_Avoid_: Ambient Agent Run, Terminal Surface
+
+**Command Process Supervisor**:
+The runtime component that starts, tracks, streams, writes to, and terminates
+Supervised Command Processes.
+_Avoid_: Ambient Agent Work, tmux session manager
+
 **Integration Tool**:
 A later Agent Tool Surface tool that connects the Workflow Agent CLI to browsers,
 web search, MCP servers, background swarms, self-development workflows, or other
 external systems.
 _Avoid_: core coding tool
+
+**Web Fetch Tool**:
+A stateless Integration Tool that retrieves one URL and returns extracted text,
+metadata, and source provenance.
+_Avoid_: browser automation, curl wrapper
+
+**Web Search Tool**:
+A stateless Integration Tool that submits a search query and returns ranked
+results with snippets, URLs, and provider provenance.
+_Avoid_: browser automation, search page scraping
+
+**Browser Automation Tool**:
+A stateful Integration Tool that observes or interacts with a live browser page,
+including DOM state, screenshots, clicks, and typed input.
+_Avoid_: web fetch, web search
+
+**Parallel Tool Call Scheduler**:
+The Agent Tool Loop component that executes multiple provider-issued tool calls
+from one model turn while preserving permission policy and transcript ordering.
+_Avoid_: batch tool, provider magic
 
 **Agent Skill**:
 A local instruction or workflow package exposed to the Workflow Agent CLI as a
@@ -223,6 +269,20 @@ _Avoid_: generated skill directory, imported skill copy
 An org export backend that materializes Agent Skills from the Skill Source File
 into tool-specific skill artifacts.
 _Avoid_: skill importer, sync script
+
+**Exported Agent Skill**:
+A generated skill artifact consumed by the Workflow Agent CLI at runtime.
+_Avoid_: Skill Source File, skill draft
+
+**Skill Entrypoint**:
+The `SKILL.md` file inside an Exported Agent Skill directory that contains
+skill metadata and instructions.
+_Avoid_: README, prompt file
+
+**Skill Discovery Directory**:
+A filesystem directory scanned by the Workflow Agent CLI to find Exported Agent
+Skills.
+_Avoid_: skill registry, skill source
 
 **Agent Memory**:
 Durable cross-session knowledge the Workflow Agent CLI can retrieve to guide
@@ -245,6 +305,26 @@ A pragmatic remote machine path for running local AFK issue work through the
 existing Codex CLI without preserving Workflow Agent CLI task or transcript
 identity.
 _Avoid_: Remote Execution Handoff, SSH session
+
+**Handoff CLI**:
+The Python command-line program that orchestrates Remote AFK Runner setup,
+status inspection, and result fetching.
+_Avoid_: Remote Execution Handoff, afk.sh
+
+**Remote AFK Repository**:
+A bare git repository on the remote runner host used as the exchange point for
+AFK source pushes and result fetches.
+_Avoid_: checked-out remote repo, origin
+
+**Remote AFK Worktree**:
+A checked-out remote working tree created from a Remote AFK Repository for one
+remote AFK run.
+_Avoid_: remote origin, bare repo
+
+**Remote AFK Run**:
+One remote AFK invocation, represented by a unique input branch, result branch,
+remote worktree, and tmux session.
+_Avoid_: branch, task, transcript session
 
 **CLI Agent Event**:
 A structured event emitted by a Workflow Agent CLI to describe session state,
@@ -431,13 +511,53 @@ _Avoid_: agent workspace
 - The first **Agent Tool Surface** slice consists of **Core Coding Tools**:
   `read`, `write`, `edit`, `multiedit`, `glob`, `grep`, `ls`, `bash`, `todo`,
   `memory`, and `session_search`.
-- The first **Agent Tool Surface** slice preserves jcode-style aliases such as
-  `file_read` to `read`, `file_write` to `write`, `file_edit` to `edit`,
-  `file_glob` to `glob`, `file_grep` to `grep`, `shell_exec` to `bash`, and
-  `todo_read`/`todo_write` to `todo`.
+- The **Agent Tool Surface** uses canonical tool names as the contract. jcode
+  parity means coding-agent workflow parity, not compatibility with jcode-style
+  alias spellings such as `file_read` or `shell_exec`.
+- The **Agent Tool Loop** should use provider-level parallel tool calls rather
+  than exposing a model-facing batch tool.
+- The **Parallel Tool Call Scheduler** follows jcode's phase model: consecutive
+  compatible auto-executable read-only calls may run in one parallel phase, and
+  serial calls act as barriers.
+- A jcode-style parallel phase drains before later tool calls start, and
+  finished results are sorted back into provider tool-call order before being
+  returned to the model.
+- The next Workflow Agent CLI feature order is provider-level parallel tool
+  calls; web fetch/search; skill discovery and explicit activation; supervised
+  long-running `bash`; then Ambient Agent Run/Execution support.
 - **Integration Tools** such as browser automation, web fetch/search, MCP,
-  subagents, batch execution, ambient work, self-development, side panels, and
-  Gmail are deferred.
+  subagents, ambient work, self-development, side panels, and Gmail are
+  Integration Tool slices rather than Core Coding Tools.
+- **Ambient Agent Work** should follow jcode semantics first. Compatibility with
+  the existing **Agent Task**, **Transcript Session**, and **Notebook
+  Projection** assumptions is secondary.
+- An **Ambient Agent Run** is the stable user-visible identity; an **Ambient
+  Agent Execution** is the runtime attempt that may expose a joinable session,
+  process, or transport.
+- Follow-up ambient prompts continue the same **Ambient Agent Run** by creating
+  another **Ambient Agent Execution**, rather than creating a new user-visible
+  conversation.
+- Ambient states should preserve the jcode-shaped lifecycle vocabulary:
+  queued, pending, claimed, in progress, succeeded, failed, error, blocked,
+  cancelled, and unknown.
+- The **Canonical Event Log**, **Agent Action Queue**, and later **Agent
+  Notebook** projections adapt to **Ambient Agent Work** instead of forcing
+  ambient work into the foreground Notebook Cell lifecycle.
+- **Ambient Agent Work** still emits auditable **CLI Agent Events** and remains
+  inspectable and controllable by the standalone **Workflow Agent CLI**.
+- Long-running `bash` tool execution is modelled as a **Supervised Command
+  Process**, not as **Ambient Agent Work**.
+- The **Command Process Supervisor** exposes process status, output tail, stdin
+  writes, and signal or kill controls through auditable tool and CLI operations.
+- **Supervised Command Processes** are permissioned effects and record lifecycle
+  events in the **Canonical Event Log**.
+- **Web Fetch Tool** and **Web Search Tool** are separate, stateless information
+  retrieval tools. They do not share the stateful page model of the **Browser
+  Automation Tool**.
+- **Web Fetch Tool** and **Web Search Tool** are **Read-Only Agent Tools** and
+  always run without **Agent Permission Flow**.
+- The first **Web Search Tool** may use DuckDuckGo as the default provider while
+  allowing an operator-configured API key for providers that require one.
 - **Agent Permission Flow** is handled through **Agent Action Transients** in
   Emacs.
 - The **Workflow Agent CLI** emits `permission_request`, waits for a
@@ -459,8 +579,8 @@ _Avoid_: agent workspace
 - Unknown or unclassified tools are treated as **Permissioned Agent Tools**.
 - The first `bash` **Core Coding Tool** executes foreground commands with a
   bounded timeout and captured stdout, stderr, and exit status.
-- Background tasks, stdin interaction, notifications, and tool-level process
-  supervision are deferred for `bash`.
+- A later `bash` slice adds **Supervised Command Process** launch and inspection
+  rather than overloading **Ambient Agent Work**.
 - The first `session_search` **Core Coding Tool** searches only the Workflow
   Agent CLI's own **Agent Transcript Store** and **Transcript Index**.
 - Importing or searching existing Codex, jcode, or other external transcripts is
@@ -498,6 +618,21 @@ _Avoid_: agent workspace
   a **Skill Export Backend**.
 - The **Workflow Agent CLI** consumes exported **Agent Skills**; it does not own
   skill authoring, importing, syncing, or distribution.
+- The first Agent Skills slice consumes **Exported Agent Skills** from the
+  filesystem and may expose them in capabilities; it does not build org export,
+  skill editing, skill import, or skill synchronization.
+- The **Workflow Agent CLI** discovers **Exported Agent Skills** by scanning one
+  or more **Skill Discovery Directories**.
+- **Skill Discovery Directories** are searched in this order: paths from
+  `TD_AGENT_SKILL_PATH`, the current project `.td-agent/skills`, then the user
+  `~/.td-agent/skills`.
+- Each **Exported Agent Skill** is a directory containing a required
+  **Skill Entrypoint**. Unknown sibling files or directories are reserved for
+  future references, assets, and scripts.
+- Skill discovery makes **Exported Agent Skills** available, but does not make
+  them active for an **Agent Task**.
+- An **Agent Task** activates skills explicitly; selected skill names are
+  recorded in the **Canonical Event Log**.
 - `skill_manage` is deferred until the **Skill Export Backend** exists.
 - **Agent Memory** may be seeded from the **Agent Transcript Store**, but it is
   not the same thing as the transcript.
@@ -511,6 +646,24 @@ _Avoid_: agent workspace
 - A **Remote AFK Runner** may use SSH, git, and tmux as a pragmatic execution
   substrate, but it is not a **Remote Execution Handoff** until it preserves
   **Agent Task** and **Transcript Session** identity.
+- The default AFK invocation uses the **Remote AFK Runner**; local AFK execution
+  remains an explicit fallback path.
+- The **Handoff CLI** is the preferred implementation of the **Remote AFK
+  Runner**; shell-based AFK orchestration is treated as legacy.
+- A **Remote AFK Repository** is bare; a **Remote AFK Worktree** is where Codex
+  edits files during a remote AFK run.
+- A **Remote AFK Run** keeps its input and result refs separate from ordinary
+  project branches; pulling a result should not merge into the current branch
+  unless the operator explicitly asks for that.
+- A **Remote AFK Runner** assumes the remote host already has git, tmux, Codex,
+  and Codex authentication available; dotfiles should not copy local agent
+  credentials as part of a run.
+- A **Remote AFK Run** uses committed git state as its input; shipping
+  uncommitted local patches is outside the first Remote AFK Runner slice.
+- The first **Remote AFK Runner** only runs issues whose target workspace is the
+  current repository; multi-repository workspace mapping is deferred.
+- A **Remote AFK Run** ships the invoking AFK launcher script as run metadata;
+  the target repository does not need to contain dotfiles' `afk.sh`.
 - The **CLI Agent Event Transport** follows Warp's structured OSC 777 shape:
   title `warp://cli-agent`, JSON body, protocol version, agent identity, session
   identity, project context, and event-specific fields.

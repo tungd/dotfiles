@@ -1,0 +1,3 @@
+# Ambient Work Follows jcode Semantics
+
+Ambient/background work in the Workflow Agent CLI will follow jcode-shaped runtime semantics even when that requires changing earlier notebook-first assumptions. The stable identity is an ambient run/task, while each startup, retry, or follow-up is an execution with its own session transport and runtime state. The existing Agent Task, Transcript Session, Agent Action Queue, and Notebook Projection vocabulary should adapt to ambient work rather than constraining it to one foreground prompt/cell loop. Ambient work must still emit canonical CLI Agent Events and remain inspectable and controllable from the standalone CLI and later Emacs surfaces.

@@ -1,0 +1,939 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import json
+import os
+import re
+import shlex
+import subprocess
+import sys
+from dataclasses import dataclass, field
+from dataclasses import fields
+from pathlib import Path
+
+
+def env(name: str, default: str | None = None, *aliases: str) -> str | None:
+    for key in (name, *aliases):
+        value = os.environ.get(key)
+        if value is not None:
+            return value
+    return default
+
+
+def env_bool(name: str, default: bool = False, *aliases: str) -> bool:
+    value = env(name, None, *aliases)
+    if value is None:
+        return default
+    return value.lower() in {"1", "true", "yes", "on"}
+
+
+def run(
+    args: list[str],
+    *,
+    cwd: Path | None = None,
+    input_text: str | None = None,
+    check: bool = True,
+    capture: bool = True,
+) -> subprocess.CompletedProcess[str]:
+    proc = subprocess.run(
+        args,
+        cwd=str(cwd) if cwd else None,
+        input=input_text,
+        text=True,
+        capture_output=capture,
+    )
+    if check and proc.returncode != 0:
+        raise CommandError(args, proc)
+    return proc
+
+
+class CommandError(RuntimeError):
+    def __init__(self, args: list[str], proc: subprocess.CompletedProcess[str]):
+        self.args_list = args
+        self.proc = proc
+        message = f"command failed ({proc.returncode}): {shlex.join(args)}"
+        if proc.stderr:
+            message += f"\n{proc.stderr.rstrip()}"
+        elif proc.stdout:
+            message += f"\n{proc.stdout.rstrip()}"
+        super().__init__(message)
+
+
+def repo_root() -> Path:
+    proc = run(["git", "rev-parse", "--show-toplevel"])
+    return Path(proc.stdout.strip()).resolve()
+
+
+def git_stdout(root: Path, *args: str) -> str:
+    return run(["git", *args], cwd=root).stdout.strip()
+
+
+def slugify(value: str) -> str:
+    slug = re.sub(r"[^A-Za-z0-9._-]+", "-", value).strip("-")
+    return slug or "run"
+
+
+def now_stamp() -> str:
+    return dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+
+
+def now_utc() -> str:
+    return dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def is_inside(path: Path, root: Path) -> bool:
+    path = path.resolve()
+    root = root.resolve()
+    return path == root or root in path.parents
+
+
+def rel_to_repo(path: Path, root: Path) -> str:
+    path = path.resolve()
+    if not is_inside(path, root):
+        raise RuntimeError(f"path is outside repository: {path}")
+    if path == root:
+        return "."
+    return str(path.relative_to(root))
+
+
+def tail_file(path: Path, lines: int) -> str:
+    if not path.exists():
+        return f"(missing: {path})"
+    content = path.read_text(errors="replace").splitlines()
+    return "\n".join(content[-lines:])
+
+
+@dataclass
+class Config:
+    root: Path
+    script_path: Path
+    remote_host: str = field(default_factory=lambda: env("HANDOFF_REMOTE_HOST", "td@100.84.248.34") or "")
+    remote_root: str = field(default_factory=lambda: env("HANDOFF_REMOTE_ROOT", "~/handoff") or "")
+    remote_login_shell: str = field(default_factory=lambda: env("HANDOFF_REMOTE_LOGIN_SHELL", "zsh") or "")
+    status_lines: int = field(default_factory=lambda: int(env("HANDOFF_STATUS_LINES", "80") or "80"))
+
+    @property
+    def state_dir(self) -> Path:
+        configured = env("HANDOFF_STATE_DIR")
+        if configured:
+            path = Path(configured)
+            return path if path.is_absolute() else self.root / path
+        return self.root / ".scratch" / "afk-runs" / "handoff-state"
+
+    @property
+    def runs_dir(self) -> Path:
+        return self.state_dir / "runs"
+
+    @property
+    def latest_path(self) -> Path:
+        return self.state_dir / "latest"
+
+
+@dataclass
+class RunRecord:
+    run_id: str
+    created_at: str
+    repo_root: str
+    repo_slug: str
+    local_head: str
+    remote_host: str
+    remote_login_shell: str
+    input_branch: str
+    result_branch: str
+    input_ref: str
+    result_ref: str
+    tmux_session: str
+    launch_log: str
+    state: str = "initializing"
+    remote_url: str = ""
+    remote_repo: str = ""
+    remote_worktree: str = ""
+    remote_run_dir: str = ""
+    remote_handoff: str = ""
+    remote_runner: str = ""
+    remote_log: str = ""
+    remote_status: str = ""
+    error: str = ""
+
+
+class Handoff:
+    def __init__(self, cfg: Config):
+        self.cfg = cfg
+        self.record: RunRecord | None = None
+        self.launch_log: Path | None = None
+
+    def log(self, message: str = "") -> None:
+        print(message)
+        if self.launch_log:
+            with self.launch_log.open("a", encoding="utf-8") as f:
+                f.write(message + "\n")
+
+    def save(self) -> None:
+        if not self.record:
+            return
+        self.cfg.runs_dir.mkdir(parents=True, exist_ok=True)
+        path = self.cfg.runs_dir / f"{self.record.run_id}.json"
+        path.write_text(json.dumps(self.record.__dict__, indent=2, sort_keys=True) + "\n")
+        self.cfg.latest_path.write_text(self.record.run_id + "\n")
+
+    def step(self, name: str, func, *args, **kwargs):
+        self.log(f"==> {name}")
+        try:
+            result = func(*args, **kwargs)
+        except Exception as exc:
+            if self.record:
+                self.record.state = "launch_failed"
+                self.record.error = f"{name}: {exc}"
+                self.save()
+            self.log(f"FAILED during {name}: {exc}")
+            raise
+        self.save()
+        return result
+
+    def ssh(self, *args: str, input_text: str | None = None, check: bool = True) -> subprocess.CompletedProcess[str]:
+        return run(["ssh", self.cfg.remote_host, *args], input_text=input_text, check=check)
+
+    def ssh_bash(self, script: str, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+        return self.ssh("bash", "-s", "--", *args, input_text=script, check=check)
+
+    def remote_login(self, script: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+        command = shlex.join([self.cfg.remote_login_shell, "-lc", script])
+        return self.ssh(command, check=check)
+
+    def remote_home(self) -> str:
+        proc = self.ssh_bash('printf "%s\\n" "$HOME"\n')
+        return proc.stdout.strip()
+
+    def expand_remote_root(self, home: str) -> str:
+        root = self.cfg.remote_root
+        if root == "~":
+            return home
+        if root.startswith("~/"):
+            return f"{home}/{root[2:]}"
+        if root.startswith("/"):
+            return root
+        return f"{home}/{root}"
+
+    def check_prereqs(self) -> None:
+        script = (
+            'missing=0; '
+            'for tool in bash python3 git tmux codex; do '
+            'if ! command -v "$tool" >/dev/null 2>&1; then '
+            'echo "missing remote tool: $tool" >&2; missing=1; fi; '
+            'done; exit "$missing"'
+        )
+        proc = self.remote_login(script, check=False)
+        if proc.stdout:
+            self.log(proc.stdout.rstrip())
+        if proc.stderr:
+            self.log(proc.stderr.rstrip())
+        if proc.returncode != 0:
+            raise RuntimeError(f"remote prerequisites failed on {self.cfg.remote_host}")
+
+    def ensure_remote_repo(self) -> None:
+        assert self.record
+        script = r'''
+set -euo pipefail
+remote_repo="$1"
+mkdir -p "$(dirname "$remote_repo")"
+if [[ ! -d "$remote_repo" ]]; then
+  git init --bare "$remote_repo"
+fi
+'''
+        proc = self.ssh_bash(script, self.record.remote_repo)
+        if proc.stdout:
+            self.log(proc.stdout.rstrip())
+        if proc.stderr:
+            self.log(proc.stderr.rstrip())
+
+    def prepare_worktree(self) -> None:
+        assert self.record
+        script = r'''
+set -euo pipefail
+remote_repo="$1"
+remote_worktree="$2"
+remote_run_dir="$3"
+remote_runner="$4"
+remote_status="$5"
+remote_log="$6"
+input_branch="$7"
+result_branch="$8"
+mkdir -p "$(dirname "$remote_worktree")" "$remote_run_dir"
+if [[ -e "$remote_worktree" ]]; then
+  echo "remote worktree already exists: $remote_worktree" >&2
+  exit 2
+fi
+git clone "$remote_repo" "$remote_worktree"
+git -C "$remote_worktree" checkout -B "$result_branch" "origin/$input_branch"
+: >"$remote_log"
+python3 - "$remote_status" <<'PY'
+import datetime as dt, json, sys
+path = sys.argv[1]
+json.dump({"state": "prepared", "exit_status": None, "updated_at": dt.datetime.now(dt.timezone.utc).isoformat()}, open(path, "w"))
+PY
+cat >"$remote_runner" <<'RUNNER'
+#!/usr/bin/env bash
+set -uo pipefail
+
+run_id="$1"
+remote_worktree="$2"
+remote_run_dir="$3"
+remote_handoff="$4"
+remote_status="$5"
+remote_log="$6"
+result_ref="$7"
+local_repo_root="$8"
+remote_issue_dir="$9"
+shift 9
+
+write_status() {
+  local state="$1"
+  local status="$2"
+  python3 - "$remote_status" "$state" "$status" <<'PY'
+import datetime as dt, json, sys
+path, state, status = sys.argv[1], sys.argv[2], sys.argv[3]
+exit_status = None if status == "" else int(status)
+with open(path, "w") as f:
+    json.dump({"state": state, "exit_status": exit_status, "updated_at": dt.datetime.now(dt.timezone.utc).isoformat()}, f)
+PY
+}
+
+cd "$remote_worktree" || exit 2
+exec > >(tee -a "$remote_log") 2>&1
+
+write_status running ""
+echo "handoff run $run_id started at $(date)"
+echo "worktree: $remote_worktree"
+
+handoff_env=(
+  "HANDOFF_ALLOW_DIRTY=1"
+  "HANDOFF_COMMIT_EACH=0"
+  "HANDOFF_RUN_DIR=$remote_run_dir/local"
+  "HANDOFF_DEFAULT_WORKSPACE=$remote_worktree"
+  "HANDOFF_WORKSPACE_REWRITE_FROM=$local_repo_root"
+  "HANDOFF_WORKSPACE_REWRITE_TO=$remote_worktree"
+)
+
+if [[ "${HANDOFF_REMOTE_LOCAL_DRY_RUN:-0}" == "1" ]]; then
+  handoff_env+=("HANDOFF_DRY_RUN=1")
+fi
+
+if [[ -n "$remote_issue_dir" ]]; then
+  handoff_env+=("HANDOFF_ISSUE_DIR=$remote_issue_dir")
+fi
+
+handoff_status=0
+env "${handoff_env[@]}" "$remote_handoff" local "$@" || handoff_status=$?
+
+git_status=0
+if [[ -n "$(git status --porcelain)" ]]; then
+  git add -A || git_status=$?
+  if [[ "$git_status" -eq 0 ]]; then
+    git \
+      -c user.name="${HANDOFF_REMOTE_GIT_USER_NAME:-Handoff Runner}" \
+      -c user.email="${HANDOFF_REMOTE_GIT_USER_EMAIL:-handoff-runner@localhost}" \
+      -c commit.gpgsign=false \
+      commit -m "Handoff result $run_id" || git_status=$?
+  fi
+else
+  echo "no worktree changes to commit"
+fi
+
+push_status=0
+git push origin "HEAD:$result_ref" || push_status=$?
+
+final_status="$handoff_status"
+if [[ "$git_status" -ne 0 ]]; then final_status="$git_status"; fi
+if [[ "$push_status" -ne 0 ]]; then final_status="$push_status"; fi
+
+if [[ "$final_status" -eq 0 ]]; then
+  write_status succeeded "$final_status"
+else
+  write_status failed "$final_status"
+fi
+
+echo "handoff run $run_id finished with exit $final_status"
+echo "this tmux session is left open for inspection"
+exec bash -l
+RUNNER
+chmod +x "$remote_runner"
+'''
+        proc = self.ssh_bash(
+            script,
+            self.record.remote_repo,
+            self.record.remote_worktree,
+            self.record.remote_run_dir,
+            self.record.remote_runner,
+            self.record.remote_status,
+            self.record.remote_log,
+            self.record.input_branch,
+            self.record.result_branch,
+        )
+        if proc.stdout:
+            self.log(proc.stdout.rstrip())
+        if proc.stderr:
+            self.log(proc.stderr.rstrip())
+
+    def install_remote_handoff(self) -> None:
+        assert self.record
+        command = shlex.join(
+            [
+                "bash",
+                "-c",
+                'dest="$1"; mkdir -p "$(dirname "$dest")"; cat >"$dest"; chmod +x "$dest"',
+                "_",
+                self.record.remote_handoff,
+            ]
+        )
+        proc = self.ssh(command, input_text=self.cfg.script_path.read_text())
+        if proc.stdout:
+            self.log(proc.stdout.rstrip())
+        if proc.stderr:
+            self.log(proc.stderr.rstrip())
+
+    def start_tmux(self, issue_args: list[str], issue_dir: str) -> None:
+        assert self.record
+        passthrough_env = [
+            "CODEX_MODEL",
+            "CODEX_PROFILE",
+            "CODEX_SANDBOX",
+            "CODEX_APPROVAL_POLICY",
+            "CODEX_SEARCH",
+            "CODEX_JSON",
+            "HANDOFF_IGNORE_BLOCKERS",
+            "AFK_IGNORE_BLOCKERS",
+            "HANDOFF_REMOTE_GIT_USER_NAME",
+            "HANDOFF_REMOTE_GIT_USER_EMAIL",
+            "HANDOFF_REMOTE_LOCAL_DRY_RUN",
+        ]
+        env_args: list[str] = ["env"]
+        for key in passthrough_env:
+            if key in os.environ:
+                env_args.append(f"{key}={os.environ[key]}")
+        runner_cmd = shlex.join(
+            [
+                *env_args,
+                "bash",
+                self.record.remote_runner,
+                self.record.run_id,
+                self.record.remote_worktree,
+                self.record.remote_run_dir,
+                self.record.remote_handoff,
+                self.record.remote_status,
+                self.record.remote_log,
+                self.record.result_ref,
+                str(self.cfg.root),
+                issue_dir,
+                *issue_args,
+            ]
+        )
+        has_cmd = shlex.join(["tmux", "has-session", "-t", self.record.tmux_session])
+        new_cmd = shlex.join(
+            ["tmux", "new-session", "-d", "-s", self.record.tmux_session, "-c", self.record.remote_worktree, runner_cmd]
+        )
+        script = f'{has_cmd} >/dev/null 2>&1 && {{ echo "tmux session already exists: {self.record.tmux_session}" >&2; exit 2; }}; {new_cmd}'
+        proc = self.remote_login(script)
+        if proc.stdout:
+            self.log(proc.stdout.rstrip())
+        if proc.stderr:
+            self.log(proc.stderr.rstrip())
+
+    def up(self, issues: list[str]) -> None:
+        issue_dir = Path(env("HANDOFF_ISSUE_DIR", env("ISSUE_DIR", "") or "") or "") if env("HANDOFF_ISSUE_DIR", env("ISSUE_DIR", "") or "") else None
+        issue_paths = collect_issues(self.cfg.root, issues, issue_dir)
+        ready = validate_remote_issues(self.cfg.root, issue_paths)
+
+        current_branch = git_stdout(self.cfg.root, "branch", "--show-current") or f"detached-{git_stdout(self.cfg.root, 'rev-parse', '--short', 'HEAD')}"
+        local_head = git_stdout(self.cfg.root, "rev-parse", "HEAD")
+        repo_slug = slugify(self.cfg.root.name)
+        branch_slug = slugify(current_branch)
+        run_id = f"{now_stamp()}-{branch_slug}-{local_head[:8]}"
+        input_branch = f"handoff/input/{run_id}"
+        result_branch = f"handoff/result/{run_id}"
+        launch_log = self.cfg.runs_dir / f"{run_id}.launch.log"
+        self.launch_log = launch_log
+        self.cfg.runs_dir.mkdir(parents=True, exist_ok=True)
+        launch_log.write_text("")
+        self.record = RunRecord(
+            run_id=run_id,
+            created_at=now_utc(),
+            repo_root=str(self.cfg.root),
+            repo_slug=repo_slug,
+            local_head=local_head,
+            remote_host=self.cfg.remote_host,
+            remote_login_shell=self.cfg.remote_login_shell,
+            input_branch=input_branch,
+            result_branch=result_branch,
+            input_ref=f"refs/heads/{input_branch}",
+            result_ref=f"refs/heads/{result_branch}",
+            tmux_session=f"handoff-{repo_slug}-{run_id}",
+            launch_log=str(launch_log),
+        )
+        self.save()
+
+        self.log("handoff launch starting")
+        self.log(f"  run id: {run_id}")
+        self.log(f"  repo:   {self.cfg.root}")
+        self.log(f"  host:   {self.cfg.remote_host}")
+        self.log(f"  log:    {launch_log}")
+
+        issue_args = [rel_to_repo(p, self.cfg.root) for p in ready if issues]
+        remote_issue_dir = rel_to_repo(issue_dir.resolve(), self.cfg.root) if issue_dir else ""
+
+        if env_bool("HANDOFF_DRY_RUN", False, "AFK_DRY_RUN"):
+            self.log("dry run: would create remote repo, push input branch, and start tmux")
+            self.log(f"  input:  {self.record.input_ref}")
+            self.log(f"  result: {self.record.result_ref}")
+            self.log(f"  tmux:   {self.record.tmux_session}")
+            return
+
+        self.step("checking clean local input", ensure_clean_remote_input, self.cfg.root)
+        self.step("checking remote prerequisites", self.check_prereqs)
+        home = self.step("resolving remote home", self.remote_home)
+        remote_root = self.expand_remote_root(home)
+        self.record.remote_repo = f"{remote_root}/repos/{repo_slug}.git"
+        self.record.remote_worktree = f"{remote_root}/worktrees/{repo_slug}/{run_id}"
+        self.record.remote_run_dir = f"{remote_root}/runs/{repo_slug}/{run_id}"
+        self.record.remote_handoff = f"{self.record.remote_run_dir}/handoff"
+        self.record.remote_runner = f"{self.record.remote_run_dir}/run.sh"
+        self.record.remote_log = f"{self.record.remote_run_dir}/run.log"
+        self.record.remote_status = f"{self.record.remote_run_dir}/status.json"
+        self.record.remote_url = f"{self.cfg.remote_host}:{self.record.remote_repo}"
+        self.save()
+
+        self.step("creating remote bare repository", self.ensure_remote_repo)
+        self.step(
+            "pushing input branch",
+            run,
+            ["git", "push", self.record.remote_url, f"HEAD:{self.record.input_ref}"],
+            cwd=self.cfg.root,
+        )
+        self.step("preparing remote worktree", self.prepare_worktree)
+        self.step("installing handoff on remote", self.install_remote_handoff)
+        self.step("starting remote tmux session", self.start_tmux, issue_args, remote_issue_dir)
+        self.record.state = "launched"
+        self.save()
+
+        attach = attach_command(self.record)
+        self.log("handoff run launched")
+        self.log(f"  run id:   {run_id}")
+        self.log(f"  worktree: {self.record.remote_worktree}")
+        self.log(f"  tmux:     {self.record.tmux_session}")
+        self.log(f"  log:      {self.record.remote_log}")
+        self.log("")
+        self.log(f"Inspect: {attach}")
+        self.log(f"Status:  handoff status {run_id}")
+        self.log(f"Pull:    handoff pull {run_id}")
+
+
+def collect_issues(root: Path, explicit: list[str], issue_dir: Path | None) -> list[Path]:
+    if explicit:
+        issues = [(root / p).resolve() if not Path(p).is_absolute() else Path(p).resolve() for p in explicit]
+    elif issue_dir:
+        base = issue_dir if issue_dir.is_absolute() else root / issue_dir
+        issues = sorted(base.glob("*.md"))
+    else:
+        issues = sorted(root.glob(".scratch/*/issues/*.md"))
+    if not issues:
+        raise RuntimeError("no issue files found")
+    return issues
+
+
+def frontmatter_value(issue: Path, key: str) -> str:
+    wanted = key.lower()
+    for line in issue.read_text(errors="replace").splitlines():
+        if ":" not in line:
+            continue
+        k, value = line.split(":", 1)
+        if k.lower().strip() == wanted:
+            value = value.split("#", 1)[0].strip().strip('"').strip("'")
+            return value
+    return ""
+
+
+def is_ready_issue(issue: Path) -> bool:
+    return bool(re.search(r"^[Ss]tatus:\s*ready-for-agent\s*$", issue.read_text(errors="replace"), re.M))
+
+
+def issue_title(issue: Path) -> str:
+    for line in issue.read_text(errors="replace").splitlines():
+        if line.startswith("# "):
+            return line[2:].strip()
+    return frontmatter_value(issue, "title") or issue.stem
+
+
+def issue_status(issue: Path) -> str:
+    return frontmatter_value(issue, "status")
+
+
+def is_complete_issue(issue: Path) -> bool:
+    return issue_status(issue) in {"done", "complete", "completed", "closed", "merged"}
+
+
+def issue_blockers(issue: Path) -> list[str]:
+    blockers: list[str] = []
+    in_section = False
+    for raw in issue.read_text(errors="replace").splitlines():
+        line = raw.rstrip("\r")
+        if re.match(r"^## Blocked by\s*$", line):
+            in_section = True
+            continue
+        if in_section and line.startswith("## "):
+            break
+        if not in_section:
+            continue
+        line = re.sub(r"^\s*[-*]\s*", "", line)
+        line = re.sub(r"\s+#.*", "", line).strip()
+        if not line or re.match(r"none(\s|$)", line, re.I):
+            continue
+        blockers.append(line)
+    return blockers
+
+
+def resolve_blocker(issue: Path, blocker: str, issues: list[Path]) -> Path | None:
+    key = Path(blocker).stem
+    for candidate in issues:
+        if candidate.stem == key:
+            return candidate
+    same_dir = issue.parent / f"{key}.md"
+    return same_dir if same_dir.exists() else None
+
+
+def has_unresolved_blockers(issue: Path, issues: list[Path]) -> bool:
+    if env_bool("HANDOFF_IGNORE_BLOCKERS", False, "AFK_IGNORE_BLOCKERS"):
+        return False
+    unresolved: list[str] = []
+    for blocker in issue_blockers(issue):
+        blocker_issue = resolve_blocker(issue, blocker, issues)
+        if blocker_issue is None:
+            unresolved.append(f"{blocker} (missing)")
+        elif not is_complete_issue(blocker_issue):
+            unresolved.append(f"{blocker_issue.stem} ({issue_status(blocker_issue)})")
+    if unresolved:
+        print(f"Skipping blocked issue: {issue}")
+        for blocker in unresolved:
+            print(f"    blocked by: {blocker}")
+        return True
+    return False
+
+
+def issue_workspace(root: Path, issue: Path) -> Path:
+    workspace = frontmatter_value(issue, "workspace")
+    rewrite_from = env("HANDOFF_WORKSPACE_REWRITE_FROM", "", "AFK_WORKSPACE_REWRITE_FROM") or ""
+    rewrite_to = env("HANDOFF_WORKSPACE_REWRITE_TO", "", "AFK_WORKSPACE_REWRITE_TO") or ""
+    if workspace and rewrite_from and rewrite_to:
+        if workspace == rewrite_from:
+            workspace = rewrite_to
+        elif workspace.startswith(rewrite_from + "/"):
+            workspace = rewrite_to + "/" + workspace[len(rewrite_from) + 1 :]
+    if not workspace:
+        workspace = env("HANDOFF_DEFAULT_WORKSPACE", str(root), "AFK_DEFAULT_WORKSPACE") or str(root)
+    path = Path(workspace)
+    if not path.is_absolute():
+        path = root / path
+    path = path.resolve()
+    if not path.is_dir():
+        raise RuntimeError(f"workspace does not exist for issue {issue}: {path}")
+    return path
+
+
+def validate_remote_issues(root: Path, issues: list[Path]) -> list[Path]:
+    ready: list[Path] = []
+    for issue in issues:
+        if not issue.exists():
+            raise RuntimeError(f"issue file does not exist: {issue}")
+        if not is_ready_issue(issue):
+            continue
+        if has_unresolved_blockers(issue, issues):
+            continue
+        workspace = issue_workspace(root, issue)
+        if not is_inside(workspace, root):
+            raise RuntimeError(
+                "remote handoff only supports issues targeting the current repository in this slice\n"
+                f"issue: {issue}\nworkspace: {workspace}\nrepository: {root}"
+            )
+        ready.append(issue)
+    if not ready:
+        raise RuntimeError("no ready unblocked issues found")
+    return ready
+
+
+def ensure_clean_remote_input(root: Path) -> None:
+    status = git_stdout(root, "status", "--porcelain")
+    if status:
+        raise RuntimeError("remote handoff sends committed git state only; commit or stash local changes first")
+
+
+def ensure_clean_local(root: Path, workspace: Path, label: str) -> None:
+    if env_bool("HANDOFF_ALLOW_DIRTY", False, "ALLOW_DIRTY"):
+        return
+    proc = run(["git", "-C", str(workspace), "rev-parse", "--is-inside-work-tree"], check=False)
+    if proc.returncode != 0:
+        return
+    if git_stdout(workspace, "status", "--porcelain"):
+        raise RuntimeError(f"refusing to run local handoff on a dirty {label} worktree: {workspace}")
+
+
+def prompt_for_issue(root: Path, issue: Path, target: Path) -> str:
+    body = "\n".join("> " + line for line in issue.read_text(errors="replace").splitlines())
+    return f"""You are working AFK on one local markdown issue in this repository.
+
+Issue file:
+{issue.resolve()}
+
+Target workspace:
+{target}
+
+Issue body:
+{body}
+
+Task:
+Implement this issue end-to-end. Read the issue body first, then read relevant local project context when present:
+
+- docs/agents/issue-tracker.md
+- docs/agents/triage-labels.md
+- docs/agents/domain.md
+- CONTEXT.md
+- CONTEXT-MAP.md
+- docs/adr/
+
+Rules:
+- Treat the issue's acceptance criteria as the contract.
+- Work in the target workspace above. The issue file may live in a separate coordinator repo.
+- Implement only this issue and its required narrow integration path.
+- Do not implement later blocked issues unless this issue explicitly requires that behavior.
+- Respect the repo's glossary and ADRs.
+- Preserve unrelated user changes.
+- Do not use destructive git commands.
+- Use TDD for the issue: write or update focused failing tests for the acceptance criteria first, then implement until they pass.
+- Test externally visible behavior and stable module contracts, not implementation details.
+- Run the relevant tests before finishing.
+- If a blocker makes the issue impossible, stop and explain the blocker in the final response.
+
+Final response:
+- Summarize what changed.
+- List tests run.
+- List any remaining blockers or follow-up issues.
+"""
+
+
+def tee_process(cmd: list[str], stdin_text: str, log_path: Path) -> int:
+    with log_path.open("w", encoding="utf-8") as log:
+        proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        assert proc.stdin and proc.stdout
+        proc.stdin.write(stdin_text)
+        proc.stdin.close()
+        for line in proc.stdout:
+            print(line, end="")
+            log.write(line)
+        return proc.wait()
+
+
+def local(root: Path, issues_arg: list[str]) -> None:
+    issue_dir_env = env("HANDOFF_ISSUE_DIR", env("ISSUE_DIR", "") or "") or ""
+    issue_dir = Path(issue_dir_env) if issue_dir_env else None
+    issues = collect_issues(root, issues_arg, issue_dir)
+    ensure_clean_local(root, root, "coordinator")
+    run_root = Path(
+        env("HANDOFF_RUN_DIR", env("AFK_RUN_DIR", "") or "")
+        or root / ".scratch" / "afk-runs" / "handoff-local" / now_stamp()
+    )
+    if not run_root.is_absolute():
+        run_root = root / run_root
+    run_root.mkdir(parents=True, exist_ok=True)
+    any_ready = False
+
+    for issue in issues:
+        if not issue.exists():
+            raise RuntimeError(f"issue file does not exist: {issue}")
+        if not is_ready_issue(issue):
+            print(f"Skipping non-ready issue: {issue}")
+            continue
+        if has_unresolved_blockers(issue, issues):
+            continue
+        any_ready = True
+        target = issue_workspace(root, issue)
+        ensure_clean_local(root, target, "target")
+        title = issue_title(issue)
+        prompt_path = run_root / f"{issue.stem}.prompt.md"
+        output_path = run_root / f"{issue.stem}.final.md"
+        log_path = run_root / f"{issue.stem}.log"
+        prompt = prompt_for_issue(root, issue, target)
+        prompt_path.write_text(prompt, encoding="utf-8")
+
+        print(f"==> Handoff issue: {title}")
+        print(f"    issue:  {issue}")
+        print(f"    target: {target}")
+        print(f"    prompt: {prompt_path}")
+        print(f"    log:    {log_path}")
+        if env_bool("HANDOFF_DRY_RUN", False, "AFK_DRY_RUN"):
+            print("    dry-run: would run Codex")
+            continue
+
+        cmd = ["codex", "-a", env("CODEX_APPROVAL_POLICY", "never") or "never"]
+        if env_bool("CODEX_SEARCH"):
+            cmd.append("--search")
+        cmd += ["exec", "-C", str(target), "-s", env("CODEX_SANDBOX", "workspace-write") or "workspace-write", "--output-last-message", str(output_path)]
+        if env("CODEX_MODEL"):
+            cmd += ["-m", env("CODEX_MODEL") or ""]
+        if env("CODEX_PROFILE"):
+            cmd += ["-p", env("CODEX_PROFILE") or ""]
+        if env_bool("CODEX_JSON"):
+            cmd.append("--json")
+        cmd.append("-")
+        status = tee_process(cmd, prompt, log_path)
+        if status != 0:
+            raise RuntimeError(f"codex failed for {issue} with exit {status}")
+
+        if env_bool("HANDOFF_COMMIT_EACH", False, "COMMIT_EACH") and git_stdout(target, "status", "--porcelain"):
+            run(["git", "add", "-A"], cwd=target)
+            run(["git", "commit", "-m", f"Implement {title}"], cwd=target)
+
+    if not any_ready:
+        raise RuntimeError("no ready unblocked issues found")
+    print(f"Handoff local run complete. Logs: {run_root}")
+
+
+def load_record(cfg: Config, run_id: str | None) -> RunRecord:
+    if not run_id:
+        if not cfg.latest_path.exists():
+            raise RuntimeError("no latest handoff run recorded")
+        run_id = cfg.latest_path.read_text().strip()
+    path = cfg.runs_dir / f"{run_id}.json"
+    if not path.exists():
+        raise RuntimeError(f"no metadata for handoff run: {run_id}")
+    data = json.loads(path.read_text())
+    allowed = {f.name for f in fields(RunRecord)}
+    return RunRecord(**{k: v for k, v in data.items() if k in allowed})
+
+
+def attach_command(record: RunRecord) -> str:
+    remote = shlex.quote(record.remote_host)
+    script = shlex.quote(f"{record.remote_login_shell} -lc {shlex.quote('tmux attach -t ' + record.tmux_session)}")
+    return f"ssh -tt {remote} {script}"
+
+
+def status(cfg: Config, run_id: str | None) -> None:
+    record = load_record(cfg, run_id)
+    h = Handoff(cfg)
+    h.record = record
+    lines = cfg.status_lines
+
+    print(f"Run:      {record.run_id}")
+    print(f"State:    {record.state}")
+    print(f"Host:     {record.remote_host}")
+    print(f"Worktree: {record.remote_worktree or '(not initialized)'}")
+    print(f"Tmux:     {record.tmux_session or '(not initialized)'}")
+    print(f"Result:   {record.result_branch}")
+    print(f"Error:    {record.error or '(none)'}")
+    if record.tmux_session:
+        tmux_proc = h.remote_login(shlex.join(["tmux", "has-session", "-t", record.tmux_session]), check=False)
+        print(f"Tmux state: {'running' if tmux_proc.returncode == 0 else 'not found'}")
+        print(f"Attach:   {attach_command(record)}")
+
+    if record.remote_status:
+        proc = h.ssh_bash(
+            'status="$1"; if [[ -f "$status" ]]; then cat "$status"; else echo "(remote status missing)"; fi\n',
+            record.remote_status,
+            check=False,
+        )
+        print("\nRemote status:")
+        print((proc.stdout or proc.stderr).rstrip())
+
+    if record.remote_repo and record.result_ref:
+        proc = h.ssh_bash(
+            'repo="$1"; ref="$2"; if git --git-dir "$repo" show-ref --verify --quiet "$ref"; then git --git-dir "$repo" log --oneline -1 "$ref"; else echo "(no result branch yet)"; fi\n',
+            record.remote_repo,
+            record.result_ref,
+            check=False,
+        )
+        print("\nRemote result commit:")
+        print((proc.stdout or proc.stderr).rstrip())
+
+    if record.remote_log:
+        proc = h.ssh_bash(
+            'log="$1"; lines="$2"; if [[ -f "$log" ]]; then tail -n "$lines" "$log"; else echo "(remote log missing)"; fi\n',
+            record.remote_log,
+            str(lines),
+            check=False,
+        )
+        print(f"\nLast {lines} remote log lines:")
+        print((proc.stdout or proc.stderr).rstrip())
+
+    print(f"\nLast {lines} launch log lines:")
+    print(tail_file(Path(record.launch_log), lines))
+
+
+def pull(cfg: Config, run_id: str | None) -> None:
+    record = load_record(cfg, run_id)
+    if not record.remote_url or not record.result_ref:
+        raise RuntimeError(f"result branch not initialized for run: {record.run_id}")
+    h = Handoff(cfg)
+    h.record = record
+    proc = run(["git", "ls-remote", "--exit-code", record.remote_url, record.result_ref], cwd=cfg.root, check=False)
+    if proc.returncode != 0:
+        raise RuntimeError(f"remote result branch does not exist yet: {record.result_branch}")
+    run(["git", "fetch", record.remote_url, f"{record.result_ref}:{record.result_ref}"], cwd=cfg.root, capture=False)
+    print(git_stdout(cfg.root, "log", "--oneline", "-1", record.result_branch))
+    print(f"Fetched handoff result branch: {record.result_branch}")
+    print(f"Inspect: git show --stat {record.result_branch}")
+    print(f"Apply:   git merge {record.result_branch}")
+
+
+def parser_for(command: str) -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(prog=f"handoff {command}" if command != "up" else "handoff")
+    if command in {"up", "local"}:
+        p.add_argument("issues", nargs="*")
+    else:
+        p.add_argument("run_id", nargs="?")
+    return p
+
+
+def main(argv: list[str]) -> int:
+    if argv and argv[0] in {"-h", "--help"}:
+        print("Usage:")
+        print("  handoff [up] [issue-file ...]")
+        print("  handoff local [issue-file ...]")
+        print("  handoff status [run-id]")
+        print("  handoff pull [run-id]")
+        print("")
+        print("Useful env vars:")
+        print("  HANDOFF_REMOTE_HOST=td@100.84.248.34")
+        print("  HANDOFF_REMOTE_ROOT=~/handoff")
+        print("  HANDOFF_REMOTE_LOGIN_SHELL=zsh")
+        print("  HANDOFF_STATE_DIR=.scratch/afk-runs/handoff-state")
+        print("  HANDOFF_ISSUE_DIR=<path>")
+        print("  HANDOFF_RUN_DIR=<path>")
+        print("  HANDOFF_DRY_RUN=1")
+        print("  HANDOFF_REMOTE_LOCAL_DRY_RUN=1")
+        return 0
+    command = "up"
+    if argv and argv[0] in {"up", "local", "status", "pull"}:
+        command = argv.pop(0)
+    args = parser_for(command).parse_args(argv)
+    root = repo_root()
+    cfg = Config(root=root, script_path=Path(__file__).resolve())
+    try:
+        if command == "up":
+            Handoff(cfg).up(args.issues)
+        elif command == "local":
+            local(root, args.issues)
+        elif command == "status":
+            status(cfg, args.run_id)
+        elif command == "pull":
+            pull(cfg, args.run_id)
+        else:
+            raise RuntimeError(f"unknown command: {command}")
+        return 0
+    except KeyboardInterrupt:
+        print("interrupted", file=sys.stderr)
+        return 130
+    except Exception as exc:
+        print(f"handoff: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))
