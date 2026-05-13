@@ -210,10 +210,10 @@
      "/usr/local/bin" "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
  '(go-ts-indent-offset 2 nil nil "Customized with use-package go-ts-mode")
  '(package-selected-packages
-   '(alabaster-themes amaranth-dark-theme avy code-cells conflict-buttons consult
-                      crux d2-mode diff-hl drepl dumb-jump emmet-mode envrc
-                      gdshader-mode gptel gptel-agent kotlin-ts-mode magit
-                      meson-mode msgpack neocaml ob-duckdb ob-http ob-kotlin
+   '(alabaster-themes amaranth-dark-theme avy citre code-cells conflict-buttons
+                      consult crux d2-mode diff-hl drepl dumb-jump emmet-mode
+                      envrc gdshader-mode gptel gptel-agent kotlin-ts-mode magit
+                      meson-mode msgpack neocaml ob-duckdb ob-kotlin
                       ob-sql-mode pache-dark-theme pi-coding-agent prescient
                       protobuf-mode rainbow-mode rg surround svg-lib swift-mode
                       tango-plus-theme tempel terraform-mode tramp-rpc

@@ -172,8 +172,7 @@
 
 ;;;; Symbols
 
-;; Using =dumb-jump= with =xref= integration. Fast, no server needed, works well
-;; with Claude for deeper code understanding.
+;; Use `xref' as the common jump interface, with Citre providing a tags backend.
 
 ;; Default key bindings is
 
@@ -195,9 +194,28 @@
   :custom
   (xref-search-program 'ripgrep))
 
-(use-package dumb-jump
+(defun td/citre-project-root ()
+  "Return the current project root for Citre."
+  (when-let* ((project (project-current nil)))
+    (project-root project)))
+
+(use-package citre
   :ensure t
-  :init (add-hook 'xref-backend-functions 'dumb-jump-xref-activate))
+  :defer t
+  :init
+  (require 'citre-config)
+  :bind (("C-c t j" . citre-jump)
+         ("C-c t J" . citre-jump-back)
+         ("C-c t p" . citre-ace-peek)
+         ("C-c t u" . citre-update-this-tags-file))
+  :custom
+  (citre-project-root-function #'td/citre-project-root)
+  (citre-default-create-tags-file-location 'global-cache)
+  (citre-edit-ctags-options-manually nil)
+  (citre-auto-enable-citre-mode-modes '(prog-mode))
+  (citre-auto-enable-citre-mode-backends-for-remote nil)
+  (citre-readtags-program "/opt/local/bin/ureadtags")
+  (citre-ctags-program "/opt/local/bin/uctags"))
 
 ;;;; Mini-buffer
 
@@ -803,7 +821,7 @@ variable on Emacs builds where it is no longer predefined.")
 
 ;;; Programming
 
-;; Native LSP support via =Eglot= since Emacs 29.1 (disabled - using dumb-jump + Claude instead)
+;; Native LSP support via =Eglot= since Emacs 29.1 (disabled - using tags + Claude instead)
 
 ;; I'm experimenting with working purely with LLM and without LSP. It's not that I don't like LSP, it's just that I don't think it's efficient, especially in the era of LLM.
 
@@ -950,15 +968,6 @@ With prefix argument FORCE, rebuild every configured grammar."
 
 ;; Alibaba Coding Plan via DashScope's OpenAI-compatible endpoint.
 
-(defconst td/llm-bench-root "/Users/tung/Projects/personal/llm-bench"
-  "Local llm-bench checkout used by the MLX gptel backend.")
-
-(defun td/load-mlx-local-gptel ()
-  "Load the local MLX E2B gptel backend from `td/llm-bench-root'."
-  (let ((file (expand-file-name "docs/gptel-mlx-local.el" td/llm-bench-root)))
-    (when (file-readable-p file)
-      (load-file file))))
-
 (use-package gptel-alibaba-coding-plan
   :load-path "vendor"
   :functions (gptel-alibaba-coding-plan-setup))
@@ -971,8 +980,9 @@ With prefix argument FORCE, rebuild every configured grammar."
   (require 'gptel-org)
   (require 'gptel-alibaba-coding-plan)
   (gptel-alibaba-coding-plan-setup)
-  (setopt gptel-default-mode 'org-mode)
-  (td/load-mlx-local-gptel))
+  (setopt
+  gptel-default-mode 'org-mode
+  gptel-model 'qwen3-coder-next))
 
 ;;;; Error checking
 (use-package flymake
@@ -1331,11 +1341,20 @@ With prefix argument FORCE, rebuild every configured grammar."
   (org-confirm-babel-evaluate nil))
 
 (use-package ob-http
+  :load-path "vendor"
+  :ensure nil
   :defer t
-  :ensure t
+  :commands (td-ob-http-copy-as-curl
+             td-ob-http-copy-as-fetch
+             td-ob-http-copy-as-python
+             td-ob-http-cancel-at-point
+             td-ob-http-export-postman-collection
+             td-ob-http-import-postman-collection)
   :custom
-  (ob-http:max-time 180)
-  (ob-http:remove-cr t))
+  (td-ob-http-async-by-default t)
+  (td-ob-http-display-async-buffer-immediately t)
+  (td-ob-http-default-response 'buffer)
+  (td-ob-http-max-time 180))
 
 (use-package ob-python
   :defer t
@@ -1375,14 +1394,7 @@ With prefix argument FORCE, rebuild every configured grammar."
  default-frame-alist
  `((left-fringe . 8) (right-fringe . 4)
    (border-width . 0) (internal-border-width . 0)
-     ;; (font . "Monaco 16")
-     (font . "Iosevka Fixed SS07 16")
-     ;; (font . "Iosevka Mono 16")
-     ;; (font . "JetBrains Mono NL 16")
-     ;; (font . "Menlo 15")
-     ;; (font . "Google Sans Code 16")
-     ;; (font . "Fira Mono 16")
-     ;; (font . "Ubuntu Mono 16")
+   (font . "Iosevka Fixed SS07 16")
    (tool-bar-lines . 0)
    (fullscreen . maximized)
    (mac-appearance . dark)
