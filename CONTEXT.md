@@ -74,13 +74,13 @@ _Avoid_: prompt, chat
 **Ambient Agent Work**:
 Background or sidecar agent activity that follows jcode-shaped lifecycle
 semantics and may continue without being driven by the foreground
-Notebook Cell loop.
+prompt loop.
 _Avoid_: shell background job, hidden daemon
 
 **Ambient Agent Run**:
 The stable identity for one ambient agent conversation or task, following
 jcode's run/task shape.
-_Avoid_: notebook cell, execution attempt
+_Avoid_: Ambient Agent Run
 
 **Ambient Agent Execution**:
 One execution attempt inside an Ambient Agent Run, with execution-scoped session
@@ -91,48 +91,6 @@ _Avoid_: Ambient Agent Run, Transcript Session
 An optional link from an Agent Task to external planning context such as an org
 heading, PRD, issue, or pull request.
 _Avoid_: required task source
-
-**Agent Cell Session**:
-A code-cells workflow where prompts are sent to a coding agent and results are
-rendered back into an editable Emacs buffer.
-_Avoid_: chat buffer, terminal transcript
-
-**Agent Notebook**:
-An Emacs buffer for one Transcript Session where past prompt/result cells are
-read-only, the latest prompt cell is editable, and submitting it continues the
-same Agent Task.
-_Avoid_: chat buffer, terminal transcript, read-only transcript view
-
-**Notebook Projection**:
-A disposable Agent Notebook rendering derived from the Agent Transcript Store.
-_Avoid_: source document, canonical org file
-
-**Notebook Cell**:
-One operator prompt and the agent continuation that follows until the task
-stops, becomes idle, or asks for more input.
-_Avoid_: provider turn, tool call, terminal block
-
-**Draft Notebook Cell**:
-The single editable latest Notebook Cell whose prompt has not been submitted.
-_Avoid_: scratch buffer, unsaved transcript
-
-**Running Notebook Cell**:
-A Notebook Cell whose prompt has been submitted and whose agent continuation is
-still producing events.
-_Avoid_: draft prompt, terminal command
-
-**Complete Notebook Cell**:
-A read-only Notebook Cell whose agent continuation has emitted `stop`.
-_Avoid_: closed task, archived transcript
-
-**Blocked Notebook Cell**:
-A read-only Notebook Cell whose agent continuation is waiting on a question or
-permission event.
-_Avoid_: editable prompt cell
-
-**Transcript View**:
-A read-only code-cells-style Emacs buffer that renders a Transcript Session.
-_Avoid_: live prompt buffer, terminal scrollback
 
 **Workflow Agent CLI**:
 A future coding-agent command-line program designed around this command
@@ -343,9 +301,8 @@ Agent Events.
 _Avoid_: custom notification protocol, desktop notification channel
 
 **Agent Event Ingestion**:
-The Emacs path that validates CLI Agent Events and updates notebooks,
-notifications, and the Agent Action Queue.
-_Avoid_: terminal scraping, notebook-only parser
+The Emacs path that validates CLI Agent Events for Command Workspace surfaces.
+_Avoid_: terminal scraping
 
 **Agent Transcript Store**:
 A durable record of CLI Agent Events used for session recovery, weekly review,
@@ -355,21 +312,6 @@ _Avoid_: tmux scrollback, terminal log
 **Agent Notification**:
 An Emacs-owned notification derived from a validated CLI Agent Event.
 _Avoid_: generic terminal notification
-
-**Agent Action Transient**:
-An Emacs transient menu opened from a question or permission CLI Agent Event to
-collect an operator decision.
-_Avoid_: minibuffer prompt, terminal approval UI
-
-**Agent Inbox**:
-A persistent Emacs buffer listing Agent Notifications and agent sessions that
-need review.
-_Avoid_: desktop notification center
-
-**Agent Action Queue**:
-The first Agent Inbox slice: a list of pending or unread agent events that need
-operator review.
-_Avoid_: project dashboard, weekly summary
 
 **Transcript Index**:
 A SQLite-backed index over the Agent Transcript Store for project, session, time,
@@ -389,9 +331,6 @@ _Avoid_: agent workspace
 
 - The **Command Workspace** owns **Terminal Surfaces**, **Durable Sessions**, and
   **Agent Sessions**.
-- The next **Agent Notebook** implementation is split into three vertical
-  slices: **Agent Resume** core, **Agent Notebook** projection, and Emacs
-  action handling.
 - A **Project Workspace** is the primary replacement for a Warp tab.
 - A **Project Workspace** contains ordinary Emacs windows, which replace Warp
   panes.
@@ -424,46 +363,12 @@ _Avoid_: agent workspace
 - Each project has one default **Project Terminal** for ordinary shell work.
 - An **Agent Session** uses a role-prefixed **Project Session** identity such as
   `codex-dotfiles` or `claude-dotfiles`.
-- An **Agent Cell Session** controls an **Agent Session** without treating the
-  terminal transcript as the main interaction model.
-- An **Agent Notebook** is the preferred **Agent Cell Session** shape for daily
-  use.
-- An **Agent Notebook** renders immutable prior cells from a **Transcript
-  Session** and exposes one editable latest prompt cell.
-- An **Agent Notebook** is a **Notebook Projection**, not an additional source of
-  truth.
-- An **Agent Notebook** can be opened for an existing **Transcript Session** or
-  created by starting a new **Agent Task**.
-- An **Agent Notebook** is rendered as **Notebook Cells**.
-- A **Notebook Cell** groups all provider responses, tool calls, and output that
-  result from one operator prompt.
-- **Notebook Cells** show prompts and response text by default, while tool
-  activity is collapsed unless expanded.
 - Permission requests and agent questions are shown prominently because they
   require operator action.
-- An **Agent Notebook** has at most one **Draft Notebook Cell**.
-- Submitting a **Draft Notebook Cell** turns it into a **Running Notebook Cell**.
-- A `stop` event turns a **Running Notebook Cell** into a **Complete Notebook
-  Cell**.
-- A question or permission event turns a **Running Notebook Cell** into a
-  **Blocked Notebook Cell**.
-- An `idle_prompt` event after a **Complete Notebook Cell** creates the next
-  **Draft Notebook Cell**.
-- Submitting the editable prompt cell in an **Agent Notebook** continues the
-  same **Agent Task** rather than creating a new task.
-- A **Transcript View** remains read-only; editable input belongs to an **Agent
-  Notebook**.
 - **Agent Resume** is owned by the **Workflow Agent CLI**, not reconstructed in
   Emacs.
-- An **Agent Notebook** submits new prompts through **Agent Resume** by passing
-  the **Transcript Session** identity and, when present, the new operator
-  prompt.
-- The first **Agent Notebook** submits each editable cell through one
-  non-interactive **Agent Resume** invocation.
 - A new agent run creates a new **Agent Task** and **Transcript Session**;
   **Agent Resume** appends to an existing **Transcript Session**.
-- Creating a new **Agent Notebook** starts a new **Agent Task** and binds the
-  notebook to the emitted **Transcript Session** identity.
 - When **Agent Resume** receives no prompt argument, it starts an **Interactive
   Agent Resume** for that **Transcript Session**.
 - **Interactive Agent Resume** uses line-oriented standard input and output; it
@@ -483,8 +388,6 @@ _Avoid_: agent workspace
   every prompt or collapsed into one endless project session.
 - An **Agent Task** has a title at creation time; when no title is supplied, the
   title may be derived from the first operator prompt.
-- The **Agent Task** title is stored in **CLI Agent Events** so selectors,
-  notebooks, summaries, and inbox views can use it.
 - An **Agent Task** may later gain a **Task Anchor**.
 - A **Workflow Agent CLI** remains a first-class command-line program and emits
   **CLI Agent Events** for the Command Workspace to react to.
@@ -528,9 +431,6 @@ _Avoid_: agent workspace
 - **Integration Tools** such as browser automation, web fetch/search, MCP,
   subagents, ambient work, self-development, side panels, and Gmail are
   Integration Tool slices rather than Core Coding Tools.
-- **Ambient Agent Work** should follow jcode semantics first. Compatibility with
-  the existing **Agent Task**, **Transcript Session**, and **Notebook
-  Projection** assumptions is secondary.
 - An **Ambient Agent Run** is the stable user-visible identity; an **Ambient
   Agent Execution** is the runtime attempt that may expose a joinable session,
   process, or transport.
@@ -540,9 +440,6 @@ _Avoid_: agent workspace
 - Ambient states should preserve the jcode-shaped lifecycle vocabulary:
   queued, pending, claimed, in progress, succeeded, failed, error, blocked,
   cancelled, and unknown.
-- The **Canonical Event Log**, **Agent Action Queue**, and later **Agent
-  Notebook** projections adapt to **Ambient Agent Work** instead of forcing
-  ambient work into the foreground Notebook Cell lifecycle.
 - **Ambient Agent Work** still emits auditable **CLI Agent Events** and remains
   inspectable and controllable by the standalone **Workflow Agent CLI**.
 - Long-running `bash` tool execution is modelled as a **Supervised Command
@@ -558,8 +455,6 @@ _Avoid_: agent workspace
   always run without **Agent Permission Flow**.
 - The first **Web Search Tool** may use DuckDuckGo as the default provider while
   allowing an operator-configured API key for providers that require one.
-- **Agent Permission Flow** is handled through **Agent Action Transients** in
-  Emacs.
 - The **Workflow Agent CLI** emits `permission_request`, waits for a
   **Permission Decision**, records `permission_replied`, and only then continues
   the **Agent Tool Loop**.
@@ -677,18 +572,6 @@ _Avoid_: agent workspace
   **CLI Agent Events**.
 - Full **Provider Conversation Items** are persisted in the **Canonical Event
   Log**, not sent wholesale through OSC 777.
-- **Agent Event Ingestion** accepts events from notebook-launched agent
-  processes and from Terminal Surfaces that pass through the **Universal Agent
-  Support Channel**.
-- Notebook-launched agent processes are the required **Agent Event Ingestion**
-  source for the first **Agent Notebook** slice.
-- Notebook-launched **Agent Sessions** may stream output into the active
-  **Running Notebook Cell** as live UI feedback.
-- A completed **Notebook Cell** is reconciled from the **Canonical Event Log** so
-  the transcript remains authoritative over streamed UI text.
-- Terminal Surface OSC ingestion through EAT/tmux is a compatibility spike for
-  terminal-rendered fallback sessions, not a blocker for the first **Agent
-  Notebook**.
 - **Agent Event Ingestion** is live UI plumbing; the **Canonical Event Log**
   remains written by the **Workflow Agent CLI**.
 - **CLI Agent Events** are expected to pass through tmux to Emacs because tmux
@@ -698,14 +581,10 @@ _Avoid_: agent workspace
   asked, and idle prompt.
 - `idle_prompt` is carried as a **CLI Agent Event** on the **Universal Agent
   Support Channel**.
-- `stop` ends the current **Notebook Cell** continuation; it does not by itself
-  mean the **Agent Task** is permanently closed.
 - `idle_prompt` means the same **Transcript Session** can accept another
   operator prompt.
 - Permanent **Agent Task** closure is a separate future event or explicit
   operator action.
-- `question_asked` and `permission_request` events are surfaced through an
-  **Agent Action Transient**.
 - Answering a `question_asked` event submits a normal **Agent Resume** prompt for
   the same **Transcript Session**.
 - Permission requested and permission replied events carry **Agent Permission
@@ -723,17 +602,10 @@ _Avoid_: agent workspace
   Workspace** and **Transcript Session**.
 - The **Agent Inbox** is the persistent place to review missed, unread, blocked,
   errored, and completed agent activity.
-- The first **Agent Inbox** implementation is an **Agent Action Queue**.
-- The **Agent Action Queue** lists pending permission requests, agent questions,
-  completed cells, and errored sessions.
-- Selecting an **Agent Action Queue** item opens the relevant **Agent Notebook**
-  and, when applicable, the **Agent Action Transient**.
 - An **Agent Notification** is marked read when its specific **Transcript
   Session** is opened.
 - The **Agent Transcript Store** is global and canonical across projects.
 - The **Agent Transcript Store** writes a **Canonical Event Log** first.
-- **Notebook Projections** are rebuilt from the **Agent Transcript Store**; only
-  the current editable prompt cell is local unsaved state.
 - The **Transcript Index** is rebuildable from the **Canonical Event Log** and
   makes the global store queryable by project, session, time range, and event
   type.
@@ -755,11 +627,6 @@ _Avoid_: agent workspace
 
 - "daily terminal" was used to mean both a terminal emulator and the whole
   command workflow; resolved: the canonical term is **Command Workspace**.
-- "agent session" previously included both full-terminal agent UIs and
-  code-cells workflows; resolved: **Agent Cell Session** is the preferred daily
-  model, while **Terminal-Rendered Agent Session** is fallback.
-- "notebook" means **Agent Notebook**, not a general editable document or a
-  read-only **Transcript View**.
 - `drepl-smolagent` and `td-acp` were both exploratory agent integrations;
   resolved: neither defines the target agent architecture.
 - `codex.el`, `claudecode.el`, `vterm-agent.el`, `drepl-smolagent.*`, and

@@ -119,3 +119,7 @@ export PATH="$HOME/.claude/local:$PATH"
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
 
 export AGENTCTL_DATABASE_URL='postgres://agentctl:t680wj3zre10s4vsquzfodin@100.84.248.34:55432/agentctl?sslmode=disable'
+
+
+# Added by Antigravity CLI installer
+export PATH="/Users/tung/.local/bin:$PATH"
