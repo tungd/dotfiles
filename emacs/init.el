@@ -1,17 +1,15 @@
 ;;; init.el --- Tung Dao's Emacs Setup -*- lexical-binding: t; -*-
 
-(require 'subr-x)
-
 ;; So, as an effort to improve the responsiveness, I'm going to reboot my Emacs
 ;; configuration. Hope it is better this time.
-
+;;
 ;; The idea is that I'm going to add things in, bit by bit, just enough to get it
 ;; going. This way I will be able to nail down the packages that cause issue, and
 ;; look for alternatives.
 
 ;;; Enable Lexical Binding
-
 ;; Make things a little bit faster. For context: https://www.emacswiki.org/emacs/DynamicBindingVsLexicalBinding
+(require 'subr-x)
 
 ;;; Packages and initialization
 
@@ -224,11 +222,10 @@
 
 (use-package minibuffer
   :custom
-  ;; Let completion metadata decide which commands auto-display completions.
-  ;; Categories opt in through `completion-category-overrides' below.
   (minibuffer-visible-completions t)
   (completion-eager-display 'auto)
   (completion-eager-update 'auto)
+  (completion-extra-properties '(:eager-display t :eager-update t))
   (completion-auto-help nil)
   (completion-show-help nil)
   (completion-auto-select 'second-tab)
@@ -238,35 +235,6 @@
   (completions-format 'one-column)
   (completions-detailed t)
   (completions-group t))
-
-(defcustom td/completion-eager-min-input 3
-  "Minimum minibuffer input length before eager completions may auto-show."
-  :type 'integer)
-
-(defcustom td/completion-eager-excluded-categories '(command)
-  "Completion categories that should not auto-show eagerly."
-  :type '(repeat symbol))
-
-(defun td/completion--minibuffer-input-length ()
-  "Return current minibuffer input length."
-  (max 0 (- (point-max) (minibuffer-prompt-end))))
-
-(defun td/completion--eager-gate (original metadata &optional force-eager-update)
-  "Gate built-in eager completion display by category and input length."
-  (if (or (not (minibufferp nil t))
-          (bound-and-true-p completion-in-region-mode)
-          (minibuffer--completions-visible))
-      (funcall original metadata force-eager-update)
-    (and (not (memq (completion-metadata-get metadata 'category)
-                    td/completion-eager-excluded-categories))
-         (>= (td/completion--minibuffer-input-length)
-             td/completion-eager-min-input)
-         (let ((completion-eager-display t)
-               (completion-eager-update t))
-           (funcall original metadata force-eager-update)))))
-
-(advice-remove 'completions--should-show-p #'td/completion--eager-gate)
-(advice-add 'completions--should-show-p :around #'td/completion--eager-gate)
 
 (bind-key "TAB" #'minibuffer-complete minibuffer-mode-map)
 
@@ -292,10 +260,13 @@
   (add-to-list 'completion-styles 'prescient)
   ;; `M-x` uses a large `command` category. Keep prescient matching/sorting
   ;; there, but avoid eager display so command completion stays explicit.
-  (setf (alist-get 'command completion-category-overrides)
-        '((styles . (prescient basic))
-          (display-sort-function . prescient-completion-sort)
-          (cycle . t)))
+  (td/set-completion-category-overrides
+   'command
+   '((eager-display . nil)
+     (eager-update . t)
+     (styles . (prescient basic))
+     (display-sort-function . prescient-completion-sort)
+     (cycle . t)))
   ;; Keep recency/frequency ahead of the old shortest-first behavior.
   (setq prescient-sort-length-enable nil
         prescient-aggressive-file-save t))
@@ -1431,8 +1402,7 @@ With prefix argument FORCE, rebuild every configured grammar."
 
 (setq-default
  cursor-in-non-selected-windows nil
- line-spacing nil
- )
+ line-spacing nil)
 
 (setq ns-use-thin-smoothing t)
 
@@ -1457,16 +1427,6 @@ With prefix argument FORCE, rebuild every configured grammar."
 
 ;; Some preferences that I set for all the theme. Per documentation, the custom
 ;; theme named =user= will always have the highest priority.
-
-;; (use-package tango-plus-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'tango-plus t))
-
-;; (use-package alabaster-themes
-;;   :ensure t
-;;   :config
-;;   (load-theme 'tango-plus t))
 
 (use-package pache-dark-theme
   :ensure t
