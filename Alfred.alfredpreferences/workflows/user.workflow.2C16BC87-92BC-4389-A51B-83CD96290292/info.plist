@@ -167,7 +167,7 @@
 			<dict>
 				<key>paths</key>
 				<array>
-					<string>/Applications/Warp.app</string>
+					<string>~/Applications/WarpSOLO.app</string>
 				</array>
 				<key>toggle</key>
 				<true/>

@@ -224,13 +224,12 @@
 
 (use-package minibuffer
   :custom
-  ;; Eager display works well for most categories. `execute-extended-command'
-  ;; gets special handling below so its large command set opens only after a
-  ;; short input prefix.
+  ;; Let completion metadata decide which commands auto-display completions.
+  ;; Categories opt in through `completion-category-overrides' below.
   (minibuffer-visible-completions t)
-  (completion-eager-display t)
-  (completion-eager-update t)
-  (completion-auto-help 'lazy)
+  (completion-eager-display 'auto)
+  (completion-eager-update 'auto)
+  (completion-auto-help nil)
   (completion-show-help nil)
   (completion-auto-select 'second-tab)
   (completion-cycle-threshold 3)
@@ -240,40 +239,34 @@
   (completions-detailed t)
   (completions-group t))
 
-(defvar-local td/delayed-completions-enabled nil
-  "Non-nil when the current minibuffer should reveal completions after a prefix.")
+(defcustom td/completion-eager-min-input 3
+  "Minimum minibuffer input length before eager completions may auto-show."
+  :type 'integer)
 
-(defun td/minibuffer-completions-available-p ()
-  "Return non-nil when current minibuffer contents have completions."
-  (let ((contents (minibuffer-contents)))
-    (consp (completion-all-completions
-            contents
-            minibuffer-completion-table
-            minibuffer-completion-predicate
-            (length contents)))))
+(defcustom td/completion-eager-excluded-categories '(command)
+  "Completion categories that should not auto-show eagerly."
+  :type '(repeat symbol))
 
-(defun td/extended-command-completion-threshold ()
-  "Open *Completions* after two characters for selected minibuffer sessions."
-  (when td/delayed-completions-enabled
-    (let ((input-length (- (point-max) (minibuffer-prompt-end))))
-      (cond
-       ((>= input-length 2)
-        (unless (or (get-buffer-window "*Completions*" 0)
-                    (not (td/minibuffer-completions-available-p)))
-          (minibuffer-completion-help)))
-       ((get-buffer-window "*Completions*" 0)
-        (minibuffer-hide-completions))))))
+(defun td/completion--minibuffer-input-length ()
+  "Return current minibuffer input length."
+  (max 0 (- (point-max) (minibuffer-prompt-end))))
 
-(defun td/extended-command-minibuffer-setup ()
-  "Use delayed completion display for `execute-extended-command'."
-  (when (eq minibuffer-history-variable 'extended-command-history)
-    (setq-local td/delayed-completions-enabled t)
-    (setq-local completion-eager-display nil)
-    (add-hook 'post-command-hook
-              #'td/extended-command-completion-threshold
-              nil t)))
+(defun td/completion--eager-gate (original metadata &optional force-eager-update)
+  "Gate built-in eager completion display by category and input length."
+  (if (or (not (minibufferp nil t))
+          (bound-and-true-p completion-in-region-mode)
+          (minibuffer--completions-visible))
+      (funcall original metadata force-eager-update)
+    (and (not (memq (completion-metadata-get metadata 'category)
+                    td/completion-eager-excluded-categories))
+         (>= (td/completion--minibuffer-input-length)
+             td/completion-eager-min-input)
+         (let ((completion-eager-display t)
+               (completion-eager-update t))
+           (funcall original metadata force-eager-update)))))
 
-(add-hook 'minibuffer-setup-hook #'td/extended-command-minibuffer-setup)
+(advice-remove 'completions--should-show-p #'td/completion--eager-gate)
+(advice-add 'completions--should-show-p :around #'td/completion--eager-gate)
 
 (bind-key "TAB" #'minibuffer-complete minibuffer-mode-map)
 
@@ -297,33 +290,12 @@
       (setf (alist-get category completion-category-overrides) current)))
   :init
   (add-to-list 'completion-styles 'prescient)
-  ;; Consult uses its own completion categories for many commands, and some
-  ;; commands like `consult-buffer' route through `multi-category'. Re-state
-  ;; eager behavior per category so those commands stay eager even when
-  ;; category metadata would otherwise override global defaults.
-  (dolist (category '(multi-category
-                      project
-                      consult-compile-error
-                      consult-flymake-error
-                      consult-grep
-                      consult-info
-                      consult-isearch-history
-                      consult-kmacro
-                      consult-location
-                      consult-man
-                      consult-xref))
-    (td/set-completion-category-overrides
-     category
-     '((eager-display . t)
-       (eager-update . t))))
-  ;; `M-x` uses the `command` completion category, which can bypass global
-  ;; completion settings via category metadata. Wire `prescient` in explicitly
-  ;; so command matching and recency sorting both apply there.
-  (td/set-completion-category-overrides
-   'command
-   '((styles . (prescient basic))
-     (display-sort-function . prescient-completion-sort)
-     (cycle . t)))
+  ;; `M-x` uses a large `command` category. Keep prescient matching/sorting
+  ;; there, but avoid eager display so command completion stays explicit.
+  (setf (alist-get 'command completion-category-overrides)
+        '((styles . (prescient basic))
+          (display-sort-function . prescient-completion-sort)
+          (cycle . t)))
   ;; Keep recency/frequency ahead of the old shortest-first behavior.
   (setq prescient-sort-length-enable nil
         prescient-aggressive-file-save t))
@@ -598,7 +570,7 @@ Uses project root if in a project, otherwise current directory."
   :custom
   (auto-revert-avoid-polling t)
   (auto-revert-interval 5)
-  (auto-revert-check-vc-info t))
+  (auto-revert-check-vc-info nil))
 
 (setq-default
  comment-auto-fill-only-comments t
@@ -766,6 +738,58 @@ variable on Emacs builds where it is no longer predefined.")
   :commands (vterm vterm-other-window)
   :custom
   (vterm-shell "/bin/zsh -l"))
+
+;; tterm - OCaml-based terminal emulator (local development)
+(use-package tterm
+  :load-path "~/Projects/personal/tterm"
+  :defer t
+  :commands (tterm)
+  :init
+  (autoload 'tterm (expand-file-name "~/Projects/personal/tterm/tterm.el") nil t)
+  :custom
+  (tterm-module-path (expand-file-name "~/Projects/personal/tterm/tterm-module.so"))
+  (tterm-agent-notification-hook '(tterm--agent-notification-message))
+  (tterm-osc-52-policy 'confirm)
+  :config
+  (defun td/tterm-reload ()
+    "Reload the local tterm checkout and reset its keymaps."
+    (interactive)
+    (dolist (symbol '(tterm-mode-map tterm--char-mode-map tterm-copy-mode-map))
+      (when (boundp symbol)
+        (makunbound symbol)))
+    (load-file (expand-file-name "~/Projects/personal/tterm/tterm.el"))
+    (when (fboundp 'tterm-redraw-all)
+      (tterm-redraw-all))))
+
+;; td-agent - Emacs session integration (local development)
+(use-package td-agent
+  :load-path "~/Projects/personal/td-agent/emacs"
+  :defer t
+  :commands (td-agent-menu
+             td-agent-new-session
+             td-agent-session-manager
+             td-agent-open-session-viewer
+             td-agent-open-prompt-draft
+             td-agent-session-viewer-mode
+             td-agent-prompt-draft-mode)
+  :init
+  (autoload 'td-agent-menu
+    (expand-file-name "~/Projects/personal/td-agent/emacs/td-agent.el") nil t)
+  (autoload 'td-agent-new-session
+    (expand-file-name "~/Projects/personal/td-agent/emacs/td-agent.el") nil t)
+  (autoload 'td-agent-session-manager
+    (expand-file-name "~/Projects/personal/td-agent/emacs/td-agent.el") nil t)
+  (autoload 'td-agent-open-session-viewer
+    (expand-file-name "~/Projects/personal/td-agent/emacs/td-agent.el") nil t)
+  (global-set-key (kbd "C-c t") #'td-agent-menu)
+  :custom
+  (td-agent-source-directory (expand-file-name "~/Projects/personal/td-agent/"))
+  (td-agent-args '("--permission" "auto"))
+  :config
+  (defun td/td-agent-reload ()
+    "Reload the local td-agent Emacs integration checkout."
+    (interactive)
+    (load-file (expand-file-name "~/Projects/personal/td-agent/emacs/td-agent.el"))))
 
 (load (expand-file-name "td-command-workspace.el" user-emacs-directory))
 (td/command-workspace-install td/leader-map)
@@ -966,11 +990,11 @@ With prefix argument FORCE, rebuild every configured grammar."
 
 (bind-key "C-x C-l" #'td/expand-lines)
 
-;; Alibaba Coding Plan via DashScope's OpenAI-compatible endpoint.
+;; Cloudflare AI Gateway via its OpenAI-compatible endpoint.
 
-(use-package gptel-alibaba-coding-plan
+(use-package gptel-cloudflare-ai-gateway
   :load-path "vendor"
-  :functions (gptel-alibaba-coding-plan-setup))
+  :functions (gptel-cloudflare-ai-gateway-setup))
 
 (use-package gptel
   :ensure t
@@ -978,11 +1002,12 @@ With prefix argument FORCE, rebuild every configured grammar."
   :hook (gptel-mode . visual-line-mode)
   :config
   (require 'gptel-org)
-  (require 'gptel-alibaba-coding-plan)
-  (gptel-alibaba-coding-plan-setup)
+  (require 'gptel-cloudflare-ai-gateway)
+  (gptel-cloudflare-ai-gateway-setup)
   (setopt
-  gptel-default-mode 'org-mode
-  gptel-model 'qwen3-coder-next))
+   gptel-default-mode 'org-mode
+   gptel-include-reasoning 'ignore
+   gptel-model 'workers-ai/@cf/google/gemma-4-26b-a4b-it))
 
 ;;;; Error checking
 (use-package flymake
@@ -1394,7 +1419,7 @@ With prefix argument FORCE, rebuild every configured grammar."
  default-frame-alist
  `((left-fringe . 8) (right-fringe . 4)
    (border-width . 0) (internal-border-width . 0)
-   (font . "Iosevka Fixed SS07 16")
+   (font . "Iosevka Fixed SS07 18")
    (tool-bar-lines . 0)
    (fullscreen . maximized)
    (mac-appearance . dark)
@@ -1407,7 +1432,6 @@ With prefix argument FORCE, rebuild every configured grammar."
 (setq-default
  cursor-in-non-selected-windows nil
  line-spacing nil
- cursor-type 'bar
  )
 
 (setq ns-use-thin-smoothing t)
