@@ -1390,7 +1390,8 @@ With prefix argument FORCE, rebuild every configured grammar."
  default-frame-alist
  `((left-fringe . 8) (right-fringe . 4)
    (border-width . 0) (internal-border-width . 0)
-   (font . "Iosevka Fixed SS07 18")
+   ;(font . "Iosevka Fixed SS07 18")
+   (font . "JetBrains Mono NL 15")
    (tool-bar-lines . 0)
    (fullscreen . maximized)
    (mac-appearance . dark)
@@ -1402,7 +1403,7 @@ With prefix argument FORCE, rebuild every configured grammar."
 
 (setq-default
  cursor-in-non-selected-windows nil
- line-spacing nil)
+ line-spacing '(0.1 . 0.1)) ;; line-height 1.2, split above/below
 
 (setq ns-use-thin-smoothing t)
 
