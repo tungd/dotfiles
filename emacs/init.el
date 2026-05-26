@@ -721,9 +721,6 @@ Uses project root if in a project, otherwise current directory."
     (interactive)
     (load-file (expand-file-name "~/Projects/personal/td-agent/emacs/td-agent.el"))))
 
-(load (expand-file-name "td-command-workspace.el" user-emacs-directory))
-(td/command-workspace-install td/leader-map)
-
 ;;;; Tramp
 (use-package tramp
   :custom
@@ -1173,18 +1170,6 @@ With prefix argument FORCE, rebuild every configured grammar."
   "Open the main Org inbox file."
   (interactive)
   (find-file td/org-inbox-file))
-
-(defun td/org-open-inbox-workspace ()
-  "Open the main Org inbox file in a command workspace."
-  (interactive)
-  (td/command-workspace-open-project-workspace
-   (file-name-directory td/org-inbox-file)
-   td/org-inbox-file))
-
-(with-eval-after-load 'td-command-workspace
-  (define-key td/command-workspace-prefix-map
-              (kbd "i")
-              #'td/org-open-inbox-workspace))
 
 (defun td/org-electric-pair ()
   (require 'elec-pair)

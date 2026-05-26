@@ -166,9 +166,7 @@
 			<key>config</key>
 			<dict>
 				<key>paths</key>
-				<array>
-					<string>~/Applications/WarpSOLO.app</string>
-				</array>
+				<array/>
 				<key>toggle</key>
 				<true/>
 			</dict>
