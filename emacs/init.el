@@ -656,51 +656,10 @@ Uses project root if in a project, otherwise current directory."
   :ensure t
   :hook (after-init . envrc-global-mode))
 
-(declare-function opam-env--maybe-activate "opam-env-mode")
-
-(defun td/opam-env-maybe-activate ()
-  "Activate OPAM env for file and Dired buffers."
-  (when (or buffer-file-name
-            (derived-mode-p 'dired-mode))
-    (when (require 'opam-env-mode nil t)
-      (opam-env--maybe-activate))))
-
-(use-package opam-env-mode
-  :ensure nil
-  :load-path "vendor"
-  :hook ((find-file . td/opam-env-maybe-activate)
-         (dired-mode . td/opam-env-maybe-activate)))
-
 (use-package comint
   :bind ("C-c C-l" . comint-clear-buffer)
   :custom
   (comint-terminfo-terminal "dumb-emacs-ansi"))
-
-(defvar display-comint-buffer-action
-  (append display-buffer--same-window-action '((category . comint)))
-  "Display action for Comint buffers.
-Compatibility binding for packages that still reference this
-variable on Emacs builds where it is no longer predefined.")
-
-(use-package drepl
-  :ensure t
-  :defer t
-  :bind (("C-l r a" . drepl-associate)
-         ("C-l r b" . drepl-eval-buffer)
-         ("C-l r p" . drepl-pop-to-repl)
-         ("C-l r r" . drepl-restart)))
-
-(use-package eat
-  :ensure t
-  :defer t
-  :commands (eat))
-
-(use-package code-cells
-  :ensure t
-  :defer t
-  :hook (prog-mode . code-cells-mode-maybe)
-  :bind (:map code-cells-mode-map
-              ("C-c C-c" . code-cells-eval)))
 
 (use-package vterm
   :ensure t
