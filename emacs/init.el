@@ -669,6 +669,28 @@ Uses project root if in a project, otherwise current directory."
   :custom
   (vterm-shell "/bin/zsh -l"))
 
+(use-package alert
+  :ensure t
+  :demand t)
+
+(use-package alert-inbox
+  :demand t
+  :after alert
+  :bind (("C-c n i" . alert-inbox-open)
+         ("C-c n n" . alert-inbox-cycle-buffer))
+  :config
+  (alert-inbox-mode 1)
+  (alert-add-rule
+   :mode 'tterm-mode
+   :category "\\`tterm-notification\\'"
+   :style 'inbox
+   :continue t)
+  (alert-add-rule
+   :mode 'tterm-mode
+   :category "\\`tterm-notification\\'"
+   :style 'mode-line
+   :append t))
+
 ;; tterm - OCaml-based terminal emulator (local development)
 (use-package tterm
   :load-path "~/Projects/personal/tterm"
@@ -678,7 +700,7 @@ Uses project root if in a project, otherwise current directory."
   (autoload 'tterm (expand-file-name "~/Projects/personal/tterm/tterm.el") nil t)
   :custom
   (tterm-module-path (expand-file-name "~/Projects/personal/tterm/tterm-module.so"))
-  (tterm-agent-notification-hook '(tterm--agent-notification-message))
+  (tterm-buffer-title-function #'tterm-buffer-title-collapse-parents)
   (tterm-osc-52-policy 'confirm)
   :config
   (defun td/tterm-reload ()
@@ -691,35 +713,26 @@ Uses project root if in a project, otherwise current directory."
     (when (fboundp 'tterm-redraw-all)
       (tterm-redraw-all))))
 
-;; td-agent - Emacs session integration (local development)
-(use-package td-agent
-  :load-path "~/Projects/personal/td-agent/emacs"
-  :defer t
-  :commands (td-agent-menu
-             td-agent-new-session
-             td-agent-session-manager
-             td-agent-open-session-viewer
-             td-agent-open-prompt-draft
-             td-agent-session-viewer-mode
-             td-agent-prompt-draft-mode)
-  :init
-  (autoload 'td-agent-menu
-    (expand-file-name "~/Projects/personal/td-agent/emacs/td-agent.el") nil t)
-  (autoload 'td-agent-new-session
-    (expand-file-name "~/Projects/personal/td-agent/emacs/td-agent.el") nil t)
-  (autoload 'td-agent-session-manager
-    (expand-file-name "~/Projects/personal/td-agent/emacs/td-agent.el") nil t)
-  (autoload 'td-agent-open-session-viewer
-    (expand-file-name "~/Projects/personal/td-agent/emacs/td-agent.el") nil t)
-  (global-set-key (kbd "C-c t") #'td-agent-menu)
-  :custom
-  (td-agent-source-directory (expand-file-name "~/Projects/personal/td-agent/"))
-  (td-agent-args '("--permission" "auto"))
+(use-package tterm-consult
+  :load-path "~/Projects/personal/tterm"
+  :after (consult tterm)
   :config
-  (defun td/td-agent-reload ()
-    "Reload the local td-agent Emacs integration checkout."
-    (interactive)
-    (load-file (expand-file-name "~/Projects/personal/td-agent/emacs/td-agent.el"))))
+  (tterm-consult-register-source))
+
+;; scv - Emacs session integration (local development)
+(use-package scv
+  :load-path "~/Projects/personal/scv/emacs"
+  :defer t
+  :commands (scv-menu
+             scv-new-session
+             scv-session-manager
+             scv-open-session-viewer
+             scv-open-prompt-draft)
+  :custom
+  (scv-source-directory (expand-file-name "~/Projects/personal/scv/"))
+  (scv-executable (expand-file-name "~/.local/bin/scv"))
+  :config
+  (scv-install td/leader-map "S"))
 
 ;;;; Tramp
 (use-package tramp
@@ -1334,10 +1347,12 @@ With prefix argument FORCE, rebuild every configured grammar."
  default-frame-alist
  `((left-fringe . 8) (right-fringe . 4)
    (border-width . 0) (internal-border-width . 0)
-   ;(font . "Iosevka Fixed SS07 18")
+   ;; (font . "Iosevka Fixed SS07 18")
    (font . "JetBrains Mono NL 15")
    (tool-bar-lines . 0)
-   (fullscreen . maximized)
+   ;; (fullscreen . maximized)
+   (width . 160)
+   (height . 50)
    (mac-appearance . dark)
    (ns-appearance . dark)
    (vertical-scroll-bars . nil)))
