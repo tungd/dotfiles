@@ -43,34 +43,29 @@
   xcode-select --install
 #+END_SRC
 
-** =macports=
+** =nix=
 
-I don't use Homebrew, it is too fragile and invasive for my taste. I tried Nix
-but it's not ready for prime time yet. Deal breaker for me is a long standing
-issue regarding =watchman= (https://github.com/NixOS/nixpkgs/issues/14309).
-
-I tried =pkgsrc=, it was great but the number of packages are so limited, and
-updates were so infrequent. I now settled down with MacPorts. It is simple, pretty
-similar to =apt= and =yum=, supports package version pining and has all of the
-packages that I need. It's also not updated too frequently like
-Homebrew. Installation is a little bit more involved, though.
+The global CLI profile is managed from this repo:
 
 #+BEGIN_SRC sh
-  # the general stuffs
-  sudo port install aspell aspell-dict-en automake autoconf openssl htop
-  sudo port install kubectl-1.24 terraform-1.2
-  sudo port install watchman sqlite3 ripgrep tree libxml2 lcms2
-  sudo port install nodejs18 npm8 yarn python3.10 py310-pip py310-awscli postgresql14
-  sudo port install texinfo gnutls
-  sudo port install z direnv
+  nix profile install ~/Projects/dotfiles/nix/profile
+  nix profile upgrade --impure nix-profile
 #+END_SRC
+
+It currently owns small standalone tools that should not be installed via
+MacPorts:
+
+#+BEGIN_SRC sh
+  cloudflared direnv emacs-weekly fd fzf gh git-lfs htop jq opam ripgrep tmux tokei tree universal-ctags uv valkey wget
+#+END_SRC
+
+** =macports=
+
+No longer used; global tools moved to the Nix profile above.
 
 ** I also maintained a separate port for building Emacs. I have it updated weekly.
 
-#+begin_src sh
-  sudo chmod -R +a "macports allow read,execute" /Users/tung/Projects/dotfiles/ports
-  sudo port install emacs-app-devel
-#+end_src
+The replacement is =nix/profile/packages/emacs-weekly.nix=.
 
 ** AWS Session Manager plugin
 
@@ -125,9 +120,8 @@ Decrease repeat delay, increase repeat rate and disable Emoji.
 #+begin_src sh
   git clone https://github.com/jdtsmith/emacs-mac.git
   cd emacs-macs
-  sudo port install tree-sitter-* automake autoconf texinfo
   ./autogen.sh
-  CFLAGS="-O3 -mcpu=native -mtune=native -fomit-frame-pointer -DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT -I/opt/local/include/gcc14 -L/opt/local/lib/gcc14 -rpath /opt/local/lib/gcc14" ./configure --with-native-compilation=aot --with-tree-sitter --enable-mac-app=yes --prefix=$HOME/.local --with-modules --enable-mac-self-contained --without-dbus
+  CFLAGS="-O3 -mcpu=native -mtune=native -fomit-frame-pointer -DFD_SETSIZE=10000 -DDARWIN_UNLIMITED_SELECT" ./configure --with-native-compilation=aot --with-tree-sitter --enable-mac-app=yes --prefix=$HOME/.local --with-modules --enable-mac-self-contained --without-dbus
   make -j10
   cp -R native-lisp mac/Emacs.app/Contents
   make install

@@ -41,7 +41,7 @@
 (add-to-list 'load-path (expand-file-name "vendor/" user-emacs-directory))
 
 (defconst td/extra-exec-path
-  '("/opt/local/bin"
+  '("~/.nix-profile/bin"
     "~/Library/Python/3.12/bin/"
     "~/Library/pnpm"
     "~/.local/bin"
@@ -811,6 +811,10 @@ Uses project root if in a project, otherwise current directory."
   (expand-file-name "tree-sitter/" user-emacs-directory)
   "Directory for locally built tree-sitter grammars.")
 
+(defconst td/nix-treesit-grammar-directory
+  (expand-file-name "~/.nix-profile/lib/tree-sitter/")
+  "Directory for Nix-provided tree-sitter grammars.")
+
 (defconst td/treesit-language-source-alist
   '((kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git"
                "0.3.8"))
@@ -848,7 +852,8 @@ With prefix argument FORCE, rebuild every configured grammar."
 
 (use-package treesit
   :custom
-  (treesit-extra-load-path (list td/treesit-grammar-directory))
+  (treesit-extra-load-path (list td/nix-treesit-grammar-directory
+                                 td/treesit-grammar-directory))
   :config
   (setq treesit-language-source-alist td/treesit-language-source-alist))
 
@@ -1468,6 +1473,7 @@ With prefix argument FORCE, rebuild every configured grammar."
   :custom
   (dired-recursive-deletes 'always)
   (dired-recursive-copies 'always)
+  (insert-directory-program "gls")
   (dired-listing-switches "-lah")
   (dired-auto-revert-buffer t)
   (dired-kill-when-opening-new-dired-buffer t))

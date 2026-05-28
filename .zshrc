@@ -9,16 +9,16 @@ fi
 
 # Core paths for non-login interactive shells such as tterm.
 path=(
-  /opt/local/bin
-  /opt/local/sbin
+  $HOME/.nix-profile/bin
   $HOME/.local/sbin
   $HOME/.local/bin
   $HOME/Projects/dotfiles/bin
-  $HOME/.opam/default/bin
   $HOME/.claude/local
   $path
 )
 typeset -U path PATH
+
+[[ ! -r $HOME/.opam/opam-init/init.zsh ]] || source $HOME/.opam/opam-init/init.zsh > /dev/null 2> /dev/null
 
 fpath=($HOME/Projects/dotfiles/zsh_functions $fpath)
 autoload -Uz add-zsh-hook
@@ -89,14 +89,12 @@ if [[ $EMACS = t ]]; then
   unsetopt zle
   unset zle_bracketed_paste
 fi
-[[ -e /opt/local/etc/profile.d/z.sh ]] && . /opt/local/etc/profile.d/z.sh
+
 [[ $+commands[direnv] ]] && eval "$(direnv hook zsh)"
-[[ ! -r '/Users/tung/.opam/opam-init/init.zsh' ]] || source '/Users/tung/.opam/opam-init/init.zsh' > /dev/null 2> /dev/null
-# [[ $+commands[thrash] ]] && alias rm=trash
+
 alias g=git
 alias e="emacsclient -n"
 alias diff="diff --color -u"
-alias imgcat="wezterm imgcat"
 
 notify() {
   osascript -e "display notification \"$2\" with title \"$1\""

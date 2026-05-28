@@ -166,7 +166,9 @@
 			<key>config</key>
 			<dict>
 				<key>paths</key>
-				<array/>
+				<array>
+					<string>/nix/store/br4i98svrrq45dclyrjwplybdp37x04l-emacs-weekly-32.0.50-20260525/Applications/Emacs.app</string>
+				</array>
 				<key>toggle</key>
 				<true/>
 			</dict>
@@ -334,7 +336,7 @@ end alfred_script</string>
 			<dict>
 				<key>paths</key>
 				<array>
-					<string>/Applications/MacPorts/Emacs.app</string>
+					<string>/Applications/Google Chrome.app</string>
 				</array>
 				<key>toggle</key>
 				<true/>
@@ -381,9 +383,7 @@ end alfred_script</string>
 			<key>config</key>
 			<dict>
 				<key>paths</key>
-				<array>
-					<string>/Applications/Safari.app</string>
-				</array>
+				<array/>
 				<key>toggle</key>
 				<true/>
 			</dict>
@@ -611,9 +611,7 @@ end alfred_script</string>
 			<key>config</key>
 			<dict>
 				<key>paths</key>
-				<array>
-					<string>/Applications/IntelliJ IDEA CE.app</string>
-				</array>
+				<array/>
 				<key>toggle</key>
 				<true/>
 			</dict>

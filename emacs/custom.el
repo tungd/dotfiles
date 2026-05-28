@@ -213,12 +213,12 @@
    '(alabaster-themes alert amaranth-dark-theme avy citre code-cells
                       conflict-buttons consult crux d2-mode diff-hl drepl
                       dumb-jump emmet-mode envrc gdshader-mode gptel gptel-agent
-                      kotlin-ts-mode magit meson-mode msgpack neocaml ob-duckdb
-                      ob-kotlin ob-sql-mode pache-dark-theme pi-coding-agent
-                      prescient protobuf-mode rainbow-mode rg surround svg-lib
-                      swift-mode tango-plus-theme tempel terraform-mode
-                      tramp-rpc treesit-fold tuareg ultra-scroll utop
-                      visual-replace vterm vundo))
+                      kotlin-ts-mode magit meson-mode msgpack neocaml nix-mode
+                      ob-duckdb ob-kotlin ob-sql-mode pache-dark-theme
+                      pi-coding-agent prescient protobuf-mode rainbow-mode rg
+                      surround svg-lib swift-mode tango-plus-theme tempel
+                      terraform-mode tramp-rpc treesit-fold tuareg ultra-scroll
+                      utop visual-replace vterm vundo))
  '(package-vc-selected-packages
    '((tramp-rpc :url "https://github.com/ArthurHeymans/emacs-tramp-rpc" :branch
                 "master")
