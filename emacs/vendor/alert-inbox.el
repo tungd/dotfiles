@@ -30,6 +30,9 @@
 (defvar alert-inbox--next-id 0
   "Next alert inbox record id.")
 
+(defvar alert-inbox--unread-ids nil
+  "IDs for alert inbox records not yet acknowledged by opening the inbox.")
+
 (defvar alert-inbox-mode nil
   "Non-nil when alert inbox mode is enabled.")
 
@@ -76,9 +79,33 @@
       (when (eq major-mode 'alert-inbox-list-mode)
         (alert-inbox-refresh)))))
 
+(defun alert-inbox--entry-id (entry)
+  "Return ENTRY's inbox id."
+  (alert-inbox-entry-id entry))
+
+(defun alert-inbox--entry-ids ()
+  "Return IDs for retained inbox entries."
+  (mapcar #'alert-inbox--entry-id alert-inbox--entries))
+
+(defun alert-inbox--unread-count ()
+  "Return the number of unread retained inbox entries."
+  (let ((entry-ids (alert-inbox--entry-ids)))
+    (setq alert-inbox--unread-ids
+          (cl-remove-if-not
+           (lambda (id) (memq id entry-ids))
+           alert-inbox--unread-ids))
+    (length alert-inbox--unread-ids)))
+
+(defun alert-inbox-mark-all-seen ()
+  "Mark all retained alert inbox entries as seen."
+  (interactive)
+  (setq alert-inbox--unread-ids nil)
+  (alert-inbox--changed))
+
 (defun alert-inbox-record (info)
   "Record alert INFO in the alert inbox."
   (setq alert-inbox--next-id (1+ alert-inbox--next-id))
+  (push alert-inbox--next-id alert-inbox--unread-ids)
   (push (alert-inbox--make-entry
          :id alert-inbox--next-id
          :time (current-time)
@@ -184,6 +211,7 @@
     (with-current-buffer buffer
       (alert-inbox-list-mode)
       (alert-inbox-refresh))
+    (alert-inbox-mark-all-seen)
     (pop-to-buffer buffer)))
 
 (defun alert-inbox--entry-at-point ()
@@ -211,6 +239,8 @@
   "Delete the alert inbox entry at point."
   (interactive)
   (let ((entry (alert-inbox--entry-at-point)))
+    (setq alert-inbox--unread-ids
+          (delq (alert-inbox-entry-id entry) alert-inbox--unread-ids))
     (setq alert-inbox--entries
           (delq entry alert-inbox--entries))
     (alert-inbox--changed)))
@@ -220,19 +250,21 @@
   "Clear all alert inbox entries."
   (interactive)
   (setq alert-inbox--entries nil)
+  (setq alert-inbox--unread-ids nil)
   (alert-inbox--changed))
 
 (defun alert-inbox--mode-line-string ()
   "Return alert inbox mode-line indicator."
-  (when (and alert-inbox-mode alert-inbox--entries)
-    (let ((text (format " [A:%d]" (length alert-inbox--entries))))
-      (add-text-properties
-       0 (length text)
-       `(local-map ,alert-inbox--mode-line-map
-         mouse-face mode-line-highlight
-         help-echo "mouse-1: cycle alert source buffers; mouse-2: open alert inbox")
-       text)
-      text)))
+  (let ((unread-count (alert-inbox--unread-count)))
+    (when (and alert-inbox-mode (> unread-count 0))
+      (let ((text (format " [!%d]" unread-count)))
+        (add-text-properties
+         0 (length text)
+         `(local-map ,alert-inbox--mode-line-map
+           mouse-face mode-line-highlight
+           help-echo "mouse-1: cycle alert source buffers; mouse-2: open alert inbox")
+         text)
+        text))))
 
 ;;;###autoload
 (define-minor-mode alert-inbox-mode

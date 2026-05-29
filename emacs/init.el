@@ -678,18 +678,92 @@ Uses project root if in a project, otherwise current directory."
   :after alert
   :bind (("C-c n i" . alert-inbox-open)
          ("C-c n n" . alert-inbox-cycle-buffer))
+  :defines alert-internal-configuration
+  :functions (alert-add-rule alert-define-style alert-inbox-mode)
+  :preface
+  (require 'cl-lib)
+
+  (defun td-alert-inbox--applescript-quote (value)
+    "Return VALUE quoted as an AppleScript string literal."
+    (let ((text (or value "")))
+      (concat "\""
+              (mapconcat
+               (lambda (char)
+                 (pcase char
+                   (?\\ "\\\\")
+                   (?\" "\\\"")
+                   (?\n "\\n")
+                   (?\r "\\r")
+                   (_ (string char))))
+               text
+               "")
+              "\"")))
+
+  (defun td-alert-inbox--emacs-focused-p ()
+    "Return non-nil when a visible graphical Emacs frame has focus."
+    (cl-some
+     (lambda (frame)
+       (and (display-graphic-p frame)
+            (frame-visible-p frame)
+            (eq (frame-focus-state frame) t)))
+     (frame-list)))
+
+  (defun td-alert-inbox--emacs-unfocused-p (_info)
+    "Return non-nil when Emacs should also send a system notification."
+    (and (eq system-type 'darwin)
+         (not (td-alert-inbox--emacs-focused-p))))
+
+  (defun td-alert-inbox--applescript-notify (info)
+    "Send alert INFO through macOS Notification Center using AppleScript."
+    (let ((process-connection-type nil))
+      (ignore-errors
+        (start-process
+         "alert-inbox-notification" nil
+         "osascript" "-e"
+         (format "display notification %s with title %s"
+                 (td-alert-inbox--applescript-quote
+                  (plist-get info :message))
+                 (td-alert-inbox--applescript-quote
+                  (or (plist-get info :title) "Emacs")))))))
+
+  (defun td-alert-inbox--tterm-rule-p (rule)
+    "Return non-nil when RULE is a tterm notification alert rule."
+    (let ((conditions (car rule)))
+      (and (equal (cdr (assq :mode conditions)) "\\`tterm-mode\\'")
+           (equal (cdr (assq :category conditions))
+                  "\\`tterm-notification\\'"))))
+
+  (defun td-alert-inbox-install-tterm-rules ()
+    "Install tterm alert routing rules without duplicating them."
+    (setq alert-internal-configuration
+          (cl-remove-if #'td-alert-inbox--tterm-rule-p
+                        alert-internal-configuration))
+    (alert-add-rule
+     :mode 'tterm-mode
+     :category "\\`tterm-notification\\'"
+     :style 'inbox
+     :continue t)
+    (alert-add-rule
+     :mode 'tterm-mode
+     :category "\\`tterm-notification\\'"
+     :predicate #'td-alert-inbox--emacs-unfocused-p
+     :style 'td-applescript
+     :continue t
+     :append t)
+    (alert-add-rule
+     :mode 'tterm-mode
+     :category "\\`tterm-notification\\'"
+     :style 'mode-line
+     :append t))
+
   :config
+  (alert-define-style 'td-applescript
+                      :title "Notify through AppleScript"
+                      :notifier #'td-alert-inbox--applescript-notify
+                      :remover #'ignore)
+
   (alert-inbox-mode 1)
-  (alert-add-rule
-   :mode 'tterm-mode
-   :category "\\`tterm-notification\\'"
-   :style 'inbox
-   :continue t)
-  (alert-add-rule
-   :mode 'tterm-mode
-   :category "\\`tterm-notification\\'"
-   :style 'mode-line
-   :append t))
+  (td-alert-inbox-install-tterm-rules))
 
 ;; tterm - OCaml-based terminal emulator (local development)
 (use-package tterm
@@ -856,38 +930,6 @@ With prefix argument FORCE, rebuild every configured grammar."
                                  td/treesit-grammar-directory))
   :config
   (setq treesit-language-source-alist td/treesit-language-source-alist))
-
-;; (with-eval-after-load 'md-ts-mode
-;;   ;; `md-ts-mode' advises `treesit-update-ranges' globally on Emacs 31.
-;;   ;; Keep that workaround scoped to md-ts buffers and ignore stale
-;;   ;; overlay parsers so regular Markdown buffers don't die in redisplay.
-;;   (defun td/md-ts--refresh-local-parsers (&optional beg end)
-;;     "Refresh stale `md-ts-mode' local parsers between BEG and END."
-;;     (when (derived-mode-p 'md-ts-mode)
-;;       (let ((tick (buffer-chars-modified-tick))
-;;             (beg (or beg (point-min)))
-;;             (end (or end (point-max))))
-;;         (dolist (ov (overlays-in beg end))
-;;           (let ((parser (overlay-get ov 'treesit-parser))
-;;                 (ov-tick (overlay-get ov 'treesit-parser-ov-timestamp)))
-;;             (when parser
-;;               (condition-case nil
-;;                   (when (not (eql ov-tick tick))
-;;                     (treesit-parser-language parser)
-;;                     (when-let* ((new-parser
-;;                                  (md-ts--recreate-local-parser ov parser)))
-;;                       (treesit-parser-set-included-ranges
-;;                        new-parser
-;;                        `((,(overlay-start ov) . ,(overlay-end ov))))))
-;;                 (treesit-parser-deleted
-;;                  (overlay-put ov 'treesit-parser nil)
-;;                  (delete-overlay ov)))))))))
-;;   (when (advice-member-p #'md-ts--refresh-local-parsers
-;;                          'treesit-update-ranges)
-;;     (advice-remove 'treesit-update-ranges
-;;                    #'md-ts--refresh-local-parsers))
-;;   (advice-add 'treesit-update-ranges :before
-;;               #'td/md-ts--refresh-local-parsers))
 
 (use-package expreg
   :ensure nil
