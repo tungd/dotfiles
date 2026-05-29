@@ -77,6 +77,7 @@
           paths = [
             pkgs.cloudflared
             pkgs.coreutils-prefixed
+            pkgs.cacert
             db-clients
             pkgs.direnv
             emacs-weekly
@@ -89,6 +90,9 @@
             pkgs.jq
             pkgs.opam
             pkgs.pinentry_mac
+            (pkgs.python314.withPackages (ps: [
+              ps.certifi
+            ]))
             pkgs.ripgrep
             pkgs.tmux
             pkgs.tokei
