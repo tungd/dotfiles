@@ -42,18 +42,26 @@
 
 (defconst td/extra-exec-path
   '("~/.nix-profile/bin"
-    "~/Library/Python/3.12/bin/"
+    "/nix/var/nix/profiles/default/bin"
+    "/usr/local/bin"
+    "~/Library/Python/3.12/bin"
     "~/Library/pnpm"
     "~/.local/bin"
-    "~/.opam/default/bin/"
-    "~/.claude/local/")
-  "Executable directories to prepend to Emacs' process search paths.")
+    "~/.opam/default/bin"
+    "~/.claude/local")
+  "Stable executable directories to prepend to Emacs process search paths.")
+
+(defun td/existing-exec-paths (paths)
+  "Return expanded PATHS that exist on this machine."
+  (delq nil
+        (mapcar (lambda (path)
+                  (let ((expanded (directory-file-name (expand-file-name path))))
+                    (when (file-directory-p expanded) expanded)))
+                paths)))
 
 (defun td/prepend-exec-paths (paths)
-  "Prepend PATHS to `exec-path' and inherited PATH."
-  (let* ((extra-paths (mapcar (lambda (path)
-                                (directory-file-name (expand-file-name path)))
-                              paths))
+  "Prepend existing PATHS to exec-path and inherited PATH."
+  (let* ((extra-paths (td/existing-exec-paths paths))
          (inherited-path (split-string (or (getenv "PATH") "") path-separator t)))
     (setq exec-path (delete-dups (append extra-paths exec-path)))
     (setenv "PATH"
@@ -654,6 +662,8 @@ Uses project root if in a project, otherwise current directory."
 ;;; Shell and remote
 (use-package envrc
   :ensure t
+  :custom
+  (envrc-direnv-executable "/Users/tung/.nix-profile/bin/direnv")
   :hook (after-init . envrc-global-mode))
 
 (use-package comint
@@ -1515,7 +1525,8 @@ With prefix argument FORCE, rebuild every configured grammar."
   :custom
   (dired-recursive-deletes 'always)
   (dired-recursive-copies 'always)
-  (insert-directory-program "gls")
+  (insert-directory-program "/bin/ls")
+  (dired-use-ls-dired nil)
   (dired-listing-switches "-lah")
   (dired-auto-revert-buffer t)
   (dired-kill-when-opening-new-dired-buffer t))
