@@ -210,12 +210,12 @@
      "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
  '(go-ts-indent-offset 2 nil nil "Customized with use-package go-ts-mode")
  '(package-selected-packages
-   '(alert avy citre conflict-buttons consult crux d2-mode diff-hl dumb-jump
-           emmet-mode envrc gdshader-mode gptel kotlin-ts-mode magit msgpack
-           neocaml nix-mode ob-duckdb ob-kotlin ob-sql-mode pache-dark-theme
-           prescient protobuf-mode rainbow-mode rg surround svg-lib tempel
-           terraform-mode tramp-rpc treesit-fold tuareg utop visual-replace
-           vundo))
+   '(alert avy citre color-theme-sanityinc-solarized consult crux d2-mode diff-hl
+           doom-themes dumb-jump emmet-mode envrc gdshader-mode gptel
+           kotlin-ts-mode magit msgpack neocaml nix-mode ob-duckdb ob-kotlin
+           ob-sql-mode pache-dark-theme prescient protobuf-mode rainbow-mode rg
+           solarized-gruvbox-theme surround svg-lib tempel terraform-mode
+           tramp-rpc treesit-fold tuareg utop visual-replace vundo))
  '(package-vc-selected-packages
    '((tramp-rpc :url "https://github.com/ArthurHeymans/emacs-tramp-rpc" :branch
                 "master")
@@ -244,6 +244,7 @@
  '(font-lock-comment-face ((t :slant normal)))
  '(font-lock-constant-face ((t :slant normal)))
  '(font-lock-string-face ((t :slant normal)))
- '(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face :foreground "#ddd")))
+ '(hl-line ((t :background "#000")))
+ '(line-number ((t :slant normal :background unspecified :foreground "#444" :inherit font-lock-comment-face)))
  '(line-number-current-line ((t :slant normal :weight normal :foreground "#444")))
  '(mode-line-buffer-id ((t :foreground "orange"))))

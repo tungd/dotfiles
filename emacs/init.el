@@ -654,11 +654,6 @@ Uses project root if in a project, otherwise current directory."
   (ediff-window-setup-function 'ediff-setup-windows-plain)
   (ediff-split-window-function 'split-window-horizontally))
 
-(use-package conflict-buttons
-  :ensure t
-  :defer t
-  :hook (smerge-mode . conflict-buttons-mode))
-
 ;;; Shell and remote
 (use-package envrc
   :ensure t
@@ -1367,7 +1362,7 @@ With prefix argument FORCE, rebuild every configured grammar."
  `((left-fringe . 8) (right-fringe . 4)
    (border-width . 0) (internal-border-width . 0)
    ;; (font . "Iosevka Fixed SS07 18")
-   (font . "JetBrains Mono NL 15")
+   (font . "JetBrains Mono NL 16")
    (tool-bar-lines . 0)
    ;; (fullscreen . maximized)
    (width . 160)
@@ -1407,10 +1402,15 @@ With prefix argument FORCE, rebuild every configured grammar."
 ;; Some preferences that I set for all the theme. Per documentation, the custom
 ;; theme named =user= will always have the highest priority.
 
-(use-package pache-dark-theme
+;; (use-package pache-dark-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'pache-dark t))
+
+(use-package solarized-gruvbox-theme
   :ensure t
   :config
-  (load-theme 'pache-dark t))
+  (load-theme 'solarized-gruvbox t))
 
 (custom-theme-set-faces
  'user
@@ -1420,10 +1420,8 @@ With prefix argument FORCE, rebuild every configured grammar."
  '(font-lock-constant-face ((t :slant normal)))
  '(completions-highlight ((t :inherit region)))
 
- '(line-number ((t :slant normal :foreground unspecified :inherit font-lock-comment-face :foreground "#222")))
- ;; '(line-number ((t :slant normal :background unspecified :foreground "#444" :inherit font-lock-comment-face)))
- ;; '(line-number-current-line ((t :slant normal :weight bold)))
- '(line-number-current-line ((t :slant normal :weight normal :foreground "#444")))
+ '(line-number ((t :slant normal :weight normal :foreground "#2e5561")))
+ '(line-number-current-line ((t :slant normal :weight normal :background "#07151B" :foreground "#8bb5c2")))
  ;; '(fringe ((t :inherit line-number :background unspecified)))
  ;; '(vertical-border ((t :foreground "#222")))
 
@@ -1432,6 +1430,7 @@ With prefix argument FORCE, rebuild every configured grammar."
  '(eglot-highlight-symbol-face ((t :weight normal)))
  '(eglot-code-action-indicator-face ((t :weight normal)))
  '(eglot-inlay-hint-face ((t :height 1.0 :inherit font-lock-comment-face)))
+ '(hl-line ((t :background "#07151B")))
  )
 
 ;; Line and column numbers, which I find only helpful when tracking
