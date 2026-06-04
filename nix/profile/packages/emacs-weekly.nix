@@ -7,8 +7,8 @@
 }:
 
 let
-  versionDate = "20260525";
-  rev = "6d15d68e1f77ebb81827d792fbc67363dd5b730c";
+  versionDate = "20260601";
+  rev = "8902361cba867e7d4aa6cb844214636a6eabe7fb";
 in
 (emacs30.override {
   srcRepo = true;
@@ -44,7 +44,7 @@ in
       owner = "emacs-mirror";
       repo = "emacs";
       inherit rev;
-      hash = "sha256-ZI7fcoGR4d1rTnwtZg2mJNk6OtvpPMxBvlJMLYyY69U=";
+      hash = "sha256-P+PNMWkQtnHEKwpxO90Vh2qQjaVstr9PlYVQ+VRyF+k=";
     };
 
     patches = lib.filter (
@@ -52,6 +52,8 @@ in
     ) (old.patches or [ ]);
 
     nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ autoreconfHook ];
+
+    enableParallelBuilding = false;
 
     postInstall = lib.replaceStrings [ nativeCompilePostInstall ] [ "" ] (old.postInstall or "");
 

@@ -207,18 +207,15 @@
  '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
  '(exec-path
    '("/opt/local/bin" "~/.local/bin" "/usr/bin" "/bin" "/usr/sbin" "/sbin"
-     "/usr/local/bin" "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
+     "/Applications/MacPorts/Emacs.app/Contents/MacOS/libexec"))
  '(go-ts-indent-offset 2 nil nil "Customized with use-package go-ts-mode")
  '(package-selected-packages
-   '(alabaster-themes alert amaranth-dark-theme avy citre code-cells
-                      conflict-buttons consult crux d2-mode diff-hl drepl
-                      dumb-jump emmet-mode envrc gdshader-mode gptel gptel-agent
-                      kotlin-ts-mode magit meson-mode msgpack neocaml nix-mode
-                      ob-duckdb ob-kotlin ob-sql-mode pache-dark-theme
-                      pi-coding-agent prescient protobuf-mode rainbow-mode rg
-                      surround svg-lib swift-mode tango-plus-theme tempel
-                      terraform-mode tramp-rpc treesit-fold tuareg ultra-scroll
-                      utop visual-replace vterm vundo))
+   '(alert avy citre conflict-buttons consult crux d2-mode diff-hl dumb-jump
+           emmet-mode envrc gdshader-mode gptel kotlin-ts-mode magit msgpack
+           neocaml nix-mode ob-duckdb ob-kotlin ob-sql-mode pache-dark-theme
+           prescient protobuf-mode rainbow-mode rg surround svg-lib tempel
+           terraform-mode tramp-rpc treesit-fold tuareg utop visual-replace
+           vundo))
  '(package-vc-selected-packages
    '((tramp-rpc :url "https://github.com/ArthurHeymans/emacs-tramp-rpc" :branch
                 "master")

@@ -8,6 +8,15 @@
       system = "aarch64-darwin"; # Apple Silicon
       pkgs = nixpkgs.legacyPackages.${system};
       emacs-weekly = pkgs.callPackage ./packages/emacs-weekly.nix { };
+      python-cli = pkgs.python314.withPackages (ps: [
+        ps.certifi
+      ]);
+      khala-cli = pkgs.writeShellApplication {
+        name = "kl";
+        text = ''
+          exec ${python-cli}/bin/python3 "$HOME/Projects/tungd/khala/kl" "$@"
+        '';
+      };
       db-clients = pkgs.runCommand "db-clients" { } ''
         mkdir -p $out/bin
 
@@ -84,15 +93,15 @@
             pkgs.fd
             pkgs.fzf
             pkgs.gh
+            pkgs.git
             pkgs.git-lfs
             pkgs.gnupg
             pkgs.htop
             pkgs.jq
+            khala-cli
             pkgs.opam
             pkgs.pinentry_mac
-            (pkgs.python314.withPackages (ps: [
-              ps.certifi
-            ]))
+            python-cli
             pkgs.ripgrep
             pkgs.tmux
             pkgs.tokei

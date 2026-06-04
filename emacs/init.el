@@ -671,14 +671,6 @@ Uses project root if in a project, otherwise current directory."
   :custom
   (comint-terminfo-terminal "dumb-emacs-ansi"))
 
-(use-package vterm
-  :ensure t
-  :defer t
-  :no-require t
-  :commands (vterm vterm-other-window)
-  :custom
-  (vterm-shell "/bin/zsh -l"))
-
 (use-package alert
   :ensure t
   :demand t)
@@ -776,14 +768,19 @@ Uses project root if in a project, otherwise current directory."
   (td-alert-inbox-install-tterm-rules))
 
 ;; tterm - OCaml-based terminal emulator (local development)
+(defconst td/tterm-source-directory "/Users/tung/Projects/tungd/tterm"
+  "Local tterm checkout used by this Emacs configuration.")
+
+(add-to-list 'load-path td/tterm-source-directory)
+(autoload 'tterm "tterm" nil t)
+(autoload 'tterm-dashboard "tterm-dashboard" nil t)
+(autoload 'tterm-send-file "tterm" nil t)
+
 (use-package tterm
-  :load-path "~/Projects/personal/tterm"
   :defer t
-  :commands (tterm)
-  :init
-  (autoload 'tterm (expand-file-name "~/Projects/personal/tterm/tterm.el") nil t)
   :custom
-  (tterm-module-path (expand-file-name "~/Projects/personal/tterm/tterm-module.so"))
+  (tterm-module-path
+   (expand-file-name "tterm-module.so" td/tterm-source-directory))
   (tterm-buffer-title-function #'tterm-buffer-title-collapse-parents)
   (tterm-osc-52-policy 'confirm)
   :config
@@ -793,19 +790,19 @@ Uses project root if in a project, otherwise current directory."
     (dolist (symbol '(tterm-mode-map tterm--char-mode-map tterm-copy-mode-map))
       (when (boundp symbol)
         (makunbound symbol)))
-    (load-file (expand-file-name "~/Projects/personal/tterm/tterm.el"))
+    (load-file
+     (expand-file-name "tterm.el" td/tterm-source-directory))
     (when (fboundp 'tterm-redraw-all)
       (tterm-redraw-all))))
 
 (use-package tterm-consult
-  :load-path "~/Projects/personal/tterm"
   :after (consult tterm)
   :config
   (tterm-consult-register-source))
 
 ;; scv - Emacs session integration (local development)
 (use-package scv
-  :load-path "~/Projects/personal/scv/emacs"
+  :load-path "~/Projects/tungd/scv/emacs"
   :defer t
   :commands (scv-menu
              scv-new-session
@@ -813,7 +810,7 @@ Uses project root if in a project, otherwise current directory."
              scv-open-session-viewer
              scv-open-prompt-draft)
   :custom
-  (scv-source-directory (expand-file-name "~/Projects/personal/scv/"))
+  (scv-source-directory (expand-file-name "~/Projects/tungd/scv/"))
   (scv-executable (expand-file-name "~/.local/bin/scv"))
   :config
   (scv-install td/leader-map "S"))
@@ -836,29 +833,6 @@ Uses project root if in a project, otherwise current directory."
    '(:application tramp :protocol "scp")
    'remote-direct-async-process))
 
-(use-package msgpack
-  :ensure t)
-
-(use-package tramp-rpc-python-backend
-  :load-path "vendor"
-  :functions (td/tramp-rpc-python-enable))
-
-(use-package tramp-rpc
-  :vc (:url "https://github.com/ArthurHeymans/emacs-tramp-rpc"
-       :branch "master"
-       :rev "38a5f1cc08fb812c727ba97f11ad0c8fcbbc981d")
-  :after tramp
-  :init
-  (require 'tramp-rpc-python-backend)
-  :custom
-  (td/tramp-rpc-python-command "python3")
-  (td/tramp-rpc-python-local-script
-   (expand-file-name "vendor/tramp-rpc/server/tramp-rpc-server.py" user-emacs-directory))
-    ;; Keep nil by default; set via connection-local vars for host-specific commands.
-  (td/tramp-rpc-python-force-server-command nil)
-  :config
-  (td/tramp-rpc-python-enable))
-
 ;; Some speedup for Tramp:
 
 (use-package vc
@@ -873,8 +847,8 @@ Uses project root if in a project, otherwise current directory."
 
 ;; I'm experimenting with working purely with LLM and without LSP. It's not that I don't like LSP, it's just that I don't think it's efficient, especially in the era of LLM.
 
-(use-package swift-mode
-  :ensure t)
+;; (use-package swift-mode
+;;   :ensure t)
 
 ;; Keep Emacs Lisp outlines focused on comment headings so `consult-outline'
 ;; navigates section markers instead of every top-level form.
@@ -1157,18 +1131,6 @@ With prefix argument FORCE, rebuild every configured grammar."
 ;; much more comprehensive and well-maintained. A lot of the libraries in the
 ;; Haskell world seems to be a one-off experiment, or an one-time job then
 ;; abandoned at best. (I'm talking about iCalendar, and there are many other cases).
-
-(use-package neocaml
-  :ensure t
-  :defer t
-  :custom
-  (neocaml-repl-program-name "dune")
-  (neocaml-repl-program-args '("utop" "." "--" "-short-paths")))
-
-(use-package utop
-  :ensure t
-  :custom
-  (utop-command "dune utop . -- -emacs"))
 
 ;;;; Kotlin
 (use-package kotlin-ts-mode
