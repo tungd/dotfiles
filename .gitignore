@@ -5,12 +5,12 @@ emacs/*
 !emacs/init.el
 !emacs/early-init.el
 !emacs/authinfo.gpg
-!emacs/vendor
+!emacs/user-lisp
 !emacs/td-command-workspace.el
 !emacs/td-command-workspace-tests.el
 !emacs/td-command-workspace-code-cells-smoke.el
 !emacs/ob-http-tests.el
-emacs/vendor/copilot
+emacs/user-lisp/copilot
 !emacs/snippets
 .yas-compiled-snippets.el
 __pycache__/

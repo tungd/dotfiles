@@ -13,9 +13,18 @@ export PATH=$HOME/Projects/dotfiles/bin:$PATH
 export PNPM_HOME="/Users/tung/Library/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 export PATH="$HOME/.claude/local:$PATH"
-# export PATH="/Applications/WezTerm.app/Contents/MacOS/:$PATH"
-export AGENTCTL_DATABASE_URL='postgres://agentctl:t680wj3zre10s4vsquzfodin@100.84.248.34:55432/agentctl?sslmode=disable'
 # Added by Antigravity CLI installer
 export PATH="/Users/tung/.local/bin:$PATH"
 
-export PATH=$HOME/.nix-profile/bin:$PATH
+##
+# Your previous /Users/tung/.zprofile file was backed up as /Users/tung/.zprofile.macports-saved_2026-06-07_at_10:51:45
+##
+
+# MacPorts Installer addition on 2026-06-07_at_10:51:45: adding an appropriate PATH variable for use with MacPorts.
+export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
+# Finished adapting your PATH environment variable for use with MacPorts.
+
+path=(${path:#$HOME/.nix-profile/bin})
+path=(${path:#/nix/var/nix/profiles/default/bin})
+path=(/opt/local/bin /opt/local/sbin $path)
+typeset -U path PATH

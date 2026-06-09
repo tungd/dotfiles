@@ -6,7 +6,7 @@
 (setq load-prefer-newer t)
 
 (add-to-list 'load-path
-             (expand-file-name "vendor"
+             (expand-file-name "user-lisp"
                                (file-name-directory
                                 (or load-file-name buffer-file-name))))
 (require 'ob-http)

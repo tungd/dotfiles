@@ -34,41 +34,31 @@
   :functions (override-global-mode bind-key--remove)
   :hook (after-init . override-global-mode))
 
-;; Sometimes I write my own package, or download package from Emacs wiki; they
-;; are stored in the =~/.emacs.d/vendor= directory.
-
-(add-to-list 'custom-theme-load-path (expand-file-name "vendor/" user-emacs-directory))
-(add-to-list 'load-path (expand-file-name "vendor/" user-emacs-directory))
-
 (defconst td/extra-exec-path
-  '("~/.nix-profile/bin"
-    "/nix/var/nix/profiles/default/bin"
+  '("/opt/local/bin"
+    "/opt/local/sbin"
     "/usr/local/bin"
-    "~/Library/Python/3.12/bin"
+    "~/Library/Python/3.14/bin"
     "~/Library/pnpm"
     "~/.local/bin"
     "~/.opam/default/bin"
     "~/.claude/local")
   "Stable executable directories to prepend to Emacs process search paths.")
 
-(defun td/existing-exec-paths (paths)
-  "Return expanded PATHS that exist on this machine."
-  (delq nil
-        (mapcar (lambda (path)
-                  (let ((expanded (directory-file-name (expand-file-name path))))
-                    (when (file-directory-p expanded) expanded)))
-                paths)))
-
-(defun td/prepend-exec-paths (paths)
-  "Prepend existing PATHS to exec-path and inherited PATH."
-  (let* ((extra-paths (td/existing-exec-paths paths))
-         (inherited-path (split-string (or (getenv "PATH") "") path-separator t)))
-    (setq exec-path (delete-dups (append extra-paths exec-path)))
-    (setenv "PATH"
-            (string-join (delete-dups (append extra-paths inherited-path))
-                         path-separator))))
-
-(td/prepend-exec-paths td/extra-exec-path)
+(let ((extra-exec-path
+       (delq nil
+             (mapcar (lambda (path)
+                       (let ((expanded (directory-file-name
+                                        (expand-file-name path))))
+                         (when (file-directory-p expanded) expanded)))
+                     td/extra-exec-path))))
+  (setq exec-path (delete-dups (append extra-exec-path exec-path)))
+  (setenv "PATH"
+          (string-join
+           (delete-dups
+            (append extra-exec-path
+                    (split-string (or (getenv "PATH") "") path-separator t)))
+           path-separator)))
 
 ;;; Defaults
 
@@ -149,7 +139,9 @@
 
 ;;;; File position
 (use-package saveplace
-  :hook (after-init . save-place-mode))
+  :hook (after-init . save-place-mode)
+  :custom
+  (save-place-autosave-interval 300))
 
 ;;;; Projects
 (use-package files
@@ -172,10 +164,6 @@
   (autoload 'magit-project-status "magit-extras" nil t)
   (keymap-set project-prefix-map "m" #'magit-project-status))
 
-(use-package rg
-  :ensure t
-  :bind ("C-c s" . rg-menu))
-
 ;;;; Symbols
 
 ;; Use `xref' as the common jump interface, with Citre providing a tags backend.
@@ -189,6 +177,7 @@
 ;; | =C-M-g=   | =xref-pop-marker-stack=              |             |
 
 (use-package grep
+  :bind ("C-c s" . grep)
   :custom
   (grep-command "rg -nS --no-heading ")
   (grep-use-null-device nil))
@@ -208,20 +197,27 @@
 (use-package citre
   :ensure t
   :defer t
+  :functions (citre-raven-create-tags-file
+              citre-raven-update-this-tags-file)
   :init
   (require 'citre-config)
   :bind (("C-c t j" . citre-jump)
          ("C-c t J" . citre-jump-back)
-         ("C-c t p" . citre-ace-peek)
-         ("C-c t u" . citre-update-this-tags-file))
+         ("C-c t p" . citre-ace-peek))
   :custom
   (citre-project-root-function #'td/citre-project-root)
   (citre-default-create-tags-file-location 'global-cache)
   (citre-edit-ctags-options-manually nil)
   (citre-auto-enable-citre-mode-modes '(prog-mode))
   (citre-auto-enable-citre-mode-backends-for-remote nil)
-  (citre-readtags-program "/opt/local/bin/ureadtags")
-  (citre-ctags-program "/opt/local/bin/uctags"))
+  (citre-readtags-program
+   (or (executable-find "ureadtags")
+       (executable-find "readtags")
+       "readtags"))
+  :config
+  (require 'citre-raven)
+  (bind-key "C-c t c" #'citre-raven-create-tags-file)
+  (bind-key "C-c t u" #'citre-raven-update-this-tags-file))
 
 ;;;; Mini-buffer
 
@@ -230,7 +226,7 @@
 
 (use-package minibuffer
   :custom
-  (minibuffer-visible-completions t)
+  (minibuffer-visible-completions 'up-down)
   (completion-eager-display 'auto)
   (completion-eager-update 'auto)
   (completion-extra-properties '(:eager-display t :eager-update t))
@@ -271,7 +267,7 @@
   (td/set-completion-category-overrides
    'command
    '((eager-display . nil)
-     (eager-update . t)
+     (eager-update . nil)
      (styles . (prescient basic))
      (display-sort-function . prescient-completion-sort)
      (cycle . t)))
@@ -333,6 +329,7 @@ Uses project root if in a project, otherwise current directory."
   :hook (after-init . recentf-mode)
   :custom
   (recentf-max-saved-items 256)
+  (recentf-autosave-interval 300)
   (recentf-auto-cleanup 'never)
   :config
   (add-to-list 'recentf-exclude #'file-remote-p)
@@ -379,6 +376,7 @@ Uses project root if in a project, otherwise current directory."
 (use-package window
   :custom
   (split-height-threshold nil)
+  (split-window-preferred-direction 'horizontal)
   :config
   ;; (add-to-list 'display-buffer-alist
   ;;              '("^\\*codex:"
@@ -473,15 +471,14 @@ Uses project root if in a project, otherwise current directory."
 ;; Make the file executable if starting with "shebang":
 
 (defun td/byte-compile-user-emacs-file-after-save ()
-  "Byte-compile `init.el' and files under `user-emacs-directory'/vendor."
+  "Byte-compile `init.el' and files under `user-lisp-directory'."
   (when (and buffer-file-name
              (derived-mode-p 'emacs-lisp-mode)
              (string-suffix-p ".el" buffer-file-name)
              (or (equal (file-truename buffer-file-name)
                         (file-truename (expand-file-name "init.el" user-emacs-directory)))
-                 (file-in-directory-p
-                  buffer-file-name
-                  (expand-file-name "vendor/" user-emacs-directory)))
+                 (and (boundp 'user-lisp-directory)
+                      (file-in-directory-p buffer-file-name user-lisp-directory)))
              (not (string-prefix-p "." (file-name-nondirectory buffer-file-name))))
     (condition-case err
         (byte-compile-file buffer-file-name)
@@ -576,6 +573,7 @@ Uses project root if in a project, otherwise current directory."
   :hook (after-init . show-paren-mode)
   :custom
   (show-paren-delay 0)
+  (show-paren-not-in-comments-or-strings t)
   (show-paren-context-when-offscreen 'overlay))
 
 (use-package elec-pair
@@ -595,31 +593,6 @@ Uses project root if in a project, otherwise current directory."
 
 (use-package delsel
   :hook (after-init . delete-selection-mode))
-
-;;;; Snippets
-
-;; I've since switched to =Tempel= instead of =Yasnippet=. With Copilot, the
-;; suggestions is my snippet/template. Coupled with Eglot/LSP for
-;; function/method-based templates, I rarely need a library of
-;; snippets/templates. For the occasional needs that is specific to me/my workflow,
-;; a more minimal template library like =Tempo=/=Tempel= is suffice.
-
-;; I settled with =Tempel=, it polished some of the rough edges with =Tempo=, namely:
-
-;; - Per-language/major-mode templates. =Tempo= does support this in the form of
-;; tags, however it requires some glue code, while =Tempel= has built-in support
-;; - Temporary key map for moving between placeholders/poi/marks
-
-;; Since the template definition is compatible between the 2, I can easily move to
-;; =Tempo= in the future if it added support for the 2 points above.
-
-(use-package tempel
-  :ensure t
-  :hook (after-init . global-tempel-abbrev-mode)
-  :bind (("M-+" . tempel-complete)
-         ("M-*" . tempel-insert)))
-
-;; Tempo integration code for future reference:
 
 ;;;; Alignment
 (use-package align
@@ -658,109 +631,13 @@ Uses project root if in a project, otherwise current directory."
 (use-package envrc
   :ensure t
   :custom
-  (envrc-direnv-executable "/Users/tung/.nix-profile/bin/direnv")
+  (envrc-direnv-executable (or (executable-find "direnv") "direnv"))
   :hook (after-init . envrc-global-mode))
 
 (use-package comint
   :bind ("C-c C-l" . comint-clear-buffer)
   :custom
   (comint-terminfo-terminal "dumb-emacs-ansi"))
-
-(use-package alert
-  :ensure t
-  :demand t)
-
-(use-package alert-inbox
-  :demand t
-  :after alert
-  :bind (("C-c n i" . alert-inbox-open)
-         ("C-c n n" . alert-inbox-cycle-buffer))
-  :defines alert-internal-configuration
-  :functions (alert-add-rule alert-define-style alert-inbox-mode)
-  :preface
-  (require 'cl-lib)
-
-  (defun td-alert-inbox--applescript-quote (value)
-    "Return VALUE quoted as an AppleScript string literal."
-    (let ((text (or value "")))
-      (concat "\""
-              (mapconcat
-               (lambda (char)
-                 (pcase char
-                   (?\\ "\\\\")
-                   (?\" "\\\"")
-                   (?\n "\\n")
-                   (?\r "\\r")
-                   (_ (string char))))
-               text
-               "")
-              "\"")))
-
-  (defun td-alert-inbox--emacs-focused-p ()
-    "Return non-nil when a visible graphical Emacs frame has focus."
-    (cl-some
-     (lambda (frame)
-       (and (display-graphic-p frame)
-            (frame-visible-p frame)
-            (eq (frame-focus-state frame) t)))
-     (frame-list)))
-
-  (defun td-alert-inbox--emacs-unfocused-p (_info)
-    "Return non-nil when Emacs should also send a system notification."
-    (and (eq system-type 'darwin)
-         (not (td-alert-inbox--emacs-focused-p))))
-
-  (defun td-alert-inbox--applescript-notify (info)
-    "Send alert INFO through macOS Notification Center using AppleScript."
-    (let ((process-connection-type nil))
-      (ignore-errors
-        (start-process
-         "alert-inbox-notification" nil
-         "osascript" "-e"
-         (format "display notification %s with title %s"
-                 (td-alert-inbox--applescript-quote
-                  (plist-get info :message))
-                 (td-alert-inbox--applescript-quote
-                  (or (plist-get info :title) "Emacs")))))))
-
-  (defun td-alert-inbox--tterm-rule-p (rule)
-    "Return non-nil when RULE is a tterm notification alert rule."
-    (let ((conditions (car rule)))
-      (and (equal (cdr (assq :mode conditions)) "\\`tterm-mode\\'")
-           (equal (cdr (assq :category conditions))
-                  "\\`tterm-notification\\'"))))
-
-  (defun td-alert-inbox-install-tterm-rules ()
-    "Install tterm alert routing rules without duplicating them."
-    (setq alert-internal-configuration
-          (cl-remove-if #'td-alert-inbox--tterm-rule-p
-                        alert-internal-configuration))
-    (alert-add-rule
-     :mode 'tterm-mode
-     :category "\\`tterm-notification\\'"
-     :style 'inbox
-     :continue t)
-    (alert-add-rule
-     :mode 'tterm-mode
-     :category "\\`tterm-notification\\'"
-     :predicate #'td-alert-inbox--emacs-unfocused-p
-     :style 'td-applescript
-     :continue t
-     :append t)
-    (alert-add-rule
-     :mode 'tterm-mode
-     :category "\\`tterm-notification\\'"
-     :style 'mode-line
-     :append t))
-
-  :config
-  (alert-define-style 'td-applescript
-                      :title "Notify through AppleScript"
-                      :notifier #'td-alert-inbox--applescript-notify
-                      :remover #'ignore)
-
-  (alert-inbox-mode 1)
-  (td-alert-inbox-install-tterm-rules))
 
 ;; tterm - OCaml-based terminal emulator (local development)
 (defconst td/tterm-source-directory "/Users/tung/Projects/tungd/tterm"
@@ -806,9 +683,7 @@ Uses project root if in a project, otherwise current directory."
              scv-open-prompt-draft)
   :custom
   (scv-source-directory (expand-file-name "~/Projects/tungd/scv/"))
-  (scv-executable (expand-file-name "~/.local/bin/scv"))
-  :config
-  (scv-install td/leader-map "S"))
+  (scv-executable (expand-file-name "~/.local/bin/scv")))
 
 ;;;; Tramp
 (use-package tramp
@@ -864,29 +739,29 @@ Uses project root if in a project, otherwise current directory."
   (expand-file-name "tree-sitter/" user-emacs-directory)
   "Directory for locally built tree-sitter grammars.")
 
-(defconst td/nix-treesit-grammar-directory
-  (expand-file-name "~/.nix-profile/lib/tree-sitter/")
-  "Directory for Nix-provided tree-sitter grammars.")
+(defconst td/macports-treesit-grammar-directory
+  "/opt/local/lib/"
+  "Directory for MacPorts-provided tree-sitter grammars.")
 
 (defconst td/treesit-language-source-alist
-  '((kotlin . ("https://github.com/fwcd/tree-sitter-kotlin.git"
-               "0.3.8"))
-    (markdown . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-                 "v0.5.3"
-                 "tree-sitter-markdown/src"))
-    (markdown-inline . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-                        "v0.5.3"
-                        "tree-sitter-markdown-inline/src"))
-    (ocaml . ("https://github.com/tree-sitter/tree-sitter-ocaml"
-              "v0.24.2"
-              "grammars/ocaml/src"))
-    (ocaml-interface . ("https://github.com/tree-sitter/tree-sitter-ocaml"
-                        "v0.24.2"
-                        "grammars/interface/src"))
-    (protobuf . ("https://github.com/casouri/tree-sitter-module.git"
-                 "v2.5"))
-    (swift . ("https://github.com/alex-pinkus/tree-sitter-swift.git"
-              "0.7.2-with-generated-files")))
+  '((kotlin "https://github.com/fwcd/tree-sitter-kotlin.git"
+            :commit "0.3.8")
+    (markdown "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+              :commit "v0.5.3"
+              :source-dir "tree-sitter-markdown/src")
+    (markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+                     :commit "v0.5.3"
+                     :source-dir "tree-sitter-markdown-inline/src")
+    (ocaml "https://github.com/tree-sitter/tree-sitter-ocaml"
+           :commit "v0.24.2"
+           :source-dir "grammars/ocaml/src")
+    (ocaml-interface "https://github.com/tree-sitter/tree-sitter-ocaml"
+                     :commit "v0.24.2"
+                     :source-dir "grammars/interface/src")
+    (protobuf "https://github.com/casouri/tree-sitter-module.git"
+              :commit "v2.5")
+    (swift "https://github.com/alex-pinkus/tree-sitter-swift.git"
+           :commit "0.7.2-with-generated-files"))
   "Pinned tree-sitter grammar recipes used by this configuration.")
 
 (defun td/bootstrap-treesit-grammars (&optional force)
@@ -905,14 +780,14 @@ With prefix argument FORCE, rebuild every configured grammar."
 
 (use-package treesit
   :custom
-  (treesit-extra-load-path (list td/nix-treesit-grammar-directory
-                                 td/treesit-grammar-directory))
+  (treesit-extra-load-path (list td/treesit-grammar-directory
+                                 td/macports-treesit-grammar-directory))
+  (treesit-auto-install-grammar 'ask)
   :config
   (setq treesit-language-source-alist td/treesit-language-source-alist))
 
 (use-package expreg
   :ensure nil
-  :load-path "vendor"
   :custom
   (expreg-restore-point-on-quit t)
   :bind (("M--" . expreg-expand)
@@ -959,7 +834,6 @@ With prefix argument FORCE, rebuild every configured grammar."
 ;; Cloudflare AI Gateway via its OpenAI-compatible endpoint.
 
 (use-package gptel-cloudflare-ai-gateway
-  :load-path "vendor"
   :functions (gptel-cloudflare-ai-gateway-setup))
 
 (use-package gptel
@@ -1186,10 +1060,6 @@ With prefix argument FORCE, rebuild every configured grammar."
 ;; - Nicer display with inline images
 ;; - Enable GTD todo keyword sequence and time logging
 
-(use-package ob-plantuml
-  :custom
-  (org-plantuml-jar-path "/opt/local/share/java/plantuml/plantuml.jar"))
-
 (defconst td/org-inbox-file (expand-file-name "~/Documents/INBOX.org")
   "Path to the main Org inbox file.")
 
@@ -1230,7 +1100,6 @@ With prefix argument FORCE, rebuild every configured grammar."
    '((emacs-lisp . t)
      (http . t)
      (ocaml . t)
-     (plantuml . t)
      (python . t)
      (shell . t)
      (js . t)
@@ -1308,7 +1177,6 @@ With prefix argument FORCE, rebuild every configured grammar."
   (org-confirm-babel-evaluate nil))
 
 (use-package ob-http
-  :load-path "vendor"
   :ensure nil
   :defer t
   :commands (td-ob-http-copy-as-curl
@@ -1326,7 +1194,7 @@ With prefix argument FORCE, rebuild every configured grammar."
 (use-package ob-python
   :defer t
   :custom
-  (org-babel-python-command "/opt/local/bin/python3.14"))
+  (org-babel-python-command (or (executable-find "python3.14") "python3")))
 
 ;;; Appearance
 
@@ -1361,7 +1229,7 @@ With prefix argument FORCE, rebuild every configured grammar."
  default-frame-alist
  `((left-fringe . 8) (right-fringe . 4)
    (border-width . 0) (internal-border-width . 0)
-   ;; (font . "Iosevka Fixed SS07 18")
+   ;;(font . "Iosevka Fixed SS07 16")
    (font . "JetBrains Mono NL 16")
    (tool-bar-lines . 0)
    ;; (fullscreen . maximized)
@@ -1402,15 +1270,10 @@ With prefix argument FORCE, rebuild every configured grammar."
 ;; Some preferences that I set for all the theme. Per documentation, the custom
 ;; theme named =user= will always have the highest priority.
 
-;; (use-package pache-dark-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'pache-dark t))
-
-(use-package solarized-gruvbox-theme
+(use-package pache-dark-theme
   :ensure t
   :config
-  (load-theme 'solarized-gruvbox t))
+  (load-theme 'pache-dark t))
 
 (custom-theme-set-faces
  'user
@@ -1420,17 +1283,27 @@ With prefix argument FORCE, rebuild every configured grammar."
  '(font-lock-constant-face ((t :slant normal)))
  '(completions-highlight ((t :inherit region)))
 
- '(line-number ((t :slant normal :weight normal :foreground "#2e5561")))
- '(line-number-current-line ((t :slant normal :weight normal :background "#07151B" :foreground "#8bb5c2")))
+ ;; '(line-number ((t :slant normal :weight normal :foreground "#2e5561")))
+ ;; '(line-number-current-line ((t :slant normal :weight normal :background "#07151B" :foreground "#8bb5c2")))
  ;; '(fringe ((t :inherit line-number :background unspecified)))
  ;; '(vertical-border ((t :foreground "#222")))
+
+ '(hl-line ((t :background "#222")))
 
  '(mode-line-buffer-id ((t :foreground "orange")))
  '(cursor ((t :background "orange")))
  '(eglot-highlight-symbol-face ((t :weight normal)))
  '(eglot-code-action-indicator-face ((t :weight normal)))
  '(eglot-inlay-hint-face ((t :height 1.0 :inherit font-lock-comment-face)))
- '(hl-line ((t :background "#07151B")))
+
+ ;; Suppress bold across all themes
+ '(bold ((t :weight normal)))
+ '(italic ((t :slant italic)))
+ '(font-lock-keyword-face ((t :weight normal)))
+ '(font-lock-function-name-face ((t :weight normal)))
+ '(font-lock-type-face ((t :weight normal)))
+ '(font-lock-builtin-face ((t :weight normal)))
+ '(font-lock-preprocessor-face ((t :weight normal)))
  )
 
 ;; Line and column numbers, which I find only helpful when tracking

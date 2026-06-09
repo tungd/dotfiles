@@ -1,17 +1,54 @@
 EMACS := $(shell curl -s "https://api.github.com/repos/emacs-mirror/emacs/commits/master" | grep '"sha"' | head -1 | sed 's/.*"sha": "\([^"]*\)".*/\1/')
 LLAMA := $(shell curl -s "https://api.github.com/repos/ikawrakow/ik_llama.cpp/commits/main" | grep '"sha"' | head -1 | sed 's/.*"sha": "\([^"]*\)".*/\1/')
 TODAY := $(shell date "+%Y%m%d")
-NIX_PROFILE_DIR := ./nix/profile
-EMACS_WEEKLY_NIX := $(NIX_PROFILE_DIR)/packages/emacs-weekly.nix
-NIX_PROFILE_NAME := nix-profile
-NIX_PROFILE_KEEP_DAYS ?= 7
+MACPORTS_LOCAL_PORTS := /opt/local/var/macports/sources/local/dotfiles-ports
 
-.DEFAULT_GOAL := emacs-weekly
+MACPORTS_PACKAGES := \
+	cloudflared \
+	coreutils \
+	curl-ca-bundle \
+	direnv \
+	duckdb \
+	fd \
+	fzf \
+	gh \
+	git \
+	git-lfs \
+	gnupg2 \
+	htop \
+	jq \
+	mysql84 \
+	nodejs24 \
+	npm11 \
+	opam \
+	pinentry-mac \
+	plantuml \
+	postgresql16 \
+	py314-certifi \
+	python314 \
+	python_select \
+	python3_select \
+	ripgrep \
+	sqlite3 \
+	tmux \
+	tokei \
+	tree \
+	universal-ctags \
+	uv \
+	valkey \
+	wget \
+	clickhouse
 
-.PHONY: emacs-weekly emacs-weekly-update emacs-weekly-build emacs-weekly-upgrade nix-profile-flake-update nix-profile-clean fix-emacs-shims
+.DEFAULT_GOAL := macports
+
+.PHONY: macports macports-tools macports-select emacs-weekly emacs-weekly-update fix-emacs-shims
 
 ports/PortIndex: ports/editors/emacs-weekly/Portfile ports/llm/ik_llama.cpp/Portfile
 	cd ports && portindex
+
+$(MACPORTS_LOCAL_PORTS)/PortIndex: ports/PortIndex
+	rsync -a --delete --exclude .DS_Store --exclude work ports/ "$(MACPORTS_LOCAL_PORTS)/"
+	cd "$(MACPORTS_LOCAL_PORTS)" && portindex
 
 $(EMACS).tar.gz:
 	curl -LO 'https://github.com/emacs-mirror/emacs/archive/$(EMACS).tar.gz'
@@ -31,32 +68,20 @@ ports/llm/ik_llama.cpp/Portfile: $(LLAMA).tar.gz ports/llm/ik_llama.cpp/Portfile
 		| sed -e 's/<DATE>/$(TODAY)/g' \
 		> $@
 
-emacs-weekly: nix-profile-flake-update emacs-weekly-update emacs-weekly-build emacs-weekly-upgrade fix-emacs-shims nix-profile-clean
+macports: macports-tools macports-select emacs-weekly fix-emacs-shims
 
-nix-profile-flake-update:
-	nix flake update --flake "$(NIX_PROFILE_DIR)"
+macports-tools:
+	sudo port install $(MACPORTS_PACKAGES)
 
-emacs-weekly-update:
-	@set -eu; \
-	rev="$(EMACS)"; \
-	date="$(TODAY)"; \
-	hash32="$$(nix-prefetch-url --unpack "https://github.com/emacs-mirror/emacs/archive/$$rev.tar.gz")"; \
-	hash="$$(nix hash convert --hash-algo sha256 --from nix32 --to sri "$$hash32")"; \
-	perl -0pi -e 's#versionDate = "[^"]+";#versionDate = "'$$date'";#; s#rev = "[^"]+";#rev = "'$$rev'";#; s#hash = "[^"]+";#hash = "'$$hash'";#;' "$(EMACS_WEEKLY_NIX)"; \
-	echo "Pinned emacs-weekly to $$rev ($$date, $$hash)"
+macports-select:
+	sudo port select --set python python314
+	sudo port select --set python3 python314
 
-emacs-weekly-build:
-	nix build --impure --no-link "$(NIX_PROFILE_DIR)#emacs-weekly" -L
+emacs-weekly: emacs-weekly-update $(MACPORTS_LOCAL_PORTS)/PortIndex
+	sudo port install emacs-app-devel +nativecomp +treesitter
 
-emacs-weekly-upgrade:
-	nix profile upgrade --impure "$(NIX_PROFILE_NAME)"
-
-nix-profile-clean:
-	nix profile wipe-history --older-than "$(NIX_PROFILE_KEEP_DAYS)d"
-	nix store gc
+emacs-weekly-update: ports/editors/emacs-weekly/Portfile
 
 fix-emacs-shims:
 	mkdir -p "$$HOME/.local/bin"
-	ln -sfn "$$HOME/.nix-profile/bin/emacs" "$$HOME/.local/bin/emacs"
-	ln -sfn "$$HOME/.nix-profile/bin/emacsclient" "$$HOME/.local/bin/emacsclient"
-	ln -sfn "$$HOME/.nix-profile/bin/kl" "$$HOME/.local/bin/kl"
+	rm -f "$$HOME/.local/bin/emacs" "$$HOME/.local/bin/emacsclient"

@@ -9,7 +9,8 @@ fi
 
 # Core paths for non-login interactive shells such as tterm.
 path=(
-  $HOME/.nix-profile/bin
+  /opt/local/bin
+  /opt/local/sbin
   $HOME/.local/sbin
   $HOME/.local/bin
   $HOME/Projects/dotfiles/bin
@@ -91,9 +92,11 @@ if [[ $EMACS = t ]]; then
 fi
 
 [[ $+commands[direnv] ]] && eval "$(direnv hook zsh)"
+[[ $+commands[zoxide] ]] && eval "$(zoxide init zsh)"
 
 alias g=git
 alias e="emacsclient -n"
+alias s="scv"
 alias diff="diff --color -u"
 
 notify() {
@@ -154,6 +157,12 @@ export PATH="/Users/tung/.antigravity-ide/antigravity-ide/bin:$PATH"
 
 # Added by Antigravity CLI installer
 export PATH="/Users/tung/.local/bin:$PATH"
+
+# Keep MacPorts ahead of installer paths added above.
+path=(${path:#$HOME/.nix-profile/bin})
+path=(${path:#/nix/var/nix/profiles/default/bin})
+path=(/opt/local/bin /opt/local/sbin $path)
+typeset -U path PATH
 
 # tterm current-directory tracking (OSC 7)
 tterm_osc7_cwd() {

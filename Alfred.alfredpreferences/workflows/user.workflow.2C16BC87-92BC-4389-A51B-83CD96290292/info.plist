@@ -167,7 +167,7 @@
 			<dict>
 				<key>paths</key>
 				<array>
-					<string>/nix/store/cmn37gb5njr8z07xkl3ap8874pv3pj51-emacs-weekly-32.0.50-20260601/Applications/Emacs.app</string>
+					<string>/Applications/MacPorts/Emacs.app</string>
 				</array>
 				<key>toggle</key>
 				<true/>

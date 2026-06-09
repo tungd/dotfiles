@@ -33,3 +33,5 @@
   ff = only
 [url "git@github-rg:Revenge-Games/"]
 	insteadOf = https://github.com/Revenge-Games/
+[includeIf "gitdir:/Users/tung/Projects/BlackWhite-Games/"]
+	path = ~/.gitconfig-revenge

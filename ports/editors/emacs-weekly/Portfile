@@ -26,6 +26,7 @@ homepage        https://www.gnu.org/software/emacs/emacs.html
 master_sites    gnu
 
 set rpaths [list]
+set gcc_v 15
 
 if {$subport eq $name} {
     conflicts   emacs-devel
@@ -124,15 +125,15 @@ if {$subport eq "emacs-devel" || $subport eq "emacs-app-devel"} {
 
     # do not forget to check that configure hasn't introduce some suprises via
     # git diff [old]..[new] -- '**/configure.ac'
-    github.setup    emacs-mirror emacs 6d15d68e1f77ebb81827d792fbc67363dd5b730c
+    github.setup    emacs-mirror emacs fa528b4e5c13f4a8738defff6fd6db3988c500d0
     github.tarball_from archive
     epoch           5
-    version         20260525
+    version         20260608
     revision        0
 
     master_sites    ${github.master_sites}
 
-    checksums       sha256  e1f397c3eff5d3b9516107cc418b73ef8bb8bb41c685e10ad97c6a32a3b6646e
+    checksums       sha256  1e3e1c5cad0ae4f635e1d6741540277e9f43da255c020978ce64e59781c79208
 
     livecheck.type none
 
@@ -231,7 +232,7 @@ if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
     if {$subport eq "emacs-app"} {
         revision 2
     } else {
-        revision 1
+        revision 2
     }
 
     configure.args-append  --with-ns \
@@ -252,7 +253,12 @@ if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
 
     post-patch {
         reinplace "s,@PATH@,${prefix}/bin:${prefix}/sbin:/usr/bin:/bin:/usr/sbin:/sbin," ${worksrcpath}/nextstep/templates/Info.plist.in
-        reinplace "s,@LIBRARY_PATH@,${prefix}/lib/gcc14:${prefix}/lib/gcc14/gcc/aarch64-apple-darwin24/14.2.0:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib," ${worksrcpath}/nextstep/templates/Info.plist.in
+        set app_library_path "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"
+        if {[variant_isset nativecomp]} {
+            set gcc_internal_libdir [file dirname [exec ${prefix}/bin/gcc-mp-${gcc_v} -print-file-name=libemutls_w.a]]
+            set app_library_path "${prefix}/lib/gcc${gcc_v}:${gcc_internal_libdir}:${app_library_path}"
+        }
+        reinplace "s,@LIBRARY_PATH@,${app_library_path}," ${worksrcpath}/nextstep/templates/Info.plist.in
     }
 
     destroot {
@@ -288,7 +294,6 @@ if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
 }
 
 variant nativecomp description {Builds emacs with native compilation support} {
-    set gcc_v                      15
     depends_lib-append             port:gcc${gcc_v}
     configure.args-append          --with-native-compilation=aot
     compiler.cpath-prepend         ${prefix}/include/gcc${gcc_v}

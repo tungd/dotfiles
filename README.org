@@ -43,29 +43,52 @@
   xcode-select --install
 #+END_SRC
 
-** =nix=
-
-The global CLI profile is managed from this repo:
-
-#+BEGIN_SRC sh
-  nix profile install ~/Projects/dotfiles/nix/profile
-  nix profile upgrade --impure nix-profile
-#+END_SRC
-
-It currently owns small standalone tools that should not be installed via
-MacPorts:
-
-#+BEGIN_SRC sh
-  cloudflared direnv emacs-weekly fd fzf gh git-lfs htop jq opam ripgrep tmux tokei tree universal-ctags uv valkey wget
-#+END_SRC
-
 ** =macports=
 
-No longer used; global tools moved to the Nix profile above.
+Global CLI tools are managed by MacPorts again. The Makefile keeps the common
+package set and custom Emacs port wired together:
+
+#+BEGIN_SRC sh
+  make macports
+#+END_SRC
+
+Local ports live in this repo under =ports/=, but MacPorts reads them from a
+mirror outside =$HOME= so its =macports= build user can access them:
+
+#+BEGIN_SRC sh
+  sudo mkdir -p /opt/local/var/macports/sources/local
+  sudo cp -R /Users/tung/Projects/dotfiles/ports /opt/local/var/macports/sources/local/dotfiles-ports
+  sudo chown -R tung:staff /opt/local/var/macports/sources/local/dotfiles-ports
+#+END_SRC
+
+Add this source before the default source in
+=/opt/local/etc/macports/sources.conf=:
+
+#+BEGIN_SRC conf
+  file:///opt/local/var/macports/sources/local/dotfiles-ports [nosync]
+  rsync://rsync.macports.org/macports/release/tarballs/ports.tar.gz [default]
+#+END_SRC
+
+After that, =make emacs-weekly= keeps the mirror updated with =rsync= and
+reruns =portindex= there.
+
+** =nix=
+
+No longer used for the global profile. If Determinate Nix is still installed on
+the machine, remove it after MacPorts has the required tools:
+
+#+BEGIN_SRC sh
+  /nix/nix-installer uninstall
+#+END_SRC
 
 ** I also maintained a separate port for building Emacs. I have it updated weekly.
 
-The replacement is =nix/profile/packages/emacs-weekly.nix=.
+The weekly Emacs build is managed through the local MacPorts port under
+=ports/editors/emacs-weekly=:
+
+#+BEGIN_SRC sh
+  make emacs-weekly
+#+END_SRC
 
 ** AWS Session Manager plugin
 
