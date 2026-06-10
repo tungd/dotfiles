@@ -10,6 +10,7 @@
 ;;; Enable Lexical Binding
 ;; Make things a little bit faster. For context: https://www.emacswiki.org/emacs/DynamicBindingVsLexicalBinding
 (require 'subr-x)
+(setq load-prefer-newer t)
 
 ;;; Packages and initialization
 
@@ -787,7 +788,7 @@ With prefix argument FORCE, rebuild every configured grammar."
   (setq treesit-language-source-alist td/treesit-language-source-alist))
 
 (use-package expreg
-  :ensure nil
+  :ensure t
   :custom
   (expreg-restore-point-on-quit t)
   :bind (("M--" . expreg-expand)
@@ -1230,7 +1231,7 @@ With prefix argument FORCE, rebuild every configured grammar."
  `((left-fringe . 8) (right-fringe . 4)
    (border-width . 0) (internal-border-width . 0)
    ;;(font . "Iosevka Fixed SS07 16")
-   (font . "JetBrains Mono NL 16")
+   (font . "JetBrains Mono NL 15")
    (tool-bar-lines . 0)
    ;; (fullscreen . maximized)
    (width . 160)
@@ -1270,10 +1271,25 @@ With prefix argument FORCE, rebuild every configured grammar."
 ;; Some preferences that I set for all the theme. Per documentation, the custom
 ;; theme named =user= will always have the highest priority.
 
+(use-package prism
+  :ensure nil
+  :load-path "user-lisp"
+  :demand t
+  :hook (enable-theme-functions . prism-soften-theme-faces))
+
 (use-package pache-dark-theme
   :ensure t
   :config
-  (load-theme 'pache-dark t))
+  (load-theme 'pache-dark t)
+  ;; Directly override legacy :bold t attributes that user theme can't always
+  ;; neutralize due to the old-style :bold attribute vs modern :weight difference.
+  (dolist (face '(font-lock-keyword-face
+                  font-lock-function-name-face
+                  font-lock-type-face
+                  font-lock-builtin-face
+                  font-lock-preprocessor-face
+                  bold))
+    (set-face-attribute face nil :weight 'normal)))
 
 (custom-theme-set-faces
  'user
@@ -1283,27 +1299,20 @@ With prefix argument FORCE, rebuild every configured grammar."
  '(font-lock-constant-face ((t :slant normal)))
  '(completions-highlight ((t :inherit region)))
 
- ;; '(line-number ((t :slant normal :weight normal :foreground "#2e5561")))
- ;; '(line-number-current-line ((t :slant normal :weight normal :background "#07151B" :foreground "#8bb5c2")))
- ;; '(fringe ((t :inherit line-number :background unspecified)))
- ;; '(vertical-border ((t :foreground "#222")))
+ '(line-number ((t :slant normal :weight normal :foreground "#303634" :background unspecified)))
+ '(line-number-current-line ((t :slant normal :weight normal :foreground "#46504D" :background unspecified)))
+ '(fringe ((t :inherit line-number :background unspecified)))
+  ;; '(vertical-border ((t :foreground "#222")))
 
  '(hl-line ((t :background "#222")))
+ '(show-paren-match ((t :foreground "#f9f5d7" :background "#665C54")))
+ '(show-paren-mismatch ((t :foreground "#000000" :background "#FB4934")))
 
  '(mode-line-buffer-id ((t :foreground "orange")))
  '(cursor ((t :background "orange")))
  '(eglot-highlight-symbol-face ((t :weight normal)))
  '(eglot-code-action-indicator-face ((t :weight normal)))
  '(eglot-inlay-hint-face ((t :height 1.0 :inherit font-lock-comment-face)))
-
- ;; Suppress bold across all themes
- '(bold ((t :weight normal)))
- '(italic ((t :slant italic)))
- '(font-lock-keyword-face ((t :weight normal)))
- '(font-lock-function-name-face ((t :weight normal)))
- '(font-lock-type-face ((t :weight normal)))
- '(font-lock-builtin-face ((t :weight normal)))
- '(font-lock-preprocessor-face ((t :weight normal)))
  )
 
 ;; Line and column numbers, which I find only helpful when tracking
