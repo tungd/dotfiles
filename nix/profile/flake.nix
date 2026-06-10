@@ -11,12 +11,6 @@
       python-cli = pkgs.python314.withPackages (ps: [
         ps.certifi
       ]);
-      khala-cli = pkgs.writeShellApplication {
-        name = "kl";
-        text = ''
-          exec ${python-cli}/bin/python3 "$HOME/Projects/tungd/khala/kl" "$@"
-        '';
-      };
       db-clients = pkgs.runCommand "db-clients" { } ''
         mkdir -p $out/bin
 
@@ -98,7 +92,6 @@
             pkgs.gnupg
             pkgs.htop
             pkgs.jq
-            khala-cli
             pkgs.opam
             pkgs.pinentry_mac
             python-cli

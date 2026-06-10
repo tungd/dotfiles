@@ -261,6 +261,21 @@ KEY defaults to \"S\".
 (register-definition-prefixes "scv-tests" '("scv-test--w"))
 
 
+;;; Generated autoloads from prism.el
+
+(autoload 'prism-soften-theme-faces "prism"
+"Walk all defined faces and soften contrast.
+
+(fn &rest _)" t)
+(provide 'prism)
+(register-definition-prefixes "prism" '("prism-"))
+
+
+;;; Generated autoloads from prism-tests.el
+
+(register-definition-prefixes "prism-tests" '("prism--test-hex->rgb"))
+
+
 ;;; End of scraped data
 
 (provide '.user-lisp-autoloads)

@@ -130,13 +130,20 @@
     (should (string-match-p "\\`tc-[0-9a-f]\\{16\\}\\'" session-id))))
 
 (ert-deftest scv-new-session-generates-id-and-opens-viewer ()
-  (let (opened)
+  (let (opened created)
     (cl-letf (((symbol-function 'scv-generate-session-id)
                (lambda () "tc-generated"))
+              ((symbol-function 'scv--call-process-string)
+               (lambda (args)
+                 (setq created args)
+                 "{}"))
               ((symbol-function 'scv-open-session-viewer)
                (lambda (session-id origin)
                  (setq opened (list session-id origin)))))
       (should (equal (scv-new-session) "tc-generated"))
+      (should
+       (equal created
+              '("session" "--session-id" "tc-generated" "--detach" "--json")))
       (should (equal opened '("tc-generated" "local"))))))
 
 (ert-deftest scv-prompt-submit-kind-sends-stdin-and-clears-on-success ()
