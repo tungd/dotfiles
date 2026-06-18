@@ -41,6 +41,7 @@
     "/usr/local/bin"
     "~/Library/Python/3.14/bin"
     "~/Library/pnpm"
+    "~/Library/pnpm/bin"
     "~/.local/bin"
     "~/.opam/default/bin"
     "~/.claude/local")
@@ -815,6 +816,83 @@ With prefix argument FORCE, rebuild every configured grammar."
      ;; (python-mode . python-ts-mode)
    ))
 
+;;;; Markdown
+
+(defconst td/markdown-mermaid-fence-open-regexp
+  "^[[:blank:]]*\\(```+\\|~~~+\\)[[:blank:]]*\\(?:mermaid\\|mmd\\)\\b.*$")
+
+(defconst td/markdown-fence-close-regexp
+  "^[[:blank:]]*\\(```+\\|~~~+\\)[[:blank:]]*$")
+
+(defconst td/mermaid-chrome-executable-candidates
+  '("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    "/Applications/Chromium.app/Contents/MacOS/Chromium"
+    "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+    "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"))
+
+(defun td/mermaid-chrome-executable ()
+  "Return a local Chrome-family executable for Mermaid CLI."
+  (catch 'found
+    (dolist (path td/mermaid-chrome-executable-candidates)
+      (when (file-executable-p path)
+        (throw 'found path)))))
+
+(defun td/markdown-mermaid-block-bounds ()
+  "Return bounds of the Mermaid fence around point."
+  (let ((origin (point))
+        open-start
+        beg
+        end
+        close-end)
+    (save-excursion
+      (when (or (looking-at td/markdown-mermaid-fence-open-regexp)
+                (re-search-backward td/markdown-mermaid-fence-open-regexp nil t))
+        (setq open-start (match-beginning 0))
+        (forward-line 1)
+        (setq beg (point))
+        (when (re-search-forward td/markdown-fence-close-regexp nil t)
+          (setq end (match-beginning 0)
+                close-end (match-end 0))
+          (when (and (<= open-start origin) (<= origin close-end))
+            (cons beg end)))))))
+
+(defun td/markdown-preview-mermaid-block (&optional browse)
+  "Render Mermaid fence at point to SVG.
+With prefix argument BROWSE, open the SVG in the browser."
+  (interactive "P")
+  (let ((mmdc (or (executable-find "mmdc")
+                  (user-error "Install Mermaid CLI: pnpm add -g @mermaid-js/mermaid-cli")))
+        (bounds (td/markdown-mermaid-block-bounds)))
+    (unless bounds
+      (user-error "Point is not in a Mermaid fenced code block"))
+    (let* ((base (make-temp-file "emacs-mermaid-"))
+           (input (concat base ".mmd"))
+           (output (concat base ".svg"))
+           (buffer (get-buffer-create "*mermaid*")))
+      (write-region (car bounds) (cdr bounds) input nil 'silent)
+      (with-current-buffer buffer
+        (erase-buffer))
+      (if (let ((process-environment (copy-sequence process-environment)))
+            (when-let* ((chrome (td/mermaid-chrome-executable)))
+              (push (concat "PUPPETEER_EXECUTABLE_PATH=" chrome)
+                    process-environment))
+            (let ((status (call-process mmdc nil buffer nil
+                                        "-i" input "-o" output "-b" "transparent")))
+              (and (integerp status) (zerop status))))
+          (if browse
+              (browse-url-of-file output)
+            (find-file-other-window output))
+        (pop-to-buffer buffer)
+        (user-error "mmdc failed")))))
+
+(defun td/markdown-mermaid-setup ()
+  "Set up Mermaid preview key for Markdown buffers."
+  (keymap-local-set "C-c C-x m" #'td/markdown-preview-mermaid-block))
+
+(add-hook 'markdown-ts-mode-hook #'td/markdown-mermaid-setup)
+(add-hook 'markdown-mode-hook #'td/markdown-mermaid-setup)
+(add-hook 'gfm-mode-hook #'td/markdown-mermaid-setup)
+
 ;;;; Auto completion
 
 ;; I use auto completion sparingly.
@@ -1234,7 +1312,7 @@ With prefix argument FORCE, rebuild every configured grammar."
    (font . "JetBrains Mono NL 15")
    (tool-bar-lines . 0)
    ;; (fullscreen . maximized)
-   (width . 160)
+   (width . 128)
    (height . 50)
    (mac-appearance . dark)
    (ns-appearance . dark)

@@ -234,7 +234,23 @@
                   line-number
                   line-number-current-line
                   show-paren-match
-                  show-paren-mismatch))
+                  show-paren-mismatch
+                  term-color-black
+                  term-color-red
+                  term-color-green
+                  term-color-yellow
+                  term-color-blue
+                  term-color-magenta
+                  term-color-cyan
+                  term-color-white
+                  term-color-bright-black
+                  term-color-bright-red
+                  term-color-bright-green
+                  term-color-bright-yellow
+                  term-color-bright-blue
+                  term-color-bright-magenta
+                  term-color-bright-cyan
+                  term-color-bright-white))
     (should (memq face prism-preserved-faces))))
 
 ;; ---------------------------------------------------------------------------
