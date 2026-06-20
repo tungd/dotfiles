@@ -75,7 +75,7 @@ reruns =portindex= there.
 ** I also maintained a separate port for building Emacs. I have it updated weekly.
 
 The weekly Emacs build is managed through the local MacPorts port under
-=ports/editors/emacs-weekly=:
+=ports/editors/emacs=:
 
 #+BEGIN_SRC sh
   make emacs-weekly

@@ -26,6 +26,7 @@ homepage        https://www.gnu.org/software/emacs/emacs.html
 master_sites    gnu
 
 set rpaths [list]
+set nativecomp_gcc_v 15
 
 if {$subport eq $name} {
     conflicts   emacs-devel
@@ -124,15 +125,17 @@ if {$subport eq "emacs-devel" || $subport eq "emacs-app-devel"} {
 
     # do not forget to check that configure hasn't introduce some suprises via
     # git diff [old]..[new] -- '**/configure.ac'
-    github.setup    emacs-mirror emacs <COMMIT_HASH>
+    github.setup    emacs-mirror emacs 4cfcf6ac67b079cb1b12758595c40c5f1c1ffc8b
     github.tarball_from archive
     epoch           5
-    version         <DATE>
+    version         20260620
     revision        0
 
     master_sites    ${github.master_sites}
 
-    checksums       sha256  <SHA_256>
+    checksums       rmd160  929cd9252fcf783cf9787864855259a587215eae \
+                    sha256  dede5f7a2150ba619fa1cee253cf8037e905a1f7843b8261e1a1249befe8cf80 \
+                    size    53963013
 
     livecheck.type none
 
@@ -149,7 +152,7 @@ if {$subport eq "emacs-devel" || $subport eq "emacs-app-devel"} {
 if {$subport eq $name || $subport eq "emacs-devel"} {
     PortGroup  muniversal 1.0
 
-    variant x11 description {Builds emacs as a X11 program with Lucid widgets} {
+    variant x11 {
         configure.args-delete   --without-x
         configure.args-append   --with-x-toolkit=lucid \
             --without-xaw3d \
@@ -251,8 +254,14 @@ if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
                         patch-ns-resolve-bundle-from-executable.diff
 
     post-patch {
+        set app_library_path ""
+        if {[variant_isset nativecomp]} {
+            set gcc_lib_dir ${prefix}/lib/gcc${nativecomp_gcc_v}
+            set gcc_internal_lib_dir [file dirname [exec ${prefix}/bin/gcc-mp-${nativecomp_gcc_v} -print-libgcc-file-name]]
+            set app_library_path "${gcc_lib_dir}:${gcc_internal_lib_dir}:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"
+        }
         reinplace "s,@PATH@,${prefix}/bin:${prefix}/sbin:/usr/bin:/bin:/usr/sbin:/sbin," ${worksrcpath}/nextstep/templates/Info.plist.in
-        reinplace "s,@LIBRARY_PATH@,${prefix}/lib/gcc14:${prefix}/lib/gcc14/gcc/aarch64-apple-darwin24/14.2.0:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib," ${worksrcpath}/nextstep/templates/Info.plist.in
+        reinplace "s,@LIBRARY_PATH@,${app_library_path}," ${worksrcpath}/nextstep/templates/Info.plist.in
     }
 
     destroot {
@@ -288,12 +297,11 @@ if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
 }
 
 variant nativecomp description {Builds emacs with native compilation support} {
-    set gcc_v                      15
-    depends_lib-append             port:gcc${gcc_v}
+    depends_lib-append             port:gcc${nativecomp_gcc_v}
     configure.args-append          --with-native-compilation=aot
-    compiler.cpath-prepend         ${prefix}/include/gcc${gcc_v}
-    compiler.library_path-prepend  ${prefix}/lib/gcc${gcc_v}
-    lappend rpaths                 ${prefix}/lib/gcc${gcc_v}
+    compiler.cpath-prepend         ${prefix}/include/gcc${nativecomp_gcc_v}
+    compiler.library_path-prepend  ${prefix}/lib/gcc${nativecomp_gcc_v}
+    lappend rpaths                 ${prefix}/lib/gcc${nativecomp_gcc_v}
 }
 
 variant treesitter description {Builds emacs with tree-sitter support} {

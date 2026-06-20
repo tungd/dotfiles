@@ -43,7 +43,7 @@ MACPORTS_PACKAGES := \
 
 .PHONY: macports macports-tools macports-select emacs-weekly emacs-weekly-update fix-emacs-shims
 
-ports/PortIndex: ports/editors/emacs-weekly/Portfile ports/llm/ik_llama.cpp/Portfile
+ports/PortIndex: ports/editors/emacs/Portfile ports/llm/ik_llama.cpp/Portfile
 	cd ports && portindex
 
 $(MACPORTS_LOCAL_PORTS)/PortIndex: ports/PortIndex
@@ -56,9 +56,11 @@ $(EMACS).tar.gz:
 $(LLAMA).tar.gz:
 	curl -LO 'https://github.com/ikawrakow/ik_llama.cpp/archive/$(LLAMA).tar.gz'
 
-ports/editors/emacs-weekly/Portfile: $(EMACS).tar.gz ports/editors/emacs-weekly/Portfile.tmpl
-	sed -e 's/<COMMIT_HASH>/$(EMACS)/g' ports/editors/emacs-weekly/Portfile.tmpl \
+ports/editors/emacs/Portfile: $(EMACS).tar.gz ports/editors/emacs/Portfile.tmpl
+	sed -e 's/<COMMIT_HASH>/$(EMACS)/g' ports/editors/emacs/Portfile.tmpl \
 		| sed -e "s/<SHA_256>/$$(shasum -a 256 $(EMACS).tar.gz | cut -w -f1)/g" \
+		| sed -e "s/<RMD160>/$$(openssl dgst -rmd160 $(EMACS).tar.gz | awk '{print $$NF}')/g" \
+		| sed -e "s/<SIZE>/$$(wc -c < $(EMACS).tar.gz | tr -d ' ')/g" \
 		| sed -e 's/<DATE>/$(TODAY)/g' \
 		> $@
 
@@ -80,7 +82,7 @@ macports-select:
 emacs-weekly: emacs-weekly-update $(MACPORTS_LOCAL_PORTS)/PortIndex
 	sudo port install emacs-app-devel +nativecomp +treesitter
 
-emacs-weekly-update: ports/editors/emacs-weekly/Portfile
+emacs-weekly-update: ports/editors/emacs/Portfile
 
 fix-emacs-shims:
 	mkdir -p "$$HOME/.local/bin"

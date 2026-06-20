@@ -17,7 +17,7 @@
   (let ((dir (expand-file-name dir)))
     (pcase citre-default-create-tags-file-location
       ('global-cache (citre--tags-file-in-global-cache dir))
-      (_ (expand-file-name (or (car citre-tags-file-names) "tags") dir)))))
+      (_ (expand-file-name "tags" dir)))))
 
 (defun citre-raven--index (tagsfile dir &optional sync callback)
   "Run Raven indexing for DIR into TAGSFILE.

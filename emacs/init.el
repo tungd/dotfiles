@@ -12,6 +12,37 @@
 (require 'subr-x)
 (setq load-prefer-newer t)
 
+(defun td/latest-directory (dir regexp)
+  "Return the lexically latest directory in DIR matching REGEXP."
+  (when (file-directory-p dir)
+    (when-let* ((name (car (last (sort (directory-files dir nil regexp t) #'string<)))))
+      (expand-file-name name dir))))
+
+(defun td/prepend-env-paths (name paths)
+  "Prepend existing PATHS to environment variable NAME."
+  (let ((existing (split-string (or (getenv name) "") path-separator t)))
+    (setenv name (string-join (delete-dups (append paths existing)) path-separator))))
+
+(let* ((gcc-lib-dir (td/latest-directory "/opt/local/lib" "\\`gcc[0-9]+\\'"))
+       (gcc-target-dir (and gcc-lib-dir
+                            (td/latest-directory (expand-file-name "gcc" gcc-lib-dir)
+                                                 "\\`[^.]")))
+       (gcc-version-dir (and gcc-target-dir
+                             (td/latest-directory gcc-target-dir "\\`[0-9]")))
+       (sdk-lib-dir "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"))
+  (when (and gcc-lib-dir gcc-version-dir)
+    (td/prepend-env-paths
+     "LIBRARY_PATH"
+     (delq nil (list gcc-lib-dir
+                     gcc-version-dir
+                     (when (file-directory-p sdk-lib-dir) sdk-lib-dir))))))
+
+(defconst user-lisp-directory
+  (expand-file-name "user-lisp/" user-emacs-directory)
+  "Directory for local Emacs Lisp files.")
+
+(add-to-list 'load-path user-lisp-directory)
+
 ;;; Packages and initialization
 
 ;; All the packages I used are from ELPA archives. However, I install them
@@ -23,10 +54,9 @@
 
 (use-package package
   :config
+  (setopt package-quickstart t)
   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-  (add-to-list 'package-archives '("nongnu" . "https://elpa.nongnu.org/nongnu/") t)
-  :custom
-  (package-quickstart t))
+  (add-to-list 'package-archives '("nongnu" . "https://elpa.nongnu.org/nongnu/") t))
 
 (setopt custom-file (expand-file-name "custom.el" user-emacs-directory))
 (load custom-file 'noerror)
@@ -1009,13 +1039,6 @@ With prefix argument BROWSE, open the SVG in the browser."
 
 (bind-key "C-M-=" #'td/format-html-attributes)
 
-(use-package emmet-mode
-  :ensure t
-  :hook (mhtml-mode . emmet-mode)
-  :bind ("C-M-<return>" . emmet-expand-line)
-  :config
-  (unbind-key "C-j" emmet-mode-keymap))
-
 (use-package sgml-mode
   :mode (("\\.svg" . sgml-mode)))
 
@@ -1349,25 +1372,26 @@ With prefix argument BROWSE, open the SVG in the browser."
 ;; Some preferences that I set for all the theme. Per documentation, the custom
 ;; theme named =user= will always have the highest priority.
 
-(use-package prism
-  :ensure nil
-  :load-path "user-lisp"
-  :demand t
-  :hook (enable-theme-functions . prism-soften-theme-faces))
+;; (use-package prism
+;;   :hook (enable-theme-functions . prism-soften-theme-faces))
 
-(use-package pache-dark-theme
+;; (use-package pache-dark-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'pache-dark t)
+;;   ;; Directly override legacy :bold t attributes that user theme can't always
+;;   ;; neutralize due to the old-style :bold attribute vs modern :weight difference.
+;;   (dolist (face '(font-lock-keyword-face
+;;                   font-lock-function-name-face
+;;                   font-lock-type-face
+;;                   font-lock-builtin-face
+;;                   font-lock-preprocessor-face
+;;                   bold))
+;;     (set-face-attribute face nil :weight 'normal)))
+
+(use-package solarized-theme
   :ensure t
-  :config
-  (load-theme 'pache-dark t)
-  ;; Directly override legacy :bold t attributes that user theme can't always
-  ;; neutralize due to the old-style :bold attribute vs modern :weight difference.
-  (dolist (face '(font-lock-keyword-face
-                  font-lock-function-name-face
-                  font-lock-type-face
-                  font-lock-builtin-face
-                  font-lock-preprocessor-face
-                  bold))
-    (set-face-attribute face nil :weight 'normal)))
+  :config (load-theme 'solarized-dark t))
 
 (custom-theme-set-faces
  'user
@@ -1377,14 +1401,14 @@ With prefix argument BROWSE, open the SVG in the browser."
  '(font-lock-constant-face ((t :slant normal)))
  '(completions-highlight ((t :inherit region)))
 
- '(line-number ((t :slant normal :weight normal :foreground "#303634" :background unspecified)))
- '(line-number-current-line ((t :slant normal :weight normal :foreground "#46504D" :background unspecified)))
+ ;; '(line-number ((t :slant normal :weight normal :foreground "#303634" :background unspecified)))
+ ;; '(line-number-current-line ((t :slant normal :weight normal :foreground "#46504D" :background unspecified)))
  '(fringe ((t :inherit line-number :background unspecified)))
   ;; '(vertical-border ((t :foreground "#222")))
 
- '(hl-line ((t :background "#222")))
- '(show-paren-match ((t :foreground "#f9f5d7" :background "#665C54")))
- '(show-paren-mismatch ((t :foreground "#000000" :background "#FB4934")))
+ ;; '(hl-line ((t :background "#222")))
+ ;; '(show-paren-match ((t :foreground "#f9f5d7" :background "#665C54")))
+ ;; '(show-paren-mismatch ((t :foreground "#000000" :background "#FB4934")))
 
  '(mode-line-buffer-id ((t :foreground "orange")))
  '(cursor ((t :background "orange")))

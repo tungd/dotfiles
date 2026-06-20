@@ -206,10 +206,11 @@
  '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
  '(go-ts-indent-offset 2 nil nil "Customized with use-package go-ts-mode")
  '(package-selected-packages
-   '(avy citre consult crux d2-mode diff-hl doom-themes emmet-mode envrc expreg
-         gdshader-mode gptel kotlin-ts-mode magit msgpack neocaml nix-mode
-         ob-duckdb ob-kotlin ob-sql-mode pache-dark-theme prescient
-         protobuf-mode rainbow-mode solarized-gruvbox-theme surround svg-lib
+   '(avy citre color-theme-sanityinc-solarized consult crux d2-mode diff-hl
+         doom-themes envrc expreg gdshader-mode gptel kotlin-ts-mode magit
+         msgpack neocaml nix-mode ob-duckdb ob-kotlin ob-sql-mode
+         pache-dark-theme prescient protobuf-mode rainbow-mode
+         solarized-gruvbox-theme solarized-theme surround svg-lib
          tango-plus-theme terraform-mode treesit-fold tuareg utop visual-replace
          vundo))
  '(package-vc-selected-packages
@@ -238,5 +239,5 @@
  '(font-lock-comment-face ((t :slant normal)))
  '(font-lock-constant-face ((t :slant normal)))
  '(font-lock-string-face ((t :slant normal)))
- '(hl-line ((t :background "#222")))
+ '(fringe ((t :inherit line-number :background unspecified)))
  '(mode-line-buffer-id ((t :foreground "orange"))))
