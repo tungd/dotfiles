@@ -163,8 +163,6 @@ export PATH="/Users/tung/.antigravity-ide/antigravity-ide/bin:$PATH"
 export PATH="/Users/tung/.local/bin:$PATH"
 
 # Keep MacPorts ahead of installer paths added above.
-path=(${path:#$HOME/.nix-profile/bin})
-path=(${path:#/nix/var/nix/profiles/default/bin})
 path=(/opt/local/bin /opt/local/sbin $path)
 typeset -U path PATH
 

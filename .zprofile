@@ -24,7 +24,5 @@ export PATH="/Users/tung/.local/bin:$PATH"
 export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
 # Finished adapting your PATH environment variable for use with MacPorts.
 
-path=(${path:#$HOME/.nix-profile/bin})
-path=(${path:#/nix/var/nix/profiles/default/bin})
 path=(/opt/local/bin /opt/local/sbin $path)
 typeset -U path PATH

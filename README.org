@@ -72,15 +72,6 @@ Add this source before the default source in
 After that, =make emacs-weekly= keeps the mirror updated with =rsync= and
 reruns =portindex= there.
 
-** =nix=
-
-No longer used for the global profile. If Determinate Nix is still installed on
-the machine, remove it after MacPorts has the required tools:
-
-#+BEGIN_SRC sh
-  /nix/nix-installer uninstall
-#+END_SRC
-
 ** I also maintained a separate port for building Emacs. I have it updated weekly.
 
 The weekly Emacs build is managed through the local MacPorts port under
