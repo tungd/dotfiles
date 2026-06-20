@@ -1,6 +1,10 @@
 # Interactive zsh setup.
 # Login/session environment lives in ~/.zprofile.
 
+if [[ $TERM = dumb && -n $SSH_CONNECTION ]]; then
+  return 0
+fi
+
 [[ -t 0 ]] && stty -ixon
 
 if [[ ! -o login && -x /usr/libexec/path_helper ]]; then

@@ -40,7 +40,6 @@
     "/opt/local/sbin"
     "/usr/local/bin"
     "~/Library/Python/3.14/bin"
-    "~/Library/pnpm"
     "~/Library/pnpm/bin"
     "~/.local/bin"
     "~/.opam/default/bin"
@@ -692,6 +691,7 @@ Uses project root if in a project, otherwise current directory."
   :custom
   (tramp-allow-unsafe-temporary-files t)
   (tramp-default-method "ssh")
+  (tramp-use-connection-share nil)
   (tramp-use-scp-direct-remote-copying t)
   (tramp-copy-size-limit (* 1024 1024))
   (tramp-verbose 2)

@@ -276,6 +276,16 @@ KEY defaults to \"S\".
 (register-definition-prefixes "prism-tests" '("prism--test-hex->rgb"))
 
 
+;;; Generated autoloads from ob-excalidraw.el
+
+(autoload 'ob-excalidraw-setup "ob-excalidraw"
+"Set up ob-excalidraw by advising org-edit-src-code.
+This intercepts C-c ' for excalidraw blocks and launches the
+visual editor instead." t)
+(autoload 'ob-excalidraw-teardown "ob-excalidraw"
+"Remove the ob-excalidraw advice from org-edit-src-code." t)
+(register-definition-prefixes "ob-excalidraw" '("ob-excalidraw-" "org-babel-"))
+
 ;;; End of scraped data
 
 (provide '.user-lisp-autoloads)
