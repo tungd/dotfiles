@@ -102,6 +102,7 @@ alias g=git
 alias e="emacsclient -n"
 alias s="scv"
 alias diff="diff --color -u"
+alias tterm="tmux -L tterm-default-local attach -t tterm-default"
 
 notify() {
   osascript -e "display notification \"$2\" with title \"$1\""

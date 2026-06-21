@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+/opt/local/bin/yabai -m window --focus stack.prev 2>/dev/null \
+    || /opt/local/bin/yabai -m window --focus stack.last 2>/dev/null

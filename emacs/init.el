@@ -1311,6 +1311,8 @@ With prefix argument BROWSE, open the SVG in the browser."
         scroll-conservatively 0
         auto-window-vscroll nil)
 
+(pixel-scroll-precision-mode t)
+
 ;; I have a 2k display, and used to run a HiDPI hack for macOS. Recently I got a
 ;; new Mac and tired of running it. So here it goes:
 
@@ -1375,23 +1377,23 @@ With prefix argument BROWSE, open the SVG in the browser."
 ;; (use-package prism
 ;;   :hook (enable-theme-functions . prism-soften-theme-faces))
 
-;; (use-package pache-dark-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'pache-dark t)
-;;   ;; Directly override legacy :bold t attributes that user theme can't always
-;;   ;; neutralize due to the old-style :bold attribute vs modern :weight difference.
-;;   (dolist (face '(font-lock-keyword-face
-;;                   font-lock-function-name-face
-;;                   font-lock-type-face
-;;                   font-lock-builtin-face
-;;                   font-lock-preprocessor-face
-;;                   bold))
-;;     (set-face-attribute face nil :weight 'normal)))
-
-(use-package solarized-theme
+(use-package pache-dark-theme
   :ensure t
-  :config (load-theme 'solarized-dark t))
+  :config
+  (load-theme 'pache-dark t)
+  ;; Directly override legacy :bold t attributes that user theme can't always
+  ;; neutralize due to the old-style :bold attribute vs modern :weight difference.
+  (dolist (face '(font-lock-keyword-face
+                  font-lock-function-name-face
+                  font-lock-type-face
+                  font-lock-builtin-face
+                  font-lock-preprocessor-face
+                  bold))
+    (set-face-attribute face nil :weight 'normal)))
+
+;; (use-package solarized-theme
+;;   :ensure t
+;;   :config (load-theme 'solarized-dark-high-contrast t))
 
 (custom-theme-set-faces
  'user

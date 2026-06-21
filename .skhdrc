@@ -1,0 +1,18 @@
+# Awesome-style Spaces.
+alt - 1 : /opt/local/bin/yabai -m space --focus home
+alt - 2 : /opt/local/bin/yabai -m space --focus code
+alt - 3 : /opt/local/bin/yabai -m space --focus web
+alt - 4 : /opt/local/bin/yabai -m space --focus comm
+alt - 5 : /opt/local/bin/yabai -m space --focus misc
+
+alt + shift - 1 : /opt/local/bin/yabai -m window --space home && /opt/local/bin/yabai -m space --focus home
+alt + shift - 2 : /opt/local/bin/yabai -m window --space code && /opt/local/bin/yabai -m space --focus code
+alt + shift - 3 : /opt/local/bin/yabai -m window --space web && /opt/local/bin/yabai -m space --focus web
+alt + shift - 4 : /opt/local/bin/yabai -m window --space comm && /opt/local/bin/yabai -m space --focus comm
+alt + shift - 5 : /opt/local/bin/yabai -m window --space misc && /opt/local/bin/yabai -m space --focus misc
+
+# Awesome-style window focus/swap.
+alt - j : /opt/local/bin/yabai -m window --focus stack.next 2>/dev/null || /opt/local/bin/yabai -m window --focus stack.first 2>/dev/null || /opt/local/bin/yabai -m window --focus next 2>/dev/null || /opt/local/bin/yabai -m window --focus first 2>/dev/null
+alt - k : /opt/local/bin/yabai -m window --focus stack.prev 2>/dev/null || /opt/local/bin/yabai -m window --focus stack.last 2>/dev/null || /opt/local/bin/yabai -m window --focus prev 2>/dev/null || /opt/local/bin/yabai -m window --focus last 2>/dev/null
+alt + shift - j : /opt/local/bin/yabai -m window --swap stack.next 2>/dev/null || /opt/local/bin/yabai -m window --swap next 2>/dev/null
+alt + shift - k : /opt/local/bin/yabai -m window --swap stack.prev 2>/dev/null || /opt/local/bin/yabai -m window --swap prev 2>/dev/null

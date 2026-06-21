@@ -37,6 +37,8 @@ MACPORTS_PACKAGES := \
 	uv \
 	valkey \
 	wget \
+	yabai \
+	skhd \
 	clickhouse
 
 .DEFAULT_GOAL := macports

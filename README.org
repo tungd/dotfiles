@@ -123,6 +123,55 @@ Decrease repeat delay, increase repeat rate and disable Emoji.
   defaults write com.apple.screencapture disable-shadow -bool true
 #+END_SRC
 
+** Yabai stack window management
+
+Managed windows use five awesome-style Space labels: =home=, =code=, =web=,
+=comm=, and =misc=. Layouts are =bsp= for =home= and =comm=, =stack= for
+=code= and =web=, and =float= for =misc=. All spaces use 2px padding and no
+window shadows. =skhd= binds Option-1..5 to switch spaces,
+Option-Shift-1..5 to move windows, and Option-j/k to cycle windows.
+
+Rules place Ghostty on =home=, Emacs on =code=, browsers on =web=, chat apps
+on =comm=, office/media apps on =misc=, and float common system/dialog windows.
+
+#+BEGIN_SRC sh
+  sudo port install yabai skhd
+  sudo codesign -fs 'yabai-cert' /opt/local/bin/yabai
+  ln -sfn ~/Projects/dotfiles/.yabairc ~/.yabairc
+  ln -sfn ~/Projects/dotfiles/.skhdrc ~/.skhdrc
+  chmod +x ~/Projects/dotfiles/.yabairc
+  yabai --start-service
+  skhd --start-service
+#+END_SRC
+
+Create =yabai-cert= first in Keychain Access: System keychain, self-signed root,
+Code Signing, and set Code Signing trust to Always Trust.
+
+If yabai exits with =could not access accessibility features=, enable
+=/opt/local/bin/yabai= in System Settings -> Privacy & Security ->
+Accessibility. If it is already listed, remove it with =-= and add it again
+after signing. Then run:
+
+#+BEGIN_SRC sh
+  yabai --restart-service
+#+END_SRC
+
+This yabai build does not support built-in focused-window borders. The
+=.yabairc= starts =borders= automatically when installed:
+
+#+BEGIN_SRC sh
+  brew tap FelixKratz/formulae
+  brew install borders
+  yabai --restart-service
+#+END_SRC
+
+If =skhd= asks for Accessibility, enable =/opt/local/bin/skhd= in System
+Settings -> Privacy & Security -> Accessibility, then run:
+
+#+BEGIN_SRC sh
+  skhd --restart-service
+#+END_SRC
+
 ** Disable font-smoothing, works better with 2k external display (provided web pages are zoomed & editors uses medium fonts)
 
 #+begin_src sh

@@ -1,0 +1,73 @@
+#!/usr/bin/env sh
+
+# Awesome-style tags on macOS Spaces.
+yabai -m config \
+    mouse_follows_focus          off \
+    focus_follows_mouse          off \
+    window_placement             second_child \
+    window_insertion_point       focused \
+    window_zoom_persist          on \
+    window_shadow                off \
+    skip_window_focus_animation  on \
+    window_animation_duration    0.0 \
+    split_type                   auto \
+    split_ratio                  0.50 \
+    auto_balance                 on \
+    mouse_modifier               fn \
+    mouse_action1                move \
+    mouse_action2                resize \
+    mouse_drop_action            swap
+
+for label in home code web comm misc; do
+    yabai -m space "$label" --label 2>/dev/null
+done
+
+yabai -m space 1 --label home
+yabai -m space 2 --label code
+yabai -m space 3 --label web
+yabai -m space 4 --label comm
+yabai -m space 5 --label misc
+
+for space in home code web comm misc; do
+    yabai -m config --space "$space" top_padding 2
+    yabai -m config --space "$space" bottom_padding 2
+    yabai -m config --space "$space" left_padding 2
+    yabai -m config --space "$space" right_padding 2
+    yabai -m config --space "$space" window_gap 0
+done
+
+yabai -m space home --layout bsp
+yabai -m space code --layout stack
+yabai -m space web --layout stack
+yabai -m space comm --layout bsp
+yabai -m space misc --layout float
+
+for rule in \
+    space-home \
+    space-code \
+    space-web \
+    space-comm \
+    space-misc \
+    float-system \
+    float-dialog \
+    float-sheet \
+    float-panel; do
+    yabai -m rule --remove "$rule" 2>/dev/null
+done
+
+yabai -m rule --add label=space-home app='^(Ghostty|ghostty)$' space=home
+yabai -m rule --add label=space-code app='^Emacs$' space=code
+yabai -m rule --add label=space-web app='^(Safari|Firefox|Google Chrome|Arc)$' space=web
+yabai -m rule --add label=space-comm app='^(Lark|Microsoft Teams|Slack|Discord|Telegram|Messages|Mail|zoom\.us)$' space=comm
+yabai -m rule --add label=space-misc app='^(Microsoft Word|Microsoft Excel|Microsoft PowerPoint|Preview|QuickTime Player|Photos)$' space=misc
+
+yabai -m rule --add label=float-system app='^(System Settings|System Preferences|Calculator|Keychain Access|Activity Monitor|Disk Utility)$' manage=off
+yabai -m rule --add label=float-dialog subrole='^AXDialog$' manage=off
+yabai -m rule --add label=float-sheet subrole='^AXSheet$' manage=off
+yabai -m rule --add label=float-panel role='^AXPanel$' manage=off
+
+yabai -m rule --apply
+
+if command -v borders >/dev/null 2>&1; then
+    borders active_color=0xffff6a00 inactive_color=0x00000000 width=2.0 &
+fi
