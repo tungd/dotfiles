@@ -35,3 +35,9 @@
 	insteadOf = https://github.com/Revenge-Games/
 [includeIf "gitdir:/Users/tung/Projects/BlackWhite-Games/"]
 	path = ~/.gitconfig-revenge
+[credential "https://github.com"]
+	helper = 
+	helper = !/opt/local/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/opt/local/bin/gh auth git-credential

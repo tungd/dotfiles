@@ -254,14 +254,7 @@ if {$subport eq "emacs-app" || $subport eq "emacs-app-devel"} {
                         patch-ns-resolve-bundle-from-executable.diff
 
     post-patch {
-        set app_library_path ""
-        if {[variant_isset nativecomp]} {
-            set gcc_lib_dir ${prefix}/lib/gcc${nativecomp_gcc_v}
-            set gcc_internal_lib_dir [file dirname [exec ${prefix}/bin/gcc-mp-${nativecomp_gcc_v} -print-libgcc-file-name]]
-            set app_library_path "${gcc_lib_dir}:${gcc_internal_lib_dir}:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"
-        }
         reinplace "s,@PATH@,${prefix}/bin:${prefix}/sbin:/usr/bin:/bin:/usr/sbin:/sbin," ${worksrcpath}/nextstep/templates/Info.plist.in
-        reinplace "s,@LIBRARY_PATH@,${app_library_path}," ${worksrcpath}/nextstep/templates/Info.plist.in
     }
 
     destroot {

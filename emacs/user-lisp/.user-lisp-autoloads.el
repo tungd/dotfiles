@@ -285,6 +285,102 @@ visual editor instead." t)
 (autoload 'ob-excalidraw-teardown "ob-excalidraw"
 "Remove the ob-excalidraw advice from org-edit-src-code." t)
 (register-definition-prefixes "ob-excalidraw" '("ob-excalidraw-" "org-babel-"))
+
+
+;;; Generated autoloads from markdown-preview-mode.el
+
+(autoload 'markdown-preview-mermaid-block "markdown-preview-mode"
+"Render Mermaid fence at point to SVG.
+With prefix argument BROWSE, open the SVG in the browser.
+
+(fn &optional BROWSE)" t)
+(autoload 'markdown-preview-buffer "markdown-preview-mode"
+"Render current Markdown file to HTML.
+With prefix argument BROWSE, open the HTML in the browser.
+
+(fn &optional BROWSE)" t)
+(autoload 'markdown-preview-mode "markdown-preview-mode"
+"Preview Markdown files and Mermaid blocks.
+
+This is a minor mode.  If called interactively, toggle the
+`Markdown-Preview mode' mode.  If the prefix argument is positive,
+enable the mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate the variable `markdown-preview-mode'.
+
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
+
+(fn &optional ARG)" t)
+(register-definition-prefixes "markdown-preview-mode" '("markdown-preview-"))
+
+
+;;; Generated autoloads from tterm.el
+
+(autoload 'tterm "tterm"
+"Create a new tmux-backed tterm terminal.
+With prefix REMOTE, prompt for an SSH host.
+
+(fn &optional REMOTE)" t)
+(autoload 'tterm-dashboard "tterm-dashboard" nil t)
+(register-definition-prefixes "tterm" '("desktop-save-buffer" "tterm-"))
+
+
+;;; Generated autoloads from tterm-apply.el
+
+(register-definition-prefixes "tterm-apply" '("tterm--"))
+
+
+;;; Generated autoloads from tterm-bridge.el
+
+(register-definition-prefixes "tterm-bridge" '("tterm-"))
+
+
+;;; Generated autoloads from tterm-consult.el
+
+(autoload 'tterm-consult-register-source "tterm-consult"
+"Register `tterm-consult-source' with Consult when available." t)
+(register-definition-prefixes "tterm-consult" '("tterm-"))
+
+
+;;; Generated autoloads from tterm-copy-mode.el
+
+(register-definition-prefixes "tterm-copy-mode" '("tterm-"))
+
+
+;;; Generated autoloads from tterm-dashboard.el
+
+(autoload 'tterm-dashboard-refresh "tterm-dashboard"
+"Refresh the tterm dashboard buffer." t)
+(autoload 'tterm-dashboard "tterm-dashboard"
+"Open the tterm dashboard." t)
+(register-definition-prefixes "tterm-dashboard" '("tterm-dashboard-"))
+
+
+;;; Generated autoloads from tterm-input.el
+
+(register-definition-prefixes "tterm-input" '("tterm-"))
+
+
+;;; Generated autoloads from tterm-mode.el
+
+(register-definition-prefixes "tterm-mode" '("tterm-"))
+
+
+;;; Generated autoloads from tterm-osc.el
+
+(register-definition-prefixes "tterm-osc" '("tterm-"))
+
+
+;;; Generated autoloads from tterm-profiling.el
+
+(register-definition-prefixes "tterm-profiling" '("tterm--"))
+
 
 ;;; End of scraped data
 

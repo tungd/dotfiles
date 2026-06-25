@@ -12,31 +12,6 @@
 (require 'subr-x)
 (setq load-prefer-newer t)
 
-(defun td/latest-directory (dir regexp)
-  "Return the lexically latest directory in DIR matching REGEXP."
-  (when (file-directory-p dir)
-    (when-let* ((name (car (last (sort (directory-files dir nil regexp t) #'string<)))))
-      (expand-file-name name dir))))
-
-(defun td/prepend-env-paths (name paths)
-  "Prepend existing PATHS to environment variable NAME."
-  (let ((existing (split-string (or (getenv name) "") path-separator t)))
-    (setenv name (string-join (delete-dups (append paths existing)) path-separator))))
-
-(let* ((gcc-lib-dir (td/latest-directory "/opt/local/lib" "\\`gcc[0-9]+\\'"))
-       (gcc-target-dir (and gcc-lib-dir
-                            (td/latest-directory (expand-file-name "gcc" gcc-lib-dir)
-                                                 "\\`[^.]")))
-       (gcc-version-dir (and gcc-target-dir
-                             (td/latest-directory gcc-target-dir "\\`[0-9]")))
-       (sdk-lib-dir "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"))
-  (when (and gcc-lib-dir gcc-version-dir)
-    (td/prepend-env-paths
-     "LIBRARY_PATH"
-     (delq nil (list gcc-lib-dir
-                     gcc-version-dir
-                     (when (file-directory-p sdk-lib-dir) sdk-lib-dir))))))
-
 (defconst user-lisp-directory
   (expand-file-name "user-lisp/" user-emacs-directory)
   "Directory for local Emacs Lisp files.")
@@ -670,11 +645,7 @@ Uses project root if in a project, otherwise current directory."
   :custom
   (comint-terminfo-terminal "dumb-emacs-ansi"))
 
-;; tterm - OCaml-based terminal emulator (local development)
-(defconst td/tterm-source-directory "/Users/tung/Projects/tungd/tterm"
-  "Local tterm checkout used by this Emacs configuration.")
-
-(add-to-list 'load-path td/tterm-source-directory)
+;; tterm - OCaml-based terminal emulator
 (autoload 'tterm "tterm" nil t)
 (autoload 'tterm-dashboard "tterm-dashboard" nil t)
 (autoload 'tterm-send-file "tterm" nil t)
@@ -682,21 +653,8 @@ Uses project root if in a project, otherwise current directory."
 (use-package tterm
   :defer t
   :custom
-  (tterm-module-path
-   (expand-file-name "tterm-module.so" td/tterm-source-directory))
   (tterm-buffer-title-function #'tterm-buffer-title-collapse-parents)
-  (tterm-osc-52-policy 'confirm)
-  :config
-  (defun td/tterm-reload ()
-    "Reload the local tterm checkout and reset its keymaps."
-    (interactive)
-    (dolist (symbol '(tterm-mode-map tterm--char-mode-map tterm-copy-mode-map))
-      (when (boundp symbol)
-        (makunbound symbol)))
-    (load-file
-     (expand-file-name "tterm.el" td/tterm-source-directory))
-    (when (fboundp 'tterm-redraw-all)
-      (tterm-redraw-all))))
+  (tterm-osc-52-policy 'confirm))
 
 (use-package tterm-consult
   :after (consult tterm)
@@ -848,80 +806,11 @@ With prefix argument FORCE, rebuild every configured grammar."
 
 ;;;; Markdown
 
-(defconst td/markdown-mermaid-fence-open-regexp
-  "^[[:blank:]]*\\(```+\\|~~~+\\)[[:blank:]]*\\(?:mermaid\\|mmd\\)\\b.*$")
-
-(defconst td/markdown-fence-close-regexp
-  "^[[:blank:]]*\\(```+\\|~~~+\\)[[:blank:]]*$")
-
-(defconst td/mermaid-chrome-executable-candidates
-  '("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-    "/Applications/Chromium.app/Contents/MacOS/Chromium"
-    "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
-    "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"))
-
-(defun td/mermaid-chrome-executable ()
-  "Return a local Chrome-family executable for Mermaid CLI."
-  (catch 'found
-    (dolist (path td/mermaid-chrome-executable-candidates)
-      (when (file-executable-p path)
-        (throw 'found path)))))
-
-(defun td/markdown-mermaid-block-bounds ()
-  "Return bounds of the Mermaid fence around point."
-  (let ((origin (point))
-        open-start
-        beg
-        end
-        close-end)
-    (save-excursion
-      (when (or (looking-at td/markdown-mermaid-fence-open-regexp)
-                (re-search-backward td/markdown-mermaid-fence-open-regexp nil t))
-        (setq open-start (match-beginning 0))
-        (forward-line 1)
-        (setq beg (point))
-        (when (re-search-forward td/markdown-fence-close-regexp nil t)
-          (setq end (match-beginning 0)
-                close-end (match-end 0))
-          (when (and (<= open-start origin) (<= origin close-end))
-            (cons beg end)))))))
-
-(defun td/markdown-preview-mermaid-block (&optional browse)
-  "Render Mermaid fence at point to SVG.
-With prefix argument BROWSE, open the SVG in the browser."
-  (interactive "P")
-  (let ((mmdc (or (executable-find "mmdc")
-                  (user-error "Install Mermaid CLI: pnpm add -g @mermaid-js/mermaid-cli")))
-        (bounds (td/markdown-mermaid-block-bounds)))
-    (unless bounds
-      (user-error "Point is not in a Mermaid fenced code block"))
-    (let* ((base (make-temp-file "emacs-mermaid-"))
-           (input (concat base ".mmd"))
-           (output (concat base ".svg"))
-           (buffer (get-buffer-create "*mermaid*")))
-      (write-region (car bounds) (cdr bounds) input nil 'silent)
-      (with-current-buffer buffer
-        (erase-buffer))
-      (if (let ((process-environment (copy-sequence process-environment)))
-            (when-let* ((chrome (td/mermaid-chrome-executable)))
-              (push (concat "PUPPETEER_EXECUTABLE_PATH=" chrome)
-                    process-environment))
-            (let ((status (call-process mmdc nil buffer nil
-                                        "-i" input "-o" output "-b" "transparent")))
-              (and (integerp status) (zerop status))))
-          (if browse
-              (browse-url-of-file output)
-            (find-file-other-window output))
-        (pop-to-buffer buffer)
-        (user-error "mmdc failed")))))
-
-(defun td/markdown-mermaid-setup ()
-  "Set up Mermaid preview key for Markdown buffers."
-  (keymap-local-set "C-c C-x m" #'td/markdown-preview-mermaid-block))
-
-(add-hook 'markdown-ts-mode-hook #'td/markdown-mermaid-setup)
-(add-hook 'markdown-mode-hook #'td/markdown-mermaid-setup)
-(add-hook 'gfm-mode-hook #'td/markdown-mermaid-setup)
+(use-package markdown-preview-mode
+  :ensure nil
+  :hook ((markdown-ts-mode . markdown-preview-mode)
+         (markdown-mode . markdown-preview-mode)
+         (gfm-mode . markdown-preview-mode)))
 
 ;;;; Auto completion
 
@@ -1374,8 +1263,8 @@ With prefix argument BROWSE, open the SVG in the browser."
 ;; Some preferences that I set for all the theme. Per documentation, the custom
 ;; theme named =user= will always have the highest priority.
 
-;; (use-package prism
-;;   :hook (enable-theme-functions . prism-soften-theme-faces))
+(use-package prism
+  :hook (enable-theme-functions . prism-soften-theme-faces))
 
 (use-package pache-dark-theme
   :ensure t

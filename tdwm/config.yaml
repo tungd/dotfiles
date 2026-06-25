@@ -1,0 +1,82 @@
+workspaces:
+  - name: home
+    desktop: 1
+    layout: tile
+  - name: code
+    desktop: 2
+    layout: max
+  - name: web
+    desktop: 3
+    layout: max
+  - name: comm
+    desktop: 4
+    layout: tile
+  - name: misc
+    desktop: 5
+    layout: float
+hotkeys:
+  reload_config: Option-Shift-r
+border:
+  color: "#ff6a00"
+  width: 2
+rules:
+  - app: Ghostty
+    workspace: home
+    manage: true
+  - app: Emacs
+    workspace: code
+    manage: true
+  - app: Safari
+    workspace: web
+    manage: true
+  - app: Firefox
+    workspace: web
+    manage: true
+  - app: Google Chrome
+    workspace: web
+    manage: true
+  - app: Arc
+    workspace: web
+    manage: true
+  - app: Lark
+    workspace: comm
+    manage: true
+  - app: Microsoft Teams
+    workspace: comm
+    manage: true
+  - app: Slack
+    workspace: comm
+    manage: true
+  - app: Discord
+    workspace: comm
+    manage: true
+  - app: Telegram
+    workspace: comm
+    manage: true
+  - app: Messages
+    workspace: comm
+    manage: true
+  - app: Mail
+    workspace: comm
+    manage: true
+  - app: zoom.us
+    workspace: comm
+    manage: true
+  - app: Microsoft Word
+    workspace: misc
+    manage: false
+  - app: Microsoft Excel
+    workspace: misc
+    manage: false
+  - app: Microsoft PowerPoint
+    workspace: misc
+    manage: false
+  - app: Preview
+    workspace: misc
+    manage: false
+  - app: QuickTime Player
+    workspace: misc
+    manage: false
+  - app: Photos
+    workspace: misc
+    manage: false

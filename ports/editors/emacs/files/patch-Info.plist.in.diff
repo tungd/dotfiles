@@ -8,8 +8,6 @@
 +  <dict>
 +    <key>PATH</key>
 +    <string>@PATH@</string>
-+    <key>LIBRARY_PATH</key>
-+    <string>@LIBRARY_PATH@</string>
 +  </dict>
  </dict>
  </plist>
