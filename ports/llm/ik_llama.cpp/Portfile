@@ -5,10 +5,10 @@ PortGroup               github 1.0
 PortGroup               cmake 1.1
 PortGroup               legacysupport 1.1
 
-github.setup            ikawrakow ik_llama.cpp d47f484d299cafad2e606afc0d31677a91b242d0
+github.setup            ikawrakow ik_llama.cpp f96eaddba8bed6a9a5e628bbf6a566775c70b49c
 github.tarball_from     archive
-checksums               sha256  5c573682548ddd750f11f5784f75502a133521da6d3b5634ee96497d48e668d9
-version                 20260620
+checksums               sha256  c52c71d3425c4bd013b0cd6e3114c975ce31b904d8c86ff1585f8c061454f29c
+version                 20260628
 revision                0
 categories              llm
 maintainers             {TD @tungd} openmaintainer

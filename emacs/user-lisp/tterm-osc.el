@@ -8,11 +8,13 @@
     "Directory containing tterm OSC Lisp files."))
 
 (require 'cl-lib)
+(require 'subr-x)
 (require 'thingatpt)
 (require 'tterm-profiling (expand-file-name "tterm-profiling" tterm-osc--directory))
 
 (declare-function tterm-dashboard "tterm-dashboard" ())
 (declare-function tterm-cwd "tterm" (term))
+(declare-function tterm--header-attention-indicator "tterm" ())
 (declare-function tterm--shift-row "tterm-apply" (row))
 
 (defvar tterm--terminal)
@@ -54,39 +56,10 @@ Larger payloads are ignored."
   :type 'integer
   :group 'tterm)
 
-(defcustom tterm-notification-inbox-limit 200
-  "Maximum number of terminal notifications kept in `tterm-notification-inbox'."
-  :type 'integer
-  :group 'tterm)
-
-(defcustom tterm-notification-mode-line-right-align t
-  "Whether to use Emacs 30 right-aligned mode-line support when available."
-  :type 'boolean
-  :group 'tterm)
-
 (defface tterm-notification-mode-line
   '((t :inherit mode-line-emphasis))
-  "Face for the global tterm pending notification count."
+  "Face for tterm notification badges."
   :group 'tterm)
-
-(defvar tterm-notification-inbox nil
-  "Recent OSC 9/777 terminal notifications.
-Each entry is a plist with title, body, source, time, buffer, terminal id,
-window handle, and read state.")
-
-(defvar tterm--notification-next-id 0
-  "Next internal notification inbox id.")
-
-(defconst tterm--notification-mode-line-item
-  '(:eval (tterm-notification-mode-line-format))
-  "Mode-line item used for global tterm notification count.")
-
-(defvar tterm--notification-mode-line-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [mode-line mouse-1] #'tterm-notification-jump-next)
-    (define-key map [mode-line mouse-3] #'tterm-notification-open-dashboard)
-    map)
-  "Keymap for the global tterm notification mode-line count.")
 
 (defvar-local tterm--title nil
   "Latest terminal title for the current tterm buffer.")
@@ -95,217 +68,8 @@ window handle, and read state.")
   "Current OSC indicator state.
 One of `idle', `busy', `failed', or `unknown'.")
 
-(defun tterm-notification-unread-count ()
-  "Return the number of unread terminal notifications."
-  (cl-count-if (lambda (entry) (plist-get entry :unread))
-               tterm-notification-inbox))
-
-(defun tterm-notification-clear ()
-  "Clear tterm's terminal notification inbox."
-  (interactive)
-  (setq tterm-notification-inbox nil)
-  (force-mode-line-update t))
-
-(defun tterm-notification-open-dashboard ()
-  "Open `tterm-dashboard' from the global notification count."
-  (interactive)
-  (require 'tterm-dashboard (expand-file-name "tterm-dashboard" tterm-osc--directory))
-  (tterm-dashboard))
-
-(defun tterm--notification-live-buffer (entry)
-  "Return ENTRY's live tterm buffer, or nil."
-  (let ((buffer (plist-get entry :buffer)))
-    (when (and (buffer-live-p buffer)
-               (with-current-buffer buffer
-                 (eq major-mode 'tterm-mode)))
-      buffer)))
-
-(defun tterm--notification-unread-live-entries ()
-  "Return unread notification entries with live buffers, oldest first."
-  (nreverse
-   (cl-remove-if-not
-    (lambda (entry)
-      (and (plist-get entry :unread)
-           (tterm--notification-live-buffer entry)))
-    tterm-notification-inbox)))
-
-(defun tterm--notification-entry-for-buffer-p (entry buffer)
-  "Return non-nil when ENTRY belongs to BUFFER."
-  (eq (tterm--notification-live-buffer entry) buffer))
-
-(defun tterm--notification-mark-buffer-read (buffer)
-  "Mark unread notifications for BUFFER as read."
-  (let ((changed nil))
-    (setq tterm-notification-inbox
-          (mapcar
-           (lambda (entry)
-             (if (and (plist-get entry :unread)
-                      (tterm--notification-entry-for-buffer-p entry buffer))
-                 (progn
-                   (setq changed t)
-                   (plist-put (copy-sequence entry) :unread nil))
-               entry))
-           tterm-notification-inbox))
-    (when changed
-      (force-mode-line-update t))))
-
-(defun tterm-notification-jump-next ()
-  "Switch to the next live tterm buffer with unread notifications."
-  (interactive)
-  (let* ((entries (tterm--notification-unread-live-entries))
-         (current (current-buffer))
-         (entry (or (cl-find-if
-                     (lambda (candidate)
-                       (not (eq (tterm--notification-live-buffer candidate)
-                                current)))
-                     entries)
-                    (car entries)))
-         (buffer (and entry (tterm--notification-live-buffer entry))))
-    (cond
-     (buffer
-      (switch-to-buffer buffer)
-      (tterm--notification-mark-buffer-read buffer)
-      (message "tterm notification: %s"
-               (or (plist-get entry :title)
-                   (plist-get entry :body)
-                   (buffer-name buffer))))
-     ((tterm-notification-unread-count)
-      (tterm-notification-open-dashboard))
-     (t
-      (user-error "No unread tterm notifications")))))
-
-(defun tterm-notification-mode-line-format ()
-  "Return global mode-line text for pending terminal notifications."
-  (let ((count (tterm-notification-unread-count)))
-    (if (zerop count)
-        ""
-      (propertize
-       (format " tterm:%d" count)
-       'face (if (facep 'appt-notification)
-                 'appt-notification
-               'tterm-notification-mode-line)
-       'mouse-face 'mode-line-highlight
-       'help-echo "mouse-1: jump to unread tterm, mouse-3: dashboard"
-       'local-map tterm--notification-mode-line-map))))
-
-(defun tterm--notification-install-global-mode-line ()
-  "Install tterm's global notification count into `global-mode-string'."
-  (let* ((current (default-value 'global-mode-string))
-         (without-tterm
-          (cl-remove tterm--notification-mode-line-item current
-                     :test #'equal))
-         (right-align
-          (and (tterm--notification-mode-line-right-align-supported-p)
-               mode-line-format-right-align))
-         (with-align
-          (if (and right-align
-                   (not (member right-align without-tterm)))
-              (append without-tterm (list right-align))
-            without-tterm)))
-    (setq-default global-mode-string
-                  (append with-align
-                          (list tterm--notification-mode-line-item)))))
-
-(defun tterm--notification-mode-line-right-align-supported-p ()
-  "Return non-nil when Emacs supports right-aligned mode-line elements."
-  (and tterm-notification-mode-line-right-align
-       (boundp 'mode-line-format-right-align)))
-
-(defun tterm-notification-mode-line-uses-right-align-p ()
-  "Return non-nil when tterm can use Emacs 30 right-aligned mode-line support."
-  (tterm--notification-mode-line-right-align-supported-p))
-
-(defun tterm--notification-current-handle ()
-  "Return a stable-ish tmux handle for the current terminal buffer."
-  (when tterm--terminal
-    (or (tterm-handle tterm--terminal)
-        (let ((host (tterm-host tterm--terminal))
-              (window-id (tterm-window-id tterm--terminal))
-              (pane-id (tterm-pane-id tterm--terminal)))
-          (when (or window-id pane-id)
-            (list :host host
-                  :window-id window-id
-                  :pane-id pane-id))))))
-
-(defun tterm--notification-truncate-inbox ()
-  "Trim `tterm-notification-inbox' to `tterm-notification-inbox-limit'."
-  (when (and (integerp tterm-notification-inbox-limit)
-             (> tterm-notification-inbox-limit 0)
-             (> (length tterm-notification-inbox)
-                tterm-notification-inbox-limit))
-    (setq tterm-notification-inbox
-          (cl-subseq tterm-notification-inbox
-                     0 tterm-notification-inbox-limit))))
-
-(defun tterm--record-notification (title body source)
-  "Record accepted terminal notification TITLE and BODY from SOURCE."
-  (cl-incf tterm--notification-next-id)
-  (push (list :id tterm--notification-next-id
-              :title title
-              :body body
-              :source source
-              :time (current-time)
-              :buffer (current-buffer)
-              :buffer-name (buffer-name)
-              :terminal-id (and tterm--terminal (tterm-id tterm--terminal))
-              :handle (tterm--notification-current-handle)
-              :unread t)
-        tterm-notification-inbox)
-  (tterm--notification-truncate-inbox)
-  (force-mode-line-update t))
-
-(defun tterm--notification-handle-match-p (left right)
-  "Return non-nil when tmux handles LEFT and RIGHT identify the same window."
-  (and (listp left)
-       (listp right)
-       (or (and (plist-get left :window-id)
-                (equal (plist-get left :window-id)
-                       (plist-get right :window-id)))
-           (and (plist-get left :pane-id)
-                (equal (plist-get left :pane-id)
-                       (plist-get right :pane-id))))))
-
-(defun tterm--notification-entry-matches-window-p (entry window)
-  "Return non-nil when inbox ENTRY belongs to dashboard WINDOW."
-  (let ((entry-terminal-id (plist-get entry :terminal-id))
-        (window-terminal-id (plist-get window :terminal-id)))
-    (or (and entry-terminal-id
-             window-terminal-id
-             (= entry-terminal-id window-terminal-id))
-        (tterm--notification-handle-match-p
-         (plist-get entry :handle)
-         (plist-get window :handle)))))
-
-(defun tterm-notification-unread-count-for-window (window)
-  "Return unread terminal notification count for dashboard WINDOW plist."
-  (cl-count-if
-   (lambda (entry)
-     (and (plist-get entry :unread)
-          (tterm--notification-entry-matches-window-p entry window)))
-   tterm-notification-inbox))
-
-(defun tterm-notification-mark-snapshot-read (snapshot)
-  "Mark unread notifications represented in dashboard SNAPSHOT as read."
-  (let ((changed nil))
-    (setq tterm-notification-inbox
-          (mapcar
-           (lambda (entry)
-             (if (and (plist-get entry :unread)
-                      (cl-some
-                       (lambda (host)
-                         (cl-some
-                          (lambda (window)
-                            (tterm--notification-entry-matches-window-p
-                             entry window))
-                          (plist-get host :windows)))
-                       snapshot))
-                 (progn
-                   (setq changed t)
-                   (plist-put (copy-sequence entry) :unread nil))
-               entry))
-           tterm-notification-inbox))
-    (when changed
-      (force-mode-line-update t))))
+(defvar-local tterm--latest-notification nil
+  "Latest OSC 9/777 notification summary for the current buffer.")
 
 (defun tterm-osc-status (&optional buffer)
   "Return the latest OSC 133 status for BUFFER.
@@ -406,15 +170,7 @@ The final path component is kept intact.  For example,
 
 (defun tterm-buffer-title-default (cwd title)
   "Return the default tterm buffer name for CWD and TITLE."
-  (let ((cwd-str (if cwd (abbreviate-file-name (directory-file-name cwd)) "")))
-    (cond
-     ((and (not (string-empty-p title)) (not (string-empty-p cwd-str)))
-      (format "*tterm:%s: %s*" cwd-str title))
-     ((not (string-empty-p cwd-str))
-      (format "*tterm:%s*" cwd-str))
-     ((not (string-empty-p title))
-      (format "*tterm: %s*" title))
-     (t (buffer-name)))))
+  (format "*tterm:%s*" (tterm--short-title cwd title)))
 
 (defun tterm-buffer-title-collapse-parents (cwd title)
   "Return a tterm buffer name with collapsed parent directories.
@@ -450,6 +206,39 @@ For example, ~/Projects/personal/tterm becomes ~/P/p/tterm."
            (new-name (funcall tterm-buffer-title-function cwd title)))
       (unless (string= (buffer-name) new-name)
         (rename-buffer new-name t)))))
+
+(defun tterm--short-title (cwd title)
+  "Return compact tterm display title from CWD and TITLE."
+  (cond
+   ((and (stringp title) (not (string-empty-p title))) title)
+   ((and (stringp cwd) (not (string-empty-p cwd)))
+    (file-name-nondirectory (directory-file-name cwd)))
+   (t "shell")))
+
+(defun tterm-header-line-format ()
+  "Return concise header-line text for the current tterm buffer."
+  (when (and (boundp 'tterm--terminal) tterm--terminal)
+    (let* ((handle (tterm-handle tterm--terminal))
+           (host (or (and (listp handle) (plist-get handle :host))
+                     (tterm-host tterm--terminal)
+                     "local"))
+           (session (or (and (listp handle) (plist-get handle :session)) ""))
+           (cwd (or (tterm-cwd tterm--terminal) default-directory))
+           (title (tterm--short-title cwd (or tterm--title
+                                              (tterm-title tterm--terminal))))
+           (status (tterm-osc-status-string))
+           (notification tterm--latest-notification))
+      (string-join
+       (delq nil
+             (list
+              (if (string-empty-p session) host (format "%s:%s" host session))
+              title
+              (unless (string-empty-p status) (format "[%s]" status))
+              (and cwd (abbreviate-file-name (directory-file-name cwd)))
+              (and notification (format "notify: %s" notification))
+              (and (fboundp 'tterm--header-attention-indicator)
+                   (tterm--header-attention-indicator))))
+       "  "))))
 
 (defun tterm--set-cwd (data)
   "Update terminal current directory from OSC 7 DATA."
@@ -709,7 +498,11 @@ the leading decimal digits followed by a semicolon."
   (when (and (stringp body)
              (not (string-empty-p body))
              (<= (string-bytes body) tterm-notification-max-bytes))
-    (tterm--record-notification title body source)
+    (setq-local tterm--latest-notification
+                (if (and title (not (string-empty-p title)))
+                    (format "%s: %s" title body)
+                  body))
+    (force-mode-line-update)
     (run-hook-with-args 'tterm-notification-hook title body)))
 
 (defun tterm--handle-osc-9 (payload)
@@ -767,8 +560,6 @@ the leading decimal digits followed by a semicolon."
           (777 (tterm--handle-osc-777 data))
           (_ nil)))
     (tterm--handle-osc (aref op 1))))
-
-(tterm--notification-install-global-mode-line)
 
 (provide 'tterm-osc)
 

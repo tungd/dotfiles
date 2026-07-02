@@ -1,13 +1,18 @@
 --- nextstep/templates/Info.plist.in.orig	2020-05-26 00:33:36.000000000 -0700
 +++ nextstep/templates/Info.plist.in	2020-05-26 00:34:48.000000000 -0700
-@@ -685,5 +685,12 @@
-         <string>Emacs requires permission to access the Downloads folder.</string>
-         <key>NSRemovableVolumesUsageDescription</key>
-         <string>Emacs requires permission to access files on Removable Volumes.</string>
-+  <key>LSEnvironment</key>
-+  <dict>
-+    <key>PATH</key>
-+    <string>@PATH@</string>
-+  </dict>
+@@ -696,10 +696,15 @@
+         <key>NSSpeechRecognitionUsageDescription</key>
+         <string>Emacs requires permission to handle any speech recognition.</string>
+ 	<!-- Prevent macOS 26 (Tahoe) and later from spawning an
+ 	     "AutoFill (Emacs)" helper process that heuristically scans
+ 	     text fields for one-time codes; Emacs never marks fields as
+ 	     one-time-code, so the helper is pure overhead.  -->
+ 	<key>NSAutoFillRequiresTextContentTypeForOneTimeCodeOnMac</key>
+ 	<true/>
++	<key>LSEnvironment</key>
++	<dict>
++		<key>PATH</key>
++		<string>@PATH@</string>
++	</dict>
  </dict>
  </plist>

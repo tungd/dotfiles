@@ -80,3 +80,10 @@ rules:
   - app: Photos
     workspace: misc
     manage: false
+
+menubar:
+  hider:
+    enabled: true
+    initially_collapsed: true
+    trigger_label: "..."
+    auto_hide_seconds: 0

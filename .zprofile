@@ -11,7 +11,7 @@ export PGUSER=postgres
 export PATH=$HOME/.local/sbin:$HOME/.local/bin:$PATH
 export PATH=$HOME/Projects/dotfiles/bin:$PATH
 export PNPM_HOME="/Users/tung/Library/pnpm"
-export PATH="$PNPM_HOME:$PATH"
+export PATH="$PNPM_HOME/bin:$PATH"
 export PATH="$HOME/.claude/local:$PATH"
 # Added by Antigravity CLI installer
 export PATH="/Users/tung/.local/bin:$PATH"

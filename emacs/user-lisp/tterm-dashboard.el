@@ -138,6 +138,9 @@ Used to detect changes and avoid unnecessary point moves.")
                   (notification (unless (string-empty-p notification)
                                   notification))
                   (identity (car rest))
+                  (unread (or (tterm-dashboard--number-or-nil
+                               (or (cadr rest) ""))
+                              0))
                   (handle (tterm-dashboard--make-handle
                            host namespace socket session window-id pane-id
                            identity))
@@ -151,10 +154,8 @@ Used to detect changes and avoid unnecessary point moves.")
                                 :cwd cwd
                                 :attached attached
                                 :status status
-                                :notification notification)))
-             (plist-put window
-                        :unread-notifications
-                        (tterm-notification-unread-count-for-window window))
+                                :notification notification
+                                :unread-notifications unread)))
              (plist-put entry :session session)
              (plist-put entry :socket socket)
              (plist-put entry :windows
@@ -337,6 +338,34 @@ Return non-nil when such a row exists."
                                   (tterm-dashboard--escape-field identity))))))
     (mapconcat #'identity lines "\n")))
 
+(defun tterm-dashboard--encode-mark-read-payload (handle &optional terminal-id)
+  "Encode HANDLE and optional TERMINAL-ID for mark-read."
+  (let ((lines nil))
+    (when terminal-id
+      (push (format "terminal-id\t%d" terminal-id) lines))
+    (when (listp handle)
+      (dolist (entry '(("host" . :host)
+                       ("namespace" . :namespace)
+                       ("socket" . :socket)
+                       ("session" . :session)
+                       ("window" . :window-id)
+                       ("pane" . :pane-id)
+                       ("identity" . :identity)))
+        (when-let* ((value (plist-get handle (cdr entry))))
+          (push (format "%s\t%s"
+                        (car entry)
+                        (tterm-dashboard--escape-field value))
+                lines))))
+    (mapconcat #'identity (nreverse lines) "\n")))
+
+(defun tterm-dashboard--mark-read (handle &optional terminal-id)
+  "Clear backend unread state for HANDLE or TERMINAL-ID."
+  (ignore-errors
+    (tterm-bridge-command
+     (or terminal-id 0)
+     "mark-read"
+     (tterm-dashboard--encode-mark-read-payload handle terminal-id))))
+
 (defun tterm-dashboard--decode-reattach-response (text)
   "Decode reattach-window response TEXT."
   (let* ((text (tterm-dashboard--decode-command-text text))
@@ -395,7 +424,9 @@ reattaching, instead of switching to it synchronously."
 When the window is detached, reattach asynchronously."
   (let ((buffer (tterm-dashboard--buffer-for-terminal-id terminal-id)))
     (if buffer
-        (switch-to-buffer buffer)
+        (progn
+          (tterm-dashboard--mark-read handle terminal-id)
+          (switch-to-buffer buffer))
       (tterm-dashboard--reattach-window handle))))
 
 (defun tterm-dashboard-select ()
@@ -560,7 +591,6 @@ With COUNT, move that many rows."
               (add-text-properties empty-start (point)
                                    (list 'tterm-host host-name)))))
         (insert "\n"))))
-  (tterm-notification-mark-snapshot-read snapshot)
   (goto-char (or (tterm-dashboard--window-position-at-or-after (point-min))
                  (point-min))))
 
@@ -589,9 +619,7 @@ is already in progress."
              (let ((snapshot (tterm-dashboard--decode result)))
                (if (equal snapshot tterm-dashboard--last-snapshot)
                    ;; No change: just clear the in-progress flag
-                   (progn
-                     (tterm-notification-mark-snapshot-read snapshot)
-                     (setq tterm-dashboard--refresh-in-progress nil))
+                   (setq tterm-dashboard--refresh-in-progress nil)
                  ;; Data changed: render and restore position
                  (setq tterm-dashboard--last-snapshot snapshot)
                  (tterm-dashboard--render snapshot)

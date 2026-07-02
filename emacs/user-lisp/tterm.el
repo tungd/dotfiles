@@ -41,6 +41,11 @@ while the buffer was hidden or inactive."
   :type 'number
   :group 'tterm)
 
+(defcustom tterm-attention-refresh-interval 2.0
+  "Seconds between backend unread-notification polls while tterm buffers exist."
+  :type 'number
+  :group 'tterm)
+
 (defcustom tterm-wheel-scroll-lines 3
   "Number of terminal scrollback lines to move per mouse wheel event."
   :type 'integer
@@ -162,11 +167,26 @@ Only `normal` is valid while copy mode is inactive.")
   (let ((map (make-sparse-keymap)))
     (define-key map [mode-line mouse-1] #'tterm-toggle-copy-mode)
     map)
-  "Keymap for tterm's compact mode-line input-mode button.")
+  "Keymap for tterm's compact mode-line mode lighter.")
 
 (define-key tterm--mode-line-input-map
             [mode-line mouse-1]
             #'tterm-toggle-copy-mode)
+
+(defvar tterm--attention-refresh-timer nil
+  "Timer that refreshes global tterm attention state.")
+
+(defvar tterm--attention-unread-total 0
+  "Total unread terminal notifications across backend windows.")
+
+(defvar tterm--attention-windows nil
+  "Dashboard window plists with unread terminal notifications.")
+
+(defvar tterm--attention-mode-line-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mode-line mouse-1] #'tterm-jump-next-notification)
+    map)
+  "Mode-line keymap for tterm attention indicator.")
 
 (defun tterm--buffers ()
   "Return live buffers currently using `tterm-mode'."
@@ -608,6 +628,141 @@ Returns [BASE_VERSION TARGET_VERSION RESET OPS]."
       (decode-coding-string text 'utf-8 t)
     text))
 
+;;; Cross-pane attention
+
+(declare-function tterm-dashboard--decode "tterm-dashboard" (text))
+(declare-function tterm-dashboard-select-window
+                  "tterm-dashboard" (handle &optional terminal-id))
+
+(defun tterm--attention-window-unread-p (window)
+  "Return non-nil when dashboard WINDOW has unread notifications."
+  (> (or (plist-get window :unread-notifications) 0) 0))
+
+(defun tterm--attention-windows-from-snapshot (snapshot)
+  "Return unread dashboard windows from decoded SNAPSHOT."
+  (let (windows)
+    (dolist (group snapshot)
+      (dolist (window (plist-get group :windows))
+        (when (tterm--attention-window-unread-p window)
+          (push window windows))))
+    (nreverse windows)))
+
+(defun tterm--attention-apply-snapshot (snapshot)
+  "Update cached attention state from decoded dashboard SNAPSHOT."
+  (setq tterm--attention-windows
+        (tterm--attention-windows-from-snapshot snapshot))
+  (setq tterm--attention-unread-total
+        (apply #'+
+               (mapcar (lambda (window)
+                         (or (plist-get window :unread-notifications) 0))
+                       tterm--attention-windows)))
+  (force-mode-line-update t))
+
+(defun tterm--attention-stop-timer ()
+  "Stop the attention refresh timer and clear cached state."
+  (when (timerp tterm--attention-refresh-timer)
+    (cancel-timer tterm--attention-refresh-timer))
+  (setq tterm--attention-refresh-timer nil)
+  (setq tterm--attention-unread-total 0)
+  (setq tterm--attention-windows nil)
+  (force-mode-line-update t))
+
+(defun tterm--attention-refresh ()
+  "Refresh cached attention state from lightweight backend output."
+  (if (null (tterm--buffers))
+      (tterm--attention-stop-timer)
+    (condition-case nil
+        (progn
+          (require 'tterm-dashboard)
+          (tterm--attention-apply-snapshot
+           (tterm-dashboard--decode (tterm-bridge-command 0 "attention" ""))))
+      (error nil))))
+
+(defun tterm--attention-ensure-timer ()
+  "Ensure the attention refresh timer is running."
+  (unless (timerp tterm--attention-refresh-timer)
+    (setq tterm--attention-refresh-timer
+          (run-at-time 0 tterm-attention-refresh-interval
+                       #'tterm--attention-refresh))))
+
+(defun tterm--attention-maybe-stop-later ()
+  "Stop attention polling after the last tterm buffer is gone."
+  (run-at-time 0 nil
+               (lambda ()
+                 (unless (tterm--buffers)
+                   (tterm--attention-stop-timer)))))
+
+(defun tterm--attention-setup-buffer ()
+  "Set up global attention polling for a tterm buffer."
+  (when (and (boundp 'tterm--terminal) tterm--terminal)
+    (tterm--attention-ensure-timer))
+  (add-hook 'kill-buffer-hook #'tterm--attention-maybe-stop-later nil t))
+
+(defun tterm--attention-current-window-p (window)
+  "Return non-nil when dashboard WINDOW is the current tterm buffer."
+  (and (boundp 'tterm--terminal)
+       tterm--terminal
+       (or (and (plist-get window :terminal-id)
+                (= (plist-get window :terminal-id)
+                   (tterm-id tterm--terminal)))
+           (and (tterm-handle tterm--terminal)
+                (equal (plist-get window :handle)
+                       (tterm-handle tterm--terminal))))))
+
+(defun tterm--attention-target-window ()
+  "Return the unread dashboard window to jump to."
+  (or (cl-find-if-not #'tterm--attention-current-window-p
+                      tterm--attention-windows)
+      (car tterm--attention-windows)))
+
+(defun tterm--attention-window-summary (window)
+  "Return a concise display summary for unread dashboard WINDOW."
+  (let ((name (or (plist-get window :name)
+                  (plist-get window :window-id)
+                  "tterm"))
+        (notification (plist-get window :notification)))
+    (if (and notification (not (string-empty-p notification)))
+        (format "%s: %s" name notification)
+      name)))
+
+(defun tterm--mode-line-attention-indicator ()
+  "Return mode-line text for global tterm unread attention."
+  (if (<= tterm--attention-unread-total 0)
+      ""
+    (let ((text (format " [🔔:%d]" tterm--attention-unread-total)))
+      (add-text-properties
+       0 (length text)
+       `(face tterm-notification-mode-line
+         local-map ,tterm--attention-mode-line-map
+         mouse-face mode-line-highlight
+         help-echo "mouse-1 or C-c C-n: jump to tterm notification")
+       text)
+      text)))
+
+(defun tterm--header-attention-indicator ()
+  "Return header-line text for global tterm unread attention."
+  (when (> tterm--attention-unread-total 0)
+    (let ((summary (and tterm--attention-windows
+                        (tterm--attention-window-summary
+                         (car tterm--attention-windows)))))
+      (if summary
+          (format "attention: %s" summary)
+        (format "attention: %d" tterm--attention-unread-total)))))
+
+;;;###autoload
+(defun tterm-jump-next-notification ()
+  "Jump to the next tterm pane with unread terminal notifications."
+  (interactive)
+  (tterm--attention-refresh)
+  (let ((window (tterm--attention-target-window)))
+    (unless window
+      (user-error "No unread tterm notifications"))
+    (require 'tterm-dashboard)
+    (tterm-dashboard-select-window
+     (plist-get window :handle)
+     (plist-get window :terminal-id))
+    (run-at-time 0.5 nil #'tterm--attention-refresh)))
+
 (defun tterm--escape-field (value)
   "Escape one tab-separated bridge field VALUE."
   (let ((index 0)
@@ -843,6 +998,7 @@ When NO-SELECT is non-nil, do not select the restored buffer."
 (require 'tterm-apply (expand-file-name "tterm-apply" tterm--directory))
 (require 'tterm-mode (expand-file-name "tterm-mode" tterm--directory))
 (add-hook 'tterm-mode-hook #'tterm--setup-desktop-save)
+(add-hook 'tterm-mode-hook #'tterm--attention-setup-buffer)
 
 (defun tterm--attach-terminal-buffer
     (id rows cols host cwd &optional window-id pane-id title no-select handle)
@@ -869,7 +1025,8 @@ When NO-SELECT is non-nil, do not select the buffer."
       (setq-local tterm--title title)
       (setq-local default-directory cwd)
       (tterm--initialize-screen rows cols)
-      (tterm--update-buffer-name))
+      (tterm--update-buffer-name)
+      (tterm--attention-setup-buffer))
     (unless no-select
       (switch-to-buffer buf))
     (with-current-buffer buf

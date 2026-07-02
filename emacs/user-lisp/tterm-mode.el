@@ -51,10 +51,13 @@
 (declare-function tterm--effective-fontset-fallbacks "tterm" ())
 (declare-function tterm--fontset-fallback-install-order "tterm" (fallbacks))
 (declare-function tterm--initialize-screen "tterm-apply" (rows cols))
+(declare-function tterm--mode-line-attention-indicator "tterm" ())
+(declare-function tterm-header-line-format "tterm-osc" ())
 (declare-function tterm--mode-line-osc-indicator "tterm-osc" ())
 (declare-function tterm--pull-apply-plan-ops "tterm" (id displayed-version))
 (declare-function tterm--resize "tterm" (id rows cols))
 (declare-function tterm--sync-point-to-cursor "tterm-apply" ())
+(declare-function tterm-jump-next-notification "tterm" ())
 
 ;;; Redraw polling
 
@@ -62,7 +65,7 @@
   "Immediately pull pending apply ops and apply them to the current buffer.
 Return non-nil when the pull found terminal changes."
   (let ((term tterm--terminal))
-    (when term
+    (when (and term (not tterm--copy-mode))
       (let* ((displayed-version (or (tterm-displayed-version term) 0))
              (response (tterm--pull-apply-plan-ops
                         (tterm-id term)
@@ -74,7 +77,7 @@ Return non-nil when the pull found terminal changes."
              (changed (or reset
                           (/= target-version displayed-version)
                           ops)))
-        (when (and reset (not tterm--copy-mode))
+        (when reset
           (tterm--initialize-screen (tterm-rows term) (tterm-cols term)))
         (when ops
           (tterm--apply-op-data (tterm-id term) ops))
@@ -103,22 +106,24 @@ When FORCE is nil, throttle requests by
 
 (defun tterm--redraw-now-full ()
   "Redraw, using tmux capture-pane as an idle resync fallback."
-  (let ((changed (tterm--redraw-now)))
-    (if changed
-        changed
-      (when (tterm--request-capture-refresh)
-        (or (tterm--redraw-now) t)))))
+  (if tterm--copy-mode
+      nil
+    (let ((changed (tterm--redraw-now)))
+      (if changed
+          changed
+        (when (tterm--request-capture-refresh)
+          (or (tterm--redraw-now) t))))))
 
 (defun tterm--redraw-latest-snapshot ()
   "Force a full repaint from the latest backend terminal snapshot."
   (let ((term tterm--terminal))
-    (when term
+    (when (and term (not tterm--copy-mode))
       (tterm--preserve-window-starts-or-tail
         (tterm--request-capture-refresh t)
         (let* ((response (tterm--pull-apply-plan-ops (tterm-id term) -1))
                (target-version (aref response 1))
                (ops (aref response 3)))
-          (unless tterm--copy-mode
+          (when (or (aref response 2) ops)
             (tterm--initialize-screen (tterm-rows term) (tterm-cols term)))
           (when ops
             (tterm--apply-op-data (tterm-id term) ops))
@@ -158,6 +163,7 @@ Buffers in copy mode are left untouched."
 (defun tterm--redraw-active-p ()
   "Return non-nil when the current tterm buffer should poll for redraws."
   (and tterm--terminal
+       (not tterm--copy-mode)
        (let ((window (get-buffer-window (current-buffer) t)))
          (and window
               (or (not (display-graphic-p (window-frame window)))
@@ -429,20 +435,23 @@ Buffers in copy mode are left untouched."
     ('normal (propertize "N" 'face 'tterm-mode-line-normal))
     (_ (propertize "?" 'face 'shadow))))
 
-(defun tterm--mode-line-input-state ()
-  "Return an `mode-line-format' element for the current input mode."
-  (let ((block (concat
-                " ["
-                (tterm--mode-line-mode-letter)
-                "]")))
+(defun tterm--mode-line-mode-name ()
+  "Return the tterm mode lighter with compact input-mode state."
+  (let ((text (concat "tterm[" (tterm--mode-line-mode-letter) "]")))
     (add-text-properties
-     0 (length block)
+     0 (length text)
      `(local-map ,tterm--mode-line-input-map
        mouse-face mode-line-highlight
        help-echo "mouse-1: toggle tterm copy mode")
-     block)
-    (concat block
-            (tterm--mode-line-osc-indicator))))
+     text)
+    text))
+
+(defun tterm--mode-line-input-state ()
+  "Return extra tterm state for `mode-line-format'."
+  (concat (tterm--mode-line-osc-indicator)
+          (if (fboundp 'tterm--mode-line-attention-indicator)
+              (tterm--mode-line-attention-indicator)
+            "")))
 
 (defun tterm--set-local-map-for-mode ()
   "Set the local keymap based on copy/input mode state."
@@ -465,9 +474,12 @@ Buffers in copy mode are left untouched."
     (user-error "Not in a tterm buffer"))
   (when tterm--copy-mode
     (tterm--restore-copy-mode-display)
+    (setq-local tterm--copy-mode nil)
+    (tterm--redraw-latest-snapshot)
     (tterm--show-copy-mode-live-screen tterm--cursor-row tterm--cursor-col))
   (setq-local tterm--copy-mode nil)
   (setq-local buffer-read-only t)
+  (tterm--start-redraw-timer)
   (tterm--set-input-mode 'normal))
 
 ;;; Resize handling
@@ -720,6 +732,7 @@ Return non-nil when a resize was sent."
     (define-key map (kbd "s-v") #'tterm--paste)
     (define-key map [paste] #'tterm--paste)
     (define-key map (kbd "<delete>") #'tterm--delete)
+    (define-key map [backtab] (lambda () (interactive) (tterm--send-special-key 'backtab)))
     (define-key map (kbd "<up>") (lambda () (interactive) (tterm--send-special-key 'up)))
     (define-key map (kbd "<down>") (lambda () (interactive) (tterm--send-special-key 'down)))
     (define-key map (kbd "<right>") (lambda () (interactive) (tterm--send-special-key 'right)))
@@ -758,7 +771,6 @@ Return non-nil when a resize was sent."
     (define-key map (kbd "C-c C-c") #'tterm-send-interrupt)
     (define-key map (kbd "C-c C-f") #'tterm-send-file)
     (define-key map (kbd "C-d") #'tterm-send-eof)
-    (define-key map (kbd "C-l") #'tterm-redraw)
     (define-key map (kbd "C-c C-v") #'tterm-paste-clipboard-media)
     (define-key map (kbd "C-c C-o") #'tterm-open-hyperlink)
 
@@ -773,11 +785,13 @@ Return non-nil when a resize was sent."
 ;; Keep reloads from leaving existing sessions on stale global editing bindings.
 (define-key tterm-mode-map (kbd "C-<backspace>") #'tterm--backward-kill-word)
 (define-key tterm-mode-map (kbd "C-DEL") #'tterm--backward-kill-word)
+(define-key tterm-mode-map [backtab] (lambda () (interactive) (tterm--send-special-key 'backtab)))
 (define-key tterm-mode-map (kbd "C-j") (tterm--control-key-command "J"))
 (define-key tterm-mode-map (kbd "C-c C-f") #'tterm-send-file)
+(define-key tterm-mode-map (kbd "C-c C-n") #'tterm-jump-next-notification)
 (define-key tterm-mode-map (kbd "C-c C-v") #'tterm-paste-clipboard-media)
 (define-key tterm-mode-map (kbd "C-d") #'tterm-send-eof)
-(define-key tterm-mode-map (kbd "C-l") #'tterm-redraw)
+(define-key tterm-mode-map (kbd "C-l") (tterm--control-key-command "L"))
 (define-key tterm-mode-map [remap scroll-down-command] #'tterm--scrollback-command-up)
 (define-key tterm-mode-map [remap scroll-up-command] #'tterm--scrollback-command-down)
 (define-key tterm-mode-map [double-wheel-up] #'tterm--wheel-up)
@@ -871,6 +885,8 @@ Return non-nil when a resize was sent."
   (when (boundp 'bidi-inhibit-bpa)
     (setq-local bidi-inhibit-bpa t))
   (setq-local show-trailing-whitespace nil)
+  (setq-local header-line-format '(:eval (tterm-header-line-format)))
+  (setq-local mode-name '(:eval (tterm--mode-line-mode-name)))
   (setq-local mode-line-misc-info
               (cons '(:eval (tterm--mode-line-input-state))
                     (default-value 'mode-line-misc-info)))

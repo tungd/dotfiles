@@ -45,6 +45,7 @@
     (end . "\e[F")
     (insert . "\e[2~")
     (delete . "\e[3~")
+    (backtab . "\e[Z")
     (prior . "\e[5~")
     (next . "\e[6~")
     (f1 . "\eOP")
