@@ -174,6 +174,20 @@ without prompting."
                         tterm-state-file)))
     (expand-file-name path)))
 
+(defun tterm-bridge--osc-color (color fallback)
+  "Return COLOR as an OSC rgb payload component, falling back to FALLBACK."
+  (when-let* ((values (or (and (stringp color)
+                               (ignore-errors (color-values color)))
+                          (and (stringp fallback)
+                               (ignore-errors (color-values fallback))))))
+    (format "%04x/%04x/%04x"
+            (nth 0 values) (nth 1 values) (nth 2 values))))
+
+(defun tterm-bridge--default-osc-color (attribute fallback)
+  "Return default face ATTRIBUTE as an OSC rgb payload component."
+  (let ((color (face-attribute 'default attribute nil 'default)))
+    (tterm-bridge--osc-color color fallback)))
+
 (defun tterm-bridge--ensure-state-file (state-file)
   "Ensure STATE-FILE's directory exists and migrate legacy state if needed."
   (when (and state-file (not (string-empty-p state-file)))
@@ -196,6 +210,10 @@ without prompting."
          (path (getenv "PATH"))
          (namespace (getenv "TTERM_TMUX_NAMESPACE"))
          (state-file (tterm-bridge--state-file))
+         (default-foreground
+          (tterm-bridge--default-osc-color :foreground "white"))
+         (default-background
+          (tterm-bridge--default-osc-color :background "black"))
          (lines
           (delq nil
                 (list
@@ -214,7 +232,13 @@ without prompting."
                       (progn
                         (tterm-bridge--ensure-state-file state-file)
                         state-file)
-                      (concat "state-file\t" state-file))))))
+                      (concat "state-file\t" state-file))
+                 (and default-foreground
+                      (concat "default-color\tforeground\t"
+                              default-foreground))
+                 (and default-background
+                      (concat "default-color\tbackground\t"
+                              default-background))))))
     (when (and (or (null host) (string= host "local"))
                (not tmux-program))
       (user-error "tmux executable not found in exec-path or PATH"))
@@ -228,6 +252,10 @@ without prompting."
         (tterm-module--command 0 "configure-runtime" payload)
         (setq tterm-bridge--runtime-configured-p t)))))
 
+(defun tterm-bridge-mark-runtime-config-dirty ()
+  "Force the next bridge command to refresh runtime config."
+  (setq tterm-bridge--runtime-configured-p nil))
+
 (defun tterm-bridge-connect (rows cols host cwd)
   "Connect to a tmux-backed terminal with ROWS, COLS, HOST, and CWD."
   (tterm-bridge-ensure-module)
@@ -237,7 +265,8 @@ without prompting."
 (defun tterm-bridge-command (id command &optional payload)
   "Send COMMAND with PAYLOAD to terminal ID."
   (tterm-bridge-ensure-module)
-  (tterm-bridge-configure-runtime "local" (string= command "dashboard"))
+  (tterm-bridge-configure-runtime
+   "local" (member command '("dashboard" "dashboard-local" "dashboard-cached")))
   (tterm-module--command id command (or payload "")))
 
 (defun tterm-bridge-command-async (id command payload callback)

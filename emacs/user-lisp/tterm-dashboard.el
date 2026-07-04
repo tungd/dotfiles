@@ -187,7 +187,7 @@ Used to detect changes and avoid unnecessary point moves.")
              (tterm-dashboard--visible-p buffer))
     (with-current-buffer buffer
       (when (derived-mode-p 'tterm-dashboard-mode)
-        (tterm-dashboard--refresh-async)))))
+        (tterm-dashboard--refresh-async t)))))
 
 (defun tterm-dashboard--frame-visible-p ()
   "Return non-nil when any frame is visible (not minimized/iconified)."
@@ -594,10 +594,11 @@ With COUNT, move that many rows."
   (goto-char (or (tterm-dashboard--window-position-at-or-after (point-min))
                  (point-min))))
 
-(defun tterm-dashboard--refresh-async ()
+(defun tterm-dashboard--refresh-async (&optional local-only)
   "Start an async dashboard refresh.
 When called interactively, prefix arg forces a new refresh even if one
-is already in progress."
+is already in progress.
+When LOCAL-ONLY is non-nil, discover local tmux windows but skip remote SSH."
   (interactive)
   (when (and tterm-dashboard--refresh-in-progress current-prefix-arg)
     (setq tterm-dashboard--refresh-in-progress nil))
@@ -608,7 +609,7 @@ is already in progress."
         (tterm-dashboard--window-handle-at-point))
   (let ((buffer (current-buffer)))
     (tterm-bridge-command-async
-     0 "dashboard" ""
+     0 (if local-only "dashboard-local" "dashboard") ""
      (lambda (result error-p)
        (when (buffer-live-p buffer)
          (with-current-buffer buffer
@@ -630,12 +631,12 @@ is already in progress."
                  (setq tterm-dashboard--refresh-in-progress nil))))))))))
 
 ;;;###autoload
-(defun tterm-dashboard-refresh ()
+(defun tterm-dashboard-refresh (&optional full)
   "Refresh the tterm dashboard buffer."
-  (interactive)
+  (interactive (list t))
   (unless (derived-mode-p 'tterm-dashboard-mode)
     (tterm-dashboard-mode))
-  (tterm-dashboard--refresh-async))
+  (tterm-dashboard--refresh-async (not full)))
 
 ;;;###autoload
 (defun tterm-dashboard ()

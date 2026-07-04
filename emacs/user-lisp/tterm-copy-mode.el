@@ -345,6 +345,10 @@ When nil, fetch up to `tterm-buffer-size'."
       (deactivate-mark)
     (tterm-normal-mode)))
 
+(defun tterm--copy-mode-trim-line-padding (text)
+  "Trim terminal padding whitespace before line ends in TEXT."
+  (replace-regexp-in-string "[ \t]+\\(\n\\|\\'\\)" "\\1" text nil nil))
+
 (defun tterm-copy-mode-kill-ring-save ()
   "Copy the active region, then deselect it without editing the terminal."
   (interactive)
@@ -352,7 +356,11 @@ When nil, fetch up to `tterm-buffer-size'."
     (user-error "Not in a tterm buffer"))
   (unless tterm--copy-mode
     (user-error "Not in copy mode"))
-  (call-interactively #'kill-ring-save)
+  (unless (use-region-p)
+    (user-error "The mark is not active now"))
+  (kill-new
+   (tterm--copy-mode-trim-line-padding
+    (buffer-substring-no-properties (region-beginning) (region-end))))
   (deactivate-mark))
 
 (defun tterm-copy-mode-end-of-visible-line ()

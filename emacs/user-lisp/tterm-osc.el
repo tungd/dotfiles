@@ -14,6 +14,7 @@
 
 (declare-function tterm-dashboard "tterm-dashboard" ())
 (declare-function tterm-cwd "tterm" (term))
+(declare-function tterm-set-cwd "tterm" (term value))
 (declare-function tterm--header-attention-indicator "tterm" ())
 (declare-function tterm--shift-row "tterm-apply" (row))
 
@@ -248,7 +249,7 @@ For example, ~/Projects/personal/tterm becomes ~/P/p/tterm."
                          (file-name-as-directory (expand-file-name path)))))
     (when directory
       (when tterm--terminal
-        (setf (tterm-cwd tterm--terminal) directory))
+        (tterm-set-cwd tterm--terminal directory))
       (when (file-directory-p directory)
         (setq-local default-directory directory))
       (tterm--update-buffer-name))))

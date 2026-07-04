@@ -133,6 +133,10 @@ belongs in `tterm-fontset-fallbacks'."
   "Set TERM alternate-screen mode to VALUE."
   (setf (tterm-alt-screen term) value))
 
+(defun tterm-set-cwd (term value)
+  "Set TERM current working directory to VALUE."
+  (setf (tterm-cwd term) value))
+
 (defvar-local desktop-save-buffer nil)
 
 (defvar-local tterm--terminal nil
@@ -168,10 +172,6 @@ Only `normal` is valid while copy mode is inactive.")
     (define-key map [mode-line mouse-1] #'tterm-toggle-copy-mode)
     map)
   "Keymap for tterm's compact mode-line mode lighter.")
-
-(define-key tterm--mode-line-input-map
-            [mode-line mouse-1]
-            #'tterm-toggle-copy-mode)
 
 (defvar tterm--attention-refresh-timer nil
   "Timer that refreshes global tterm attention state.")
@@ -262,7 +262,7 @@ Only `normal` is valid while copy mode is inactive.")
 (tterm--declare-terminal-color-faces)
 
 (defface tterm-default
-  '((t :inherit tterm-fg-white :background "#000000"))
+  '((t :inherit default))
   "Default face for terminal cells without explicit SGR colors."
   :group 'tterm)
 
@@ -295,13 +295,21 @@ ATTRIBUTE should be either `:foreground' or `:background'."
         (tterm--face-color face fallback)
         (tterm--xterm-256-color index))))
 
+(defun tterm--default-color-name (attribute fallback-index)
+  "Return terminal default color for ATTRIBUTE with FALLBACK-INDEX."
+  (or (tterm--face-color 'default attribute)
+      (tterm--palette-color-name fallback-index attribute)
+      'unspecified))
+
 (defun tterm--update-terminal-color-faces (&rest _)
   "Refresh tterm terminal color faces from Emacs terminal palette faces."
   (dotimes (index (length tterm--ansi-color-face-suffixes))
     (let ((fg-face (tterm--palette-face index :foreground))
           (bg-face (tterm--palette-face index :background))
           (fg-color (tterm--palette-color-name index :foreground))
-          (bg-color (tterm--palette-color-name index :background)))
+          (bg-color (if (zerop index)
+                        (tterm--default-color-name :background 0)
+                      (tterm--palette-color-name index :background))))
       (when fg-face
         (set-face-attribute fg-face nil
                             :foreground (or fg-color 'unspecified)
@@ -311,9 +319,10 @@ ATTRIBUTE should be either `:foreground' or `:background'."
                             :foreground 'unspecified
                             :background (or bg-color 'unspecified)))))
   (set-face-attribute 'tterm-default nil
-                      :foreground (or (tterm--palette-color-name 7 :foreground)
-                                      'unspecified)
-                      :background "#000000"))
+                      :foreground (tterm--default-color-name :foreground 7)
+                      :background (tterm--default-color-name :background 0))
+  (when (fboundp 'tterm-bridge-mark-runtime-config-dirty)
+    (tterm-bridge-mark-runtime-config-dirty)))
 
 (tterm--update-terminal-color-faces)
 (add-hook 'after-init-hook #'tterm--update-terminal-color-faces t)

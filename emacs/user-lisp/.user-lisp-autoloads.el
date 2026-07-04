@@ -322,6 +322,8 @@ disabled.
 
 ;;; Generated autoloads from tterm.el
 
+(autoload 'tterm-jump-next-notification "tterm"
+"Jump to the next tterm pane with unread terminal notifications." t)
 (autoload 'tterm "tterm"
 "Create a new tmux-backed tterm terminal.
 With prefix REMOTE, prompt for an SSH host.
@@ -356,7 +358,9 @@ With prefix REMOTE, prompt for an SSH host.
 ;;; Generated autoloads from tterm-dashboard.el
 
 (autoload 'tterm-dashboard-refresh "tterm-dashboard"
-"Refresh the tterm dashboard buffer." t)
+"Refresh the tterm dashboard buffer.
+
+(fn &optional FULL)" t)
 (autoload 'tterm-dashboard "tterm-dashboard"
 "Open the tterm dashboard." t)
 (register-definition-prefixes "tterm-dashboard" '("tterm-dashboard-"))
