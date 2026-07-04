@@ -1,0 +1,322 @@
+;;; clear-light-theme.el --- Clear Light terminal-inspired theme -*- lexical-binding: t; -*-
+
+;; Author: Tung Dao
+;; Package-Requires: ((emacs "27.1"))
+
+;;; Commentary:
+
+;; A light theme based on tango-plus, remapped to the Clear Light Terminal.app
+;; palette from /Users/tung/Downloads/Clear Light.terminal.
+
+;;; Code:
+
+(deftheme clear-light
+  "Light theme based on tango-plus and the Clear Light terminal palette.")
+
+(defface clear-light-quotation
+  '((t :inherit default))
+  "Face for quotes."
+  :group 'basic-faces)
+
+(defface clear-light-deemphasized
+  '((t :inherit shadow))
+  "Face for visually deemphasized text."
+  :group 'basic-faces)
+
+(let* ((class '((class color) (min-colors 89)))
+       ;; Clear Light Terminal.app palette.
+       (bg "#ffffff")
+       (fg "#2d3840")
+       (fg-bold "#252e34")
+       (black "#2d3840")
+       (red "#b45648")
+       (green "#6caa71")
+       (yellow "#c4ac62")
+       (blue "#5685a8")
+       (magenta "#ad64be")
+       (cyan "#69c6c9")
+       (white "#c1c8cc")
+       (bright-black "#506573")
+       (bright-red "#df6c5a")
+       (bright-green "#79be7e")
+       (bright-yellow "#e5c872")
+       (bright-blue "#49a2e1")
+       (bright-magenta "#d389e5")
+       (bright-cyan "#77e1e5")
+       (bright-white "#d8e1e7")
+       (selection "#dfe8ee")
+       (cursor "#7f7f7f")
+
+       ;; Light UI tints derived from the terminal palette.
+       (bg-alt "#f7f9fa")
+       (bg-panel "#eef3f6")
+       (bg-active "#e6eef3")
+       (bg-hover selection)
+       (muted bright-black)
+       (muted-2 "#7f919b")
+       (muted-3 white)
+       (comment "#6f8088")
+       (region-fg fg-bold)
+       (red-bg "#f8e8e5")
+       (green-bg "#e9f5ea")
+       (yellow-bg "#f8f1dc")
+       (blue-bg "#e6f0f7")
+       (magenta-bg "#f5e9f8")
+       (cyan-bg "#e7f8f8"))
+  (custom-theme-set-faces
+   'clear-light
+
+   ;; Core UI.
+   `(default ((,class :foreground ,fg :background ,bg)))
+   `(cursor ((,class :background ,cursor)))
+   `(fringe ((,class :foreground ,muted-3 :background ,bg)))
+   `(highlight ((,class :background ,bg-active)))
+   `(hl-line ((,class :background ,bg-alt)))
+   `(region ((,class :foreground ,region-fg :background ,selection)))
+   `(secondary-selection ((,class :foreground ,region-fg :background ,bg-hover)))
+   `(shadow ((,class :foreground ,muted-2)))
+   `(minibuffer-prompt ((,class :foreground ,blue :weight bold)))
+   `(escape-glyph ((,class :foreground ,red)))
+   `(homoglyph ((,class :foreground ,red)))
+   `(link ((,class :foreground ,blue :underline t)))
+   `(link-visited ((,class :foreground ,magenta :underline t)))
+   `(button ((,class :foreground ,blue :underline t)))
+   `(match ((,class :foreground ,fg-bold :background ,yellow-bg :weight bold)))
+   `(lazy-highlight ((,class :foreground ,fg-bold :background ,green-bg)))
+   `(isearch ((,class :foreground ,fg-bold :background ,bright-yellow :weight bold)))
+   `(isearch-fail ((,class :foreground ,fg-bold :background ,red-bg)))
+   `(show-paren-match ((,class :foreground ,fg-bold :background ,green-bg :weight bold)))
+   `(show-paren-mismatch ((,class :foreground ,fg-bold :background ,red-bg :weight bold)))
+   `(trailing-whitespace ((,class :background ,red-bg)))
+   `(vertical-border ((,class :foreground ,bright-white)))
+   `(window-divider ((,class :foreground ,bright-white)))
+   `(window-divider-first-pixel ((,class :foreground ,bright-white)))
+   `(window-divider-last-pixel ((,class :foreground ,bright-white)))
+   `(tooltip ((,class :foreground ,fg :background ,bg-panel)))
+   `(error ((,class :foreground ,red :weight bold)))
+   `(warning ((,class :foreground ,yellow :weight bold)))
+   `(success ((,class :foreground ,green :weight bold)))
+
+   ;; Tango-plus-inspired helper faces.
+   `(clear-light-deemphasized ((,class :foreground ,muted-2)))
+   `(clear-light-quotation ((,class :foreground ,muted :slant italic)))
+
+   ;; Mode line.
+   `(mode-line ((,class :foreground ,fg-bold :background ,bg-active :box (:line-width -1 :color ,muted-3))))
+   `(mode-line-inactive ((,class :foreground ,muted :background ,bg-panel :box (:line-width -1 :color ,bg-panel))))
+   `(mode-line-buffer-id ((,class :foreground ,blue :weight bold)))
+   `(header-line ((,class :foreground ,fg-bold :background ,bg-panel)))
+   `(tab-line ((,class :foreground ,muted :background ,bg-alt)))
+   `(tab-line-tab ((,class :foreground ,fg-bold :background ,bg-panel)))
+   `(tab-line-tab-current ((,class :foreground ,fg-bold :background ,bg :weight bold)))
+   `(tab-line-tab-inactive ((,class :foreground ,muted :background ,bg-alt)))
+
+   ;; Line numbers and margins.
+   `(line-number ((,class :foreground ,muted-3 :background ,bg)))
+   `(line-number-current-line ((,class :foreground ,bright-black :background ,bg-alt)))
+   `(fill-column-indicator ((,class :foreground ,bright-white)))
+
+   ;; Font lock, following tango-plus' assignments with Clear Light accents.
+   `(font-lock-builtin-face ((,class :foreground ,magenta)))
+   `(font-lock-comment-face ((,class :foreground ,comment :slant normal)))
+   `(font-lock-comment-delimiter-face ((,class :foreground ,comment :slant normal)))
+   `(font-lock-constant-face ((,class :foreground ,yellow)))
+   `(font-lock-doc-face ((,class :foreground ,comment :slant normal)))
+   `(font-lock-doc-markup-face ((,class :foreground ,green)))
+   `(font-lock-function-call-face ((,class :foreground ,fg)))
+   `(font-lock-function-name-face ((,class :foreground ,red)))
+   `(font-lock-keyword-face ((,class :foreground ,blue :weight normal)))
+   `(font-lock-negation-char-face ((,class :foreground ,red)))
+   `(font-lock-number-face ((,class :foreground ,yellow)))
+   `(font-lock-operator-face ((,class :foreground ,blue)))
+   `(font-lock-preprocessor-face ((,class :foreground ,muted)))
+   `(font-lock-property-name-face ((,class :foreground ,bright-black)))
+   `(font-lock-property-use-face ((,class :foreground ,bright-black)))
+   `(font-lock-punctuation-face ((,class :foreground ,muted)))
+   `(font-lock-regexp-grouping-backslash ((,class :foreground ,magenta)))
+   `(font-lock-regexp-grouping-construct ((,class :foreground ,magenta)))
+   `(font-lock-string-face ((,class :foreground ,green :slant normal)))
+   `(font-lock-type-face ((,class :foreground ,red)))
+   `(font-lock-variable-name-face ((,class :foreground ,red)))
+   `(font-lock-variable-use-face ((,class :foreground ,fg)))
+   `(font-lock-warning-face ((,class :foreground ,red :weight bold)))
+
+   ;; Completion and minibuffer.
+   `(completions-annotations ((,class :foreground ,comment)))
+   `(completions-common-part ((,class :foreground ,blue :weight bold)))
+   `(completions-first-difference ((,class :foreground ,red :weight bold)))
+   `(completions-highlight ((,class :inherit region)))
+   `(icomplete-first-match ((,class :foreground ,blue :weight bold)))
+
+   ;; Dired.
+   `(dired-directory ((,class :foreground ,blue :weight bold)))
+   `(dired-flagged ((,class :foreground ,red)))
+   `(dired-header ((,class :foreground ,blue :weight bold)))
+   `(dired-ignored ((,class :foreground ,muted-2)))
+   `(dired-mark ((,class :foreground ,yellow)))
+   `(dired-marked ((,class :foreground ,red)))
+   `(dired-perm-write ((,class :foreground ,fg)))
+   `(dired-symlink ((,class :foreground ,magenta)))
+   `(dired-warning ((,class :foreground ,red)))
+
+   ;; Diff and VC.
+   `(diff-added ((,class :foreground ,green :background ,green-bg)))
+   `(diff-changed ((,class :foreground ,yellow :background ,yellow-bg)))
+   `(diff-removed ((,class :foreground ,red :background ,red-bg)))
+   `(diff-refine-added ((,class :foreground ,fg-bold :background "#d3ead6")))
+   `(diff-refine-changed ((,class :foreground ,fg-bold :background "#efe0ad")))
+   `(diff-refine-removed ((,class :foreground ,fg-bold :background "#efcbc4")))
+   `(diff-header ((,class :foreground ,fg-bold :background ,bg-panel)))
+   `(diff-file-header ((,class :foreground ,blue :background ,bg-active :weight bold)))
+   `(diff-hunk-header ((,class :foreground ,blue :background ,bg-panel)))
+   `(diff-context ((,class :foreground ,fg)))
+   `(diff-indicator-added ((,class :foreground ,green)))
+   `(diff-indicator-changed ((,class :foreground ,yellow)))
+   `(diff-indicator-removed ((,class :foreground ,red)))
+   `(vc-conflict-state ((,class :foreground ,red)))
+   `(vc-edited-state ((,class :foreground ,yellow)))
+   `(vc-locally-added-state ((,class :foreground ,green)))
+   `(vc-locked-state ((,class :foreground ,magenta)))
+   `(vc-missing-state ((,class :foreground ,red)))
+   `(vc-needs-update-state ((,class :foreground ,yellow)))
+   `(vc-removed-state ((,class :foreground ,red)))
+   `(vc-up-to-date-state ((,class :foreground ,green)))
+
+   ;; Org.
+   `(org-agenda-date ((,class :foreground ,blue)))
+   `(org-agenda-date-today ((,class :foreground ,blue :weight bold)))
+   `(org-agenda-date-weekend ((,class :foreground ,magenta)))
+   `(org-block ((,class :foreground ,fg :background ,bg-alt)))
+   `(org-block-begin-line ((,class :foreground ,comment :background ,bg-panel)))
+   `(org-block-end-line ((,class :foreground ,comment :background ,bg-panel)))
+   `(org-code ((,class :foreground ,green)))
+   `(org-date ((,class :foreground ,blue :underline t)))
+   `(org-document-info ((,class :foreground ,fg)))
+   `(org-document-title ((,class :foreground ,blue :weight bold :height 1.2)))
+   `(org-done ((,class :foreground ,green :weight bold)))
+   `(org-drawer ((,class :foreground ,blue)))
+   `(org-headline-done ((,class :foreground ,muted-2)))
+   `(org-hide ((,class :foreground ,bg)))
+   `(org-level-1 ((,class :foreground ,blue :weight bold :height 1.15)))
+   `(org-level-2 ((,class :foreground ,red :weight bold :height 1.08)))
+   `(org-level-3 ((,class :foreground ,green :weight bold)))
+   `(org-level-4 ((,class :foreground ,magenta :weight bold)))
+   `(org-level-5 ((,class :foreground ,yellow)))
+   `(org-level-6 ((,class :foreground ,cyan)))
+   `(org-link ((,class :foreground ,blue :underline t)))
+   `(org-meta-line ((,class :foreground ,comment)))
+   `(org-quote ((,class :inherit clear-light-quotation)))
+   `(org-special-keyword ((,class :foreground ,comment)))
+   `(org-table ((,class :foreground ,blue)))
+   `(org-tag ((,class :foreground ,muted :weight normal)))
+   `(org-todo ((,class :foreground ,red :weight bold)))
+   `(org-verbatim ((,class :foreground ,green)))
+
+   ;; Markdown.
+   `(markdown-bold-face ((,class :weight bold)))
+   `(markdown-code-face ((,class :foreground ,fg :background ,bg-alt)))
+   `(markdown-header-face ((,class :foreground ,blue :weight bold)))
+   `(markdown-header-face-1 ((,class :foreground ,blue :weight bold :height 1.15)))
+   `(markdown-header-face-2 ((,class :foreground ,red :weight bold :height 1.08)))
+   `(markdown-header-face-3 ((,class :foreground ,green :weight bold)))
+   `(markdown-inline-code-face ((,class :foreground ,green)))
+   `(markdown-link-face ((,class :foreground ,blue :underline t)))
+   `(markdown-pre-face ((,class :foreground ,fg :background ,bg-alt)))
+   `(markdown-blockquote-face ((,class :inherit clear-light-quotation)))
+   `(markdown-comment-face ((,class :inherit clear-light-deemphasized)))
+
+   ;; Whitespace.
+   `(whitespace-empty ((,class :background ,red-bg)))
+   `(whitespace-hspace ((,class :foreground ,bright-white)))
+   `(whitespace-indentation ((,class :foreground ,bright-white)))
+   `(whitespace-line ((,class :background ,bg-panel)))
+   `(whitespace-newline ((,class :foreground ,bright-white)))
+   `(whitespace-space ((,class :foreground ,bright-white)))
+   `(whitespace-space-after-tab ((,class :background ,red-bg)))
+   `(whitespace-space-before-tab ((,class :background ,red-bg)))
+   `(whitespace-tab ((,class :foreground ,bright-white)))
+   `(whitespace-trailing ((,class :background ,red-bg)))
+
+   ;; Common packages.
+   `(avy-lead-face ((,class :foreground ,fg-bold :background ,bright-yellow :weight bold)))
+   `(avy-lead-face-0 ((,class :foreground ,fg-bold :background ,bright-blue :weight bold)))
+   `(avy-lead-face-1 ((,class :foreground ,fg-bold :background ,bright-magenta :weight bold)))
+   `(avy-lead-face-2 ((,class :foreground ,fg-bold :background ,bright-green :weight bold)))
+   `(consult-highlight-match ((,class :inherit match)))
+   `(consult-preview-match ((,class :inherit region)))
+   `(eglot-highlight-symbol-face ((,class :background ,bg-active :weight normal)))
+   `(eglot-inlay-hint-face ((,class :foreground ,comment :background ,bg :height 1.0)))
+   `(flymake-error ((,class :underline (:style wave :color ,red))))
+   `(flymake-note ((,class :underline (:style wave :color ,blue))))
+   `(flymake-warning ((,class :underline (:style wave :color ,yellow))))
+   `(magit-branch-current ((,class :foreground ,blue :box t)))
+   `(magit-branch-local ((,class :foreground ,blue)))
+   `(magit-branch-remote ((,class :foreground ,green)))
+   `(magit-diff-added ((,class :foreground ,green :background ,green-bg)))
+   `(magit-diff-added-highlight ((,class :foreground ,green :background "#ddf0df")))
+   `(magit-diff-context ((,class :foreground ,fg :background ,bg)))
+   `(magit-diff-context-highlight ((,class :foreground ,fg :background ,bg-alt)))
+   `(magit-diff-file-heading ((,class :foreground ,blue :weight bold)))
+   `(magit-diff-file-heading-highlight ((,class :background ,bg-panel)))
+   `(magit-diff-hunk-heading ((,class :foreground ,blue :background ,bg-panel)))
+   `(magit-diff-hunk-heading-highlight ((,class :foreground ,blue :background ,bg-active)))
+   `(magit-diff-removed ((,class :foreground ,red :background ,red-bg)))
+   `(magit-diff-removed-highlight ((,class :foreground ,red :background "#f1d4ce")))
+   `(magit-hash ((,class :foreground ,comment)))
+   `(magit-section-heading ((,class :foreground ,blue :weight bold)))
+   `(magit-section-highlight ((,class :background ,bg-alt)))
+   `(which-key-command-description-face ((,class :foreground ,blue)))
+   `(which-key-group-description-face ((,class :foreground ,magenta)))
+   `(which-key-key-face ((,class :foreground ,green :weight bold)))
+   `(which-key-separator-face ((,class :foreground ,comment)))
+
+   ;; Terminal colors.
+   `(ansi-color-black ((,class :foreground ,black :background ,black)))
+   `(ansi-color-red ((,class :foreground ,red :background ,red)))
+   `(ansi-color-green ((,class :foreground ,green :background ,green)))
+   `(ansi-color-yellow ((,class :foreground ,yellow :background ,yellow)))
+   `(ansi-color-blue ((,class :foreground ,blue :background ,blue)))
+   `(ansi-color-magenta ((,class :foreground ,magenta :background ,magenta)))
+   `(ansi-color-cyan ((,class :foreground ,cyan :background ,cyan)))
+   `(ansi-color-white ((,class :foreground ,white :background ,white)))
+   `(ansi-color-bright-black ((,class :foreground ,bright-black :background ,bright-black)))
+   `(ansi-color-bright-red ((,class :foreground ,bright-red :background ,bright-red)))
+   `(ansi-color-bright-green ((,class :foreground ,bright-green :background ,bright-green)))
+   `(ansi-color-bright-yellow ((,class :foreground ,bright-yellow :background ,bright-yellow)))
+   `(ansi-color-bright-blue ((,class :foreground ,bright-blue :background ,bright-blue)))
+   `(ansi-color-bright-magenta ((,class :foreground ,bright-magenta :background ,bright-magenta)))
+   `(ansi-color-bright-cyan ((,class :foreground ,bright-cyan :background ,bright-cyan)))
+   `(ansi-color-bright-white ((,class :foreground ,bright-white :background ,bright-white)))
+   `(term-color-black ((,class :foreground ,black :background ,black)))
+   `(term-color-red ((,class :foreground ,red :background ,red)))
+   `(term-color-green ((,class :foreground ,green :background ,green)))
+   `(term-color-yellow ((,class :foreground ,yellow :background ,yellow)))
+   `(term-color-blue ((,class :foreground ,blue :background ,blue)))
+   `(term-color-magenta ((,class :foreground ,magenta :background ,magenta)))
+   `(term-color-cyan ((,class :foreground ,cyan :background ,cyan)))
+   `(term-color-white ((,class :foreground ,white :background ,white)))
+   `(vterm-color-black ((,class :foreground ,black :background ,black)))
+   `(vterm-color-red ((,class :foreground ,red :background ,red)))
+   `(vterm-color-green ((,class :foreground ,green :background ,green)))
+   `(vterm-color-yellow ((,class :foreground ,yellow :background ,yellow)))
+   `(vterm-color-blue ((,class :foreground ,blue :background ,blue)))
+   `(vterm-color-magenta ((,class :foreground ,magenta :background ,magenta)))
+   `(vterm-color-cyan ((,class :foreground ,cyan :background ,cyan)))
+   `(vterm-color-white ((,class :foreground ,white :background ,white))))
+
+  (custom-theme-set-variables
+   'clear-light
+   `(ansi-color-names-vector [,black ,red ,green ,yellow ,blue ,magenta ,cyan ,white])))
+
+;;;###autoload
+(when (and (boundp 'custom-theme-load-path) load-file-name)
+  (add-to-list 'custom-theme-load-path
+               (file-name-as-directory (file-name-directory load-file-name))))
+
+(provide-theme 'clear-light)
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:
+
+;;; clear-light-theme.el ends here

@@ -96,7 +96,8 @@ if [[ $EMACS = t ]]; then
 fi
 
 [[ $+commands[direnv] ]] && eval "$(direnv hook zsh)"
-[[ $+commands[zoxide] ]] && eval "$(zoxide init zsh)"
+# [[ $+commands[zoxide] ]] && eval "$(zoxide init zsh)"
+. /opt/local/etc/profile.d/z.sh
 
 alias g=git
 alias e="emacsclient -n"

@@ -7,16 +7,8 @@
 ;; going. This way I will be able to nail down the packages that cause issue, and
 ;; look for alternatives.
 
-;;; Enable Lexical Binding
-;; Make things a little bit faster. For context: https://www.emacswiki.org/emacs/DynamicBindingVsLexicalBinding
 (require 'subr-x)
 (setq load-prefer-newer t)
-
-(defconst user-lisp-directory
-  (expand-file-name "user-lisp/" user-emacs-directory)
-  "Directory for local Emacs Lisp files.")
-
-(add-to-list 'load-path user-lisp-directory)
 
 ;;; Packages and initialization
 
@@ -334,7 +326,7 @@ Uses project root if in a project, otherwise current directory."
 (use-package recentf
   :hook (after-init . recentf-mode)
   :custom
-  (recentf-max-saved-items 256)
+  (recentf-max-saved-items 64)
   (recentf-autosave-interval 300)
   (recentf-auto-cleanup 'never)
   :config
@@ -1223,13 +1215,13 @@ With prefix argument FORCE, rebuild every configured grammar."
  `((left-fringe . 8) (right-fringe . 4)
    (border-width . 0) (internal-border-width . 0)
    ;;(font . "Iosevka Fixed SS07 16")
-   (font . "JetBrains Mono NL 15")
+   (font . "JetBrains Mono NL 18")
    (tool-bar-lines . 0)
    ;; (fullscreen . maximized)
    (width . 128)
    (height . 50)
-   (mac-appearance . dark)
-   (ns-appearance . dark)
+   ;; (mac-appearance . dark)
+   ;; (ns-appearance . dark)
    (vertical-scroll-bars . nil)))
 
 (blink-cursor-mode -1)
@@ -1237,7 +1229,8 @@ With prefix argument FORCE, rebuild every configured grammar."
 
 (setq-default
  cursor-in-non-selected-windows nil
- line-spacing '(0.1 . 0.1)) ;; line-height 1.2, split above/below
+ line-spacing '(0.1 . 0.1)
+ ) ;; line-height 1.2, split above/below
 
 (setq ns-use-thin-smoothing t)
 
@@ -1263,26 +1256,29 @@ With prefix argument FORCE, rebuild every configured grammar."
 ;; Some preferences that I set for all the theme. Per documentation, the custom
 ;; theme named =user= will always have the highest priority.
 
-(use-package prism
-  :hook (enable-theme-functions . prism-soften-theme-faces))
+;; (use-package prism
+;;   :hook (enable-theme-functions . prism-soften-theme-faces))
 
-(use-package pache-dark-theme
-  :ensure t
-  :config
-  (load-theme 'pache-dark t)
-  ;; Directly override legacy :bold t attributes that user theme can't always
-  ;; neutralize due to the old-style :bold attribute vs modern :weight difference.
-  (dolist (face '(font-lock-keyword-face
-                  font-lock-function-name-face
-                  font-lock-type-face
-                  font-lock-builtin-face
-                  font-lock-preprocessor-face
-                  bold))
-    (set-face-attribute face nil :weight 'normal)))
+;; (use-package pache-dark-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'pache-dark t)
+;;   ;; Directly override legacy :bold t attributes that user theme can't always
+;;   ;; neutralize due to the old-style :bold attribute vs modern :weight difference.
+;;   (dolist (face '(font-lock-keyword-face
+;;                   font-lock-function-name-face
+;;                   font-lock-type-face
+;;                   font-lock-builtin-face
+;;                   font-lock-preprocessor-face
+;;                   bold))
+;;     (set-face-attribute face nil :weight 'normal)))
 
 ;; (use-package solarized-theme
 ;;   :ensure t
 ;;   :config (load-theme 'solarized-dark-high-contrast t))
+
+(add-to-list 'custom-theme-load-path user-emacs-directory)
+(load-theme 'clear-light t)
 
 (custom-theme-set-faces
  'user

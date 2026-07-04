@@ -5,6 +5,7 @@ emacs/*
 !emacs/init.el
 !emacs/early-init.el
 !emacs/codeberg-dark-theme.el
+!emacs/clear-light-theme.el
 !emacs/authinfo.gpg
 !emacs/user-lisp
 !emacs/td-command-workspace.el

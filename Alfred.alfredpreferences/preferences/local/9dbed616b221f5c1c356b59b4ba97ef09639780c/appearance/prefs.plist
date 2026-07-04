@@ -5,6 +5,6 @@
 	<key>darkthemeuid</key>
 	<string>theme.bundled.osx</string>
 	<key>lightthemeuid</key>
-	<string>theme.bundled.dark</string>
+	<string>theme.bundled.osx</string>
 </dict>
 </plist>
