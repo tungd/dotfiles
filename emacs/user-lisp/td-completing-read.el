@@ -18,22 +18,27 @@ Phase 1 returns a capped, prescient-sorted subset for instant display."
        (let* ((orig (if (functionp collection)
                         (funcall collection string pred action)
                       nil))
-              (copy (copy-sequence (cdr orig))))
-         (setq copy (assq-delete-all 'category copy))
+              (cat (completion-metadata-get (or orig '(metadata)) 'category))
+              (orig-tail (cdr orig)))
+         ;; Strip category only if it's `command` (to avoid eager-display
+         ;; override that disabled it). Keep it for file/buffer/etc.
+         (when (eq cat 'command)
+           (setq orig-tail (assq-delete-all 'category orig-tail)))
          `(metadata
            (eager-display . t)
            (eager-update . t)
            (cycle . t)
-           ,@copy)))
+           ,@orig-tail)))
       (`t                        ; all-completions
        (let* ((all (complete-with-action t collection string pred))
-              (filtered (if (fboundp 'prescient-filter)
-                            (prescient-filter string all)
-                          all))
-              (sorted (if (fboundp 'prescient-completion-sort)
-                          (prescient-completion-sort filtered)
-                        filtered)))
-         (seq-take sorted td-cr-phase-1-size)))
+              (is-file minibuffer-completing-file-name)
+              (processed (cond
+                          (is-file all)
+                          ((fboundp 'prescient-filter)
+                           (prescient-completion-sort
+                            (prescient-filter string all)))
+                          (t all))))
+         (seq-take processed td-cr-phase-1-size)))
       (_                          ; try-completion, test-completion, boundaries
        (complete-with-action action collection string pred)))))
 
@@ -48,7 +53,9 @@ that limits the initial candidate set."
                        predicate require-match initial-input hist def
                        inherit-input-method)))
     ;; Track selected candidate for prescient frequency/recency.
+    ;; Skip file-name completion to avoid polluting command history.
     (when (and (fboundp 'prescient-remember)
+               (not minibuffer-completing-file-name)
                (not (equal result "")))
       (prescient-remember result))
     result))
