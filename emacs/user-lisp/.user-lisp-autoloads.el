@@ -386,6 +386,40 @@ With prefix REMOTE, prompt for an SSH host.
 (register-definition-prefixes "tterm-profiling" '("tterm--"))
 
 
+;;; Generated autoloads from td-completing-read.el
+
+(defvar td-completing-read-mode nil
+"Non-nil if Td-Completing-Read mode is enabled.
+See the `td-completing-read-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `td-completing-read-mode'.")
+(custom-autoload 'td-completing-read-mode "td-completing-read" nil)
+(autoload 'td-completing-read-mode "td-completing-read"
+"Toggle hybrid async completing-read.
+
+When active, `completing-read' uses a hybrid table that returns a
+limited prescient-sorted subset immediately, then fills in the
+full list asynchronously.
+
+This is a global minor mode.  If called interactively, toggle the
+`Td-Completing-Read mode' mode.  If the prefix argument is positive,
+enable the mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `(default-value \\='td-completing-read-mode)'.
+
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
+
+(fn &optional ARG)" t)
+(register-definition-prefixes "td-completing-read" '("td-"))
+
 ;;; End of scraped data
 
 (provide '.user-lisp-autoloads)

@@ -167,11 +167,7 @@ Only `normal` is valid while copy mode is inactive.")
 (defvar tterm-mode-map)
 (defvar tterm-copy-mode-map)
 
-(defvar tterm--mode-line-input-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [mode-line mouse-1] #'tterm-toggle-copy-mode)
-    map)
-  "Keymap for tterm's compact mode-line mode lighter.")
+(defvar tterm--mode-line-input-map)
 
 (defvar tterm--attention-refresh-timer nil
   "Timer that refreshes global tterm attention state.")

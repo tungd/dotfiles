@@ -30,7 +30,11 @@
 (defvar tterm--input-mode)
 (defvar tterm--last-redraw-change-time)
 (defvar tterm--last-capture-refresh-time)
-(defvar tterm--mode-line-input-map)
+(defvar tterm--mode-line-input-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mode-line mouse-1] #'tterm-toggle-copy-mode)
+    map)
+  "Keymap for tterm's compact mode-line mode lighter.")
 (defvar tterm--osc-indicator)
 (defvar tterm--redraw-request-timer)
 (defvar tterm--redraw-timer)

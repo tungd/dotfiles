@@ -273,6 +273,8 @@
   (setq prescient-sort-length-enable nil
         prescient-aggressive-file-save t))
 
+(td-completing-read-mode t)
+
 (defun td/minibuffer-smart-tilde ()
   (interactive)
   (if (not (looking-back "/" 0))
@@ -821,23 +823,24 @@ With prefix argument FORCE, rebuild every configured grammar."
 
 (bind-key "C-x C-l" #'td/expand-lines)
 
-;; Cloudflare AI Gateway via its OpenAI-compatible endpoint.
-
-(use-package gptel-cloudflare-ai-gateway
-  :functions (gptel-cloudflare-ai-gateway-setup))
-
 (use-package gptel
   :ensure t
   :bind ("C-l a" . gptel-menu)
   :hook (gptel-mode . visual-line-mode)
   :config
-  (require 'gptel-org)
-  (require 'gptel-cloudflare-ai-gateway)
-  (gptel-cloudflare-ai-gateway-setup)
-  (setopt
+  (eval-and-compile (require 'gptel-org))
+  (eval-and-compile (require 'gptel-gemini))
+  (setopt gptel-backend (gptel-make-gemini "Google AI Studio"
+    :stream t
+    :key (lambda ()
+           (auth-source-pick-first-password
+            :host "gemini"
+            :user "gemini"
+            :max 1))
+    :models '("gemma-4-31b-it"))
    gptel-default-mode 'org-mode
-   gptel-include-reasoning 'ignore
-   gptel-model 'workers-ai/@cf/google/gemma-4-26b-a4b-it))
+   gptel-include-reasoning nil
+   gptel-model 'gemma-4-31b-it))
 
 ;;;; Error checking
 (use-package flymake
