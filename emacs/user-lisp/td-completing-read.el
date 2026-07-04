@@ -43,10 +43,15 @@ Phase 1 returns a capped, prescient-sorted subset for instant display."
   "`completing-read' using a hybrid completion table.
 Delegates to `completing-read-default' with a wrapped collection
 that limits the initial candidate set."
-  (apply #'completing-read-default prompt
-         (td--make-hybrid-table collection)
-         predicate require-match initial-input hist def
-         inherit-input-method))
+  (let ((result (apply #'completing-read-default prompt
+                       (td--make-hybrid-table collection)
+                       predicate require-match initial-input hist def
+                       inherit-input-method)))
+    ;; Track selected candidate for prescient frequency/recency.
+    (when (and (fboundp 'prescient-remember)
+               (not (equal result "")))
+      (prescient-remember result))
+    result))
 
 ;;;###autoload
 (define-minor-mode td-completing-read-mode
