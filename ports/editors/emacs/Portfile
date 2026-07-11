@@ -125,19 +125,26 @@ if {$subport eq "emacs-devel" || $subport eq "emacs-app-devel"} {
 
     # do not forget to check that configure hasn't introduce some suprises via
     # git diff [old]..[new] -- '**/configure.ac'
-    github.setup    emacs-mirror emacs 56154c939bf8f3cd7dbadeb91ef0a2fe4294ec65
+    github.setup    emacs-mirror emacs c6147e2b539dc3490b47a924bed86da00cc763a7
     github.tarball_from archive
     epoch           5
-    version         20260705
+    version         20260712
     revision        0
 
     master_sites    ${github.master_sites}
 
-    checksums       rmd160  366b449469cc8905749eb4e6d6a4b8109576ee14 \
-                    sha256  31c5c28fb8c4b44013067a7d3f3eafb6a2bb2ec7b47738fc27c270985b0c6ff6 \
-                    size    54025195
+    checksums       rmd160  9ad3ba8fe5da4a145bb76b9c178eb755c7c20aeb \
+                    sha256  891317221989b597c35b9b94e2ec36cdbb701efc3d392fa8a04821c1cd931be7 \
+                    size    54029589
 
     livecheck.type none
+
+    # GitHub snapshots do not include Texinfo generated from Org sources.
+    # Generate misc manuals before the parallel build creates info/dir.
+    # Needed after upstream b0d7164edc89e5d205af516545d7e0de1bbac533.
+    pre-build {
+        system -W ${worksrcpath} "${build.cmd} misc-info"
+    }
 
     if {[variant_isset nativecomp]} {
         notes "emacs devel subports don't always keep compatibility for native\

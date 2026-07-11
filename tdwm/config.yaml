@@ -18,7 +18,7 @@ hotkeys:
   reload_config: Option-Shift-r
 border:
   color: "#ff6a00"
-  width: 2
+  width: 4
 rules:
   - app: Ghostty
     workspace: home

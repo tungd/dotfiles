@@ -639,35 +639,6 @@ Uses project root if in a project, otherwise current directory."
   :custom
   (comint-terminfo-terminal "dumb-emacs-ansi"))
 
-;; tterm - OCaml-based terminal emulator
-(autoload 'tterm "tterm" nil t)
-(autoload 'tterm-dashboard "tterm-dashboard" nil t)
-(autoload 'tterm-send-file "tterm" nil t)
-
-(use-package tterm
-  :defer t
-  :custom
-  (tterm-buffer-title-function #'tterm-buffer-title-collapse-parents)
-  (tterm-osc-52-policy 'confirm))
-
-(use-package tterm-consult
-  :after (consult tterm)
-  :config
-  (tterm-consult-register-source))
-
-;; scv - Emacs session integration (local development)
-(use-package scv
-  :load-path "~/Projects/tungd/scv/emacs"
-  :defer t
-  :commands (scv-menu
-             scv-new-session
-             scv-session-manager
-             scv-open-session-viewer
-             scv-open-prompt-draft)
-  :custom
-  (scv-source-directory (expand-file-name "~/Projects/tungd/scv/"))
-  (scv-executable (expand-file-name "~/.local/bin/scv")))
-
 ;;;; Tramp
 (use-package tramp
   :custom
@@ -837,7 +808,12 @@ With prefix argument FORCE, rebuild every configured grammar."
             :host "gemini"
             :user "gemini"
             :max 1))
-    :models '("gemma-4-31b-it"))
+    ;; free models with decent quota
+    :models '(
+              "gemini-3.1-flash-lite"
+              "gemma-4-31b-it"
+              "gemma-4-26b-it"
+              ))
    gptel-default-mode 'org-mode
    gptel-include-reasoning nil
    gptel-model 'gemma-4-31b-it))
@@ -1280,8 +1256,7 @@ With prefix argument FORCE, rebuild every configured grammar."
 ;;   :ensure t
 ;;   :config (load-theme 'solarized-dark-high-contrast t))
 
-(add-to-list 'custom-theme-load-path user-emacs-directory)
-(load-theme 'clear-light t)
+(load-theme 'codeberg-dark t)
 
 (custom-theme-set-faces
  'user
