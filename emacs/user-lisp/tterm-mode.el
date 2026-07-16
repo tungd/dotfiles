@@ -15,6 +15,7 @@
 
 (defvar tterm-buffer-size)
 (defvar tterm-capture-refresh-idle-interval)
+(defvar tterm-alt-screen-sync-interval)
 (defvar tterm-fontset-fallbacks)
 (defvar tterm-redraw-active-grace-delay)
 (defvar tterm-redraw-idle-delay)
@@ -30,11 +31,7 @@
 (defvar tterm--input-mode)
 (defvar tterm--last-redraw-change-time)
 (defvar tterm--last-capture-refresh-time)
-(defvar tterm--mode-line-input-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [mode-line mouse-1] #'tterm-toggle-copy-mode)
-    map)
-  "Keymap for tterm's compact mode-line mode lighter.")
+(defvar tterm--capture-refresh-handle)
 (defvar tterm--osc-indicator)
 (defvar tterm--redraw-request-timer)
 (defvar tterm--redraw-timer)
@@ -42,6 +39,7 @@
 (defvar tterm--resize-window-starts)
 (defvar tterm--terminal)
 (defvar tterm--title)
+(defvar tterm-mode-map)
 
 (declare-function tterm-alt-screen "tterm" (term))
 (declare-function tterm-cols "tterm" (term))
@@ -49,12 +47,17 @@
 (declare-function tterm-id "tterm" (term))
 (declare-function tterm-rows "tterm" (term))
 (declare-function tterm-set-alt-screen "tterm" (term value))
+(declare-function tterm-set-displayed-version "tterm" (term value))
+(declare-function tterm-set-size "tterm" (term rows cols))
 (declare-function tterm--apply-op-data "tterm-apply" (id ops))
 (declare-function tterm-bridge-command "tterm-bridge" (id command &optional payload))
+(declare-function tterm-bridge-command-async
+                  "tterm-bridge" (id command payload callback))
 (declare-function tterm--detach-current-terminal "tterm" ())
 (declare-function tterm--effective-fontset-fallbacks "tterm" ())
 (declare-function tterm--fontset-fallback-install-order "tterm" (fallbacks))
 (declare-function tterm--initialize-screen "tterm-apply" (rows cols))
+(declare-function tterm--kill-current-terminal-window "tterm" ())
 (declare-function tterm--mode-line-attention-indicator "tterm" ())
 (declare-function tterm-header-line-format "tterm-osc" ())
 (declare-function tterm--mode-line-osc-indicator "tterm-osc" ())
@@ -62,6 +65,22 @@
 (declare-function tterm--resize "tterm" (id rows cols))
 (declare-function tterm--sync-point-to-cursor "tterm-apply" ())
 (declare-function tterm-jump-next-notification "tterm" ())
+
+(defmacro tterm--preserve-window-starts (&rest body)
+  "Run BODY without letting cursor housekeeping move visible window starts."
+  (declare (indent 0) (debug t))
+  `(let ((starts (tterm--visible-window-starts)))
+     (unwind-protect
+         (progn ,@body)
+       (tterm--restore-window-starts starts))))
+
+(defmacro tterm--preserve-window-starts-or-tail (&rest body)
+  "Run BODY preserving manual scrollback, but keeping tail-pinned windows live."
+  (declare (indent 0) (debug t))
+  `(let ((starts (tterm--visible-window-starts-or-tail)))
+     (unwind-protect
+         (progn ,@body)
+       (tterm--restore-window-starts starts))))
 
 ;;; Redraw polling
 
@@ -83,10 +102,46 @@ Return non-nil when the pull found terminal changes."
                           ops)))
         (when reset
           (tterm--initialize-screen (tterm-rows term) (tterm-cols term)))
-        (when ops
-          (tterm--apply-op-data (tterm-id term) ops))
-        (setf (tterm-displayed-version term) target-version)
+        (condition-case _err
+            (progn
+              (when ops
+                (tterm--apply-op-data (tterm-id term) ops))
+              ;; Advance the displayed version only once the ops are fully
+              ;; applied, so a failed apply never leaves a stale version that
+              ;; would re-diff and replay the same partial plan next poll.
+              (tterm-set-displayed-version term target-version))
+          (error
+           ;; LOOP 2.3: a mid-apply error left the buffer partially mutated.
+           ;; Recover with a clean full snapshot from version -1 and reinitialize
+           ;; the screen, so the partially applied ops are never replayed.
+           (tterm--redraw-recover-full term)))
         changed))))
+
+(defun tterm--redraw-recover-full (term)
+  "Recover from a mid-apply error with a clean full snapshot (LOOP 2.3).
+Pull version -1, reinitialize the screen, apply the full op set, and
+advance the displayed version so the partially applied plan is never
+replayed as an incremental diff."
+  (let ((target-version (or (tterm-displayed-version term) 0)))
+    (condition-case err
+        (let* ((response (tterm--pull-apply-plan-ops (tterm-id term) -1))
+               (pulled-version (aref response 1))
+               (ops (aref response 3)))
+          (setq target-version pulled-version)
+          (when (or (aref response 2) ops)
+            (tterm--initialize-screen (tterm-rows term) (tterm-cols term)))
+          (when ops
+            (tterm--apply-op-data (tterm-id term) ops))
+          (tterm-set-displayed-version term target-version)
+          t)
+      (error
+       ;; Recovery also failed. Keep an explicit full-recovery sentinel so the
+       ;; next normal redraw pulls from -1 again. Advancing to TARGET-VERSION
+       ;; here would make that poll accept an empty diff while the buffer still
+       ;; contains the partially applied incremental/recovery plan (LOOP 2.3).
+       (tterm-set-displayed-version term -1)
+       (message "tterm redraw recovery failed: %S" err)
+       nil))))
 
 (defun tterm--capture-refresh-due-p ()
   "Return non-nil when the current buffer should ask tmux for a pane snapshot."
@@ -102,11 +157,33 @@ When FORCE is nil, throttle requests by
 `tterm-capture-refresh-idle-interval'."
   (when-let* ((term tterm--terminal)
               (now (or force (tterm--capture-refresh-due-p))))
-    (let ((result (tterm-bridge-command (tterm-id term) "refresh-capture" "")))
-      (when (and (stringp result) (not (string-empty-p result)))
-        (setq-local tterm--last-capture-refresh-time
-                    (if (numberp now) now (float-time)))
-        t))))
+    (if force
+        (let ((result
+               (tterm-bridge-command (tterm-id term) "refresh-capture" "")))
+          (when (and (stringp result) (not (string-empty-p result)))
+            (setq-local tterm--last-capture-refresh-time (float-time))
+            t))
+      (unless tterm--capture-refresh-handle
+        (let ((buffer (current-buffer))
+              (terminal-id (tterm-id term)))
+          (setq-local tterm--last-capture-refresh-time now)
+          (setq-local
+           tterm--capture-refresh-handle
+           (tterm-bridge-command-async
+            terminal-id "refresh-capture" ""
+            (lambda (result error-message)
+              (when (buffer-live-p buffer)
+                (with-current-buffer buffer
+                  (setq-local tterm--capture-refresh-handle nil)
+                  (when (and (not error-message)
+                             (stringp result)
+                             (not (string-empty-p result))
+                             tterm--terminal
+                             (= (tterm-id tterm--terminal) terminal-id)
+                             (tterm--redraw-active-p))
+                    (tterm--redraw-now)
+                    (tterm--update-redraw-timer)))))))))
+      nil)))
 
 (defun tterm--redraw-now-full ()
   "Redraw, using tmux capture-pane as an idle resync fallback."
@@ -116,7 +193,11 @@ When FORCE is nil, throttle requests by
       (if changed
           changed
         (when (tterm--request-capture-refresh)
-          (or (tterm--redraw-now) t))))))
+          ;; Return the second pull's REAL result. The previous code returned
+          ;; `t' here, faking a change on every idle capture-refresh even when
+          ;; nothing changed, which kept tterm--last-redraw-change-time fresh
+          ;; and forced the 25ms fast-poll to run forever (LOOP 6.1).
+          (tterm--redraw-now))))))
 
 (defun tterm--redraw-latest-snapshot ()
   "Force a full repaint from the latest backend terminal snapshot."
@@ -131,7 +212,7 @@ When FORCE is nil, throttle requests by
             (tterm--initialize-screen (tterm-rows term) (tterm-cols term)))
           (when ops
             (tterm--apply-op-data (tterm-id term) ops))
-          (setf (tterm-displayed-version term) target-version)
+          (tterm-set-displayed-version term target-version)
           t)))))
 
 (defun tterm-redraw ()
@@ -347,11 +428,27 @@ Buffers in copy mode are left untouched."
         (tterm-set-alt-screen tterm--terminal alt-screen))
       (and (not (eq alt-screen 'unknown)) alt-screen))))
 
+(defvar tterm--last-alt-screen-sync 0
+  "Float time of the last wheel-driven alt-screen resync (LOOP 6.5).")
+
+(defun tterm--alt-screen-resync-due-p ()
+  "Return non-nil when a wheel-driven alt-screen resync is due.
+Resyncs at most every `tterm-alt-screen-sync-interval' seconds so a
+trackpad burst does not block on a bridge round trip per event (LOOP 6.5)."
+  (let ((now (float-time)))
+    (when (>= (- now tterm--last-alt-screen-sync)
+              tterm-alt-screen-sync-interval)
+      (setq tterm--last-alt-screen-sync now)
+      t)))
+
 (defun tterm--send-alt-screen-wheel (button event)
   "Send alternate-screen wheel BUTTON for EVENT when applicable."
   (let ((term tterm--terminal))
     (when term
-      (tterm--sync-pane-alt-screen))
+      ;; Trust the cached alt-screen on the hot path; only resync at most
+      ;; every `tterm-alt-screen-sync-interval' seconds (LOOP 6.5).
+      (when (tterm--alt-screen-resync-due-p)
+        (tterm--sync-pane-alt-screen)))
     (when (and term (tterm-alt-screen term))
       (tterm--send-wheel-mouse-event button event)
       t)))
@@ -431,6 +528,12 @@ Buffers in copy mode are left untouched."
   (if tterm--copy-mode
       (tterm-normal-mode)
     (tterm-copy-mode)))
+
+(defvar tterm--mode-line-input-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mode-line mouse-1] #'tterm-toggle-copy-mode)
+    map)
+  "Keymap for tterm's compact mode-line mode lighter.")
 
 (defun tterm--mode-line-mode-letter ()
   "Return a colored compact input-mode letter for the mode line."
@@ -576,22 +679,6 @@ Buffers in copy mode are left untouched."
             (set-window-point window point)
             (set-window-start window start t)))))))
 
-(defmacro tterm--preserve-window-starts (&rest body)
-  "Run BODY without letting cursor housekeeping move visible window starts."
-  (declare (indent 0) (debug t))
-  `(let ((starts (tterm--visible-window-starts)))
-     (unwind-protect
-         (progn ,@body)
-       (tterm--restore-window-starts starts))))
-
-(defmacro tterm--preserve-window-starts-or-tail (&rest body)
-  "Run BODY preserving manual scrollback, but keeping tail-pinned windows live."
-  (declare (indent 0) (debug t))
-  `(let ((starts (tterm--visible-window-starts-or-tail)))
-     (unwind-protect
-         (progn ,@body)
-       (tterm--restore-window-starts starts))))
-
 (defun tterm--resize-window (&optional frame)
   "Resize terminal to match its displayed window on FRAME.
 Return non-nil when a resize was sent."
@@ -608,8 +695,7 @@ Return non-nil when a resize was sent."
                        (= cols (tterm-cols term)))
             (tterm--clamp-cursor-to-grid rows cols)
             (tterm--sync-point-to-cursor)
-            (setf (tterm-rows term) rows
-                  (tterm-cols term) cols)
+            (tterm-set-size term rows cols)
             (tterm--resize (tterm-id term) rows cols)
             t))))))
 
@@ -726,6 +812,7 @@ Return non-nil when a resize was sent."
     (define-key map (kbd "C-DEL") #'tterm--backward-kill-word)
     (define-key map (kbd "TAB") #'tterm--tab)
     (define-key map [escape] #'tterm--escape)
+    (define-key map (kbd "ESC ESC") #'tterm--escape)
     (define-key map [remap yank] #'tterm--paste)
     (define-key map [remap clipboard-yank] #'tterm--paste)
     (define-key map [remap yank-media] #'tterm-paste-clipboard-media)
@@ -889,6 +976,24 @@ Return non-nil when a resize was sent."
   (when (boundp 'bidi-inhibit-bpa)
     (setq-local bidi-inhibit-bpa t))
   (setq-local show-trailing-whitespace nil)
+  ;; Header-line / mode-name / mode-line-misc-info use :eval so Emacs
+  ;; recomputes them during redisplay. 6.8e measured the per-redisplay cost
+  ;; of each formatter (realistic remote session, 50k iterations, batch):
+  ;;   tterm-header-line-format     ~0.013us/call
+  ;;   tterm--mode-line-mode-name   ~0.002us/call
+  ;;   tterm--mode-line-input-state ~0.002us/call
+  ;; Total < 0.02us/redisplay: not material, so no caching is added. Emacs
+  ;; also caches the mode-line between redisplays and only recomputes it when
+  ;; force-mode-line-update fires or the buffer/window state changes. If a
+  ;; future change adds caching, the cached value must be invalidated on
+  ;; exactly these events (each already triggers force-mode-line-update where
+  ;; relevant):
+  ;;   header-line          : cwd (tterm-set-cwd / OSC 7), title (OSC 0/2),
+  ;;                          osc indicator (OSC 133), notification (OSC 9/777),
+  ;;                          attention snapshot/stop, connection/session.
+  ;;   mode-name            : copy-mode toggle (tterm--toggle-copy-mode),
+  ;;                          input-mode change.
+  ;;   mode-line-input-state: osc indicator (OSC 133), attention snapshot/stop.
   (setq-local header-line-format '(:eval (tterm-header-line-format)))
   (setq-local mode-name '(:eval (tterm--mode-line-mode-name)))
   (setq-local mode-line-misc-info

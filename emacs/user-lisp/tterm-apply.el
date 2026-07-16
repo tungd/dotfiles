@@ -14,6 +14,8 @@
 
 (defvar tterm--terminal)
 
+(declare-function tterm-id "tterm" (term))
+
 (defvar-local tterm--cursor-row 0
   "Latest terminal cursor row.")
 
@@ -107,6 +109,7 @@
           (progn
             (save-excursion
               (save-restriction
+                (widen)
                 (let ((inhibit-redisplay t)
                       (inhibit-read-only t)
                       (inhibit-modification-hooks t)
@@ -172,12 +175,31 @@
     (setq-local tterm--simple-row-prefix rows)))
 
 (defun tterm--find-buffer (id)
-  "Find the buffer associated with terminal ID."
-  (or (get-buffer (format "*tterm-%d*" id))
-      (current-buffer)))
+  "Find the live tterm buffer associated with terminal ID.
+Resolves by buffer-local `tterm--terminal' identity, not buffer name,
+so renamed or non-terminal buffers matching the name pattern are not
+mistakenly mutated."
+  (or (cl-find-if
+       (lambda (buffer)
+         (with-current-buffer buffer
+           (and (eq major-mode 'tterm-mode)
+                (boundp 'tterm--terminal)
+                tterm--terminal
+                (= (tterm-id tterm--terminal) id))))
+       (buffer-list))
+      (error "tterm--find-buffer: no terminal buffer for id %d" id)))
 
-(defconst tterm--flat-style-run-field-count 13
-  "Field count for one flat direct-bridge style run.")
+(defconst tterm--flat-style-run-field-count 19
+  "Field count for one flat direct-bridge style run.
+
+Layout (indices within one run):
+  0 bold        1 italic       2 underline     3 reverse
+  4..7 fg color (type,a,b,c)    8..11 bg color (type,a,b,c)
+  12 length     13 text
+  14 dim        15 blink        16 conceal      17 strike
+  18 double-underline
+The five trailing attributes (2.6b) are appended after text so the first
+14 fields keep their historical offsets; see OCaml Apply_plan.style_run_fields.")
 
 (defun tterm--flat-style-color (runs base)
   "Return decoded color from flat RUNS at BASE."
@@ -190,9 +212,10 @@
     (_ nil)))
 
 (defun tterm--flat-style-face (runs base)
-  "Return a face from flat direct-bridge RUNS at BASE."
-  (let ((fg (tterm--flat-style-color runs (+ base 3)))
-        (bg (tterm--flat-style-color runs (+ base 7)))
+  "Return a face from flat direct-bridge RUNS at BASE.
+See `tterm--flat-style-run-field-count' for the per-run field layout."
+  (let ((fg (tterm--flat-style-color runs (+ base 4)))
+        (bg (tterm--flat-style-color runs (+ base 8)))
         face)
     (unless (zerop (aref runs base))
       (push '(:weight bold) face))
@@ -200,6 +223,16 @@
       (push 'italic face))
     (unless (zerop (aref runs (+ base 2)))
       (push 'underline face))
+    (unless (zerop (aref runs (+ base 3)))
+      (push '(:inverse-video t) face))
+    ;; 2.6b attributes (OCaml 2.6b). dim(14)/blink(15) have no native Emacs
+    ;; equivalent and are approximated as no-ops here (see LOOP 2.6b).
+    (unless (zerop (aref runs (+ base 16)))
+      (push '(invisible t) face))        ; conceal
+    (unless (zerop (aref runs (+ base 17)))
+      (push '(:strike-through t) face))   ; strike
+    (unless (zerop (aref runs (+ base 18)))
+      (push '(:underline t) face))        ; double underline (approx single)
     (when fg
       (push (tterm--apply-foreground-face fg) face))
     (when bg
@@ -227,7 +260,7 @@
       (let* ((face (tterm--flat-style-face runs 0))
              (text (tterm--apply-profile-time :text-decode-ms
                      (tterm--decode-apply-cell-text
-                      (aref runs 12) row-len))))
+                      (aref runs 13) row-len))))
         (if face (propertize text 'face face) text))
     (let ((idx 0)
           chunks)
@@ -235,7 +268,7 @@
         (let* ((face (tterm--flat-style-face runs idx))
                (text (tterm--apply-profile-time :text-decode-ms
                        (tterm--decode-apply-cell-text
-                        (aref runs (+ idx 12)) (aref runs (+ idx 11))))))
+                        (aref runs (+ idx 13)) (aref runs (+ idx 12))))))
           (push (if face (propertize text 'face face) text) chunks))
         (setq idx (+ idx tterm--flat-style-run-field-count)))
       (apply #'concat (nreverse chunks)))))
@@ -539,13 +572,78 @@
   (tterm--goto-row row nil)
   (tterm--replace-row-span-at-point row col row-len text))
 
+(defun tterm--any-multibyte-p (lines)
+  "Return non-nil when any string in LINES is multibyte."
+  (let ((multibyte nil))
+    (while (and lines (not multibyte))
+      (when (multibyte-string-p (car lines))
+        (setq multibyte t))
+      (setq lines (cdr lines)))
+    multibyte))
+
+(defun tterm--full-row-simple-fast-p (text count)
+  "Return non-nil when TEXT is an unibyte run implying all-ASCII rows.
+Lets `tterm--set-simple-row-range-simple' skip the split-string resplit
+(LOOP 6.3) when the byte length matches COUNT*(COLS+1)-1."
+  (and (not (multibyte-string-p text))
+       (let ((cols (and tterm--terminal (tterm-cols tterm--terminal))))
+         (and cols (> count 0)
+              (= (string-bytes text) (- (* count (1+ cols)) 1))))))
+
+(defun tterm--set-simple-row-range-simple (start-row count)
+  "Mark COUNT consecutive rows from START-ROW simple, without per-line checks."
+  (when (vectorp tterm--simple-row-map)
+    (let ((row start-row)
+          (end (+ start-row count)))
+      (while (< row end)
+        (when (and (>= row 0) (< row (length tterm--simple-row-map)))
+          (aset tterm--simple-row-map row t))
+        (setq row (1+ row)))
+      (when (<= start-row tterm--simple-row-prefix)
+        (tterm--recompute-simple-row-prefix)))))
+
 (defun tterm--replace-full-row-run (start-row lines)
   "Replace consecutive full rows from START-ROW with LINES.
 Return the row immediately after the replaced run, with point there."
-  (tterm--replace-full-row-run-text
-   start-row
-   (length lines)
-   (if lines (mapconcat #'identity lines "\n") "")))
+  (tterm--replace-full-row-run-lines start-row (length lines) lines))
+
+(defun tterm--replace-full-row-run-lines (start-row count lines)
+  "Replace COUNT consecutive full rows from START-ROW with LINES.
+Return the row immediately after the replaced run, with point there.
+Inserts LINES directly with interleaved newlines (no mapconcat join) and
+records simple-row metadata from LINES directly (no split-string resplit)."
+  (tterm--apply-profile-inc :full-row-runs)
+  (tterm--apply-profile-inc :full-row-lines count)
+  (tterm--apply-profile-time :full-row-ms
+    (let ((position (and (/= start-row 0)
+                         (tterm--simple-row-position start-row))))
+      (cond
+       ((= start-row 0)
+        (goto-char (point-min)))
+       (position
+        (goto-char position))
+       (t
+        (goto-char (point-min))
+        (forward-line start-row))))
+    (let ((start (point)))
+      (let ((end-position (tterm--simple-row-position (+ start-row count))))
+        (if end-position
+            (goto-char end-position)
+          (forward-line count)))
+      (delete-region start (point))
+      (goto-char start)
+      (dolist (line lines)
+        (insert line "\n"))
+      (tterm--set-simple-row-range start-row lines)
+      (let ((end (point)))
+        (when (tterm--any-multibyte-p lines)
+          (tterm--apply-symbol-font-fallbacks-for-text
+           (mapconcat #'identity lines "\n") start end))
+        (when (and (tterm--active-hyperlink-p)
+                   (> end start))
+          (tterm--apply-profile-time :link-property-ms
+            (tterm--apply-active-hyperlink start (max start (1- end))))))
+      (+ start-row count))))
 
 (defun tterm--replace-full-row-run-text (start-row count text)
   "Replace COUNT consecutive full rows from START-ROW with TEXT.
@@ -571,8 +669,13 @@ Return the row immediately after the replaced run, with point there."
           (forward-line count)))
       (delete-region start (point))
       (goto-char start)
-      (insert (if (> count 0) (concat text "\n") ""))
-      (tterm--set-simple-row-range start-row (split-string text "\n"))
+      (when (> count 0)
+        (insert text "\n"))   ; multi-arg insert, no `(concat text "\n")' copy
+      ;; Simple-row metadata: skip the split-string resplit for unibyte runs
+      ;; whose byte length implies all-ASCII rows (LOOP 6.3 O(1) fast path).
+      (if (tterm--full-row-simple-fast-p text count)
+          (tterm--set-simple-row-range-simple start-row count)
+        (tterm--set-simple-row-range start-row (split-string text "\n")))
       (let ((end (point)))
         (tterm--apply-symbol-font-fallbacks-for-text text start end)
         (when (and (tterm--active-hyperlink-p)

@@ -115,18 +115,64 @@ disabled.
 (register-definition-prefixes "gptel-cloudflare-ai-gateway" '("gptel-cloudflare-ai-gateway-"))
 
 
+;;; Generated autoloads from markdown-preview-mode.el
+
+(autoload 'markdown-preview-mermaid-block "markdown-preview-mode"
+"Render Mermaid fence at point to SVG.
+With prefix argument BROWSE, open the SVG in the browser.
+
+(fn &optional BROWSE)" t)
+(autoload 'markdown-preview-buffer "markdown-preview-mode"
+"Render current Markdown file to HTML.
+With prefix argument BROWSE, open the HTML in the browser.
+
+(fn &optional BROWSE)" t)
+(autoload 'markdown-preview-mode "markdown-preview-mode"
+"Preview Markdown files and Mermaid blocks.
+
+This is a minor mode.  If called interactively, toggle the
+`Markdown-Preview mode' mode.  If the prefix argument is positive,
+enable the mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate the variable `markdown-preview-mode'.
+
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
+
+\\{markdown-preview-mode-map}
+
+(fn &optional ARG)" t)
+(register-definition-prefixes "markdown-preview-mode" '("markdown-preview-"))
+
+
 ;;; Generated autoloads from mql-mode.el
 
 (autoload 'mql-mode "mql-mode"
 "Major mode for editing MetaTrader MQL4/5 code.
 
-In addition to any hooks its parent mode `c-mode' might have run, this
-mode runs the hook `mql-mode-hook', as the final or penultimate step
-during initialization.
+In addition to any hooks its parent mode `c-mode' might have run, this mode runs
+the hook `mql-mode-hook', as the final or penultimate step during
+initialization.
 
 \\{mql-mode-map}" t)
 (add-to-list 'auto-mode-alist '("\\.mq4\\'" . mql-mode))
 (register-definition-prefixes "mql-mode" '("mql-"))
+
+
+;;; Generated autoloads from ob-excalidraw.el
+
+(autoload 'ob-excalidraw-setup "ob-excalidraw"
+"Set up ob-excalidraw by advising org-edit-src-code.
+This intercepts C-c ' for excalidraw blocks and launches the
+visual editor instead." t)
+(autoload 'ob-excalidraw-teardown "ob-excalidraw"
+"Remove the ob-excalidraw advice from org-edit-src-code." t)
+(register-definition-prefixes "ob-excalidraw" '("ob-excalidraw-" "org-babel-"))
 
 
 ;;; Generated autoloads from ob-http.el
@@ -191,76 +237,6 @@ disabled.
 (register-definition-prefixes "opam-env-mode" '("opam-env-"))
 
 
-;;; Generated autoloads from sql-clickhouse.el
-
-(autoload 'sql-clickhouse "sql-clickhouse"
-"Run clickhouse-client by ClickHouse as an inferior process.
-Optional argument BUFFER current buffer.
-
-(fn &optional BUFFER)" t)
-(register-definition-prefixes "sql-clickhouse" '("sql-clickhouse-"))
-
-
-;;; Generated autoloads from scv.el
-
-(autoload 'scv-session-manager "scv"
-"Open the scv Session Manager." t)
-(autoload 'scv-open-prompt-draft "scv"
-"Open the Rich Prompt Box for SESSION-ID and ORIGIN.
-
-(fn &optional SESSION-ID ORIGIN)" t)
-(autoload 'scv-open-session-viewer "scv"
-"Open a native Emacs Session Viewer for SESSION-ID and ORIGIN.
-
-(fn SESSION-ID &optional ORIGIN)" t)
-(autoload 'scv-new-session "scv"
-"Start a new local Session Viewer.
-
-With PROMPT-FOR-ID, prompt for the Session id instead of using a generated id.
-
-(fn &optional PROMPT-FOR-ID)" t)
-(autoload 'scv-menu "scv"
-"Open the scv transient command menu." t)
-(autoload 'scv-install "scv"
-"Attach scv key bindings to LEADER-MAP under KEY.
-
-KEY defaults to \"S\".
-
-(fn LEADER-MAP &optional KEY)")
-(register-definition-prefixes "scv" '("scv-"))
-
-
-;;; Generated autoloads from scv-reducer.el
-
-(register-definition-prefixes "scv-reducer" '("scv-reducer-"))
-
-
-;;; Generated autoloads from scv-reducer-tests.el
-
-(register-definition-prefixes "scv-reducer-tests" '("scv-"))
-
-
-;;; Generated autoloads from scv-session-viewer.el
-
-(autoload 'scv-session-viewer-open "scv-session-viewer"
-"Open native Emacs Session Viewer for SESSION-ID.
-
-(fn SESSION-ID)" t)
-(autoload 'scv-session-viewer-close "scv-session-viewer"
-"Close current Session Viewer." t)
-(register-definition-prefixes "scv-session-viewer" '("scv-session-viewer-"))
-
-
-;;; Generated autoloads from scv-session-viewer-tests.el
-
-(register-definition-prefixes "scv-session-viewer-tests" '("scv-test-"))
-
-
-;;; Generated autoloads from scv-tests.el
-
-(register-definition-prefixes "scv-tests" '("scv-test--w"))
-
-
 ;;; Generated autoloads from prism.el
 
 (autoload 'prism-soften-theme-faces "prism"
@@ -276,34 +252,41 @@ KEY defaults to \"S\".
 (register-definition-prefixes "prism-tests" '("prism--test-hex->rgb"))
 
 
-;;; Generated autoloads from ob-excalidraw.el
+;;; Generated autoloads from scv-drepl.el
 
-(autoload 'ob-excalidraw-setup "ob-excalidraw"
-"Set up ob-excalidraw by advising org-edit-src-code.
-This intercepts C-c ' for excalidraw blocks and launches the
-visual editor instead." t)
-(autoload 'ob-excalidraw-teardown "ob-excalidraw"
-"Remove the ob-excalidraw advice from org-edit-src-code." t)
-(register-definition-prefixes "ob-excalidraw" '("ob-excalidraw-" "org-babel-"))
+ (autoload 'drepl-scv "scv-drepl" nil t)
+(register-definition-prefixes "scv-drepl" '("display-comint-buffer-action" "drepl-scv-"))
 
 
-;;; Generated autoloads from markdown-preview-mode.el
+;;; Generated autoloads from sql-clickhouse.el
 
-(autoload 'markdown-preview-mermaid-block "markdown-preview-mode"
-"Render Mermaid fence at point to SVG.
-With prefix argument BROWSE, open the SVG in the browser.
+(autoload 'sql-clickhouse "sql-clickhouse"
+"Run clickhouse-client by ClickHouse as an inferior process.
+Optional argument BUFFER current buffer.
 
-(fn &optional BROWSE)" t)
-(autoload 'markdown-preview-buffer "markdown-preview-mode"
-"Render current Markdown file to HTML.
-With prefix argument BROWSE, open the HTML in the browser.
+(fn &optional BUFFER)" t)
+(register-definition-prefixes "sql-clickhouse" '("sql-clickhouse-"))
 
-(fn &optional BROWSE)" t)
-(autoload 'markdown-preview-mode "markdown-preview-mode"
-"Preview Markdown files and Mermaid blocks.
+
+;;; Generated autoloads from td-completing-read.el
 
-This is a minor mode.  If called interactively, toggle the
-`Markdown-Preview mode' mode.  If the prefix argument is positive,
+(defvar td-completing-read-mode nil
+"Non-nil if Td-Completing-Read mode is enabled.
+See the `td-completing-read-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `td-completing-read-mode'.")
+(custom-autoload 'td-completing-read-mode "td-completing-read" nil)
+(autoload 'td-completing-read-mode "td-completing-read"
+"Toggle hybrid async completing-read.
+
+When active, `completing-read' uses a hybrid table that returns a
+limited prescient-sorted subset immediately, then fills in the
+full list asynchronously.
+
+This is a global minor mode.  If called interactively, toggle the
+`Td-Completing-Read mode' mode.  If the prefix argument is positive,
 enable the mode, and if it is zero or negative, disable the mode.
 
 If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
@@ -311,13 +294,13 @@ mode if ARG is nil, omitted, or is a positive number.  Disable the mode
 if ARG is a negative number.
 
 To check whether the minor mode is enabled in the current buffer,
-evaluate the variable `markdown-preview-mode'.
+evaluate `(default-value \\='td-completing-read-mode)'.
 
 The mode's hook is called both when the mode is enabled and when it is
 disabled.
 
 (fn &optional ARG)" t)
-(register-definition-prefixes "markdown-preview-mode" '("markdown-preview-"))
+(register-definition-prefixes "td-completing-read" '("td-"))
 
 
 ;;; Generated autoloads from tterm.el
@@ -359,6 +342,8 @@ With prefix REMOTE, prompt for an SSH host.
 
 (autoload 'tterm-dashboard-refresh "tterm-dashboard"
 "Refresh the tterm dashboard buffer.
+When called from a non-dashboard buffer, target
+`tterm-dashboard-buffer-name' instead of the current buffer.
 
 (fn &optional FULL)" t)
 (autoload 'tterm-dashboard "tterm-dashboard"
@@ -385,40 +370,6 @@ With prefix REMOTE, prompt for an SSH host.
 
 (register-definition-prefixes "tterm-profiling" '("tterm--"))
 
-
-;;; Generated autoloads from td-completing-read.el
-
-(defvar td-completing-read-mode nil
-"Non-nil if Td-Completing-Read mode is enabled.
-See the `td-completing-read-mode' command
-for a description of this minor mode.
-Setting this variable directly does not take effect;
-either customize it (see the info node `Easy Customization')
-or call the function `td-completing-read-mode'.")
-(custom-autoload 'td-completing-read-mode "td-completing-read" nil)
-(autoload 'td-completing-read-mode "td-completing-read"
-"Toggle hybrid async completing-read.
-
-When active, `completing-read' uses a hybrid table that returns a
-limited prescient-sorted subset immediately, then fills in the
-full list asynchronously.
-
-This is a global minor mode.  If called interactively, toggle the
-`Td-Completing-Read mode' mode.  If the prefix argument is positive,
-enable the mode, and if it is zero or negative, disable the mode.
-
-If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
-mode if ARG is nil, omitted, or is a positive number.  Disable the mode
-if ARG is a negative number.
-
-To check whether the minor mode is enabled in the current buffer,
-evaluate `(default-value \\='td-completing-read-mode)'.
-
-The mode's hook is called both when the mode is enabled and when it is
-disabled.
-
-(fn &optional ARG)" t)
-(register-definition-prefixes "td-completing-read" '("td-"))
 
 ;;; End of scraped data
 

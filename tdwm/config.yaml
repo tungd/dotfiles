@@ -87,3 +87,5 @@ menubar:
     initially_collapsed: true
     trigger_label: "..."
     auto_hide_seconds: 0
+
+debug: true

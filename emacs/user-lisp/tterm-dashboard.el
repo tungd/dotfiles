@@ -30,6 +30,9 @@ Used to detect changes and avoid unnecessary point moves.")
 (defvar-local tterm-dashboard--pending-handle nil
   "Dashboard window handle to restore after an async refresh.")
 
+(defvar-local tterm-dashboard--refresh-job-handle nil
+  "Async job handle from `tterm-bridge-command-async', for cancellation.")
+
 (defvar tterm-dashboard--focus-callback-installed nil
   "Non-nil when dashboard focus callback is installed.")
 
@@ -248,6 +251,8 @@ Intended for focus, window configuration, and kill-emacs callbacks."
 
 (define-derived-mode tterm-dashboard-mode special-mode "tterm-dashboard"
   "Dashboard for tmux-backed tterm windows."
+  (add-hook 'change-major-mode-hook
+            #'tterm-dashboard--cancel-auto-refresh nil t)
   (add-hook 'kill-buffer-hook #'tterm-dashboard--cancel-auto-refresh nil t)
   (tterm-dashboard--start-auto-refresh))
 
@@ -439,21 +444,31 @@ When the window is detached, reattach asynchronously."
     (tterm-dashboard-select-window handle id)))
 
 (defun tterm-dashboard-detach-window ()
-  "Detach the attached tterm window on the current dashboard row."
+  "Detach the attached tterm window on the current dashboard row.
+Disposes the attached tterm buffer to stop its redraw timers."
   (interactive)
   (let ((id (tterm-dashboard--terminal-id-at-point)))
     (unless id
       (user-error "No attached tterm window on this line"))
     (tterm-bridge-command id "detach" "")
+    (when-let* ((buffer (tterm--buffer-for-terminal-id id)))
+      (with-current-buffer buffer
+        (tterm--dispose-terminal-buffer)))
     (tterm-dashboard-refresh)))
 
 (defun tterm-dashboard-kill-window ()
-  "Kill the attached tterm window on the current dashboard row."
+  "Kill the attached tterm window on the current dashboard row.
+Disposes and kills the attached tterm buffer."
   (interactive)
   (let ((id (tterm-dashboard--terminal-id-at-point)))
     (unless id
       (user-error "No attached tterm window on this line"))
-    (tterm-bridge-command id "kill-window" "")
+    (ignore-errors
+      (tterm-bridge-command id "kill-window" ""))
+    (when-let* ((buffer (tterm--buffer-for-terminal-id id)))
+      (with-current-buffer buffer
+        (tterm--dispose-terminal-buffer))
+      (kill-buffer buffer))
     (tterm-dashboard-refresh)))
 
 (defun tterm-dashboard-create-window ()
@@ -601,6 +616,9 @@ is already in progress.
 When LOCAL-ONLY is non-nil, discover local tmux windows but skip remote SSH."
   (interactive)
   (when (and tterm-dashboard--refresh-in-progress current-prefix-arg)
+    (when tterm-dashboard--refresh-job-handle
+      (tterm-bridge-command-cancel tterm-dashboard--refresh-job-handle)
+      (setq tterm-dashboard--refresh-job-handle nil))
     (setq tterm-dashboard--refresh-in-progress nil))
   (when tterm-dashboard--refresh-in-progress
     (user-error "Dashboard refresh already in progress; C-u g to retry"))
@@ -608,35 +626,44 @@ When LOCAL-ONLY is non-nil, discover local tmux windows but skip remote SSH."
   (setq tterm-dashboard--pending-handle
         (tterm-dashboard--window-handle-at-point))
   (let ((buffer (current-buffer)))
-    (tterm-bridge-command-async
-     0 (if local-only "dashboard-local" "dashboard") ""
-     (lambda (result error-p)
-       (when (buffer-live-p buffer)
-         (with-current-buffer buffer
-           (if error-p
-               (progn
-                 (setq tterm-dashboard--refresh-in-progress nil)
-                 (message "Dashboard refresh failed: %s" error-p))
-             (let ((snapshot (tterm-dashboard--decode result)))
-               (if (equal snapshot tterm-dashboard--last-snapshot)
-                   ;; No change: just clear the in-progress flag
-                   (setq tterm-dashboard--refresh-in-progress nil)
-                 ;; Data changed: render and restore position
-                 (setq tterm-dashboard--last-snapshot snapshot)
-                 (tterm-dashboard--render snapshot)
-                 (when tterm-dashboard--pending-handle
-                   (tterm-dashboard--goto-window-handle
-                    tterm-dashboard--pending-handle))
-                 (setq tterm-dashboard--pending-handle nil)
-                 (setq tterm-dashboard--refresh-in-progress nil))))))))))
+    (let ((job-handle
+           (tterm-bridge-command-async
+            0 (if local-only "dashboard-local" "dashboard") ""
+            (lambda (result error-p)
+              (when (buffer-live-p buffer)
+                (with-current-buffer buffer
+                  (setq tterm-dashboard--refresh-job-handle nil)
+                  (if error-p
+                      (progn
+                        (setq tterm-dashboard--refresh-in-progress nil)
+                        (message "Dashboard refresh failed: %s" error-p))
+                    (let ((snapshot (tterm-dashboard--decode result)))
+                      (if (equal snapshot tterm-dashboard--last-snapshot)
+                          ;; No change: just clear the in-progress flag
+                          (setq tterm-dashboard--refresh-in-progress nil)
+                        ;; Data changed: render and restore position
+                        (setq tterm-dashboard--last-snapshot snapshot)
+                        (tterm-dashboard--render snapshot)
+                        (when tterm-dashboard--pending-handle
+                          (tterm-dashboard--goto-window-handle
+                           tterm-dashboard--pending-handle))
+                        (setq tterm-dashboard--pending-handle nil)
+                        (setq tterm-dashboard--refresh-in-progress nil))))))))))
+      (setq tterm-dashboard--refresh-job-handle job-handle))))
 
 ;;;###autoload
 (defun tterm-dashboard-refresh (&optional full)
-  "Refresh the tterm dashboard buffer."
+  "Refresh the tterm dashboard buffer.
+When called from a non-dashboard buffer, target
+`tterm-dashboard-buffer-name' instead of the current buffer."
   (interactive (list t))
-  (unless (derived-mode-p 'tterm-dashboard-mode)
-    (tterm-dashboard-mode))
-  (tterm-dashboard--refresh-async (not full)))
+  (if (derived-mode-p 'tterm-dashboard-mode)
+      (tterm-dashboard--refresh-async (not full))
+    (let ((buffer (get-buffer-create tterm-dashboard-buffer-name)))
+      (with-current-buffer buffer
+        (unless (derived-mode-p 'tterm-dashboard-mode)
+          (tterm-dashboard-mode))
+        (tterm-dashboard--refresh-async (not full))))))
 
 ;;;###autoload
 (defun tterm-dashboard ()
@@ -644,7 +671,8 @@ When LOCAL-ONLY is non-nil, discover local tmux windows but skip remote SSH."
   (interactive)
   (let ((buffer (get-buffer-create tterm-dashboard-buffer-name)))
     (with-current-buffer buffer
-      (tterm-dashboard-mode)
+      (unless (derived-mode-p 'tterm-dashboard-mode)
+        (tterm-dashboard-mode))
       (tterm-dashboard-refresh))
     (switch-to-buffer buffer)))
 

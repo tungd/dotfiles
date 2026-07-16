@@ -94,25 +94,27 @@
   (when (and (not noninteractive)
              (eq major-mode 'tterm-mode)
              (tterm--redraw-active-p))
-    (when (timerp tterm--redraw-request-timer)
-      (cancel-timer tterm--redraw-request-timer))
-    (let ((buffer (current-buffer)))
-      (cl-labels
-          ((schedule
-            (delay follow-up)
-            (setq tterm--redraw-request-timer
-                  (run-at-time
-                   delay nil
-                   (lambda ()
-                     (when (buffer-live-p buffer)
-                       (with-current-buffer buffer
-                         (setq tterm--redraw-request-timer nil)
-                         (when (and tterm--terminal
-                                    (tterm--redraw-active-p))
-                           (tterm--redraw-now-unless-resizing)
-                           (when follow-up
-                             (schedule tterm-redraw-update-delay nil))))))))))
-        (schedule 0 t)))))
+    ;; Coalesce rapid input onto the already-pending pull. Replacing the 25ms
+    ;; follow-up on every key can postpone it indefinitely, so tmux echo only
+    ;; becomes visible after typing pauses.
+    (unless (timerp tterm--redraw-request-timer)
+      (let ((buffer (current-buffer)))
+        (cl-labels
+            ((schedule
+              (delay follow-up)
+              (setq tterm--redraw-request-timer
+                    (run-at-time
+                     delay nil
+                     (lambda ()
+                       (when (buffer-live-p buffer)
+                         (with-current-buffer buffer
+                           (setq tterm--redraw-request-timer nil)
+                           (when (and tterm--terminal
+                                      (tterm--redraw-active-p))
+                             (tterm--redraw-now-unless-resizing)
+                             (when follow-up
+                               (schedule tterm-redraw-update-delay nil))))))))))
+          (schedule 0 t))))))
 
 (defun tterm--send-key (key)
   "Send KEY to the terminal."
@@ -126,10 +128,20 @@
         (tterm--schedule-input-redraw)))))
 
 (defun tterm--self-insert (n)
-  "Insert N self-inserting characters into the terminal."
+  "Insert N self-inserting characters into the terminal.
+N is the numeric prefix argument (1 for bare key press).
+Repeats the typed character N times instead of sending prefix
+events (C-u, digits) to the terminal like `this-command-keys' does."
   (interactive "p")
-  (ignore n)
-  (tterm--send-key (this-command-keys)))
+  (let ((term tterm--terminal))
+    (when term
+      (let* ((id (tterm-id term))
+             (bytes (tterm--input-bytes-for-mode
+                     (string last-command-event)
+                     (tterm-application-cursor term))))
+        (dotimes (_ n)
+          (tterm--write-input id bytes))
+        (tterm--schedule-input-redraw)))))
 
 (defun tterm--newline (n)
   "Send newline to terminal."

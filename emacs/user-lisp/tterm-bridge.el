@@ -132,6 +132,9 @@ without prompting."
 ;; These functions are provided by tterm-module.so at runtime.
 (declare-function tterm-module--connect "tterm-module" (rows cols host cwd))
 (declare-function tterm-module--command "tterm-module" (id command payload))
+(declare-function tterm-module--command-start "tterm-module" (id command payload))
+(declare-function tterm-module--command-poll "tterm-module" (job))
+(declare-function tterm-module--command-cancel "tterm-module" (job))
 (declare-function tterm-module--pull-apply-plan-bytes "tterm-module" (id displayed-version))
 (declare-function tterm-module--bracketed-paste-enabled "tterm-module" (id))
 (declare-function tterm-module--profile-reset "tterm-module" ())
@@ -269,18 +272,79 @@ without prompting."
    "local" (member command '("dashboard" "dashboard-local" "dashboard-cached")))
   (tterm-module--command id command (or payload "")))
 
+(defconst tterm-bridge-async-poll-interval 0.04
+  "Seconds between async command poll ticks while waiting for a result.
+The heavy command runs on the OCaml backend worker thread; the Emacs
+main thread only reads the job status on this timer until it completes.")
+
 (defun tterm-bridge-command-async (id command payload callback)
   "Asynchronously run COMMAND with PAYLOAD for terminal ID.
-CALLBACK is called with two arguments: (RESULT ERROR-P).
-RESULT is the output string on success, or nil on error.
-ERROR-P is non-nil when the command failed."
-  (run-at-time
-   0 nil
-   (lambda ()
-     (condition-case err
-         (funcall callback (tterm-bridge-command id command payload) nil)
-       (error
-        (funcall callback nil (error-message-string err)))))))
+CALLBACK is called exactly once with two arguments: (RESULT ERROR-P).
+RESULT is the output string on success, or nil on error/cancellation.
+ERROR-P is non-nil (a string describing the failure) when the command
+failed or was cancelled.
+Returns a job handle (opaque) accepted by `tterm-bridge-command-cancel',
+or nil if the command could not be started. Heavy work runs on the OCaml
+backend worker thread; this function returns immediately and polls for
+completion on a timer."
+  (tterm-bridge-ensure-module)
+  (condition-case err
+      (progn
+        (tterm-bridge-configure-runtime
+         "local" (member command '("dashboard" "dashboard-local" "dashboard-cached")))
+        (let* ((job (tterm-module--command-start id command (or payload "")))
+               (state (list :job job :callback callback :timer nil :fired nil))
+               (timer (run-at-time
+                       0 tterm-bridge-async-poll-interval
+                       (lambda ()
+                         (unless (plist-get state :fired)
+                           (let ((outcome nil)
+                                 (outcome-err nil)
+                                 (pending t))
+                             (condition-case poll-err
+                                 (pcase (tterm-module--command-poll job)
+                                   (`(done . ,result)
+                                    (setq outcome result
+                                          pending nil))
+                                   (`(error . ,err-msg)
+                                    (setq outcome-err err-msg
+                                          pending nil))
+                                   (`(cancelled . ,_ign)
+                                    (setq outcome-err "cancelled"
+                                          pending nil))
+                                   (`(pending . ,_ign) nil)
+                                   (_
+                                    (setq outcome-err "unknown async status"
+                                          pending nil)))
+                               (error
+                                (setq outcome-err (error-message-string poll-err)
+                                      pending nil)))
+                             (unless pending
+                               (setf (plist-get state :fired) t)
+                               (when (plist-get state :timer)
+                                 (cancel-timer (plist-get state :timer)))
+                               (funcall callback outcome outcome-err))))))))
+          (setf (plist-get state :timer) timer)
+          state))
+    (error
+     (funcall callback nil (error-message-string err))
+     nil)))
+
+(defun tterm-bridge-command-cancel (handle)
+  "Cancel an in-flight async command started by `tterm-bridge-command-async'.
+HANDLE is the job handle returned by that function. Safe to call with nil
+or an already-completed job: it stops polling and asks the backend to
+cancel, and the original CALLBACK is invoked exactly once with a
+cancellation error if it has not already fired."
+  (when (and handle (consp handle) (keywordp (car handle)))
+    (let ((timer (plist-get handle :timer))
+          (job (plist-get handle :job))
+          (callback (plist-get handle :callback)))
+      (unless (plist-get handle :fired)
+        (setf (plist-get handle :fired) t)
+        (when timer (cancel-timer timer))
+        (ignore-errors (tterm-module--command-cancel job))
+        (when callback (funcall callback nil "cancelled"))))))
 
 (defun tterm-bridge-pull-apply-plan-bytes (id displayed-version)
   "Pull serialized apply-plan from terminal ID as #[...] bytecode form."

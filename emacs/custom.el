@@ -207,9 +207,9 @@
  '(go-ts-indent-offset 2 nil nil "Customized with use-package go-ts-mode")
  '(package-selected-packages
    '(avy citre color-theme-sanityinc-solarized consult crux d2-mode diff-hl
-         doom-themes envrc expreg gdshader-mode gptel kotlin-ts-mode magit
-         msgpack neocaml nix-mode ob-duckdb ob-kotlin ob-sql-mode
-         pache-dark-theme prescient protobuf-mode rainbow-mode
+         doom-themes drepl envrc expreg folio-theme gdshader-mode gptel
+         kotlin-ts-mode magit msgpack neocaml nix-mode ob-duckdb ob-kotlin
+         ob-sql-mode pache-dark-theme prescient protobuf-mode rainbow-mode
          solarized-gruvbox-theme solarized-theme surround svg-lib
          tango-plus-theme terraform-mode treesit-fold tuareg utop visual-replace
          vundo))

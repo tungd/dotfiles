@@ -639,6 +639,14 @@ Uses project root if in a project, otherwise current directory."
   :custom
   (comint-terminfo-terminal "dumb-emacs-ansi"))
 
+(use-package drepl
+  :ensure t
+  :defer t)
+
+(use-package scv-drepl
+  :ensure nil
+  :commands drepl-scv)
+
 ;;;; Tramp
 (use-package tramp
   :custom
@@ -812,7 +820,7 @@ With prefix argument FORCE, rebuild every configured grammar."
     :models '(
               "gemini-3.1-flash-lite"
               "gemma-4-31b-it"
-              "gemma-4-26b-it"
+              "gemma-4-26b-a4b-it"
               ))
    gptel-default-mode 'org-mode
    gptel-include-reasoning nil
@@ -1170,8 +1178,6 @@ With prefix argument FORCE, rebuild every configured grammar."
         scroll-margin 5
         scroll-conservatively 0
         auto-window-vscroll nil)
-
-(pixel-scroll-precision-mode t)
 
 ;; I have a 2k display, and used to run a HiDPI hack for macOS. Recently I got a
 ;; new Mac and tired of running it. So here it goes:

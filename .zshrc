@@ -147,19 +147,8 @@ export PATH="$HOME/.npm-global/bin:$PATH"
 # opencode
 export PATH=/Users/tung/.opencode/bin:$PATH
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/tung/Downloads/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/tung/Downloads/google-cloud-sdk/path.zsh.inc'; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f '/Users/tung/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/tung/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
-
-# >>> grok installer >>>
-export PATH="$HOME/.grok/bin:$PATH"
-# <<< grok installer <<<
-
 # Added by Antigravity IDE
 export PATH="/Users/tung/.antigravity-ide/antigravity-ide/bin:$PATH"
-
 
 # Added by Antigravity CLI installer
 export PATH="/Users/tung/.local/bin:$PATH"
@@ -173,3 +162,9 @@ tterm_osc7_cwd() {
   printf '\e]7;file://%s%s\a' "${HOST:-localhost}" "$PWD"
 }
 add-zsh-hook precmd tterm_osc7_cwd
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/tung/Downloads/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/tung/Downloads/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/tung/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/tung/Downloads/google-cloud-sdk/completion.zsh.inc'; fi

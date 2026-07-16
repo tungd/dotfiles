@@ -14,7 +14,11 @@
 
 (declare-function tterm-dashboard "tterm-dashboard" ())
 (declare-function tterm-cwd "tterm" (term))
+(declare-function tterm-handle "tterm" (term))
+(declare-function tterm-host "tterm" (term))
 (declare-function tterm-set-cwd "tterm" (term value))
+(declare-function tterm-title "tterm" (term))
+(declare-function tterm--directory-for-host "tterm" (host directory))
 (declare-function tterm--header-attention-indicator "tterm" ())
 (declare-function tterm--shift-row "tterm-apply" (row))
 
@@ -28,13 +32,22 @@ buffer name string."
   :type 'function
   :group 'tterm)
 
-(defcustom tterm-osc-52-policy 'ask
+(defcustom tterm-buffer-title-update-delay 0.5
+  "Seconds an OSC title must remain stable before renaming its buffer.
+This prevents animated OSC titles from making buffer names flash.  Set to zero
+to rename immediately."
+  :type 'number
+  :group 'tterm)
+
+(defcustom tterm-osc-52-policy 'confirm
   "Policy for OSC 52 clipboard writes.
 `accept` writes to the kill ring automatically, `reject` ignores requests,
-`confirm` prompts before writing, and `ignore` keeps clipboard writes silent."
+`confirm' prompts (deferred outside the apply loop) before writing,
+`ask' is aliased to `confirm', and `ignore' keeps clipboard writes silent."
   :type '(choice (const :tag "Accept" accept)
                  (const :tag "Reject" reject)
                  (const :tag "Confirm" confirm)
+                 (const :tag "Ask" ask)
                  (const :tag "Ignore" ignore))
   :group 'tterm)
 
@@ -65,29 +78,33 @@ Larger payloads are ignored."
 (defvar-local tterm--title nil
   "Latest terminal title for the current tterm buffer.")
 
+(defvar-local tterm--buffer-title-update-timer nil
+  "Pending timer for a coalesced buffer-name update.")
+
 (defvar-local tterm--osc-indicator nil
   "Current OSC indicator state.
-One of `idle', `busy', `failed', or `unknown'.")
+One of `idle', `busy', `blocked', `failed', or `unknown'.")
 
 (defvar-local tterm--latest-notification nil
   "Latest OSC 9/777 notification summary for the current buffer.")
 
 (defun tterm-osc-status (&optional buffer)
-  "Return the latest OSC 133 status for BUFFER.
+  "Return the latest OSC work status for BUFFER.
 BUFFER defaults to the current buffer.  The result is one of `busy', `idle',
-`failed', `unknown', or nil when no OSC 133 marker has been seen."
+`blocked', `failed', `unknown', or nil when no status marker has been seen."
   (let ((target (or buffer (current-buffer))))
     (when (buffer-live-p target)
       (with-current-buffer target
         tterm--osc-indicator))))
 
 (defun tterm-osc-status-string (&optional buffer)
-  "Return a compact display string for BUFFER's OSC 133 status.
+  "Return a compact display string for BUFFER's OSC work status.
 BUFFER defaults to the current buffer.  Return an empty string when no status is
 available."
   (pcase (tterm-osc-status buffer)
     ('busy "busy")
     ('idle "idle")
+    ('blocked "blocked")
     ('failed "failed")
     ('unknown "?")
     (_ "")))
@@ -115,30 +132,45 @@ available."
         ""
       (format " [osc:%s]" status))))
 
+(defun tterm--hex-pair-p (string index)
+  "Return non-nil when STRING at INDEX starts a two-hex-digit escape.
+INDEX points at the first hex digit (the character after '%')."
+  (and (<= (+ index 1) (1- (length string)))
+       (let ((h1 (aref string index))
+             (h2 (aref string (1+ index))))
+         (and (or (and (>= h1 ?0) (<= h1 ?9))
+                  (and (>= h1 ?A) (<= h1 ?F))
+                  (and (>= h1 ?a) (<= h1 ?f)))
+              (or (and (>= h2 ?0) (<= h2 ?9))
+                  (and (>= h2 ?A) (<= h2 ?F))
+                  (and (>= h2 ?a) (<= h2 ?f)))))))
+
 (defun tterm--url-decode (value)
-  "Decode percent-escaped octets in VALUE.
-Malformed escapes are preserved."
-  (let ((len (length value))
-        (decoded "")
-        (start 0))
+  "Decode percent-escaped octets in VALUE as UTF-8.
+VALUE is treated as a raw byte sequence (the usual OSC payload encoding):
+each literal byte is copied once into a staging buffer and the whole buffer
+is decoded as UTF-8 in a single pass, so this is O(n) in the length of VALUE.
+Percent-encoded octets are accumulated as raw bytes and decoded together with
+the rest, which fixes UTF-8 sequences that were previously mangled into
+Latin-1.  Malformed escapes (a '%' not followed by two hex digits) are
+preserved verbatim."
+  (let* ((len (length value))
+         (buf (make-string len 0))
+         (n 0)
+         (start 0))
     (while (< start len)
       (let ((c (aref value start)))
         (if (and (= c ?%)
-                 (<= (+ start 2) (1- len))
-                 (let ((h1 (aref value (+ start 1)))
-                       (h2 (aref value (+ start 2))))
-                   (and (or (and (>= h1 ?0) (<= h1 ?9))
-                            (and (>= h1 ?A) (<= h1 ?F))
-                            (and (>= h1 ?a) (<= h1 ?f)))
-                        (or (and (>= h2 ?0) (<= h2 ?9))
-                            (and (>= h2 ?A) (<= h2 ?F))
-                            (and (>= h2 ?a) (<= h2 ?f))))))
-            (let ((byte (string-to-number (substring value (+ start 1) (+ start 3)) 16)))
-              (setq decoded (concat decoded (string byte)))
+                 (tterm--hex-pair-p value (1+ start)))
+            (progn
+              (aset buf n (string-to-number
+                           (substring value (1+ start) (+ start 3)) 16))
+              (setq n (1+ n))
               (setq start (+ start 3)))
-          (setq decoded (concat decoded (string c)))
+          (aset buf n (logand c #xff))
+          (setq n (1+ n))
           (setq start (1+ start)))))
-    decoded))
+    (decode-coding-string (substring buf 0 n) 'utf-8 t)))
 
 (defun tterm--collapse-path-parents (path)
   "Return PATH with parent directories collapsed to initials.
@@ -187,8 +219,10 @@ For example, ~/Projects/personal/tterm becomes ~/P/p/tterm."
      (t (buffer-name)))))
 
 (defun tterm--osc-cwd-path (data)
-  "Return a local directory path from OSC 7 DATA."
-  (let ((value (decode-coding-string data 'utf-8)))
+  "Return a local directory path from OSC 7 DATA.
+DATA is a raw byte sequence (as received from the terminal); the single
+UTF-8 decode is performed by `tterm--url-decode'."
+  (let ((value data))
     (when (string-prefix-p "file://" value)
       (setq value (substring value 7))
       (let ((slash (string-match-p "/" value)))
@@ -207,6 +241,26 @@ For example, ~/Projects/personal/tterm becomes ~/P/p/tterm."
            (new-name (funcall tterm-buffer-title-function cwd title)))
       (unless (string= (buffer-name) new-name)
         (rename-buffer new-name t)))))
+
+(defun tterm--apply-buffer-name-update (buffer title)
+  "Rename live BUFFER when TITLE is still its current terminal title."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (when (equal title tterm--title)
+        (setq tterm--buffer-title-update-timer nil)
+        (tterm--update-buffer-name)))))
+
+(defun tterm--schedule-buffer-name-update ()
+  "Coalesce buffer renames until the current OSC title is stable."
+  (when (timerp tterm--buffer-title-update-timer)
+    (cancel-timer tterm--buffer-title-update-timer))
+  (setq tterm--buffer-title-update-timer nil)
+  (if (<= tterm-buffer-title-update-delay 0)
+      (tterm--update-buffer-name)
+    (setq tterm--buffer-title-update-timer
+          (run-at-time tterm-buffer-title-update-delay nil
+                       #'tterm--apply-buffer-name-update
+                       (current-buffer) tterm--title))))
 
 (defun tterm--short-title (cwd title)
   "Return compact tterm display title from CWD and TITLE."
@@ -242,7 +296,8 @@ For example, ~/Projects/personal/tterm becomes ~/P/p/tterm."
        "  "))))
 
 (defun tterm--set-cwd (data)
-  "Update terminal current directory from OSC 7 DATA."
+  "Update terminal current directory from OSC 7 DATA.
+For remote terminals, the directory is wrapped in a TRAMP path."
   (let* ((path (tterm--osc-cwd-path data))
          (directory (and (stringp path)
                          (not (string-empty-p path))
@@ -250,9 +305,18 @@ For example, ~/Projects/personal/tterm becomes ~/P/p/tterm."
     (when directory
       (when tterm--terminal
         (tterm-set-cwd tterm--terminal directory))
-      (when (file-directory-p directory)
-        (setq-local default-directory directory))
-      (tterm--update-buffer-name))))
+      (let ((effective-dir
+             (if (and tterm--terminal
+                      (tterm-host tterm--terminal)
+                      (not (string= (tterm-host tterm--terminal) "local")))
+                 (tterm--directory-for-host (tterm-host tterm--terminal) directory)
+               directory)))
+        ;; For remote paths skip the file-directory-p guard (Tramp would try
+        ;; to connect); for local paths only accept directories that exist.
+        (when (or (file-remote-p effective-dir)
+                  (file-directory-p effective-dir))
+          (setq-local default-directory effective-dir)))
+      (tterm--schedule-buffer-name-update))))
 
 (defun tterm--osc-code-and-data (payload)
   "Return cons (CODE . DATA) from OSC PAYLOAD.
@@ -272,11 +336,40 @@ the leading decimal digits followed by a semicolon."
         (cons first (substring payload 1))))))
 
 (defun tterm--clipboard-policy-accepts-p ()
-  "Return non-nil when current OSC 52 policy wants to write clipboard data."
+  "Return non-nil when current OSC 52 policy wants to write clipboard data.
+For deferrable policies (`confirm', `ask') the actual prompt is deferred
+out of the apply loop; this function returns t to signal acceptance, and
+`tterm--handle-osc-52' schedules the deferred write."
   (pcase tterm-osc-52-policy
     ('accept t)
-    ('confirm (y-or-n-p "Allow OSC 52 clipboard write? "))
+    ((or 'confirm 'ask) t)
     (_ nil)))
+
+(defvar tterm--osc-52-deferred-payload nil
+  "Deferred payload for the pending OSC 52 confirm prompt.
+The value is a (SELECTION . DECODED) cons, or nil.")
+
+(defvar tterm--osc-52-deferred-timer nil
+  "Timer object for the deferred OSC 52 confirm prompt, or nil.")
+
+(defun tterm--osc-52-defer-write (selection decoded)
+  "Defer an OSC 52 clipboard write for CONFIRM policy.
+Prompts the user once the apply loop's `inhibit-redisplay' is released
+and writes SELECTION/DECODED to the clipboard if accepted.
+Only one prompt is kept pending at a time."
+  (when tterm--osc-52-deferred-timer
+    (cancel-timer tterm--osc-52-deferred-timer))
+  (setq tterm--osc-52-deferred-payload (cons selection decoded)
+        tterm--osc-52-deferred-timer
+        (run-at-time 0 nil
+                     (lambda ()
+                       (setq tterm--osc-52-deferred-timer nil)
+                       (when tterm--osc-52-deferred-payload
+                         (let ((sel (car tterm--osc-52-deferred-payload))
+                               (txt (cdr tterm--osc-52-deferred-payload)))
+                           (setq tterm--osc-52-deferred-payload nil)
+                           (when (y-or-n-p "Allow OSC 52 clipboard write? ")
+                             (tterm--set-terminal-clipboard sel txt))))))))
 
 (defun tterm--set-terminal-clipboard (selection text)
   "Update kill ring and system clipboard with TEXT for SELECTION."
@@ -444,12 +537,16 @@ the leading decimal digits followed by a semicolon."
               tterm--active-hyperlink-start nil))
 
 (defun tterm--parse-osc-8 (payload)
-  "Parse OSC 8 payload string into (ID URI) list."
+  "Parse OSC 8 payload string into (ID URI) list.
+The URI is stored verbatim; percent-escapes are decoded once, later, when
+the URI is opened (see `tterm--local-file-from-uri').  This avoids decoding
+the same escapes twice, which previously mangled http URIs (e.g. `%20')
+and file paths containing literal percent-encoded bytes."
   (let ((semi (string-match-p ";" payload)))
     (when semi
       (let ((id (substring payload 0 semi))
             (uri (substring payload (1+ semi))))
-        (cons id (if uri (tterm--url-decode uri) ""))))))
+        (cons id (if uri uri ""))))))
 
 (defun tterm--handle-osc-8 (payload)
   "Handle OSC 8 hyperlink payload."
@@ -461,14 +558,16 @@ the leading decimal digits followed by a semicolon."
       (tterm--clear-active-hyperlink))))
 
 (defun tterm--handle-osc-52 (payload)
-  "Handle OSC 52 clipboard payload."
+  "Handle OSC 52 clipboard payload.
+For deferrable policies (`confirm', `ask') the prompt and clipboard write
+are deferred outside the apply loop to avoid the `inhibit-redisplay' lock."
   (let ((semi (string-match-p ";" payload)))
     (when (and semi (< 0 semi) (< semi (length payload)))
       (let* ((selection-token (substring payload 0 semi))
              (data-b64 (substring payload (1+ semi)))
              (selection (if (member selection-token '("c" "C")) 1 0)))
         (condition-case nil
-            (let* ((raw-bytes (base64-decode-string data-b64 t t))
+            (let* ((raw-bytes (base64-decode-string data-b64 nil t))
                    (raw-len (string-bytes raw-bytes))
                    (decoded (decode-coding-string raw-bytes 'utf-8 t)))
               (if (and (numberp raw-len)
@@ -477,7 +576,9 @@ the leading decimal digits followed by a semicolon."
                 (when (and (stringp decoded)
                            (not (string-empty-p decoded))
                            (tterm--clipboard-policy-accepts-p))
-                  (tterm--set-terminal-clipboard selection decoded))))
+                  (if (memq tterm-osc-52-policy '(confirm ask))
+                      (tterm--osc-52-defer-write selection decoded)
+                    (tterm--set-terminal-clipboard selection decoded)))))
           (error
            (message "Malformed OSC52 payload ignored")))))))
 
@@ -494,7 +595,7 @@ the leading decimal digits followed by a semicolon."
                     (_ 'unknown)))
       (force-mode-line-update))))
 
-(defun tterm--emit-notification (title body source)
+(defun tterm--emit-notification (title body _source)
   "Emit accepted terminal notification TITLE and BODY from SOURCE."
   (when (and (stringp body)
              (not (string-empty-p body))
@@ -506,13 +607,31 @@ the leading decimal digits followed by a semicolon."
     (force-mode-line-update)
     (run-hook-with-args 'tterm-notification-hook title body)))
 
+(defun tterm--parse-osc-9-progress (payload)
+  "Return (STATE . PERCENT) for valid OSC 9;4 PAYLOAD, else nil.
+STATE is 0 through 4.  PERCENT is nil or an integer from 0 through 100."
+  (when (string-match
+         "\\`4;\\([0-4]\\)\\(?:;\\([0-9]+\\)\\)?\\'" payload)
+    (let* ((state (string-to-number (match-string 1 payload)))
+           (percent-text (match-string 2 payload))
+           (percent (and percent-text (string-to-number percent-text))))
+      (when (or (null percent) (<= percent 100))
+        (cons state percent)))))
+
 (defun tterm--handle-osc-9 (payload)
-  "Handle OSC 9 desktop notification payload."
-  (unless (or (string-empty-p payload)
-              ;; OSC 9;4 is a progress sequence in iTerm2/ConEmu-style
-              ;; protocols, not a desktop notification body.
-              (string-match-p "\\`4\\(?:;\\|\\'\\)" payload))
-    (tterm--emit-notification nil payload 'osc-9)))
+  "Handle OSC 9 notification or OSC 9;4 progress PAYLOAD."
+  (if (string-match-p "\\`4\\(?:;\\|\\'\\)" payload)
+      (when-let* ((progress (tterm--parse-osc-9-progress payload)))
+        (setq-local tterm--osc-indicator
+                    (pcase (car progress)
+                      (0 'idle)
+                      (1 'busy)
+                      (2 'failed)
+                      (3 'busy)
+                      (4 'blocked)))
+        (force-mode-line-update))
+    (unless (string-empty-p payload)
+      (tterm--emit-notification nil payload 'osc-9))))
 
 (defun tterm--handle-osc-777 (payload)
   "Handle OSC 777 desktop notification payload."
@@ -526,7 +645,7 @@ the leading decimal digits followed by a semicolon."
   "Set terminal title from PAYLOAD."
   (let ((title (decode-coding-string payload 'utf-8)))
     (setq-local tterm--title title)
-    (tterm--update-buffer-name)))
+    (tterm--schedule-buffer-name-update)))
 
 (defun tterm--handle-osc (payload)
   "Handle OSC event from PAYLOAD."

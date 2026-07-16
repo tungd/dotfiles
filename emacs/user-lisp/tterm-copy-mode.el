@@ -130,6 +130,16 @@ When nil, fetch up to `tterm-buffer-size'."
 
 (defun tterm--copy-mode-unescape-field (value)
   "Decode one escaped copy-history field VALUE."
+  ;; Fast path: most history fields carry no escapes, so return VALUE
+  ;; unchanged instead of building a cons per character and apply-ing it
+  ;; back into a string (LOOP 6.6). Only the rare escaped field pays
+  ;; for the character-by-character decode.
+  (if (string-search "\\" value)
+      (tterm--copy-mode-unescape-field-slow value)
+    value))
+
+(defun tterm--copy-mode-unescape-field-slow (value)
+  "Character-by-character decode of an escaped copy-history field VALUE."
   (let ((index 0)
         (length (length value))
         (out nil))

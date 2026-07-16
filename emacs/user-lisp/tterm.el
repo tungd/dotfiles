@@ -46,6 +46,14 @@ while the buffer was hidden or inactive."
   :type 'number
   :group 'tterm)
 
+(defcustom tterm-alt-screen-sync-interval 0.25
+  "Minimum seconds between wheel-driven alt-screen resyncs (LOOP 6.5).
+A trackpad delivers dozens of wheel events per second; resyncing on
+every event blocks on a bridge round trip. Cache the alt-screen and
+only resync at most this often."
+  :type 'number
+  :group 'tterm)
+
 (defcustom tterm-wheel-scroll-lines 3
   "Number of terminal scrollback lines to move per mouse wheel event."
   :type 'integer
@@ -75,8 +83,13 @@ completion windows are active."
   "Display substitutions for terminal glyphs with poor font coverage.")
 
 (defconst tterm--built-in-symbol-face-fallbacks
-  '(((#x273B . #x273F) . "Menlo"))
-  "Built-in per-character font faces for line-height-sensitive symbols.")
+  '(((#x273B . #x273F) . "Menlo")
+    ;; OpenCode's fallback fonts render braille spinners wider than a cell and
+    ;; U+2B1D progress marks narrower than a cell.  Relative face metrics keep
+    ;; the original glyphs without assuming an optional font family.
+    ((#x2800 . #x28FF) . (:height 0.9))
+    ((#x2B00 . #x2BFF) . (:width expanded)))
+  "Built-in per-character faces for symbols with unstable cell metrics.")
 
 (defcustom tterm-fontset-fallbacks
   tterm--built-in-fontset-fallbacks
@@ -89,11 +102,11 @@ proportional symbol fonts with taller line boxes."
 
 (defcustom tterm-symbol-face-fallbacks
   tterm--built-in-symbol-face-fallbacks
-  "Per-character font faces for terminal symbols that can alter line height.
-Each entry is (CHARACTERS . FONT), where CHARACTERS is either a character code
-or an inclusive (MIN . MAX) range. Keep this list narrow; broad symbol fallback
-belongs in `tterm-fontset-fallbacks'."
-  :type '(repeat (cons sexp string))
+  "Per-character faces for terminal symbols that can alter cell metrics.
+Each entry is (CHARACTERS . FACE), where CHARACTERS is either a character code
+or an inclusive (MIN . MAX) range, and FACE is a font family string or face
+attribute plist."
+  :type '(repeat (cons sexp (choice string sexp)))
   :group 'tterm)
 
 (defface tterm-mode-line-normal
@@ -137,6 +150,15 @@ belongs in `tterm-fontset-fallbacks'."
   "Set TERM current working directory to VALUE."
   (setf (tterm-cwd term) value))
 
+(defun tterm-set-displayed-version (term value)
+  "Set TERM displayed apply-plan version to VALUE."
+  (setf (tterm-displayed-version term) value))
+
+(defun tterm-set-size (term rows cols)
+  "Set TERM dimensions to ROWS by COLS."
+  (setf (tterm-rows term) rows
+        (tterm-cols term) cols))
+
 (defvar-local desktop-save-buffer nil)
 
 (defvar-local tterm--terminal nil
@@ -160,14 +182,15 @@ belongs in `tterm-fontset-fallbacks'."
 (defvar-local tterm--last-capture-refresh-time nil
   "Last `float-time' value when this buffer requested tmux capture resync.")
 
+(defvar-local tterm--capture-refresh-handle nil
+  "In-flight asynchronous idle capture-refresh job, or nil.")
+
 (defvar-local tterm--input-mode 'normal
   "Current terminal input mode.
 Only `normal` is valid while copy mode is inactive.")
 
 (defvar tterm-mode-map)
 (defvar tterm-copy-mode-map)
-
-(defvar tterm--mode-line-input-map)
 
 (defvar tterm--attention-refresh-timer nil
   "Timer that refreshes global tterm attention state.")
@@ -242,6 +265,22 @@ Only `normal` is valid while copy mode is inactive.")
                     kind
                     (aref tterm--ansi-color-face-suffixes index)))))
 
+;; Precomputed palette face symbols, indexed by palette index 0-15. These
+;; avoid `(intern (format ...))' on the styled hot path (LOOP 6.4) where
+;; hundreds of runs per frame would otherwise format+intern thousands of
+;; times per second.
+(defconst tterm--fg-palette-faces
+  (vconcat (mapcar (lambda (index)
+                     (tterm--terminal-color-face-symbol "fg" index))
+                   (number-sequence 0 (1- (length tterm--ansi-color-face-suffixes)))))
+  "Precomputed foreground palette face symbols, indexed by palette index 0-15.")
+
+(defconst tterm--bg-palette-faces
+  (vconcat (mapcar (lambda (index)
+                     (tterm--terminal-color-face-symbol "bg" index))
+                   (number-sequence 0 (1- (length tterm--ansi-color-face-suffixes)))))
+  "Precomputed background palette face symbols, indexed by palette index 0-15.")
+
 (defun tterm--declare-terminal-color-faces ()
   "Declare tterm terminal color faces."
   (dotimes (index (length tterm--ansi-color-face-suffixes))
@@ -271,10 +310,13 @@ Only `normal` is valid while copy mode is inactive.")
 
 (defun tterm--palette-face (index attribute)
   "Return tterm face for ANSI palette INDEX and ATTRIBUTE."
-  (pcase attribute
-    (:foreground (tterm--terminal-color-face-symbol "fg" index))
-    (:background (tterm--terminal-color-face-symbol "bg" index))
-    (_ nil)))
+  (when (and (integerp index)
+             (>= index 0)
+             (< index (length tterm--ansi-color-face-suffixes)))
+    (pcase attribute
+      (:foreground (aref tterm--fg-palette-faces index))
+      (:background (aref tterm--bg-palette-faces index))
+      (_ nil))))
 
 (defun tterm--face-color (face attribute)
   "Return FACE color ATTRIBUTE, falling back through inherited faces."
@@ -342,6 +384,19 @@ ATTRIBUTE should be either `:foreground' or `:background'."
       (format "#%02x%02x%02x" level level level)))
    (t nil)))
 
+(defvar tterm--rgb-color-name-cache (make-hash-table :test 'eql :size 512)
+  "Memoization cache for RGB color name strings, keyed by packed 24-bit int.
+Avoids repeated `(format \"#%02x%02x%02x\")' on the styled hot path
+(LOOP 6.4) where hundreds of RGB runs per frame would otherwise build the
+same strings thousands of times per second.")
+
+(defun tterm--rgb-color-name (r g b)
+  "Return an RGB color name string, memoized by the packed (R G B) int."
+  (let ((key (+ (ash r 16) (ash g 8) b)))
+    (or (gethash key tterm--rgb-color-name-cache)
+        (puthash key (format "#%02x%02x%02x" r g b)
+                 tterm--rgb-color-name-cache))))
+
 (defun tterm--apply-color-name (color &optional attribute)
   "Return an Emacs color string for decoded apply-plan COLOR.
 ATTRIBUTE selects the palette face attribute to use and defaults to
@@ -351,8 +406,8 @@ ATTRIBUTE selects the palette face attribute to use and defaults to
      (tterm--palette-color-name index (or attribute :background)))
     (`[palette ,index]
      (tterm--palette-color-name index (or attribute :background)))
-    (`(rgb ,r ,g ,b) (format "#%02x%02x%02x" r g b))
-    (`[rgb ,r ,g ,b] (format "#%02x%02x%02x" r g b))
+    (`(rgb ,r ,g ,b) (tterm--rgb-color-name r g b))
+    (`[rgb ,r ,g ,b] (tterm--rgb-color-name r g b))
     (_ nil)))
 
 (defun tterm--apply-palette-face (color attribute)
@@ -441,7 +496,9 @@ the narrow override first in the fontset."
         (tterm--fontset-range-span (car right))))))
 
 (defun tterm--apply-symbol-display-substitutions (text start)
-  "Apply configured display substitutions for inserted TEXT at START."
+  "Apply configured display substitutions for inserted TEXT at START.
+Scans per configured glyph; for the handful of explicit substitutions this
+is a fixed number of `string-search' calls, so it stays cheap."
   (dolist (entry tterm--symbol-display-substitutions)
     (let ((needle (char-to-string (car entry)))
           (display (cdr entry))
@@ -478,7 +535,7 @@ the narrow override first in the fontset."
 
 (defun tterm--prepend-symbol-font-face (face font)
   "Return FACE with FONT prepended as a family face."
-  (let ((font-face `(:family ,font)))
+  (let ((font-face (if (stringp font) `(:family ,font) font)))
     (cond
      ((null face)
       (list font-face))
@@ -488,6 +545,27 @@ the narrow override first in the fontset."
       (cons font-face face))
      (t
       (list font-face face)))))
+
+(defcustom tterm-symbol-fallback-scan-threshold 32
+  "Maximum configured symbol-face glyphs before tterm switches strategies.
+`tterm--apply-symbol-face-fallbacks' scans per glyph below this many
+codepoints (fast for the common narrow configs) and builds a char-table and
+scans the text once above it (O(text length) instead of O(glyphs*length),
+which would blow up when a range spans many codepoints)."
+  :type 'integer
+  :group 'tterm)
+
+(defvar tterm--symbol-face-table-cache nil
+  "Cached (FALLBACKS . CHAR-TABLE) for broad symbol face matching.")
+
+(defun tterm--symbol-face-glyph-count ()
+  "Return the number of codepoints covered by `tterm-symbol-face-fallbacks'."
+  (let ((n 0))
+    (dolist (entry tterm-symbol-face-fallbacks n)
+      (let ((range (car entry)))
+        (cond
+         ((consp range) (setq n (+ n 1 (- (cdr range) (car range)))))
+         ((integerp range) (setq n (1+ n))))))))
 
 (defun tterm--apply-symbol-face-fallback-for-char (char font text start)
   "Apply FONT face to occurrences of CHAR in inserted TEXT at START."
@@ -503,10 +581,8 @@ the narrow override first in the fontset."
           font)))
       (setq offset (1+ match)))))
 
-(defun tterm--apply-symbol-face-fallbacks (text start)
-  "Apply configured symbol face fallbacks to matched chars in TEXT.
-This searches for configured glyphs instead of walking all inserted text, so
-large scrollback inserts stay cheap when they do not contain those glyphs."
+(defun tterm--apply-symbol-face-fallbacks-scan (text start)
+  "Per-glyph scan fallback: O(glyphs*length), fastest for narrow configs."
   (dolist (entry tterm-symbol-face-fallbacks)
     (let ((range (car entry))
           (font (cdr entry)))
@@ -518,6 +594,39 @@ large scrollback inserts stay cheap when they do not contain those glyphs."
             (setq char (1+ char)))))
        ((integerp range)
         (tterm--apply-symbol-face-fallback-for-char range font text start))))))
+
+(defun tterm--apply-symbol-face-fallbacks-chartable (text start)
+  "Char-table fallback: build once, scan text once, O(length) regardless of
+range size. Earlier entries are overridden by later ones on overlap."
+  (let ((table (tterm--symbol-face-fallback-table))
+        (end (+ start (length text))))
+    (let ((pos start))
+      (while (< pos end)
+        (let ((font (aref table (char-after pos))))
+          (when font
+            (put-text-property pos (1+ pos) 'face
+              (tterm--prepend-symbol-font-face (get-text-property pos 'face) font))))
+        (setq pos (1+ pos))))))
+
+(defun tterm--symbol-face-fallback-table ()
+  "Return the cached char-table for `tterm-symbol-face-fallbacks'."
+  (if (equal (car-safe tterm--symbol-face-table-cache)
+             tterm-symbol-face-fallbacks)
+      (cdr tterm--symbol-face-table-cache)
+    (let ((table (make-char-table 'tterm-symbol-face-table nil)))
+      (dolist (entry tterm-symbol-face-fallbacks)
+        (set-char-table-range table (car entry) (cdr entry)))
+      (setq tterm--symbol-face-table-cache
+            (cons (copy-tree tterm-symbol-face-fallbacks) table))
+      table)))
+
+(defun tterm--apply-symbol-face-fallbacks (text start)
+  "Apply configured symbol face fallbacks to matched chars in TEXT at START.
+Uses a per-glyph scan for narrow configs and a char-table single pass for
+large configs (see `tterm-symbol-fallback-scan-threshold')."
+  (if (<= (tterm--symbol-face-glyph-count) tterm-symbol-fallback-scan-threshold)
+      (tterm--apply-symbol-face-fallbacks-scan text start)
+    (tterm--apply-symbol-face-fallbacks-chartable text start)))
 
 (defun tterm--apply-symbol-font-fallbacks-for-text (text start end)
   "Apply terminal symbol display and narrow face fallbacks to inserted TEXT."
@@ -562,6 +671,15 @@ large scrollback inserts stay cheap when they do not contain those glyphs."
   "Connect to tmux-backed terminal on HOST at CWD."
   (tterm-bridge-connect rows cols host cwd))
 
+(defun tterm--directory-for-host (host directory)
+  "Return DIRECTORY wrapped in a TRAMP path for remote HOST, or plain otherwise.
+For local HOST the DIRECTORY is returned as-is.
+For remote HOST the path is wrapped in an /ssh:HOST: prefix so that Emacs
+file operations resolve through Tramp."
+  (if (string= host "local")
+      directory
+    (concat "/ssh:" host ":" (directory-file-name directory))))
+
 (defun tterm--new (rows cols &optional scrollback cwd)
   "Create a new local tmux-backed terminal. Returns terminal ID.
 SCROLLBACK is accepted for compatibility with older test and bench helpers."
@@ -605,6 +723,9 @@ Returns [BASE_VERSION TARGET_VERSION RESET OPS]."
     (tterm--stop-redraw-request-timer))
   (when (fboundp 'tterm--stop-resize-timer)
     (tterm--stop-resize-timer))
+  (when tterm--capture-refresh-handle
+    (tterm-bridge-command-cancel tterm--capture-refresh-handle)
+    (setq-local tterm--capture-refresh-handle nil))
   (setq-local tterm--terminal nil)
   (setq-local tterm--title nil)
   (setq-local tterm--last-redraw-change-time nil))
@@ -617,9 +738,12 @@ Returns [BASE_VERSION TARGET_VERSION RESET OPS]."
   (tterm--dispose-terminal-buffer))
 
 (defun tterm--kill-current-terminal-window ()
-  "Kill the current terminal's tmux window and dispose its buffer attachment."
+  "Kill the current terminal's tmux window and dispose its buffer attachment.
+Errors from the bridge (e.g. missing module) are ignored so that
+`kill-buffer' always succeeds, even when the backend is broken."
   (when tterm--terminal
-    (tterm--destroy (tterm-id tterm--terminal)))
+    (ignore-errors
+      (tterm--destroy (tterm-id tterm--terminal))))
   (tterm--dispose-terminal-buffer))
 
 (defun tterm--command (id command &optional payload)
@@ -653,15 +777,23 @@ Returns [BASE_VERSION TARGET_VERSION RESET OPS]."
     (nreverse windows)))
 
 (defun tterm--attention-apply-snapshot (snapshot)
-  "Update cached attention state from decoded dashboard SNAPSHOT."
-  (setq tterm--attention-windows
-        (tterm--attention-windows-from-snapshot snapshot))
-  (setq tterm--attention-unread-total
-        (apply #'+
-               (mapcar (lambda (window)
-                         (or (plist-get window :unread-notifications) 0))
-                       tterm--attention-windows)))
-  (force-mode-line-update t))
+  "Update cached attention state from decoded dashboard SNAPSHOT.
+Only refresh mode lines when the attention state actually changed, and
+restrict the refresh to live tterm buffers (LOOP 6.2). The previous code
+called `(force-mode-line-update t)` unconditionally, invalidating every
+window's mode line in every frame every 2s even when nothing changed."
+  (let* ((windows (tterm--attention-windows-from-snapshot snapshot))
+         (unread (apply #'+
+                        (mapcar (lambda (window)
+                                  (or (plist-get window :unread-notifications) 0))
+                                windows))))
+    (unless (and (equal windows tterm--attention-windows)
+                 (eq unread tterm--attention-unread-total))
+      (setq tterm--attention-windows windows)
+      (setq tterm--attention-unread-total unread)
+      (dolist (buffer (tterm--buffers))
+        (with-current-buffer buffer
+          (force-mode-line-update))))))
 
 (defun tterm--attention-stop-timer ()
   "Stop the attention refresh timer and clear cached state."
@@ -948,7 +1080,7 @@ When NO-SELECT is non-nil, do not select the restored buffer."
 
 (defun tterm--handle-exit (payload)
   "Handle terminal exit from PAYLOAD."
-  (let ((status (if (> (length payload) 0)
+  (let ((status (if (>= (length payload) 4)
                     (logior (ash (aref payload 0) 24) (ash (aref payload 1) 16)
                             (ash (aref payload 2) 8) (aref payload 3))
                   0)))
@@ -1028,7 +1160,7 @@ When NO-SELECT is non-nil, do not select the buffer."
       (tterm-mode)
       (setq-local tterm--terminal term)
       (setq-local tterm--title title)
-      (setq-local default-directory cwd)
+      (setq-local default-directory (tterm--directory-for-host host cwd))
       (tterm--initialize-screen rows cols)
       (tterm--update-buffer-name)
       (tterm--attention-setup-buffer))
