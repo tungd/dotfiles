@@ -43,6 +43,8 @@ Keys: context_window, input_tokens, output_tokens, cached_tokens, total_tokens."
 
 (defvar-local drepl-scv--busy-started-at nil)
 (defvar-local drepl-scv--header-timer nil)
+(defvar-local drepl-scv--steering-prompt-range nil)
+(defvar-local drepl-scv--steering-prompt-timer nil)
 
 (defconst drepl-scv--other-choice "Other…")
 
@@ -87,7 +89,68 @@ Keys: context_window, input_tokens, output_tokens, cached_tokens, total_tokens."
   (setq-local truncate-lines nil)
   (setq-local word-wrap t)
   (add-hook 'post-self-insert-hook #'drepl-scv--maybe-complete-slash nil t)
+  (add-hook 'pre-command-hook
+            #'drepl-scv--ensure-steering-prompt-before-command nil t)
+  (add-hook 'comint-preoutput-filter-functions
+            #'drepl-scv--move-steering-prompt-before-output nil t)
+  (add-hook 'comint-output-filter-functions
+            #'drepl-scv--restore-steering-prompt-after-output t t)
   (add-hook 'kill-buffer-hook #'drepl-scv--stop-header-timer nil t))
+
+(defun drepl-scv--move-steering-prompt-before-output (output)
+  "Remove the movable busy prompt before inserting process OUTPUT."
+  (when drepl-scv--steering-prompt-range
+    (pcase-let ((`(,start . ,end) drepl-scv--steering-prompt-range))
+      (let ((inhibit-read-only t))
+        (delete-region start end))
+      (set-marker start nil)
+      (set-marker end nil)
+      (setq drepl-scv--steering-prompt-range nil)))
+  output)
+
+(defun drepl-scv--schedule-steering-prompt (repl)
+  "Schedule REPL's movable prompt after the current process filter returns."
+  (when (timerp drepl-scv--steering-prompt-timer)
+    (cancel-timer drepl-scv--steering-prompt-timer))
+  (setq drepl-scv--steering-prompt-timer
+        (run-at-time 0 nil #'drepl-scv--insert-steering-prompt repl)))
+
+(defun drepl-scv--restore-steering-prompt-after-output (output)
+  "Restore the movable busy prompt after process OUTPUT."
+  (when (and drepl--current
+             (eq (drepl--status drepl--current) 'busy)
+             (not (equal output "› ")))
+    (drepl-scv--schedule-steering-prompt drepl--current)))
+
+(defun drepl-scv--ensure-steering-prompt-before-command ()
+  "Make the busy composer editable before a command at process output end."
+  (when-let* ((repl drepl--current)
+              (process (drepl--process repl))
+              ((eq (drepl--status repl) 'busy))
+              ((>= (point) (process-mark process))))
+    (drepl-scv--insert-steering-prompt repl)))
+
+(defun drepl-scv--insert-steering-prompt (repl)
+  "Keep REPL editable while REPL is processing an active turn."
+  (when-let* ((process (drepl--process repl))
+              ((process-live-p process))
+              ((eq (drepl--status repl) 'busy)))
+    (setq drepl-scv--steering-prompt-timer nil)
+    (unless drepl-scv--steering-prompt-range
+      (let ((start (copy-marker (process-mark process))))
+        (comint-output-filter process "› ")
+        (setq drepl-scv--steering-prompt-range
+              (cons start (copy-marker (process-mark process))))))))
+
+(cl-defmethod drepl--eval ((repl drepl-scv) code)
+  "Send CODE immediately so SCV can steer an active turn."
+  (if (eq (drepl--status repl) 'busy)
+      (let* ((id (cl-incf (drepl--last-id repl)))
+             (data `(:id ,id :op "eval" :code ,code)))
+        (push (cons id #'ignore) (drepl--callbacks repl))
+        (drepl--send-request repl data))
+    (cl-call-next-method))
+  (drepl-scv--schedule-steering-prompt repl))
 
 (defun drepl-scv--question-key (repl data)
   "Return the unique pending-question key for REPL and DATA."
@@ -174,18 +237,22 @@ Keys: context_window, input_tokens, output_tokens, cached_tokens, total_tokens."
   "Complete COMMAND's required argument, when it has a selector."
   (if-let* ((candidates (drepl-scv--argument-candidates command))
             (prompt (cond ((equal command "/model") "Model: ")
+                          ((equal command "/skill") "Skill: ")
                           ((member command '("/mode" "/permissions"))
                            "Permissions: ")))
             (argument
              (condition-case nil
                  (completing-read prompt candidates nil t)
                (quit nil))))
-      (concat command " " argument)
-    command))
+      (concat command " " argument (if (equal command "/skill") " " ""))
+    (if (member command '("/goal" "/compact" "/mode" "/model"
+                          "/permissions" "/help" "/exit" "/skill"))
+        command
+      (concat command " "))))
 
 (defun drepl-scv--argument-candidates (command)
   "Return completion candidates for COMMAND's argument."
-  (when (member command '("/model" "/mode" "/permissions"))
+  (when (member command '("/model" "/mode" "/permissions" "/skill"))
     (when-let* ((repl (drepl--get-repl 'ready))
                 (code (concat command " "))
                 (reply (drepl--completion-cadidates repl code (length code))))
@@ -280,7 +347,11 @@ Keys: context_window, input_tokens, output_tokens, cached_tokens, total_tokens."
 (defun drepl-scv--stop-header-timer ()
   (when (timerp drepl-scv--header-timer)
     (cancel-timer drepl-scv--header-timer))
-  (setq drepl-scv--header-timer nil))
+  (when (timerp drepl-scv--steering-prompt-timer)
+    (cancel-timer drepl-scv--steering-prompt-timer))
+  (setq drepl-scv--header-timer nil
+        drepl-scv--steering-prompt-timer nil
+        drepl-scv--steering-prompt-range nil))
 
 (defun drepl-scv--sync-busy-clock (status)
   (if (eq status 'busy)
