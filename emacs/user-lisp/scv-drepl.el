@@ -238,6 +238,8 @@ Keys: context_window, input_tokens, output_tokens, cached_tokens, total_tokens."
   (if-let* ((candidates (drepl-scv--argument-candidates command))
             (prompt (cond ((equal command "/model") "Model: ")
                           ((equal command "/skill") "Skill: ")
+                          ((equal command "/resume-codex") "Codex session: ")
+                          ((equal command "/resume-claude") "Claude session: ")
                           ((member command '("/mode" "/permissions"))
                            "Permissions: ")))
             (argument
@@ -246,13 +248,15 @@ Keys: context_window, input_tokens, output_tokens, cached_tokens, total_tokens."
                (quit nil))))
       (concat command " " argument (if (equal command "/skill") " " ""))
     (if (member command '("/goal" "/compact" "/mode" "/model"
+                          "/resume-codex" "/resume-claude"
                           "/permissions" "/help" "/exit" "/skill"))
         command
       (concat command " "))))
 
 (defun drepl-scv--argument-candidates (command)
   "Return completion candidates for COMMAND's argument."
-  (when (member command '("/model" "/mode" "/permissions" "/skill"))
+  (when (member command '("/model" "/mode" "/permissions" "/skill"
+                          "/resume-codex" "/resume-claude"))
     (when-let* ((repl (drepl--get-repl 'ready))
                 (code (concat command " "))
                 (reply (drepl--completion-cadidates repl code (length code))))

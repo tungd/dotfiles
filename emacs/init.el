@@ -133,6 +133,9 @@
 (setopt trash-directory "~/.Trash"
       delete-by-moving-to-trash t)
 
+(require 'icloud-mode)
+(icloud-mode 1)
+
 ;;; Navigation
 
 ;;;; File position
