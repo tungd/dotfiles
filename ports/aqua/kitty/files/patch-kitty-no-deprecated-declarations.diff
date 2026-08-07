@@ -1,0 +1,8 @@
+--- setup.py.orig
++++ setup.py
+@@ -649,1 +649,1 @@
+-            f'-Wextra {float_conversion} -Wno-missing-field-initializers -Wall -Wstrict-prototypes {c_std}'
++            f'-Wextra {float_conversion} -Wno-missing-field-initializers -Wno-deprecated-declarations -Wall -Wstrict-prototypes {c_std}'
+             f' {werror} {optimize} {sanitize_flag} -fwrapv {stack_protector} {missing_braces}'
+             f' -pipe -fvisibility=hidden {no_plt}'
+         )

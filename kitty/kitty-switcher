@@ -1,0 +1,262 @@
+#!/usr/bin/env python3
+"""Select a live Kitty pane with fzf and focus it."""
+
+from __future__ import annotations
+
+import json
+import os
+import shlex
+import shutil
+import subprocess
+import sys
+from dataclasses import dataclass
+from typing import Any
+
+
+@dataclass(frozen=True)
+class Target:
+    window_id: int
+
+
+SWITCHER_NAME = "kitty-switcher"
+
+
+def executable(name: str) -> str:
+    """Resolve a binary even when Kitty was launched by macOS with a short PATH."""
+    candidates: list[str] = []
+    if name == "kitty":
+        installation_dir = os.environ.get("KITTY_INSTALLATION_DIR")
+        if installation_dir:
+            candidates.append(
+                os.path.normpath(
+                    os.path.join(installation_dir, os.pardir, os.pardir, "MacOS", "kitty")
+                )
+            )
+        candidates.extend(
+            (
+                "/Applications/MacPorts/kitty.app/Contents/MacOS/kitty",
+                "/Applications/kitty.app/Contents/MacOS/kitty",
+            )
+        )
+
+    discovered = shutil.which(name)
+    if discovered:
+        candidates.append(discovered)
+
+    candidates.extend(
+        os.path.join(directory, name)
+        for directory in (
+            "/opt/local/bin",
+            "/opt/homebrew/bin",
+            "/usr/local/bin",
+        )
+    )
+
+    for candidate in candidates:
+        if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+            return candidate
+    raise RuntimeError(f"could not find executable {name!r}")
+
+
+def clean(value: Any, fallback: str = "—") -> str:
+    """Convert a state value into one searchable, single-line field."""
+    if value is None:
+        return fallback
+    text = str(value).replace("\x00", "").replace("\r", " ").replace("\n", " ")
+    return text or fallback
+
+
+def command_text(command: Any) -> str:
+    if isinstance(command, (list, tuple)):
+        return shlex.join(str(item) for item in command)
+    return clean(command)
+
+
+def running_text(window: dict[str, Any]) -> str:
+    processes = window.get("foreground_processes") or []
+    commands: list[str] = []
+    for process in processes:
+        if isinstance(process, dict):
+            command = process.get("cmdline")
+        else:
+            command = process
+        if command:
+            value = command_text(command)
+            if value not in commands:
+                commands.append(value)
+    if commands:
+        return " ; ".join(commands)
+    return command_text(window.get("cmdline"))
+
+
+def is_switcher_command(command: Any) -> bool:
+    """Recognize the picker process without hiding a pane editing its file."""
+    if isinstance(command, (list, tuple)):
+        for position, item in enumerate(command):
+            value = str(item)
+            if value == SWITCHER_NAME and position == 0:
+                return True
+            if os.path.basename(value) == SWITCHER_NAME and (position == 0 or os.path.isabs(value) or "/" in value):
+                return True
+        return False
+    value = clean(command, fallback="")
+    return value == SWITCHER_NAME or value.endswith(f"/{SWITCHER_NAME}")
+
+
+def is_switcher_window(window: dict[str, Any]) -> bool:
+    if is_switcher_command(window.get("cmdline")):
+        return True
+
+    for process in window.get("foreground_processes") or []:
+        command = process.get("cmdline") if isinstance(process, dict) else process
+        if is_switcher_command(command):
+            return True
+
+    return any(
+        clean(window.get(field), fallback="") in (SWITCHER_NAME, f"/{SWITCHER_NAME}")
+        or clean(window.get(field), fallback="").endswith(f"/{SWITCHER_NAME}")
+        for field in ("title", "session_name")
+    )
+
+
+def overlay_group_window_ids(tab: dict[str, Any], self_window_id: str | None) -> set[str]:
+    """Return the overlay group containing this picker's own window."""
+    windows = tab.get("windows") or []
+    switcher_ids = {
+        str(window.get("id"))
+        for window in windows
+        if isinstance(window, dict)
+        and is_switcher_window(window)
+        and (window.get("is_self") or (self_window_id is not None and str(window.get("id")) == self_window_id))
+    }
+    if not switcher_ids:
+        return set()
+
+    excluded_ids = set(switcher_ids)
+    for group in tab.get("groups") or []:
+        if not isinstance(group, dict):
+            continue
+        group_ids = {str(window_id) for window_id in group.get("windows") or []}
+        if switcher_ids & group_ids:
+            excluded_ids.update(group_ids)
+    return excluded_ids
+
+
+def load_state() -> list[dict[str, Any]]:
+    kitty = executable("kitty")
+    result = subprocess.run(
+        [kitty, "@", "ls", "--output-format", "json"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        message = result.stderr.strip() or "kitty @ ls failed"
+        raise RuntimeError(message)
+    try:
+        state = json.loads(result.stdout)
+    except json.JSONDecodeError as error:
+        raise RuntimeError(f"kitty @ ls returned invalid JSON: {error}") from error
+    if not isinstance(state, list):
+        raise RuntimeError("kitty @ ls returned an unexpected state shape")
+    return state
+
+
+def build_rows(state: list[dict[str, Any]]) -> tuple[list[str], dict[str, Target]]:
+    rows: list[str] = []
+    targets: dict[str, Target] = {}
+    row_number = 0
+    self_window_id = os.environ.get("KITTY_WINDOW_ID")
+
+    for os_window in state:
+        os_id = os_window.get("id", "?")
+        tabs = os_window.get("tabs") or []
+        for tab_index, tab in enumerate(tabs, start=1):
+            tab_id = tab.get("id", "?")
+            tab_title = clean(tab.get("title"))
+            windows = tab.get("windows") or []
+            excluded_ids = overlay_group_window_ids(tab, self_window_id)
+            visible_windows = [
+                window
+                for window in windows
+                if str(window.get("id")) not in excluded_ids
+                and not is_switcher_window(window)
+            ]
+            for pane_index, window in enumerate(visible_windows, start=1):
+                window_id = window.get("id")
+                if not isinstance(window_id, int):
+                    continue
+
+                row_number += 1
+                active = "*" if window.get("is_focused") else " "
+                cwd = clean(window.get("cwd"))
+                pane_title = clean(window.get("title"))
+                running = running_text(window)
+                session = clean(window.get("session_name"))
+                row = (
+                    f"{row_number:03d}{active} "
+                    f"OS {os_id}  TAB {tab_id} "
+                    f"T{tab_index}/{len(tabs)} {tab_title}  "
+                    f"P{pane_index}/{len(visible_windows)} {pane_title}  "
+                    f"DIR {cwd}  RUN {running}  SESSION {session}"
+                )
+                rows.append(row)
+                targets[row] = Target(window_id=window_id)
+
+    return rows, targets
+
+
+def choose(rows: list[str]) -> str | None:
+    if not rows:
+        return None
+    fzf = executable("fzf")
+    result = subprocess.run(
+        [
+            fzf,
+            "--no-multi",
+            "--height=100%",
+            "--layout=reverse",
+            "--border=rounded",
+            "--prompt=kitty> ",
+            "--header=Enter focus  •  Esc cancel",
+        ],
+        input="\n".join(rows) + "\n",
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return None
+    selected = result.stdout.rstrip("\n")
+    return selected or None
+
+
+def focus(target: Target) -> None:
+    kitty = executable("kitty")
+    result = subprocess.run(
+        [kitty, "@", "focus-window", "--match", f"id:{target.window_id}"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        message = result.stderr.strip() or "kitty could not focus the selected pane"
+        raise RuntimeError(message)
+
+
+def main() -> int:
+    try:
+        rows, targets = build_rows(load_state())
+        selected = choose(rows)
+        if selected is not None:
+            target = targets.get(selected)
+            if target is not None:
+                focus(target)
+        return 0
+    except (OSError, RuntimeError) as error:
+        print(f"kitty-switcher: {error}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -821,9 +821,9 @@ With prefix argument FORCE, rebuild every configured grammar."
             :max 1))
     ;; free models with decent quota
     :models '(
-              "gemini-3.1-flash-lite"
-              "gemma-4-31b-it"
+              "gemini-3.5-flash-lite"
               "gemma-4-26b-a4b-it"
+              "gemma-4-31b-it" ;; slow
               ))
    gptel-default-mode 'org-mode
    gptel-include-reasoning nil
@@ -1247,25 +1247,25 @@ With prefix argument FORCE, rebuild every configured grammar."
 ;; (use-package prism
 ;;   :hook (enable-theme-functions . prism-soften-theme-faces))
 
-;; (use-package pache-dark-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'pache-dark t)
-;;   ;; Directly override legacy :bold t attributes that user theme can't always
-;;   ;; neutralize due to the old-style :bold attribute vs modern :weight difference.
-;;   (dolist (face '(font-lock-keyword-face
-;;                   font-lock-function-name-face
-;;                   font-lock-type-face
-;;                   font-lock-builtin-face
-;;                   font-lock-preprocessor-face
-;;                   bold))
-;;     (set-face-attribute face nil :weight 'normal)))
+(use-package pache-dark-theme
+  :ensure t
+  :config
+  (load-theme 'pache-dark t)
+  ;; Directly override legacy :bold t attributes that user theme can't always
+  ;; neutralize due to the old-style :bold attribute vs modern :weight difference.
+  (dolist (face '(font-lock-keyword-face
+                  font-lock-function-name-face
+                  font-lock-type-face
+                  font-lock-builtin-face
+                  font-lock-preprocessor-face
+                  bold))
+    (set-face-attribute face nil :weight 'normal)))
 
 ;; (use-package solarized-theme
 ;;   :ensure t
 ;;   :config (load-theme 'solarized-dark-high-contrast t))
 
-(load-theme 'codeberg-dark t)
+;; (load-theme 'codeberg-dark t)
 
 (custom-theme-set-faces
  'user

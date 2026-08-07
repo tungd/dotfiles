@@ -1,5 +1,6 @@
 EMACS := $(shell curl -s "https://api.github.com/repos/emacs-mirror/emacs/commits/master" | grep '"sha"' | head -1 | sed 's/.*"sha": "\([^"]*\)".*/\1/')
 LLAMA := $(shell curl -s "https://api.github.com/repos/ikawrakow/ik_llama.cpp/commits/main" | grep '"sha"' | head -1 | sed 's/.*"sha": "\([^"]*\)".*/\1/')
+KITTY := $(shell curl -s "https://api.github.com/repos/kovidgoyal/kitty/commits/master" | grep '"sha"' | head -1 | sed 's/.*"sha": "\([^"]*\)".*/\1/')
 TODAY := $(shell date "+%Y%m%d")
 MACPORTS_LOCAL_PORTS := /opt/local/var/macports/sources/local/dotfiles-ports
 
@@ -43,9 +44,9 @@ MACPORTS_PACKAGES := \
 
 .DEFAULT_GOAL := macports
 
-.PHONY: macports macports-tools macports-select emacs-weekly emacs-weekly-update fix-emacs-shims
+.PHONY: macports macports-tools macports-select emacs-weekly emacs-weekly-update kitty-mainline kitty-mainline-update fix-emacs-shims
 
-ports/PortIndex: ports/editors/emacs/Portfile ports/llm/ik_llama.cpp/Portfile
+ports/PortIndex: ports/aqua/kitty/Portfile ports/editors/emacs/Portfile ports/llm/ik_llama.cpp/Portfile
 	cd ports && portindex
 
 $(MACPORTS_LOCAL_PORTS)/PortIndex: ports/PortIndex
@@ -57,6 +58,9 @@ $(EMACS).tar.gz:
 
 $(LLAMA).tar.gz:
 	curl -LO 'https://github.com/ikawrakow/ik_llama.cpp/archive/$(LLAMA).tar.gz'
+
+$(KITTY).tar.gz:
+	curl -LO 'https://github.com/kovidgoyal/kitty/archive/$(KITTY).tar.gz'
 
 ports/editors/emacs/Portfile: $(EMACS).tar.gz ports/editors/emacs/Portfile.tmpl
 	sed -e 's/<COMMIT_HASH>/$(EMACS)/g' ports/editors/emacs/Portfile.tmpl \
@@ -72,7 +76,15 @@ ports/llm/ik_llama.cpp/Portfile: $(LLAMA).tar.gz ports/llm/ik_llama.cpp/Portfile
 		| sed -e 's/<DATE>/$(TODAY)/g' \
 		> $@
 
-macports: macports-tools macports-select emacs-weekly fix-emacs-shims
+ports/aqua/kitty/Portfile: $(KITTY).tar.gz ports/aqua/kitty/Portfile.tmpl
+	sed -e 's/<COMMIT_HASH>/$(KITTY)/g' ports/aqua/kitty/Portfile.tmpl \
+		| sed -e "s/<SHA_256>/$$(shasum -a 256 $(KITTY).tar.gz | cut -w -f1)/g" \
+		| sed -e "s/<RMD160>/$$(openssl dgst -rmd160 $(KITTY).tar.gz | awk '{print $$NF}')/g" \
+		| sed -e "s/<SIZE>/$$(wc -c < $(KITTY).tar.gz | tr -d ' ')/g" \
+		| sed -e 's/<DATE>/$(TODAY)/g' \
+		> $@
+
+macports: macports-tools macports-select emacs-weekly kitty-mainline fix-emacs-shims
 
 macports-tools:
 	sudo port install $(MACPORTS_PACKAGES)
@@ -85,6 +97,11 @@ emacs-weekly: emacs-weekly-update $(MACPORTS_LOCAL_PORTS)/PortIndex
 	sudo port install emacs-app-devel +nativecomp +treesitter
 
 emacs-weekly-update: ports/editors/emacs/Portfile
+
+kitty-mainline: kitty-mainline-update $(MACPORTS_LOCAL_PORTS)/PortIndex
+	sudo port install kitty
+
+kitty-mainline-update: ports/aqua/kitty/Portfile
 
 fix-emacs-shims:
 	mkdir -p "$$HOME/.local/bin"

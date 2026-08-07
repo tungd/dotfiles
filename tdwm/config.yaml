@@ -4,7 +4,7 @@ workspaces:
     layout: tile
   - name: code
     desktop: 2
-    layout: max
+    layout: tile
   - name: web
     desktop: 3
     layout: max
@@ -21,7 +21,13 @@ border:
   width: 4
 rules:
   - app: Ghostty
-    workspace: home
+    workspace: code
+    manage: true
+  - app: kitty
+    workspace: code
+    manage: true
+  - app: Terminal
+    workspace: code
     manage: true
   - app: Emacs
     workspace: code
