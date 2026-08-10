@@ -1,0 +1,82 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+
+PortSystem          1.0
+
+name                shader-slang
+version             2026.12.2
+revision            1
+categories          devel graphics
+platforms           {darwin >= 20}
+supported_archs     arm64 x86_64
+universal_variant   no
+maintainers         {TD @tungd} openmaintainer
+license             Apache-2.0
+
+description         Shading language compiler and runtime
+long_description    The Slang compiler makes it easier to build and maintain large shader codebases while targeting graphics APIs such as Metal, Vulkan, and Direct3D.
+homepage            https://shader-slang.com/
+
+if {${configure.build_arch} eq "arm64"} {
+    set slang_arch      aarch64
+    set slang_rmd160    4d43a4aad553d3065c1b1004602546291b4a1f46
+    set slang_sha256    de919ef0d616a8dba86fa8443bb25975492936872cb261094c1a152522b3b495
+    set slang_size      56993414
+} elseif {${configure.build_arch} eq "x86_64"} {
+    set slang_arch      x86_64
+    set slang_rmd160    f112dbe96f7e48833d6703797b7e8e02b1b79e9b
+    set slang_sha256    e0bdbd8cc39c8d0b9f7a0308d93f4f5d004af27d71aa131d7b173768fe3f70eb
+    set slang_size      20739151
+} else {
+    return -code error "${name} supports only arm64 and x86_64"
+}
+
+master_sites        https://github.com/shader-slang/slang/releases/download/v${version}/
+distname            slang-${version}-macos-${slang_arch}
+dist_subdir         ${name}/${version}
+extract.suffix      .tar.gz
+extract.mkdir       yes
+worksrcdir          .
+
+checksums           rmd160  ${slang_rmd160} \
+                    sha256  ${slang_sha256} \
+                    size    ${slang_size}
+
+use_configure       no
+build               {}
+installs_libs       yes
+
+depends_lib-append  port:zstd
+
+proc copy_tree {source_dir target_dir} {
+    xinstall -d ${target_dir}
+    foreach entry [glob -nocomplain -directory ${source_dir} *] {
+        set target [file join ${target_dir} [file tail ${entry}]]
+        if {[file isdirectory ${entry}] && [file type ${entry}] ne "link"} {
+            copy_tree ${entry} ${target}
+        } else {
+            copy ${entry} ${target}
+        }
+    }
+}
+
+destroot {
+    xinstall -d ${destroot}${prefix}
+    foreach directory {bin include lib share} {
+        copy_tree ${worksrcpath}/${directory} ${destroot}${prefix}/${directory}
+    }
+
+    set docdir ${destroot}${prefix}/share/doc/${name}
+    xinstall -d ${docdir}
+    xinstall -m 0644 -W ${worksrcpath} LICENSE README.md ${docdir}
+}
+
+post-destroot {
+    set llvm_lib ${destroot}${prefix}/lib/libslang-llvm.dylib
+    if {[file exists ${llvm_lib}]} {
+        system "/usr/bin/install_name_tool -change /opt/homebrew/opt/zstd/lib/libzstd.1.dylib ${prefix}/lib/libzstd.1.dylib ${llvm_lib}"
+    }
+}
+
+livecheck.type      regex
+livecheck.url       https://github.com/shader-slang/slang/releases
+livecheck.regex     {tag/v([0-9.]+)}

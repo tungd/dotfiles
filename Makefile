@@ -46,7 +46,7 @@ MACPORTS_PACKAGES := \
 
 .PHONY: macports macports-tools macports-select emacs-weekly emacs-weekly-update kitty-mainline kitty-mainline-update fix-emacs-shims
 
-ports/PortIndex: ports/aqua/kitty/Portfile ports/editors/emacs/Portfile ports/llm/ik_llama.cpp/Portfile
+ports/PortIndex: ports/aqua/kitty/Portfile ports/devel/shader-slang/Portfile ports/editors/emacs/Portfile ports/llm/ik_llama.cpp/Portfile
 	cd ports && portindex
 
 $(MACPORTS_LOCAL_PORTS)/PortIndex: ports/PortIndex

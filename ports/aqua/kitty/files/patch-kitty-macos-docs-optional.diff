@@ -1,0 +1,15 @@
+--- setup.py.orig
++++ setup.py
+@@ -2070,8 +2070,10 @@
+ def create_macos_bundle_gunk(dest: str, for_freeze: bool, args: Options) -> str:
+     ddir = Path(dest)
+     os.mkdir(ddir / 'Contents')
+     with open(ddir / 'Contents/Info.plist', 'wb') as fp:
+         fp.write(macos_info_plist())
+-    copy_man_pages(str(ddir))
+-    copy_html_docs(str(ddir))
++    if os.path.exists('docs/_build/man'):
++        copy_man_pages(str(ddir))
++    if os.path.exists('docs/_build/html'):
++        copy_html_docs(str(ddir))
+     os.rename(ddir / 'share', ddir / 'Contents/Resources')

@@ -1,0 +1,22 @@
+--- setup.py.orig
++++ setup.py
+@@ -2167,15 +2167,16 @@
+         for f_ in files:
+             path = os.path.join(root, f_)
+             os.chmod(path, 0o755 if should_be_executable(path) else 0o644)
+-    if not for_freeze:
+-        if not bundle_type.startswith('macos-'):
+-            build_static_kittens(args, launcher_dir=launcher_dir)
++    if not for_freeze and not bundle_type.startswith('macos-'):
++        build_static_kittens(args, launcher_dir=launcher_dir)
+         shutil.copytree('shaders', os.path.join(libdir, 'shaders'), dirs_exist_ok=True)
+     if not is_macos and not is_windows:
+         create_linux_bundle_gunk(ddir, args)
+ 
+     if bundle_type.startswith('macos-'):
+         create_macos_bundle_gunk(ddir, for_freeze, args)
++        if not for_freeze:
++            shutil.copytree('shaders', os.path.join(ddir, 'Contents', 'Resources', 'kitty', 'shaders'), dirs_exist_ok=True)
+ 
+ 
+ # }}}

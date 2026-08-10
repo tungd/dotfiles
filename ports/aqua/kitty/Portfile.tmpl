@@ -47,7 +47,9 @@ if {${os.major} <= 15} {
                         size    4716932
 }
 
-patchfiles-append   patch-kitty-no-deprecated-declarations.diff
+patchfiles-append   patch-kitty-no-deprecated-declarations.diff \
+                    patch-kitty-macos-shaders-order.diff \
+                    patch-kitty-macos-docs-optional.diff
 
 python.default_version \
                     314
@@ -60,6 +62,7 @@ depends_build-append \
                     port:ncurses \
                     port:optipng \
                     port:pkgconfig \
+                    port:shader-slang \
                     port:ttf-nerd-fonts-symbols
 
 depends_lib-append  \
