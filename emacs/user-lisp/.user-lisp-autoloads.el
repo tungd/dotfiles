@@ -404,6 +404,15 @@ disabled.
 
 (fn &optional ARG)" t)
 (register-definition-prefixes "icloud-mode" '("icloud-mode-"))
+
+
+;;; Generated autoloads from quota-dashboard.el
+
+(autoload 'quota-dashboard-refresh "quota-dashboard"
+"Refresh the Quota dashboard buffer." t)
+(autoload 'quota-dashboard "quota-dashboard"
+"Open the local Quota dashboard." t)
+(register-definition-prefixes "quota-dashboard" '("quota-dashboard-"))
 
 ;;; End of scraped data
 

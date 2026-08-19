@@ -1,0 +1,45 @@
+{
+  "refreshMinutes": 10,
+  "providers": [
+    {
+      "id": "claude",
+      "name": "Claude",
+      "source": "claude",
+      "paths": ["~/.claude", "~/.claude.json"],
+      "enabled": true,
+      "windows": [
+        { "id": "5h", "label": "5h", "minutes": 300 },
+        { "id": "weekly", "label": "Weekly", "minutes": 10080 }
+      ]
+    },
+    {
+      "id": "codex",
+      "name": "Codex",
+      "source": "codex",
+      "paths": ["~/.codex/state_5.sqlite"],
+      "enabled": true,
+      "windows": [
+        { "id": "5h", "label": "5h", "minutes": 300 },
+        { "id": "weekly", "label": "Weekly", "minutes": 10080 }
+      ]
+    },
+    {
+      "id": "huggingface",
+      "name": "HF Pro Inference",
+      "source": "huggingface",
+      "paths": ["~/.cache/huggingface/token"],
+      "enabled": true,
+      "windows": [
+        { "id": "daily", "label": "Daily", "minutes": 1440 }
+      ]
+    }
+  ],
+  "deepSeek": {
+    "timezone": "Asia/Ho_Chi_Minh",
+      "peakWindows": [
+        { "start": "08:00", "end": "11:00" },
+        { "start": "13:00", "end": "17:00" }
+      ],
+    "days": null
+  }
+}

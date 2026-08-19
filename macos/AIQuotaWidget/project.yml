@@ -1,0 +1,83 @@
+name: AIQuotaWidget
+
+options:
+  minimumXcodeGenVersion: 2.44.1
+  deploymentTarget:
+    macOS: "14.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "0.1.0"
+
+targets:
+  AIQuota:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/Shared
+      - path: Sources/App
+    resources:
+      - path: Resources/DefaultConfig.json
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tung.aiquotawidget
+        PRODUCT_NAME: AIQuota
+        SWIFT_MODULE_NAME: AIQuota
+        INFOPLIST_FILE: Resources/AppInfo.plist
+        GENERATE_INFOPLIST_FILE: false
+        CODE_SIGN_ENTITLEMENTS: Resources/AIQuota.entitlements
+        CODE_SIGN_STYLE: Automatic
+    dependencies:
+      - target: AIQuotaWidgetExtension
+        embed: true
+
+  AIQuotaWidgetExtension:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: Sources/Shared
+      - path: Sources/Widget
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tung.aiquotawidget.widget
+        PRODUCT_NAME: AIQuotaWidgetExtension
+        SWIFT_MODULE_NAME: AIQuotaWidgetExtension
+        INFOPLIST_FILE: Resources/WidgetInfo.plist
+        GENERATE_INFOPLIST_FILE: false
+        CODE_SIGN_ENTITLEMENTS: Resources/AIQuotaWidgetExtension.entitlements
+        ENABLE_APP_SANDBOX: YES
+        CODE_SIGN_STYLE: Automatic
+
+  AIQuotaTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Sources/Shared
+      - path: Tests
+    dependencies:
+      - target: AIQuota
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tung.aiquotawidget.tests
+        PRODUCT_NAME: AIQuotaTests
+        SWIFT_MODULE_NAME: AIQuotaTests
+        GENERATE_INFOPLIST_FILE: true
+
+schemes:
+  AIQuota:
+    build:
+      targets:
+        AIQuota: all
+        AIQuotaWidgetExtension: all
+        AIQuotaTests: [testing]
+    test:
+      targets:
+        - name: AIQuotaTests
+          parallelizable: true
+  AIQuotaInstall:
+    build:
+      targets:
+        AIQuota: all

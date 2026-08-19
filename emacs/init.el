@@ -349,6 +349,9 @@ Uses project root if in a project, otherwise current directory."
 (global-set-key (kbd "C-l") td/leader-map)
 (bind-key* "C-l" td/leader-map)
 
+(autoload 'quota-dashboard "quota-dashboard" "Open the local Quota dashboard." t)
+(define-key td/leader-map (kbd "q") #'quota-dashboard)
+
 ;; Use consult for completion-in-region (more efficient than default)
 (setopt completion-in-region-function #'consult-completion-in-region)
 
@@ -827,7 +830,7 @@ With prefix argument FORCE, rebuild every configured grammar."
               ))
    gptel-default-mode 'org-mode
    gptel-include-reasoning nil
-   gptel-model 'gemma-4-31b-it))
+   gptel-model 'gemma-4-26b-a4b-it))
 
 ;;;; Error checking
 (use-package flymake
