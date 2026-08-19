@@ -23,6 +23,9 @@ rules:
   - app: Ghostty
     workspace: code
     manage: true
+  - app: Wezterm
+    workspace: code
+    manage: true
   - app: kitty
     workspace: code
     manage: true
