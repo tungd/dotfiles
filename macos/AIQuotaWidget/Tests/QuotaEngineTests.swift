@@ -175,6 +175,27 @@ final class QuotaEngineTests: XCTestCase {
         XCTAssertNotNil(geminiWeekly.resetAt)
     }
 
+    func testNormalizedConfigRemovesCodexFiveHourWindow() {
+        let config = WidgetConfig(
+            providers: [
+                ProviderConfig(
+                    id: "codex",
+                    name: "Codex",
+                    source: .codex,
+                    paths: [],
+                    windows: [
+                        QuotaWindowConfig(id: "5h", label: "5h", minutes: 300),
+                        QuotaWindowConfig(id: "weekly", label: "Weekly", minutes: 10080)
+                    ]
+                )
+            ]
+        )
+
+        let normalized = SnapshotStore.normalizedConfig(config)
+        XCTAssertEqual(normalized.providers.first?.windows.map(\.id), ["weekly"])
+        XCTAssertTrue(normalized.providers.contains(where: { $0.id == "antigravity" }))
+    }
+
     func testWidgetSnapshotFollowsCurrentConfigWhenCachedSnapshotIsStale() throws {
         let staleSnapshot = DashboardSnapshot(
             generatedAt: Date(),

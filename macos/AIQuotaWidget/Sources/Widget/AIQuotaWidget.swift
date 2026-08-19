@@ -1,32 +1,91 @@
 import SwiftUI
 import WidgetKit
+import AppIntents
+
+enum QuotaWidgetSelection: String, AppEnum {
+    case overview
+    case claude
+    case codex
+    case huggingFace
+    case gemini
+    case thirdParty
+    case deepSeek
+
+    static var typeDisplayRepresentation: TypeDisplayRepresentation {
+        "Quota group"
+    }
+
+    static var caseDisplayRepresentations: [QuotaWidgetSelection: DisplayRepresentation] {
+        [
+            .overview: "Overview",
+            .claude: "Claude",
+            .codex: "Codex",
+            .huggingFace: "HF Pro Inference",
+            .gemini: "Gemini (Antigravity)",
+            .thirdParty: "Claude/GPT (Antigravity)",
+            .deepSeek: "DeepSeek"
+        ]
+    }
+}
+
+struct QuotaWidgetIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource { "Quota group" }
+    static var description: IntentDescription { "Choose which quota group this widget instance shows." }
+
+    @Parameter(title: "Show", default: .claude)
+    var selection: QuotaWidgetSelection
+}
 
 struct AIQuotaTimelineEntry: TimelineEntry {
     let date: Date
     let snapshot: DashboardSnapshot
+    let selection: QuotaWidgetSelection
+
+    init(
+        date: Date,
+        snapshot: DashboardSnapshot,
+        selection: QuotaWidgetSelection = .overview
+    ) {
+        self.date = date
+        self.snapshot = snapshot
+        self.selection = selection
+    }
 }
 
-struct AIQuotaProvider: TimelineProvider {
+struct AIQuotaProvider: AppIntentTimelineProvider {
+    typealias Intent = QuotaWidgetIntent
+
     func placeholder(in context: Context) -> AIQuotaTimelineEntry {
-        AIQuotaTimelineEntry(date: Date(), snapshot: placeholderSnapshot)
+        AIQuotaTimelineEntry(date: Date(), snapshot: placeholderSnapshot, selection: .claude)
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (AIQuotaTimelineEntry) -> Void) {
-        completion(AIQuotaTimelineEntry(date: Date(), snapshot: displaySnapshot()))
+    func snapshot(for configuration: QuotaWidgetIntent, in context: Context) async -> AIQuotaTimelineEntry {
+        AIQuotaTimelineEntry(
+            date: Date(),
+            snapshot: displaySnapshot(selection: configuration.selection),
+            selection: configuration.selection
+        )
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<AIQuotaTimelineEntry>) -> Void) {
+    func timeline(for configuration: QuotaWidgetIntent, in context: Context) async -> Timeline<AIQuotaTimelineEntry> {
         let now = Date()
         let config = SnapshotStore.loadConfig()
-        let snapshot = SnapshotPresentation.aligned(SnapshotStore.loadSnapshot(), to: config)
+        let snapshot = configuration.selection.filteredSnapshot(
+            SnapshotPresentation.aligned(SnapshotStore.loadSnapshot(), to: config)
+        )
         let refreshMinutes = max(5, config.refreshMinutes)
         let next = now.addingTimeInterval(Double(refreshMinutes) * 60)
-        completion(Timeline(entries: [AIQuotaTimelineEntry(date: now, snapshot: snapshot)], policy: .after(next)))
+        return Timeline(
+            entries: [AIQuotaTimelineEntry(date: now, snapshot: snapshot, selection: configuration.selection)],
+            policy: .after(next)
+        )
     }
 
-    private func displaySnapshot() -> DashboardSnapshot {
+    private func displaySnapshot(selection: QuotaWidgetSelection) -> DashboardSnapshot {
         let config = SnapshotStore.loadConfig()
-        return SnapshotPresentation.aligned(SnapshotStore.loadSnapshot(), to: config)
+        return selection.filteredSnapshot(
+            SnapshotPresentation.aligned(SnapshotStore.loadSnapshot(), to: config)
+        )
     }
 
     private var placeholderSnapshot: DashboardSnapshot {
@@ -34,9 +93,9 @@ struct AIQuotaProvider: TimelineProvider {
             generatedAt: Date(),
             providers: [
                 ProviderSnapshot(
-                    id: "codex",
-                    name: "Codex",
-                    source: .codex,
+                    id: "claude",
+                    name: "Claude",
+                    source: .claude,
                     status: "ready",
                     windows: [
                         WindowSnapshot(
@@ -68,19 +127,86 @@ struct AIQuotaProvider: TimelineProvider {
     }
 }
 
+private extension QuotaWidgetSelection {
+    func filteredSnapshot(_ snapshot: DashboardSnapshot) -> DashboardSnapshot {
+        let providers: [ProviderSnapshot]
+        switch self {
+        case .overview:
+            return snapshot
+        case .claude:
+            providers = [quotaProvider(from: snapshot, id: "claude")].compactMap { $0 }
+        case .codex:
+            providers = [quotaProvider(from: snapshot, id: "codex")].compactMap { $0 }
+        case .huggingFace:
+            providers = [quotaProvider(from: snapshot, id: "huggingface")].compactMap { $0 }
+        case .gemini:
+            providers = [quotaProvider(
+                from: snapshot,
+                id: "antigravity",
+                name: "Gemini",
+                windowIDs: ["gemini-5h", "gemini-weekly"]
+            )].compactMap { $0 }
+        case .thirdParty:
+            providers = [quotaProvider(
+                from: snapshot,
+                id: "antigravity",
+                name: "Claude/GPT",
+                windowIDs: ["3p-5h", "3p-weekly"]
+            )].compactMap { $0 }
+        case .deepSeek:
+            providers = []
+        }
+
+        return DashboardSnapshot(
+            generatedAt: snapshot.generatedAt,
+            providers: providers,
+            deepSeek: snapshot.deepSeek
+        )
+    }
+}
+
+private func quotaProvider(
+    from snapshot: DashboardSnapshot,
+    id: String,
+    name: String? = nil,
+    windowIDs: Set<String>? = nil
+) -> ProviderSnapshot? {
+    guard var provider = snapshot.providers.first(where: { $0.id == id }) else { return nil }
+    if let windowIDs {
+        provider.windows = provider.windows.filter { windowIDs.contains($0.id) }
+    }
+    if let name {
+        provider.name = name
+        provider.windows = provider.windows.map { window in
+            var compact = window
+            if window.id.contains("5h") { compact.label = "5h" }
+            if window.id.contains("weekly") { compact.label = "Weekly" }
+            return compact
+        }
+    }
+    return provider
+}
+
 struct AIQuotaWidgetView: View {
     let entry: AIQuotaTimelineEntry
     @Environment(\.widgetFamily) private var family
 
     var body: some View {
         Group {
-            switch family {
-            case .systemSmall:
-                SmallWidget(snapshot: entry.snapshot)
-            case .systemMedium:
-                MediumWidget(snapshot: entry.snapshot)
-            default:
-                LargeWidget(snapshot: entry.snapshot)
+            if entry.selection == .deepSeek {
+                DeepSeekWidget(snapshot: entry.snapshot)
+            } else {
+                switch family {
+                case .systemSmall:
+                    SmallWidget(snapshot: entry.snapshot)
+                case .systemMedium:
+                    MediumWidget(snapshot: entry.snapshot)
+                default:
+                    LargeWidget(
+                        snapshot: entry.snapshot,
+                        showsDeepSeek: entry.selection == .overview
+                    )
+                }
             }
         }
         .containerBackground(.fill.tertiary, for: .widget)
@@ -142,6 +268,7 @@ private struct MediumWidget: View {
 
 private struct LargeWidget: View {
     let snapshot: DashboardSnapshot
+    let showsDeepSeek: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -164,25 +291,65 @@ private struct LargeWidget: View {
                 }
             }
 
-            Divider()
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("DeepSeek")
-                        .font(.caption.weight(.semibold))
-                    Spacer()
-                    Text(deepSeekStatusLabel)
+            if showsDeepSeek {
+                Divider()
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("DeepSeek")
+                            .font(.caption.weight(.semibold))
+                        Spacer()
+                        Text(deepSeekStatusLabel)
+                            .font(.caption)
+                    }
+                    Text(snapshot.deepSeek.windowDescription)
                         .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
-                Text(snapshot.deepSeek.windowDescription)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
             }
         }
     }
 
     private var deepSeekStatusLabel: String {
+        switch snapshot.deepSeek.state {
+        case .peak:
+            return "Peak now"
+        case .outsidePeak:
+            return "Outside peak"
+        case .notConfigured:
+            return "Schedule not set"
+        }
+    }
+}
+
+private struct DeepSeekWidget: View {
+    let snapshot: DashboardSnapshot
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("DeepSeek", systemImage: "clock")
+                .font(.headline)
+            Text(statusLabel)
+                .font(.title3.weight(.semibold))
+            Text(snapshot.deepSeek.windowDescription)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+            if let nextChangeAt = snapshot.deepSeek.nextChangeAt {
+                HStack(spacing: 4) {
+                    Image(systemName: "arrow.counterclockwise.circle")
+                    Text("Changes")
+                    Text(nextChangeAt, style: .timer)
+                        .monospacedDigit()
+                }
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var statusLabel: String {
         switch snapshot.deepSeek.state {
         case .peak:
             return "Peak now"
@@ -267,14 +434,14 @@ private extension AIQuotaWidget {
 }
 
 struct AIQuotaWidget: Widget {
-    let kind = "com.tung.aiquotawidget.status"
+    let kind = "com.tung.aiquotawidget.status.v2"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: AIQuotaProvider()) { entry in
+        AppIntentConfiguration(kind: kind, intent: QuotaWidgetIntent.self, provider: AIQuotaProvider()) { entry in
             AIQuotaWidgetView(entry: entry)
         }
         .configurationDisplayName("Quota")
-        .description("See quota usage, reset countdowns, and DeepSeek peak hours.")
+        .description("Add multiple Quota widgets and choose a quota group for each.")
         .supportedFamilies(Self.supportedFamilies)
     }
 }

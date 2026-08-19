@@ -23,7 +23,6 @@ enum DefaultConfig {
           "paths": ["~/.codex/state_5.sqlite"],
           "enabled": true,
           "windows": [
-            { "id": "5h", "label": "5h", "minutes": 300 },
             { "id": "weekly", "label": "Weekly", "minutes": 10080 }
           ]
         },

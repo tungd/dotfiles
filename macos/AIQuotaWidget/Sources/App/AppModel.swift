@@ -14,8 +14,8 @@ final class AppModel: ObservableObject {
     private var refreshLoop: Task<Void, Never>?
 
     init() {
-        snapshot = SnapshotStore.loadSnapshot()
         config = SnapshotStore.loadConfig()
+        snapshot = SnapshotPresentation.aligned(SnapshotStore.loadSnapshot(), to: config)
         configText = Self.encode(config)
         refresh()
         startRefreshLoop()
@@ -44,7 +44,7 @@ final class AppModel: ObservableObject {
                 lastError = "Could not save the local snapshot: \(error.localizedDescription)"
             }
             isRefreshing = false
-            WidgetCenter.shared.reloadTimelines(ofKind: "com.tung.aiquotawidget.status")
+            WidgetCenter.shared.reloadTimelines(ofKind: "com.tung.aiquotawidget.status.v2")
             WidgetCenter.shared.reloadAllTimelines()
         }
     }
@@ -58,10 +58,11 @@ final class AppModel: ObservableObject {
             return
         }
 
+        let normalized = SnapshotStore.normalizedConfig(decoded)
         do {
-            try SnapshotStore.saveConfig(decoded)
-            config = decoded
-            configText = Self.encode(decoded)
+            try SnapshotStore.saveConfig(normalized)
+            config = normalized
+            configText = Self.encode(normalized)
             lastError = nil
             refresh()
         } catch {

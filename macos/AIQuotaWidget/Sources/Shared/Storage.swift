@@ -41,7 +41,7 @@ enum SnapshotStore {
         guard let config = try? decoder.decode(WidgetConfig.self, from: data) else {
             return DefaultConfig.value
         }
-        return addBuiltInProviders(to: config)
+        return normalizedConfig(config)
     }
 
     static func saveConfig(_ config: WidgetConfig) throws {
@@ -51,7 +51,7 @@ enum SnapshotStore {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         encoder.dateEncodingStrategy = .iso8601
-        try encoder.encode(config).write(to: configURL, options: .atomic)
+        try encoder.encode(normalizedConfig(config)).write(to: configURL, options: .atomic)
     }
 
     static func saveSnapshot(_ snapshot: DashboardSnapshot) throws {
@@ -86,8 +86,14 @@ enum SnapshotStore {
         return URL(fileURLWithPath: expanded).standardizedFileURL
     }
 
-    private static func addBuiltInProviders(to config: WidgetConfig) -> WidgetConfig {
+    static func normalizedConfig(_ config: WidgetConfig) -> WidgetConfig {
         var result = config
+        result.providers = result.providers.map { provider in
+            guard provider.source == .codex else { return provider }
+            var normalized = provider
+            normalized.windows.removeAll { $0.id == "5h" || $0.minutes == 300 }
+            return normalized
+        }
         if !result.providers.contains(where: { $0.id == "antigravity" }) {
             if let provider = DefaultConfig.value.providers.first(where: { $0.id == "antigravity" }) {
                 result.providers.append(provider)

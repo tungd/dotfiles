@@ -60,8 +60,37 @@ That generates the Xcode project, builds a local development app, copies it to
 `~/Applications/AI Quota.app`, and launches it. Open the macOS widget gallery and
 add **Quota** to the desktop or Notification Center after the first launch.
 
+### Multiple compact widgets
+
+Add **Quota** more than once. Edit each widget and set **Show** to the group you
+want on that instance:
+
+- Claude
+- Codex (weekly)
+- HF Pro Inference (daily)
+- Gemini (Antigravity)
+- Claude/GPT (Antigravity)
+- DeepSeek peak hours
+- Overview, for the combined dashboard
+
+This keeps each widget focused while letting the desktop hold the quota groups
+you care about. The default for a new instance is Claude.
+
+If a Quota widget was placed before configurable instances were added, remove
+that old instance and add **Quota** again once. The new instance has an **Edit
+“Quota”…** menu item with the **Show** selector.
+
 The app is not submitted to App Store Connect and has no public distribution
 step.
+
+## Runtime model
+
+The widget extension can render the last snapshot without the Quota app window
+being open. The Quota app is currently the collector: it reads the local
+provider sources, writes the shared snapshot, and refreshes the widget on its
+configured interval. If the app is quit, the widget remains visible but its
+provider values stop advancing until the app runs again; countdown display is
+still rendered from the saved reset dates.
 
 ## Emacs dashboard
 
