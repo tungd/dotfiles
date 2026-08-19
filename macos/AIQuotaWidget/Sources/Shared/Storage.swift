@@ -38,7 +38,10 @@ enum SnapshotStore {
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        return (try? decoder.decode(WidgetConfig.self, from: data)) ?? DefaultConfig.value
+        guard let config = try? decoder.decode(WidgetConfig.self, from: data) else {
+            return DefaultConfig.value
+        }
+        return addBuiltInProviders(to: config)
     }
 
     static func saveConfig(_ config: WidgetConfig) throws {
@@ -81,5 +84,15 @@ enum SnapshotStore {
     static func expandPath(_ path: String) -> URL {
         let expanded = NSString(string: path).expandingTildeInPath
         return URL(fileURLWithPath: expanded).standardizedFileURL
+    }
+
+    private static func addBuiltInProviders(to config: WidgetConfig) -> WidgetConfig {
+        var result = config
+        if !result.providers.contains(where: { $0.id == "antigravity" }) {
+            if let provider = DefaultConfig.value.providers.first(where: { $0.id == "antigravity" }) {
+                result.providers.append(provider)
+            }
+        }
+        return result
     }
 }

@@ -56,6 +56,13 @@ struct QuotaEngine: Sendable {
             genericValues = [:]
             detail = result.detail
 
+        case .antigravity:
+            let result = AntigravityImporter.scan(paths: provider.paths)
+            events = []
+            liveValues = result.values
+            genericValues = [:]
+            detail = result.detail
+
         case .generic:
             let result = GenericUsageImporter.scan(paths: provider.paths)
             events = []
@@ -368,6 +375,8 @@ enum UsageFileScanner {
         case .codex:
             return false
         case .huggingface:
+            return false
+        case .antigravity:
             return false
         case .generic:
             let extensionName = url.pathExtension.lowercased()

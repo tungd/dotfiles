@@ -4,6 +4,7 @@ enum SourceKind: String, Codable, CaseIterable, Sendable {
     case claude
     case codex
     case huggingface
+    case antigravity
     case generic
 }
 

@@ -108,6 +108,7 @@ private struct ProviderCard: View {
         case .claude: return "bubble.left.and.bubble.right"
         case .codex: return "chevron.left.forwardslash.chevron.right"
         case .huggingface: return "cloud.fill"
+        case .antigravity: return "sparkles"
         case .generic: return "shippingbox"
         }
     }

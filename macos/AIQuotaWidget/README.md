@@ -1,7 +1,8 @@
 # Quota
 
 A local-only macOS WidgetKit app for watching Claude, Codex, Hugging Face
-Inference, and DeepSeek's published peak windows.
+Inference, Antigravity through the installed `agy` CLI, and DeepSeek's
+published peak windows.
 
 The app reads local usage metadata and writes only a small rendered snapshot to
 `~/Library/Application Support/AIQuotaWidget/snapshot.json`. It does not read or
@@ -10,6 +11,8 @@ display provider credentials. The default source paths are:
 - Claude: `~/.claude/**/*.jsonl` token records plus `~/.claude.json` cached quota utilization
 - Codex: `~/.codex/state_5.sqlite` rollout paths and their `rate_limits` records
 - Hugging Face: `~/.cache/huggingface` files named `usage`, `quota`, or `limit`
+- Antigravity: the installed `agy --print /usage --output-format json` command;
+  it shows separate Gemini and Claude/GPT 5-hour and weekly buckets
 
 Hugging Face plan limits are provider/account-specific. Add them in the in-app
 Settings JSON using `limitTokens` and, when known, `resetAt`:

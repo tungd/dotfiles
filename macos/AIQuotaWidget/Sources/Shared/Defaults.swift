@@ -36,6 +36,19 @@ enum DefaultConfig {
           "windows": [
             { "id": "daily", "label": "Daily", "minutes": 1440 }
           ]
+        },
+        {
+          "id": "antigravity",
+          "name": "Antigravity",
+          "source": "antigravity",
+          "paths": ["~/.local/bin/agy"],
+          "enabled": true,
+          "windows": [
+            { "id": "gemini-5h", "label": "Gemini 5h", "minutes": 300 },
+            { "id": "gemini-weekly", "label": "Gemini Weekly", "minutes": 10080 },
+            { "id": "3p-5h", "label": "Claude/GPT 5h", "minutes": 300 },
+            { "id": "3p-weekly", "label": "Claude/GPT Weekly", "minutes": 10080 }
+          ]
         }
       ],
       "deepSeek": {

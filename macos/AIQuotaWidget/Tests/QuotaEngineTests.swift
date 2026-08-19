@@ -135,6 +135,46 @@ final class QuotaEngineTests: XCTestCase {
         XCTAssertNotNil(value.resetAt)
     }
 
+    func testAntigravityUsageParsesGeminiAndThirdPartyBuckets() throws {
+        let json = """
+        {
+          "conversation_id": "",
+          "status": "SUCCESS",
+          "command": {
+            "name": "usage",
+            "data": {
+              "groups": [
+                {
+                  "name": "Gemini Models",
+                  "buckets": [
+                    {"id":"gemini-weekly","window":"weekly","remaining_fraction":0.75,"reset_time":"2030-01-02T00:00:00Z"},
+                    {"id":"gemini-5h","window":"5h","remaining_fraction":1,"reset_time":"2030-01-01T12:00:00Z"}
+                  ]
+                },
+                {
+                  "name": "Claude and GPT models",
+                  "buckets": [
+                    {"id":"3p-weekly","window":"weekly","remaining_fraction":0.5,"reset_time":"2030-01-03T00:00:00Z"},
+                    {"id":"3p-5h","window":"5h","remaining_fraction":0.9,"reset_time":"2030-01-01T12:00:00Z"}
+                  ]
+                }
+              ]
+            }
+          }
+        }
+        """
+
+        let values = AntigravityImporter.parseUsage(data: Data(json.utf8))
+        let geminiWeekly = try XCTUnwrap(values["gemini-weekly"])
+        let thirdPartyFiveHour = try XCTUnwrap(values["3p-5h"])
+
+        XCTAssertEqual(geminiWeekly.usedPercent, 25, accuracy: 0.01)
+        XCTAssertEqual(thirdPartyFiveHour.usedPercent, 10, accuracy: 0.01)
+        XCTAssertEqual(geminiWeekly.windowMinutes, 10080)
+        XCTAssertEqual(thirdPartyFiveHour.windowMinutes, 300)
+        XCTAssertNotNil(geminiWeekly.resetAt)
+    }
+
     func testWidgetSnapshotFollowsCurrentConfigWhenCachedSnapshotIsStale() throws {
         let staleSnapshot = DashboardSnapshot(
             generatedAt: Date(),

@@ -48,7 +48,7 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 5) {
                 Text("What the default importers read")
                     .font(.headline)
-                Text("Claude reads its local quota cache and JSONL usage records. Codex reads local rate-limit records from its SQLite index and rollout files. Hugging Face only scans files named usage, quota, limit, or telemetry; credential files are ignored.")
+                Text("Claude reads its local quota cache and JSONL usage records. Codex reads local rate-limit records from its SQLite index and rollout files. Hugging Face reads the authenticated daily endpoint. Antigravity runs the installed agy CLI's read-only /usage command. Credential files are not displayed.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Text("A configured window shows headroom, reset time, burn rate, and whether usage is ahead of or behind the elapsed window percentage.")
