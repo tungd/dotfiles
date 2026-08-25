@@ -1,0 +1,8 @@
+#+TITLE: dotfiles — Message Board
+
+* Welcome to dotfiles :announcement:
+:PROPERTIES:
+:AUTHOR: Tung
+:DATE: 2026-08-25
+:END:
+Project message board for pitches, RFCs, and decisions.

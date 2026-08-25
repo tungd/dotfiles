@@ -1,0 +1,30 @@
+#+TITLE: dotfiles — Basecamp HQ
+#+AUTHOR: Tung Dao
+#+STARTUP: showall
+
+* 🚀 Project Actions
+[[elisp:(bc-run-agent)][🤖 Run Agent]]  |  [[elisp:(bc-checkin)][💬 Check-in]]  |  [[elisp:(bc-add-task)][✅ New Task]]  |  [[elisp:(bc-open-terminal)][💻 Terminal]]  |  [[elisp:(magit-status)][🐙 Git Status]]  |  [[elisp:(bc-refresh)][🔄 Refresh HQ]]
+
+* 📋 Active To-Dos
+#+BEGIN: bc-tasks :limit 10 :status "TODO|IN-PROGRESS"
+  /No active tasks match current filter./
+
+#+END:
+
+* 📢 Message Board
+#+BEGIN: bc-messages :limit 5
+- [[file:docs/MESSAGES.org::*Welcome to dotfiles][Welcome to dotfiles]] :announcement:  /(Tung, 2026-08-25)/
+
+#+END:
+
+* ⏱️ Recent Activity & Check-ins
+#+BEGIN: bc-activities :limit 6
+- [[file:docs/ACTIVITIES.org::*[2026-08-25 10:41] Basecamp Initialized][[2026-08-25 10:41] Basecamp Initialized]]  /(Tung, 7s ago)/
+
+#+END:
+
+* 📚 Docs & Specifications
+#+BEGIN: bc-specs :dir "docs"
+- [[file:docs/SPECS.org][SPECS.org]]
+
+#+END:

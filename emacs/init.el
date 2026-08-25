@@ -347,10 +347,15 @@ Uses project root if in a project, otherwise current directory."
   "Personal prefix map used from `C-l'.")
 (set-keymap-parent td/leader-map ctl-x-map)
 (global-set-key (kbd "C-l") td/leader-map)
-(bind-key* "C-l" td/leader-map)
-
 (autoload 'quota-dashboard "quota-dashboard" "Open the local Quota dashboard." t)
 (define-key td/leader-map (kbd "q") #'quota-dashboard)
+
+(require 'td-command-workspace nil t)
+(when (fboundp 'td/command-workspace-install)
+  (td/command-workspace-install td/leader-map))
+
+(require 'bc nil t)
+(define-key td/leader-map (kbd "b") bc-prefix-map)
 
 ;; Use consult for completion-in-region (more efficient than default)
 (setopt completion-in-region-function #'consult-completion-in-region)

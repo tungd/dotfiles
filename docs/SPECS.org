@@ -1,0 +1,4 @@
+#+TITLE: dotfiles — Specifications
+
+* Overview
+High-level architectural overview for dotfiles.

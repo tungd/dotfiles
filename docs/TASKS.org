@@ -1,0 +1,7 @@
+#+TITLE: dotfiles — Tasks
+#+SEQ_TODO: TODO(t) IN-PROGRESS(i) WAITING(w) | DONE(d) CANCELED(c)
+
+* 🎯 Milestones
+** DONE Initialize project documentation :setup:
+
+* TODO [#A] Implement Basecamp theme integration :feat:ui:

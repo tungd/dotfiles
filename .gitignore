@@ -12,6 +12,7 @@ emacs/*
 !emacs/td-command-workspace-tests.el
 !emacs/td-command-workspace-code-cells-smoke.el
 !emacs/ob-http-tests.el
+!emacs/bc-tests.el
 emacs/user-lisp/copilot
 !emacs/snippets
 .yas-compiled-snippets.el

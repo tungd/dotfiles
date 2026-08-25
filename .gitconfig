@@ -41,3 +41,5 @@
 [credential "https://gist.github.com"]
 	helper = 
 	helper = !/opt/local/bin/gh auth git-credential
+[core]
+	hooksPath = .githooks
