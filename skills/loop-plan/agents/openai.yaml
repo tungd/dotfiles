@@ -1,0 +1,4 @@
+interface:
+  display_name: "Loop Plan"
+  short_description: "Plan implementation without losing the intent"
+  default_prompt: "Use $loop-plan to create or repair this implementation handoff."

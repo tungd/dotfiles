@@ -1,0 +1,4 @@
+interface:
+  display_name: "Loop Execute"
+  short_description: "Carry a LOOP handoff through to its outcome"
+  default_prompt: "Use $loop-execute to complete the remaining work in this LOOP."
