@@ -34,16 +34,9 @@ If nil, looks in the same directory as tterm.el."
   :type 'string
   :group 'tterm)
 
-(defcustom tterm-tmux-program nil
-  "Path to the local tmux executable.
-When nil, tterm searches `exec-path' and the PATH entry in
-`process-environment'."
-  :type '(choice (const nil) file)
-  :group 'tterm)
-
 (defcustom tterm-state-file
   (locate-user-emacs-file "tterm/sessions.tsv")
-  "Path where tterm persists tmux-backed session hosts.
+  "Path where tterm persists wezterm-backed session hosts.
 The environment variable TTERM_STATE_FILE overrides this value."
   :type 'file
   :group 'tterm)
@@ -208,10 +201,8 @@ without prompting."
 
 (defun tterm-bridge--runtime-config-payload (host)
   "Return OCaml runtime configuration payload for HOST."
-  (let* ((tmux-program (tterm-bridge--find-executable
-                        (or tterm-tmux-program "tmux")))
-         (path (getenv "PATH"))
-         (namespace (getenv "TTERM_TMUX_NAMESPACE"))
+  (let* ((path (getenv "PATH"))
+         (namespace (getenv "TTERM_NAMESPACE"))
          (state-file (tterm-bridge--state-file))
          (default-foreground
           (tterm-bridge--default-osc-color :foreground "white"))
@@ -220,8 +211,6 @@ without prompting."
          (lines
           (delq nil
                 (list
-                 (and tmux-program
-                      (concat "tmux\t" tmux-program))
                  (and path
                       (not (string-empty-p path))
                       (concat "env\tPATH\t" path))
@@ -242,9 +231,6 @@ without prompting."
                  (and default-background
                       (concat "default-color\tbackground\t"
                               default-background))))))
-    (when (and (or (null host) (string= host "local"))
-               (not tmux-program))
-      (user-error "tmux executable not found in exec-path or PATH"))
     (mapconcat #'identity lines "\n")))
 
 (defun tterm-bridge-configure-runtime (host &optional force)
@@ -260,7 +246,7 @@ without prompting."
   (setq tterm-bridge--runtime-configured-p nil))
 
 (defun tterm-bridge-connect (rows cols host cwd)
-  "Connect to a tmux-backed terminal with ROWS, COLS, HOST, and CWD."
+  "Connect to a wezterm-backed terminal with ROWS, COLS, HOST, and CWD."
   (tterm-bridge-ensure-module)
   (tterm-bridge-configure-runtime host t)
   (tterm-module--connect rows cols host cwd))

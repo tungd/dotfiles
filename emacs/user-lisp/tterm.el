@@ -8,6 +8,7 @@
     "Directory containing tterm.el."))
 
 (require 'cl-lib)
+(require 'seq)
 (require 'term)
 (require 'tramp nil t)
 (require 'tterm-bridge (expand-file-name "tterm-bridge" tterm--directory))
@@ -24,7 +25,15 @@
   :type 'number
   :group 'tterm)
 
-(defcustom tterm-redraw-idle-delay 0.125
+(defcustom tterm-input-redraw-delay 0.004
+  "Seconds to wait before the first redraw pull after terminal input.
+The wezterm backend normally reports local echo in about 1--2ms.  This small
+head start avoids a predictably stale delay-zero pull without postponing the
+first useful redraw by a full display frame."
+  :type 'number
+  :group 'tterm)
+
+(defcustom tterm-redraw-idle-delay 0.050
   "Seconds between Emacs pulls after a redraw finds no terminal changes."
   :type 'number
   :group 'tterm)
@@ -35,8 +44,8 @@
   :group 'tterm)
 
 (defcustom tterm-capture-refresh-idle-interval 2.0
-  "Seconds between tmux capture resyncs for an idle visible terminal.
-This is a recovery path for panes whose tmux control-mode output was missed
+  "Seconds between wezterm render-change resyncs for an idle visible terminal.
+This is a recovery path for panes whose wezterm mux output was missed
 while the buffer was hidden or inactive."
   :type 'number
   :group 'tterm)
@@ -167,6 +176,9 @@ attribute plist."
 (defvar-local tterm--redraw-timer nil
   "Pending redraw timer for this tterm buffer.")
 
+(defvar-local tterm--redraw-timer-deadline nil
+  "Absolute `float-time' deadline of `tterm--redraw-timer'.")
+
 (defvar-local tterm--redraw-request-timer nil
   "Pending one-shot redraw request timer.")
 
@@ -177,10 +189,10 @@ attribute plist."
   "Visible window state captured while automatic resize is settling.")
 
 (defvar-local tterm--last-redraw-change-time nil
-  "Last `float-time' value when a redraw pull found terminal changes.")
+  "Last time output changed or input required active redraw polling.")
 
 (defvar-local tterm--last-capture-refresh-time nil
-  "Last `float-time' value when this buffer requested tmux capture resync.")
+  "Last `float-time' value when this buffer requested wezterm capture resync.")
 
 (defvar-local tterm--capture-refresh-handle nil
   "In-flight asynchronous idle capture-refresh job, or nil.")
@@ -558,6 +570,9 @@ which would blow up when a range spans many codepoints)."
 (defvar tterm--symbol-face-table-cache nil
   "Cached (FALLBACKS . CHAR-TABLE) for broad symbol face matching.")
 
+(defvar-local tterm--wide-glyph-display-cache nil
+  "Cached display replacements that normalize wide glyph pixel advances.")
+
 (defun tterm--symbol-face-glyph-count ()
   "Return the number of codepoints covered by `tterm-symbol-face-fallbacks'."
   (let ((n 0))
@@ -628,11 +643,88 @@ large configs (see `tterm-symbol-fallback-scan-threshold')."
       (tterm--apply-symbol-face-fallbacks-scan text start)
     (tterm--apply-symbol-face-fallbacks-chartable text start)))
 
+(defconst tterm--pixel-spacer-candidates '(" " " " " " "​")
+  "Unicode spaces used to add exact, non-line-height-changing pixel advances.")
+
+(defun tterm--pixel-spacer-string (pixels)
+  "Return a display spacer exactly PIXELS wide, or nil when unavailable."
+  (when (> pixels 0)
+    (let ((options
+           (delq nil
+                 (mapcar
+                  (lambda (string)
+                    (let ((width (string-pixel-width string (current-buffer))))
+                      (when (> width 0)
+                        (cons width string))))
+                  tterm--pixel-spacer-candidates)))
+          (remaining pixels)
+          parts)
+      (setq options
+            (sort options (lambda (left right) (> (car left) (car right)))))
+      (while (> remaining 0)
+        (if-let* ((choice
+                   (seq-find (lambda (entry) (<= (car entry) remaining))
+                             options)))
+            (progn
+              (push (cdr choice) parts)
+              (setq remaining (- remaining (car choice))))
+          (setq remaining -1)))
+      (when (= remaining 0)
+        (apply #'concat (nreverse parts))))))
+
+(defun tterm--wide-glyph-display (char cell-pixels)
+  "Return an exact-cell display replacement for CHAR.
+CELL-PIXELS is the width of one terminal cell in the current buffer."
+  (let* ((source (char-to-string char))
+         (actual-pixels
+          (string-pixel-width source (current-buffer)))
+         (key (list char actual-pixels cell-pixels))
+         (missing (make-symbol "missing"))
+         (cached (gethash key tterm--wide-glyph-display-cache missing)))
+    (if (not (eq cached missing))
+        (unless (eq cached 'none) cached)
+      (let* ((target-pixels (* (char-width char) cell-pixels))
+             (deficit (- target-pixels actual-pixels))
+             (spacer (tterm--pixel-spacer-string deficit))
+             (display
+              (when (and spacer
+                         (= target-pixels
+                            (+ actual-pixels
+                               (string-pixel-width spacer
+                                                   (current-buffer)))))
+                (concat (char-to-string char) spacer))))
+        (puthash key (or display 'none) tterm--wide-glyph-display-cache)
+        display))))
+
+(defun tterm--normalize-wide-glyph-cell-metrics (_text start end)
+  "Make wide glyphs in START..END consume their promised terminal pixels.
+Emacs and the terminal width authority can agree that a CJK or emoji glyph is
+two cells while the fallback font advances fewer pixels.  Preserve the
+underlying character and its logical width, but display it with a measured
+thin-space suffix when needed."
+  (unless (hash-table-p tterm--wide-glyph-display-cache)
+    (setq-local tterm--wide-glyph-display-cache
+                (make-hash-table :test 'equal)))
+  (let ((cell-pixels
+         (string-pixel-width " " (current-buffer)))
+        (position start))
+    (while (< position end)
+      (let ((char (char-after position)))
+        (when (and char
+                   (> (char-width char) 1)
+                   (not (get-text-property position 'display)))
+          (when-let* ((display
+                       (tterm--wide-glyph-display
+                        char cell-pixels)))
+            (put-text-property position (1+ position) 'display display))))
+      (setq position (1+ position)))))
+
 (defun tterm--apply-symbol-font-fallbacks-for-text (text start end)
-  "Apply terminal symbol display and narrow face fallbacks to inserted TEXT."
+  "Apply symbol fallbacks and exact wide-cell metrics to inserted TEXT."
   (when (and (multibyte-string-p text) (< start end))
     (tterm--apply-symbol-display-substitutions text start)
-    (tterm--apply-symbol-face-fallbacks text start)))
+    (tterm--apply-symbol-face-fallbacks text start)
+    (tterm--normalize-wide-glyph-cell-metrics text start end)))
 
 ;;; Core functions
 
@@ -655,7 +747,7 @@ large configs (see `tterm-symbol-fallback-scan-threshold')."
   (completing-read "tterm host: " (tterm--remote-host-candidates) nil nil))
 
 (defun tterm--normalize-start-cwd (cwd)
-  "Return CWD in the form passed to tmux when creating a window."
+  "Return CWD in the form passed to wezterm when creating a terminal."
   (directory-file-name cwd))
 
 (defun tterm--cwd-for-host (host)
@@ -668,7 +760,7 @@ large configs (see `tterm-symbol-fallback-scan-threshold')."
     (expand-file-name default-directory)))
 
 (defun tterm--connect (rows cols host cwd)
-  "Connect to tmux-backed terminal on HOST at CWD."
+  "Connect to wezterm-backed terminal on HOST at CWD."
   (tterm-bridge-connect rows cols host cwd))
 
 (defun tterm--directory-for-host (host directory)
@@ -681,7 +773,7 @@ file operations resolve through Tramp."
     (concat "/ssh:" host ":" (directory-file-name directory))))
 
 (defun tterm--new (rows cols &optional scrollback cwd)
-  "Create a new local tmux-backed terminal. Returns terminal ID.
+  "Create a new local wezterm-backed terminal. Returns terminal ID.
 SCROLLBACK is accepted for compatibility with older test and bench helpers."
   (ignore scrollback)
   (tterm--connect rows cols "local"
@@ -712,11 +804,11 @@ Returns [BASE_VERSION TARGET_VERSION RESET OPS]."
   (tterm--command id "resize" (format "%dx%d" rows cols)))
 
 (defun tterm--destroy (id)
-  "Destroy terminal ID and its tmux window."
+  "Destroy terminal ID and its wezterm pane."
   (tterm--command id "kill-window" ""))
 
 (defun tterm--dispose-terminal-buffer ()
-  "Dispose the current Attached Terminal Buffer without tmux commands."
+  "Dispose the current Attached Terminal Buffer without backend commands."
   (when (fboundp 'tterm--stop-redraw-timer)
     (tterm--stop-redraw-timer))
   (when (fboundp 'tterm--stop-redraw-request-timer)
@@ -731,14 +823,14 @@ Returns [BASE_VERSION TARGET_VERSION RESET OPS]."
   (setq-local tterm--last-redraw-change-time nil))
 
 (defun tterm--detach-current-terminal ()
-  "Detach the buffer-local terminal from Emacs, preserving its tmux window."
+  "Detach the buffer-local terminal from Emacs, preserving its wezterm pane."
   (when tterm--terminal
     (tterm--command (tterm-id tterm--terminal) "detach" "")
     (setf (tterm-detached tterm--terminal) t))
   (tterm--dispose-terminal-buffer))
 
 (defun tterm--kill-current-terminal-window ()
-  "Kill the current terminal's tmux window and dispose its buffer attachment.
+  "Kill the current terminal's wezterm pane and dispose its buffer attachment.
 Errors from the bridge (e.g. missing module) are ignored so that
 `kill-buffer' always succeeds, even when the backend is broken."
   (when tterm--terminal
@@ -963,12 +1055,12 @@ window's mode line in every frame every 2s even when nothing changed."
       handle)))
 
 (defun tterm--pending-handle-p (handle)
-  "Return non-nil when HANDLE still names a pending tmux window."
+  "Return non-nil when HANDLE still names a pending wezterm pane."
   (or (string-prefix-p "@tterm-" (or (plist-get handle :window-id) ""))
       (string-prefix-p "%tterm-" (or (plist-get handle :pane-id) ""))))
 
 (defun tterm--terminal-handle ()
-  "Return the current terminal's stable tmux handle, or nil."
+  "Return the current terminal's stable wezterm handle, or nil."
   (when tterm--terminal
     (let ((handle
            (condition-case nil
@@ -981,7 +1073,7 @@ window's mode line in every frame every 2s even when nothing changed."
         handle))))
 
 (defun tterm--encode-reattach-payload (handle rows cols)
-  "Encode tmux HANDLE and terminal ROWS/COLS for reattach-window."
+  "Encode wezterm HANDLE and terminal ROWS/COLS for reattach-window."
   (let ((lines
          (list (format "host\t%s"
                        (tterm--escape-field (plist-get handle :host)))
@@ -1024,10 +1116,10 @@ window's mode line in every frame every 2s even when nothing changed."
        (user-error "Invalid reattach-window response: %s" text)))))
 
 (defun tterm--reattach-window (handle rows cols &optional no-select)
-  "Reattach tmux HANDLE at ROWS/COLS and return the tterm buffer.
+  "Reattach wezterm HANDLE at ROWS/COLS and return the tterm buffer.
 When NO-SELECT is non-nil, do not select the restored buffer."
   (unless (and (listp handle) (plist-member handle :window-id))
-    (user-error "No stable tmux handle"))
+    (user-error "No stable wezterm handle"))
   (let* ((payload (tterm--encode-reattach-payload handle rows cols))
          (response (tterm--decode-reattach-response
                     (tterm-bridge-command 0 "reattach-window" payload))))
@@ -1087,7 +1179,7 @@ When NO-SELECT is non-nil, do not select the restored buffer."
     (message "Terminal exited with status %d" status)))
 
 (defun tterm-detach ()
-  "Detach the current tterm buffer while preserving its tmux window."
+  "Detach the current tterm buffer while preserving its wezterm pane."
   (interactive)
   (unless (eq major-mode 'tterm-mode)
     (user-error "Not in a tterm buffer"))
@@ -1097,7 +1189,7 @@ When NO-SELECT is non-nil, do not select the restored buffer."
   (kill-buffer (current-buffer)))
 
 (defun tterm-kill-window ()
-  "Kill the current tterm tmux window and close its Emacs buffer."
+  "Kill the current tterm wezterm pane and close its Emacs buffer."
   (interactive)
   (unless (eq major-mode 'tterm-mode)
     (user-error "Not in a tterm buffer"))
@@ -1107,7 +1199,7 @@ When NO-SELECT is non-nil, do not select the restored buffer."
   (kill-buffer (current-buffer)))
 
 (defun tterm-cleanup ()
-  "Reset tterm's tmux runtime and close live tterm buffers."
+  "Reset tterm's wezterm runtime and close live tterm buffers."
   (interactive)
   (when (fboundp 'tterm-module--command)
     (condition-case err
@@ -1119,10 +1211,10 @@ When NO-SELECT is non-nil, do not select the restored buffer."
       (with-current-buffer buffer
         (tterm--dispose-terminal-buffer))
       (kill-buffer buffer)))
-  (message "Cleaned up tterm tmux runtime"))
+  (message "Cleaned up tterm wezterm runtime"))
 
 (defun tterm--shutdown-control-clients ()
-  "Close tterm tmux control clients while preserving tmux windows."
+  "Close tterm wezterm control connections while preserving wezterm panes."
   (when (fboundp 'tterm-module--command)
     (ignore-errors
       (tterm--command 0 "shutdown-clients" ""))))
@@ -1179,7 +1271,7 @@ When NO-SELECT is non-nil, do not select the buffer."
 
 ;;;###autoload
 (defun tterm (&optional remote)
-  "Create a new tmux-backed tterm terminal.
+  "Create a new wezterm-backed tterm terminal.
 With prefix REMOTE, prompt for an SSH host."
   (interactive "P")
   (let* ((host (if remote (tterm-read-remote-host) "local"))

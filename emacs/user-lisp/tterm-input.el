@@ -24,6 +24,7 @@
   :group 'tterm)
 
 (defvar tterm-redraw-update-delay)
+(defvar tterm-input-redraw-delay)
 (defvar tterm--redraw-request-timer)
 (defvar tterm--terminal)
 
@@ -33,6 +34,7 @@
 (declare-function tterm--local-file-from-uri "tterm-osc" (uri))
 (declare-function tterm--redraw-active-p "tterm-mode" ())
 (declare-function tterm--redraw-now-unless-resizing "tterm-mode" ())
+(declare-function tterm--wake-redraw-timer-for-input "tterm-mode" ())
 (declare-function tterm--paste-input "tterm" (id bytes))
 (declare-function tterm--write-input "tterm" (id bytes))
 
@@ -90,12 +92,13 @@
 ;;; Input dispatch
 
 (defun tterm--schedule-input-redraw ()
-  "Schedule immediate redraw after terminal input."
+  "Schedule redraw after terminal input."
   (when (and (not noninteractive)
              (eq major-mode 'tterm-mode)
              (tterm--redraw-active-p))
+    (tterm--wake-redraw-timer-for-input)
     ;; Coalesce rapid input onto the already-pending pull. Replacing the 25ms
-    ;; follow-up on every key can postpone it indefinitely, so tmux echo only
+    ;; follow-up on every key can postpone it indefinitely, so backend echo only
     ;; becomes visible after typing pauses.
     (unless (timerp tterm--redraw-request-timer)
       (let ((buffer (current-buffer)))
@@ -113,8 +116,16 @@
                                       (tterm--redraw-active-p))
                              (tterm--redraw-now-unless-resizing)
                              (when follow-up
-                               (schedule tterm-redraw-update-delay nil))))))))))
-          (schedule 0 t))))))
+                               (schedule
+                                (max 0
+                                     (- tterm-redraw-update-delay
+                                        tterm-input-redraw-delay))
+                                nil))))))))))
+          ;; A live local probe puts backend echo readiness around 1--2ms.
+          ;; Pull just after that boundary, then preserve the established
+          ;; absolute active-cadence fallback instead of accidentally making
+          ;; it INITIAL-DELAY + UPDATE-DELAY.
+          (schedule tterm-input-redraw-delay t))))))
 
 (defun tterm--send-key (key)
   "Send KEY to the terminal."

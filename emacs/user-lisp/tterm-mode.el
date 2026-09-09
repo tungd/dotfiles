@@ -35,6 +35,7 @@
 (defvar tterm--osc-indicator)
 (defvar tterm--redraw-request-timer)
 (defvar tterm--redraw-timer)
+(defvar tterm--redraw-timer-deadline)
 (defvar tterm--resize-timer)
 (defvar tterm--resize-window-starts)
 (defvar tterm--terminal)
@@ -144,7 +145,7 @@ replayed as an incremental diff."
        nil))))
 
 (defun tterm--capture-refresh-due-p ()
-  "Return non-nil when the current buffer should ask tmux for a pane snapshot."
+  "Return non-nil when the current buffer should ask the backend for a pane snapshot."
   (let ((now (float-time)))
     (and (or (not tterm--last-capture-refresh-time)
              (>= (- now tterm--last-capture-refresh-time)
@@ -152,7 +153,7 @@ replayed as an incremental diff."
          now)))
 
 (defun tterm--request-capture-refresh (&optional force)
-  "Refresh the backend terminal state from tmux capture-pane.
+  "Refresh the backend terminal state from wezterm render-change.
 When FORCE is nil, throttle requests by
 `tterm-capture-refresh-idle-interval'."
   (when-let* ((term tterm--terminal)
@@ -186,7 +187,7 @@ When FORCE is nil, throttle requests by
       nil)))
 
 (defun tterm--redraw-now-full ()
-  "Redraw, using tmux capture-pane as an idle resync fallback."
+  "Redraw, using wezterm render-change as an idle resync fallback."
   (if tterm--copy-mode
       nil
     (let ((changed (tterm--redraw-now)))
@@ -295,13 +296,30 @@ Buffers in copy mode are left untouched."
              (tterm--redraw-active-p))
     (tterm--schedule-redraw-timer (tterm--redraw-delay t))))
 
+(defun tterm--wake-redraw-timer-for-input ()
+  "Keep late input-triggered output off the idle redraw deadline.
+Input marks the buffer active for `tterm-redraw-active-grace-delay'.  If the
+periodic timer is sleeping past the next active-cadence deadline, preempt it.
+Preserve an already-earlier timer so rapid keys never postpone a useful pull."
+  (let* ((now (float-time))
+         (active-deadline (+ now tterm-redraw-update-delay)))
+    (setq-local tterm--last-redraw-change-time now)
+    (when (and (tterm--redraw-active-p)
+               (or (not (timerp tterm--redraw-timer))
+                   (not tterm--redraw-timer-deadline)
+                   (> tterm--redraw-timer-deadline active-deadline)))
+      (tterm--stop-redraw-timer)
+      (tterm--schedule-redraw-timer tterm-redraw-update-delay))))
+
 (defun tterm--schedule-redraw-timer (delay)
   "Schedule the next redraw poll for the current tterm buffer after DELAY."
   (when (and (not (timerp tterm--redraw-timer))
              (tterm--redraw-active-p))
     (let ((buffer (current-buffer))
+          (deadline (+ (float-time) delay))
           timer)
-      (setq tterm--redraw-timer
+      (setq tterm--redraw-timer-deadline deadline
+            tterm--redraw-timer
             (setq timer
                   (run-at-time
                    delay nil
@@ -310,7 +328,8 @@ Buffers in copy mode are left untouched."
                          (cancel-timer timer)
                        (with-current-buffer buffer
                          (when (eq tterm--redraw-timer timer)
-                           (setq tterm--redraw-timer nil))
+                           (setq tterm--redraw-timer nil
+                                 tterm--redraw-timer-deadline nil))
                          (when (tterm--redraw-active-p)
                            (let ((changed (tterm--redraw-now-unless-resizing)))
                              (unless (tterm--resize-pending-p)
@@ -320,8 +339,9 @@ Buffers in copy mode are left untouched."
 (defun tterm--stop-redraw-timer ()
   "Stop periodic apply-op pulls for the current tterm buffer."
   (when (timerp tterm--redraw-timer)
-    (cancel-timer tterm--redraw-timer)
-    (setq tterm--redraw-timer nil)))
+    (cancel-timer tterm--redraw-timer))
+  (setq tterm--redraw-timer nil
+        tterm--redraw-timer-deadline nil))
 
 (defun tterm--stop-redraw-request-timer ()
   "Stop the pending one-shot redraw request timer."
@@ -346,7 +366,7 @@ Buffers in copy mode are left untouched."
 (add-hook 'window-state-change-functions #'tterm--update-redraw-timers)
 
 (defun tterm--kill-buffer ()
-  "Kill the tmux window for the current buffer."
+  "Kill the wezterm pane for the current buffer."
   (tterm--kill-current-terminal-window))
 
 ;;; Mouse and input-mode handling
@@ -417,7 +437,7 @@ Buffers in copy mode are left untouched."
          (throw 'state (string= value "1")))))))
 
 (defun tterm--sync-pane-alt-screen ()
-  "Sync cached alt-screen state from tmux pane metadata."
+  "Sync cached alt-screen state from wezterm pane metadata."
   (when tterm--terminal
     (let* ((text (ignore-errors
                    (tterm-bridge-command
@@ -956,6 +976,7 @@ Return non-nil when a resize was sent."
   (setq-local tterm--terminal nil)
   (setq-local tterm--title nil)
   (setq-local tterm--redraw-timer nil)
+  (setq-local tterm--redraw-timer-deadline nil)
   (setq-local tterm--resize-timer nil)
   (setq-local tterm--resize-window-starts nil)
   (setq-local tterm--last-redraw-change-time nil)

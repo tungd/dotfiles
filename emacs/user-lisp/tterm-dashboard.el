@@ -1,7 +1,7 @@
-;;; tterm-dashboard.el --- Dashboard for tmux-backed tterm -*- lexical-binding: t; -*-
+;;; tterm-dashboard.el --- Dashboard for wezterm-backed tterm -*- lexical-binding: t; -*-
 
 ;;; Commentary:
-;; Host-grouped dashboard for tmux-backed tterm windows.
+;; Host-grouped dashboard for wezterm-backed tterm windows.
 
 ;;; Code:
 
@@ -98,7 +98,7 @@ Used to detect changes and avoid unnecessary point moves.")
 
 (defun tterm-dashboard--make-handle
     (host namespace socket session window-id pane-id &optional identity)
-  "Return a stable tmux handle plist."
+  "Return a stable wezterm handle plist."
   (let ((handle (list :host host
                       :namespace namespace
                       :socket socket
@@ -250,7 +250,7 @@ Intended for focus, window configuration, and kill-emacs callbacks."
     (tterm-dashboard--teardown-visibility-hooks)))
 
 (define-derived-mode tterm-dashboard-mode special-mode "tterm-dashboard"
-  "Dashboard for tmux-backed tterm windows."
+  "Dashboard for wezterm-backed tterm windows."
   (add-hook 'change-major-mode-hook
             #'tterm-dashboard--cancel-auto-refresh nil t)
   (add-hook 'kill-buffer-hook #'tterm-dashboard--cancel-auto-refresh nil t)
@@ -318,7 +318,7 @@ Return non-nil when such a row exists."
         (tterm--buffers))))
 
 (defun tterm-dashboard--encode-reattach-payload (handle rows cols)
-  "Encode tmux HANDLE and terminal ROWS/COLS for reattach-window."
+  "Encode wezterm HANDLE and terminal ROWS/COLS for reattach-window."
   (let ((lines
          (list (format "host\t%s"
                        (tterm-dashboard--escape-field (plist-get handle :host)))
@@ -391,16 +391,16 @@ Return non-nil when such a row exists."
        (user-error "Invalid reattach-window response: %s" text)))))
 
 (defun tterm-dashboard--reattach-window (handle &optional callback)
-  "Reattach tmux HANDLE and open the resulting tterm buffer.
+  "Reattach wezterm HANDLE and open the resulting tterm buffer.
 When CALLBACK is non-nil, call it with the terminal buffer after
 reattaching, instead of switching to it synchronously."
   (unless (and (listp handle) (plist-member handle :window-id))
-    (user-error "No stable tmux handle for this row"))
+    (user-error "No stable wezterm handle for this row"))
   (let* ((grid (tterm--window-grid-size))
          (rows (car grid))
          (cols (cdr grid))
          (payload (tterm-dashboard--encode-reattach-payload handle rows cols)))
-    (message "Reattaching tmux window…")
+    (message "Reattaching wezterm pane…")
     (tterm-bridge-command-async
      0 "reattach-window" payload
      (lambda (result error-p)
@@ -613,7 +613,7 @@ With COUNT, move that many rows."
   "Start an async dashboard refresh.
 When called interactively, prefix arg forces a new refresh even if one
 is already in progress.
-When LOCAL-ONLY is non-nil, discover local tmux windows but skip remote SSH."
+When LOCAL-ONLY is non-nil, discover local wezterm panes but skip remote SSH."
   (interactive)
   (when (and tterm-dashboard--refresh-in-progress current-prefix-arg)
     (when tterm-dashboard--refresh-job-handle
