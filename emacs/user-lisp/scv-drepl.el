@@ -7,7 +7,9 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'ansi-color)
 (require 'json)
+(require 'subr-x)
 (require 'drepl)
 
 ;; dREPL 0.4 still dynamically references this Comint display option, removed
@@ -41,8 +43,14 @@ Keys: context_window, input_tokens, output_tokens, cached_tokens, total_tokens."
 (defvar-local drepl-scv--ui nil
   "Latest TUI footer state: mode, model, cwd, and git_head.")
 
+(defvar-local drepl-scv--todo nil
+  "Latest SCV todo summary.")
+
+(defvar-local drepl-scv--ansi-context nil
+  "ANSI decoder state carried between process-output chunks.")
+
 (defvar-local drepl-scv--busy-started-at nil)
-(defvar-local drepl-scv--header-timer nil)
+(defvar-local drepl-scv--status-timer nil)
 (defvar-local drepl-scv--steering-prompt-range nil)
 (defvar-local drepl-scv--steering-prompt-timer nil)
 
@@ -88,23 +96,44 @@ Keys: context_window, input_tokens, output_tokens, cached_tokens, total_tokens."
   (setq-local comint-prompt-read-only t)
   (setq-local truncate-lines nil)
   (setq-local word-wrap t)
+  (setq-local header-line-format nil)
+  (unless (member '(:eval (drepl-scv--render-mode-line-status))
+                  mode-line-format)
+    (setq-local mode-line-format
+                (append mode-line-format
+                        '((:eval (drepl-scv--render-mode-line-status))))))
   (add-hook 'post-self-insert-hook #'drepl-scv--maybe-complete-slash nil t)
   (add-hook 'pre-command-hook
             #'drepl-scv--ensure-steering-prompt-before-command nil t)
   (add-hook 'comint-preoutput-filter-functions
             #'drepl-scv--move-steering-prompt-before-output nil t)
+  (add-hook 'comint-preoutput-filter-functions
+            #'drepl-scv--decode-ansi-output t t)
   (add-hook 'comint-output-filter-functions
             #'drepl-scv--restore-steering-prompt-after-output t t)
-  (add-hook 'kill-buffer-hook #'drepl-scv--stop-header-timer nil t))
+  (add-hook 'kill-buffer-hook #'drepl-scv--stop-live-timers nil t))
+
+(defun drepl-scv--decode-ansi-output (output)
+  "Decode ANSI in process OUTPUT, carrying partial sequences across chunks."
+  (let ((ansi-color-context drepl-scv--ansi-context))
+    (prog1 (ansi-color-apply output)
+      (setq drepl-scv--ansi-context ansi-color-context))))
 
 (defun drepl-scv--move-steering-prompt-before-output (output)
-  "Remove the movable busy prompt before inserting process OUTPUT."
+  "Remove the movable busy prompt before inserting process OUTPUT.
+
+If the stored markers do not belong to the current buffer (e.g. because a
+timer fired in a different REPL buffer), they are garbage-collected without
+touching the buffer."
   (when drepl-scv--steering-prompt-range
     (pcase-let ((`(,start . ,end) drepl-scv--steering-prompt-range))
-      (let ((inhibit-read-only t))
-        (delete-region start end))
-      (set-marker start nil)
-      (set-marker end nil)
+      (if (and (eq (marker-buffer start) (current-buffer))
+               (eq (marker-buffer end) (current-buffer)))
+          (let ((inhibit-read-only t))
+            (delete-region start end))
+        ;; Markers belong to a dead or foreign buffer — discard silently.
+        (set-marker start nil)
+        (set-marker end nil))
       (setq drepl-scv--steering-prompt-range nil)))
   output)
 
@@ -131,16 +160,25 @@ Keys: context_window, input_tokens, output_tokens, cached_tokens, total_tokens."
     (drepl-scv--insert-steering-prompt repl)))
 
 (defun drepl-scv--insert-steering-prompt (repl)
-  "Keep REPL editable while REPL is processing an active turn."
-  (when-let* ((process (drepl--process repl))
-              ((process-live-p process))
-              ((eq (drepl--status repl) 'busy)))
-    (setq drepl-scv--steering-prompt-timer nil)
-    (unless drepl-scv--steering-prompt-range
-      (let ((start (copy-marker (process-mark process))))
-        (comint-output-filter process "› ")
-        (setq drepl-scv--steering-prompt-range
-              (cons start (copy-marker (process-mark process))))))))
+  "Keep REPL editable while REPL is processing an active turn.
+
+This function may be called from a timer in any buffer, so it explicitly
+switches to the REPL's buffer to update the correct buffer-local state.
+If the REPL's buffer has been killed the call is a no-op."
+  (let ((buffer (drepl--buffer repl)))
+    (unless (buffer-live-p buffer)
+      (cl-return-from drepl-scv--insert-steering-prompt))
+    (with-current-buffer buffer
+      (setq drepl-scv--steering-prompt-timer nil)
+      (when-let* ((process (drepl--process repl))
+                  ((process-live-p process))
+                  ((eq (drepl--status repl) 'busy))
+                  ((not ansi-osc--marker)))
+        (unless drepl-scv--steering-prompt-range
+          (let ((start (copy-marker (process-mark process))))
+            (comint-output-filter process "› ")
+            (setq drepl-scv--steering-prompt-range
+                  (cons start (copy-marker (process-mark process))))))))))
 
 (cl-defmethod drepl--eval ((repl drepl-scv) code)
   "Send CODE immediately so SCV can steer an active turn."
@@ -240,22 +278,22 @@ Keys: context_window, input_tokens, output_tokens, cached_tokens, total_tokens."
                           ((equal command "/skill") "Skill: ")
                           ((equal command "/resume-codex") "Codex session: ")
                           ((equal command "/resume-claude") "Claude session: ")
-                          ((member command '("/mode" "/permissions"))
+                          ((member command '("/mode"))
                            "Permissions: ")))
             (argument
              (condition-case nil
                  (completing-read prompt candidates nil t)
                (quit nil))))
       (concat command " " argument (if (equal command "/skill") " " ""))
-    (if (member command '("/goal" "/compact" "/mode" "/model"
+    (if (member command '("/compact" "/mode" "/model"
                           "/resume-codex" "/resume-claude"
-                          "/permissions" "/help" "/exit" "/skill"))
+                          "/help" "/exit" "/skill"))
         command
       (concat command " "))))
 
 (defun drepl-scv--argument-candidates (command)
   "Return completion candidates for COMMAND's argument."
-  (when (member command '("/model" "/mode" "/permissions" "/skill"
+  (when (member command '("/model" "/mode" "/skill"
                           "/resume-codex" "/resume-claude"))
     (when-let* ((repl (drepl--get-repl 'ready))
                 (code (concat command " "))
@@ -281,79 +319,63 @@ Keys: context_window, input_tokens, output_tokens, cached_tokens, total_tokens."
 (defun drepl-scv--trim-scale (value)
   (replace-regexp-in-string "\\.0\\([kM]\\)\\'" "\\1" value))
 
-(defun drepl-scv--footer-left ()
-  (let* ((mode (or (alist-get 'mode drepl-scv--ui) "ask"))
-         (model (or (alist-get 'model drepl-scv--ui) ""))
-         (cwd (or (alist-get 'cwd drepl-scv--ui) default-directory))
-         (cwd (directory-file-name (abbreviate-file-name cwd)))
-         (git (or (alist-get 'git_head drepl-scv--ui) "")))
-    (concat mode " · " model " · " cwd
-            (if (string-empty-p git) "" (format " [%s]" git)))))
-
-(defun drepl-scv--footer-right ()
+(defun drepl-scv--mode-line-usage ()
   (let* ((ctx (or (alist-get 'context_window drepl-scv--usage) 0))
          (total (or (alist-get 'total_tokens drepl-scv--usage) 0))
-         (input (or (alist-get 'input_tokens drepl-scv--usage) 0))
-         (output (or (alist-get 'output_tokens drepl-scv--usage) 0))
-         (cached (or (alist-get 'cached_tokens drepl-scv--usage) 0))
-         (context (if (> ctx 0)
-                      (format "%.1f%%/%s" (* 100.0 (/ total (float ctx)))
-                              (drepl-scv--trim-scale
-                               (drepl-scv--scaled-count ctx)))
-                    "-/-"))
-         (cache-pct (if (> input 0) (* 100.0 (/ cached (float input))) 0.0)))
-    (format "%s · ↑%s/↓%s (%.1f%%)" context
-            (drepl-scv--trim-scale (drepl-scv--scaled-count input))
-            (drepl-scv--trim-scale (drepl-scv--scaled-count output))
-            cache-pct)))
+         (context (drepl-scv--trim-scale (drepl-scv--scaled-count ctx))))
+    (when (> ctx 0)
+      (format "%.1f%%/%s" (* 100.0 (/ total (float ctx))) context))))
 
-(defun drepl-scv--format-usage (usage)
-  "Return a compact usage suffix for header from USAGE alist, or empty string."
-  (if-let* ((total (alist-get 'total_tokens usage))
-            (ctx (alist-get 'context_window usage))
-            ((numberp total))
-            ((numberp ctx)))
-      (let* ((input (or (alist-get 'input_tokens usage) 0))
-             (output (or (alist-get 'output_tokens usage) 0))
-             (cached (or (alist-get 'cached_tokens usage) 0))
-             (pct (if (> ctx 0) (/ (* total 100) ctx) 0)))
-        (format "  %d/%d (%d%%)" total ctx pct))
-    ""))
+(defun drepl-scv--mode-line-config ()
+  (let ((mode (alist-get 'mode drepl-scv--ui))
+        (model (alist-get 'model drepl-scv--ui)))
+    (cond
+     ((and mode model) (format "%s · %s" mode model))
+     (mode mode)
+     (model model))))
 
-(defun drepl-scv--format-header (status)
-  "Return TUI-style (LEFT RIGHT) header text for STATUS."
+(defun drepl-scv--mode-line-todo ()
+  (let ((total (or (alist-get 'total drepl-scv--todo) 0)))
+    (when (> total 0)
+      (propertize
+       (format "todo:%d/%d"
+               (or (alist-get 'completed drepl-scv--todo) 0) total)
+       'help-echo (or (alist-get 'current drepl-scv--todo) "")))))
+
+(defun drepl-scv--mode-line-activity (status)
   (let* ((elapsed (if drepl-scv--busy-started-at
                       (max 0 (floor (- (float-time)
                                        drepl-scv--busy-started-at)))
                     0))
          (phase (mod (floor (* 10 (- (float-time)
                                      (or drepl-scv--busy-started-at
-                                         (float-time))))) 10))
-         (state
-          (pcase status
-            ('busy (format "%s Working… (%ds) · "
-                           (aref drepl-scv--spinner-frames phase) elapsed))
-            ('rawio "Waiting… · ")
-            (_ ""))))
-    (list (concat state (drepl-scv--footer-left))
-          (drepl-scv--footer-right))))
+                                         (float-time))))) 10)))
+    (pcase status
+      ('busy (propertize
+              (format "%s Working %ds"
+                      (aref drepl-scv--spinner-frames phase) elapsed)
+              'face 'mode-line-emphasis))
+      ('rawio (propertize "Waiting" 'face 'warning))
+      (_ nil))))
 
-(defun drepl-scv--render-header-line ()
-  "Render the live SCV header with its right side aligned like the TUI."
-  (pcase-let ((`(,left ,right)
-               (drepl-scv--format-header
-                (and drepl--current (drepl--status drepl--current)))))
-    (list " " (replace-regexp-in-string "%" "%%" left t t)
-          (propertize " " 'display
-                      `(space :align-to (- right-fringe ,(1+ (string-width right)))))
-          (replace-regexp-in-string "%" "%%" right t t) " ")))
+(defun drepl-scv--render-mode-line-status ()
+  "Render compact live SCV activity, todo, and context state."
+  (let* ((status (and drepl--current (drepl--status drepl--current)))
+         (parts (delq nil
+                      (list (drepl-scv--mode-line-activity status)
+                            (drepl-scv--mode-line-config)
+                            (drepl-scv--mode-line-todo)
+                            (drepl-scv--mode-line-usage))))
+         (rendered (string-join parts " · ")))
+    (if (string-empty-p rendered) ""
+      (concat "  " (replace-regexp-in-string "%" "%%" rendered t t)))))
 
-(defun drepl-scv--stop-header-timer ()
-  (when (timerp drepl-scv--header-timer)
-    (cancel-timer drepl-scv--header-timer))
+(defun drepl-scv--stop-live-timers ()
+  (when (timerp drepl-scv--status-timer)
+    (cancel-timer drepl-scv--status-timer))
   (when (timerp drepl-scv--steering-prompt-timer)
     (cancel-timer drepl-scv--steering-prompt-timer))
-  (setq drepl-scv--header-timer nil
+  (setq drepl-scv--status-timer nil
         drepl-scv--steering-prompt-timer nil
         drepl-scv--steering-prompt-range nil))
 
@@ -361,28 +383,28 @@ Keys: context_window, input_tokens, output_tokens, cached_tokens, total_tokens."
   (if (eq status 'busy)
       (unless drepl-scv--busy-started-at
         (setq drepl-scv--busy-started-at (float-time)
-              drepl-scv--header-timer
+              drepl-scv--status-timer
               (run-at-time 0.1 0.1 #'force-window-update (current-buffer))))
     (setq drepl-scv--busy-started-at nil)
-    (drepl-scv--stop-header-timer)))
+    (drepl-scv--stop-live-timers)))
 
-(defun drepl-scv--update-header (repl)
-  "Update `header-line-format' from REPL status and force redisplay."
+(defun drepl-scv--update-live-state (repl)
+  "Refresh mode-line state for REPL without consuming a header line."
   (let ((buffer (drepl--buffer repl)))
     (when (buffer-live-p buffer)
       (with-current-buffer buffer
-        (setq-local header-line-format '(:eval (drepl-scv--render-header-line)))
+        (setq-local header-line-format nil)
         (force-window-update buffer)))))
 
 (cl-defmethod drepl--init :after ((repl drepl-scv))
-  (drepl-scv--update-header repl))
+  (drepl-scv--update-live-state repl))
 
 (cl-defmethod drepl--handle-notification :after ((_repl drepl-scv) _data)
   (when-let* ((buffer (drepl--buffer _repl)))
     (when (buffer-live-p buffer)
       (with-current-buffer buffer
         (drepl-scv--sync-busy-clock (drepl--status _repl)))))
-  (drepl-scv--update-header _repl))
+  (drepl-scv--update-live-state _repl))
 
 (cl-defmethod drepl--handle-notification ((repl drepl-scv) data)
   (pcase (alist-get 'op data)
@@ -397,6 +419,14 @@ Keys: context_window, input_tokens, output_tokens, cached_tokens, total_tokens."
                                  (cons key (alist-get key data)))
                                '(context_window input_tokens
                                  output_tokens cached_tokens total_tokens)))))))
+    ("scv/todo"
+     (let ((buffer (drepl--buffer repl)))
+       (when (buffer-live-p buffer)
+         (with-current-buffer buffer
+           (setq-local drepl-scv--todo
+                       (mapcar (lambda (key) (cons key (alist-get key data)))
+                               '(total completed in_progress pending
+                                 current)))))))
     ("scv/ui"
      (let ((buffer (drepl--buffer repl)))
        (when (buffer-live-p buffer)
