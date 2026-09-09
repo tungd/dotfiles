@@ -7,10 +7,10 @@ PortGroup           python 1.0
 # TODO: Test port on the macOS 10.12 - macOS 10.15. Because kitty replaces the
 # librsync with libxxhash, new versions can work
 # correctly again.
-github.setup        kovidgoyal kitty e7ccaa429d8579d13e24c4a11164259f36f953c7
+github.setup        kovidgoyal kitty 35f88faeeae938bb9f210509c55a2633086f88d2
 github.tarball_from archive
 epoch               1
-version             20260817
+version             20260901
 revision            0
 
 categories          aqua
@@ -22,9 +22,9 @@ description         A cross-platform, fast, feature full, GPU based terminal emu
 long_description    ${description}
 homepage            https://sw.kovidgoyal.net/kitty/
 
-checksums           rmd160  a949cbe14a3f1a0059304a1a31fee0518855529c \
-                    sha256  273b0c766e1ad7b76941fa061473f68eaf55cd55405aaa6440edabfbc2afde0a \
-                    size    9648507
+checksums           rmd160  d861d35dee9f2d10316837263bf1e197ae5ebdd5 \
+                    sha256  e461fe416b393280a6b793b85d1f0534c15f6fbd1ed6f1f1c7949284be34058d \
+                    size    9683603
 
 livecheck.type      none
 
