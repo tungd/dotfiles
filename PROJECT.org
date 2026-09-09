@@ -7,7 +7,9 @@
 
 * 📋 Active To-Dos
 #+BEGIN: bc-tasks :limit 10 :status "TODO|IN-PROGRESS"
-  /No active tasks match current filter./
+| Status | Pri | Task                                 | Tags    |
+|--------+-----+--------------------------------------+---------|
+| TODO   | A   | [[file:docs/TASKS.org::*Implement Basecamp theme integration][Implement Basecamp theme integration]] | feat:ui |
 
 #+END:
 
@@ -19,7 +21,8 @@
 
 * ⏱️ Recent Activity & Check-ins
 #+BEGIN: bc-activities :limit 6
-- [[file:docs/ACTIVITIES.org::*[2026-08-25 10:41] Basecamp Initialized][[2026-08-25 10:41] Basecamp Initialized]]  /(Tung, 7s ago)/
+- [[file:docs/ACTIVITIES.org::*[2026-08-25 10:42] Completed Basecamp initial setup and task verified][[2026-08-25 10:42] Completed Basecamp initial setup and task verified]]  /(Antigravity, 2026-08-25)/
+- [[file:docs/ACTIVITIES.org::*[2026-08-25 10:41] Basecamp Initialized][[2026-08-25 10:41] Basecamp Initialized]]  /(Tung, 2026-08-25)/
 
 #+END:
 

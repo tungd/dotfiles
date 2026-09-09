@@ -413,6 +413,11 @@ disabled.
 (autoload 'quota-dashboard "quota-dashboard"
 "Open the local Quota dashboard." t)
 (register-definition-prefixes "quota-dashboard" '("quota-dashboard-"))
+
+
+;;; Generated autoloads from bc.el
+
+(register-definition-prefixes "bc" '("bc-" "org-dblock-write:bc-"))
 
 ;;; End of scraped data
 

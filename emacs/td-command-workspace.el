@@ -300,12 +300,14 @@ Reuse an existing terminal session when available."
 (defun td/command-workspace--open-dashboard (project-root &optional file)
   "Open a workspace dashboard for PROJECT-ROOT.
 
-When FILE is non-nil, visit it. Otherwise prefer `magit-status' in git repos
-and `dired' as the fallback."
+When FILE is non-nil, visit it. Otherwise prefer `PROJECT.org` Basecamp HQ,
+then `magit-status` in git repos and `dired` as fallback."
   (let ((default-directory (file-name-as-directory project-root)))
     (cond
      ((and file (file-exists-p file))
       (find-file file))
+     ((file-exists-p (expand-file-name "PROJECT.org" project-root))
+      (find-file (expand-file-name "PROJECT.org" project-root)))
      ((and (fboundp 'magit-status)
            (file-exists-p (expand-file-name ".git" project-root)))
       (magit-status))
