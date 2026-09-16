@@ -16,11 +16,7 @@ export PATH="$HOME/.claude/local:$PATH"
 # Added by Antigravity CLI installer
 export PATH="/Users/tung/.local/bin:$PATH"
 
-##
-# Your previous /Users/tung/.zprofile file was backed up as /Users/tung/.zprofile.macports-saved_2026-06-07_at_10:51:45
-##
-
-# MacPorts Installer addition on 2026-06-07_at_10:51:45: adding an appropriate PATH variable for use with MacPorts.
+# MacPorts Installer addition
 export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
 # Finished adapting your PATH environment variable for use with MacPorts.
 

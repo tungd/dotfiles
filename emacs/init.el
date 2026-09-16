@@ -835,7 +835,7 @@ With prefix argument FORCE, rebuild every configured grammar."
               ))
    gptel-default-mode 'org-mode
    gptel-include-reasoning nil
-   gptel-model 'gemma-4-26b-a4b-it))
+   gptel-model 'gemini-3.5-flash-lite))
 
 ;;;; Error checking
 (use-package flymake
