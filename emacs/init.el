@@ -7,6 +7,7 @@
 ;; going. This way I will be able to nail down the packages that cause issue, and
 ;; look for alternatives.
 
+(require 'jka-compr)
 (require 'subr-x)
 (setq load-prefer-newer t)
 

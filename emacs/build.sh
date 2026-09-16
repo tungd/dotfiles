@@ -121,6 +121,13 @@ mkdir -p "$(dirname "$APP_DIR")"
 cp -R nextstep/Emacs.app "$APP_DIR"
 chmod -R u+w "$APP_DIR"
 
+# Ensure all bundled .elc files are newer than .el.gz files.
+# When Emacs make install compresses .el into .el.gz, their mtime can be newer than .elc.
+# If `load-prefer-newer t` is set, Emacs would try to load .el.gz instead of .elc, causing
+# recursive load errors on jka-compr.
+echo "==> Ensuring bundled .elc files are newer than .el.gz..."
+find "$APP_DIR" -name "*.elc" -exec touch {} +
+
 # Ad-hoc codesign to avoid macOS gatekeeper warnings
 echo "==> Ad-hoc codesigning $APP_DIR..."
 /usr/bin/codesign --force --deep --sign - "$APP_DIR"
