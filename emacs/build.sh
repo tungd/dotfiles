@@ -117,8 +117,8 @@ echo "==> Installing Emacs.app to $APP_DIR..."
 if [ -d "$APP_DIR" ] || [ -L "$APP_DIR" ]; then
     rm -rf "$APP_DIR"
 fi
-mkdir -p "$(dirname "$APP_DIR")"
-cp -R nextstep/Emacs.app "$APP_DIR"
+mkdir -p "$APP_DIR"
+rsync -a nextstep/Emacs.app/ "$APP_DIR/"
 chmod -R u+w "$APP_DIR"
 
 # Ensure all bundled .elc files are newer than .el.gz files.
