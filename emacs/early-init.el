@@ -1,7 +1,5 @@
 ;;; early-init.el --- Early startup configuration -*- lexical-binding: t; -*-
 
-(require 'jka-compr)
-(setq load-prefer-newer t)
 
 (defun td/early-frame-parameter (parameter value)
   "Set PARAMETER to VALUE for the initial and future frames."
