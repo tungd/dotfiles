@@ -1254,19 +1254,24 @@ With prefix argument FORCE, rebuild every configured grammar."
 ;; (use-package prism
 ;;   :hook (enable-theme-functions . prism-soften-theme-faces))
 
-(use-package pache-dark-theme
+;; (use-package pache-dark-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'pache-dark t)
+;;   ;; Directly override legacy :bold t attributes that user theme can't always
+;;   ;; neutralize due to the old-style :bold attribute vs modern :weight difference.
+;;   (dolist (face '(font-lock-keyword-face
+;;                   font-lock-function-name-face
+;;                   font-lock-type-face
+;;                   font-lock-builtin-face
+;;                   font-lock-preprocessor-face
+;;                   bold))
+;;     (set-face-attribute face nil :weight 'normal)))
+
+(use-package doom-themes
   :ensure t
   :config
-  (load-theme 'pache-dark t)
-  ;; Directly override legacy :bold t attributes that user theme can't always
-  ;; neutralize due to the old-style :bold attribute vs modern :weight difference.
-  (dolist (face '(font-lock-keyword-face
-                  font-lock-function-name-face
-                  font-lock-type-face
-                  font-lock-builtin-face
-                  font-lock-preprocessor-face
-                  bold))
-    (set-face-attribute face nil :weight 'normal)))
+  (load-theme 'doom-oksolar-light))
 
 ;; (use-package solarized-theme
 ;;   :ensure t

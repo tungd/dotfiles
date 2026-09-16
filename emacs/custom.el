@@ -184,7 +184,8 @@
                                                     (null-device . "/dev/null")
                                                     (exec-suffixes ""))))
  '(custom-safe-themes
-   '("68e9ab92a95e1ab84478c94a912766b00cf2b492b6b56db39f7e5d31c65498a2"
+   '("f253a920e076213277eb4cbbdf3ef2062e018016018a941df6931b995c6ff6f6"
+     "68e9ab92a95e1ab84478c94a912766b00cf2b492b6b56db39f7e5d31c65498a2"
      "5541d412c46ad24030fd34348ce1a5fa5e9030dd335e6d8322aba28fc9ceccc3"
      "5b4fc448d0fb588fdad7c86ab5bb9baaa358488f4b6e4a3d1ff2aca7b293651f"
      "a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e"
