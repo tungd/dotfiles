@@ -2,7 +2,7 @@
 # Interactive shell setup lives in ~/.zshrc.
 # export LANG=en_US.UTF-8
 export CLICOLOR=1
-export ENV=development
+export ENV=local
 export LOCAL=$HOME/.local
 export PGHOST=127.0.0.1
 export PGPASS=postgres
@@ -13,8 +13,6 @@ export PATH=$HOME/Projects/dotfiles/bin:$PATH
 export PNPM_HOME="/Users/tung/Library/pnpm"
 export PATH="$PNPM_HOME/bin:$PATH"
 export PATH="$HOME/.claude/local:$PATH"
-# Added by Antigravity CLI installer
-export PATH="/Users/tung/.local/bin:$PATH"
 
 # MacPorts Installer addition
 export PATH="/opt/local/bin:/opt/local/sbin:$PATH"

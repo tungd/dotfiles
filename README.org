@@ -69,15 +69,18 @@ Add this source before the default source in
   rsync://rsync.macports.org/macports/release/tarballs/ports.tar.gz [default]
 #+END_SRC
 
-After that, =make emacs-weekly= keeps the mirror updated with =rsync= and
-reruns =portindex= there.
+After that, local ports under =ports/= remain available to MacPorts.
 
-** I also maintained a separate port for building Emacs. I have it updated weekly.
+** Building Emacs
 
-The weekly Emacs build is managed through the local MacPorts port under
-=ports/editors/emacs=:
+Emacs is built directly from git master using MacPorts for dependencies via
+=emacs/build.sh=. It clones/updates to =~/.local/src/emacs=, configures with
+native compilation and tree-sitter, installs to =~/Applications/Emacs.app=, and sets
+up CLI shims in =~/.local/bin/=:
 
 #+BEGIN_SRC sh
+  ./emacs/build.sh
+  # or
   make emacs-weekly
 #+END_SRC
 

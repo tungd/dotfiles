@@ -1,7 +1,3 @@
-EMACS := $(shell curl -s "https://api.github.com/repos/emacs-mirror/emacs/commits/master" | grep '"sha"' | head -1 | sed 's/.*"sha": "\([^"]*\)".*/\1/')
-LLAMA := $(shell curl -s "https://api.github.com/repos/ikawrakow/ik_llama.cpp/commits/main" | grep '"sha"' | head -1 | sed 's/.*"sha": "\([^"]*\)".*/\1/')
-KITTY := $(shell curl -s "https://api.github.com/repos/kovidgoyal/kitty/commits/master" | grep '"sha"' | head -1 | sed 's/.*"sha": "\([^"]*\)".*/\1/')
-TODAY := $(shell date "+%Y%m%d")
 MACPORTS_LOCAL_PORTS := /opt/local/var/macports/sources/local/dotfiles-ports
 
 MACPORTS_PACKAGES := \
@@ -44,47 +40,16 @@ MACPORTS_PACKAGES := \
 
 .DEFAULT_GOAL := macports
 
-.PHONY: macports macports-tools macports-select emacs-weekly emacs-weekly-update kitty-mainline kitty-mainline-update fix-emacs-shims
+.PHONY: macports macports-tools macports-select emacs-weekly
 
-ports/PortIndex: ports/aqua/kitty/Portfile ports/devel/shader-slang/Portfile ports/editors/emacs/Portfile ports/llm/ik_llama.cpp/Portfile
+ports/PortIndex: ports/devel/shader-slang/Portfile
 	cd ports && portindex
 
 $(MACPORTS_LOCAL_PORTS)/PortIndex: ports/PortIndex
 	rsync -a --delete --exclude .DS_Store --exclude work ports/ "$(MACPORTS_LOCAL_PORTS)/"
 	cd "$(MACPORTS_LOCAL_PORTS)" && portindex
 
-$(EMACS).tar.gz:
-	curl -LO 'https://github.com/emacs-mirror/emacs/archive/$(EMACS).tar.gz'
-
-$(LLAMA).tar.gz:
-	curl -LO 'https://github.com/ikawrakow/ik_llama.cpp/archive/$(LLAMA).tar.gz'
-
-$(KITTY).tar.gz:
-	curl -LO 'https://github.com/kovidgoyal/kitty/archive/$(KITTY).tar.gz'
-
-ports/editors/emacs/Portfile: $(EMACS).tar.gz ports/editors/emacs/Portfile.tmpl
-	sed -e 's/<COMMIT_HASH>/$(EMACS)/g' ports/editors/emacs/Portfile.tmpl \
-		| sed -e "s/<SHA_256>/$$(shasum -a 256 $(EMACS).tar.gz | cut -w -f1)/g" \
-		| sed -e "s/<RMD160>/$$(openssl dgst -rmd160 $(EMACS).tar.gz | awk '{print $$NF}')/g" \
-		| sed -e "s/<SIZE>/$$(wc -c < $(EMACS).tar.gz | tr -d ' ')/g" \
-		| sed -e 's/<DATE>/$(TODAY)/g' \
-		> $@
-
-ports/llm/ik_llama.cpp/Portfile: $(LLAMA).tar.gz ports/llm/ik_llama.cpp/Portfile.tmpl
-	sed -e 's/<COMMIT_HASH>/$(LLAMA)/g' ports/llm/ik_llama.cpp/Portfile.tmpl \
-		| sed -e "s/<SHA_256>/$$(shasum -a 256 $(LLAMA).tar.gz | cut -w -f1)/g" \
-		| sed -e 's/<DATE>/$(TODAY)/g' \
-		> $@
-
-ports/aqua/kitty/Portfile: $(KITTY).tar.gz ports/aqua/kitty/Portfile.tmpl
-	sed -e 's/<COMMIT_HASH>/$(KITTY)/g' ports/aqua/kitty/Portfile.tmpl \
-		| sed -e "s/<SHA_256>/$$(shasum -a 256 $(KITTY).tar.gz | cut -w -f1)/g" \
-		| sed -e "s/<RMD160>/$$(openssl dgst -rmd160 $(KITTY).tar.gz | awk '{print $$NF}')/g" \
-		| sed -e "s/<SIZE>/$$(wc -c < $(KITTY).tar.gz | tr -d ' ')/g" \
-		| sed -e 's/<DATE>/$(TODAY)/g' \
-		> $@
-
-macports: macports-tools macports-select emacs-weekly kitty-mainline fix-emacs-shims
+macports: macports-tools macports-select emacs-weekly
 
 macports-tools:
 	sudo port install $(MACPORTS_PACKAGES)
@@ -93,16 +58,5 @@ macports-select:
 	sudo port select --set python python314
 	sudo port select --set python3 python314
 
-emacs-weekly: emacs-weekly-update $(MACPORTS_LOCAL_PORTS)/PortIndex
-	sudo port install emacs-app-devel +nativecomp +treesitter
-
-emacs-weekly-update: ports/editors/emacs/Portfile
-
-kitty-mainline: kitty-mainline-update $(MACPORTS_LOCAL_PORTS)/PortIndex
-	sudo port install kitty
-
-kitty-mainline-update: ports/aqua/kitty/Portfile
-
-fix-emacs-shims:
-	mkdir -p "$$HOME/.local/bin"
-	rm -f "$$HOME/.local/bin/emacs" "$$HOME/.local/bin/emacsclient"
+emacs-weekly:
+	./emacs/build.sh

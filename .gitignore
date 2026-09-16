@@ -13,6 +13,7 @@ emacs/*
 !emacs/td-command-workspace-code-cells-smoke.el
 !emacs/ob-http-tests.el
 !emacs/bc-tests.el
+!emacs/build.sh
 emacs/user-lisp/copilot
 !emacs/snippets
 .yas-compiled-snippets.el
@@ -22,3 +23,7 @@ __pycache__/
 .dolt/
 *.db
 .beads-credential-key
+
+# Source archives
+*.tar.gz
+
