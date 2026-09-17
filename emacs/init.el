@@ -717,7 +717,8 @@ Uses project root if in a project, otherwise current directory."
   "Directory for MacPorts-provided tree-sitter grammars.")
 
 (defconst td/treesit-language-source-alist
-  '((kotlin "https://github.com/fwcd/tree-sitter-kotlin.git"
+  '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+    (kotlin "https://github.com/fwcd/tree-sitter-kotlin.git"
             :commit "0.3.8")
     (markdown "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
               :commit "v0.5.3"
@@ -1268,16 +1269,20 @@ With prefix argument FORCE, rebuild every configured grammar."
 ;;                   bold))
 ;;     (set-face-attribute face nil :weight 'normal)))
 
-(use-package doom-themes
-  :ensure t
-  :config
-  (load-theme 'doom-oksolar-light))
+;; (use-package doom-themes
+;;   :ensure t
+;;   :config
+;;   (load-theme 'doom-oksolar-light))
 
 ;; (use-package solarized-theme
 ;;   :ensure t
 ;;   :config (load-theme 'solarized-dark-high-contrast t))
 
-;; (load-theme 'codeberg-dark t)
+;; (load-theme 'adwaita t)
+
+(use-package tango-plus-theme
+  :ensure t
+  :config (load-theme 'tango-plus))
 
 (custom-theme-set-faces
  'user
@@ -1287,12 +1292,12 @@ With prefix argument FORCE, rebuild every configured grammar."
  '(font-lock-constant-face ((t :slant normal)))
  '(completions-highlight ((t :inherit region)))
 
- ;; '(line-number ((t :slant normal :weight normal :foreground "#303634" :background unspecified)))
- ;; '(line-number-current-line ((t :slant normal :weight normal :foreground "#46504D" :background unspecified)))
+ '(line-number ((t :slant normal :weight normal :foreground "#ccc" :background unspecified)))
+ '(line-number-current-line ((t :slant normal :weight normal :foreground "#222" :background unspecified)))
  '(fringe ((t :inherit line-number :background unspecified)))
   ;; '(vertical-border ((t :foreground "#222")))
 
- ;; '(hl-line ((t :background "#222")))
+ ;; '(hl-line ((t :background "#ddd")))
  ;; '(show-paren-match ((t :foreground "#f9f5d7" :background "#665C54")))
  ;; '(show-paren-mismatch ((t :foreground "#000000" :background "#FB4934")))
 
