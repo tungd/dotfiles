@@ -39,7 +39,7 @@
   "Number of rows currently shown as copy-mode scrollback.")
 
 (defvar-local tterm--copy-mode-history-rows 0
-  "Number of wezterm history rows fetched into copy mode.")
+  "Number of tmux history rows fetched into copy mode.")
 
 (defcustom tterm-copy-mode-scrollback-rows 2000
   "How many historical lines to fetch when entering copy mode.
@@ -207,7 +207,7 @@ When nil, fetch up to `tterm-buffer-size'."
   text)
 
 (defun tterm--copy-mode-strip-osc-controls (text)
-  "Remove OSC control strings from wezterm history TEXT."
+  "Remove OSC control strings from tmux history TEXT."
   (let ((len (length text))
         (pos 0)
         (copy-start 0)
@@ -246,7 +246,7 @@ When nil, fetch up to `tterm-buffer-size'."
       text)))
 
 (defun tterm--copy-mode-decode-history-row (text cols)
-  "Decode wezterm captured history TEXT and fit it to COLS cells."
+  "Decode tmux captured history TEXT and fit it to COLS cells."
   (let ((text (tterm--copy-mode-strip-osc-controls text)))
     (tterm--copy-mode-fit-row
      (if (string-match-p "\e" text)
@@ -271,13 +271,13 @@ When nil, fetch up to `tterm-buffer-size'."
       (list (vector 'A (vconcat (nreverse rows)))))))
 
 (defun tterm--copy-mode-history-ops (id count cols &optional offset)
-  "Return apply ops for wezterm history for terminal ID."
+  "Return apply ops for tmux history for terminal ID."
   (let ((text (tterm--command id "copy-history"
                               (format "%d:%d:%d" (or offset 0) count cols))))
     (tterm--decode-copy-history-ops text cols)))
 
 (defun tterm--copy-mode-insert-history-ops (ops)
-  "Prepend wezterm history OPS to the copy-mode display."
+  "Prepend tmux history OPS to the copy-mode display."
   (when ops
     (let ((scrollback-rows (tterm--count-scrollback-rows ops)))
       (when (> scrollback-rows 0)
@@ -307,7 +307,7 @@ When nil, fetch up to `tterm-buffer-size'."
         (tterm--copy-mode-insert-history-ops ops)))))
 
 (defun tterm-copy-mode-fetch-older-history ()
-  "Fetch the next older wezterm history window and prepend it."
+  "Fetch the next older tmux history window and prepend it."
   (interactive)
   (unless (and tterm--copy-mode tterm--terminal)
     (user-error "Not in copy mode"))
@@ -322,7 +322,7 @@ When nil, fetch up to `tterm-buffer-size'."
         tterm--copy-mode-history-rows)))))
 
 (defun tterm-copy-mode-scroll-down-command (&optional arg)
-  "Scroll down in copy mode, fetching older wezterm history at the top."
+  "Scroll down in copy mode, fetching older tmux history at the top."
   (interactive "P")
   (if (bobp)
       (tterm-copy-mode-fetch-older-history)

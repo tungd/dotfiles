@@ -98,7 +98,7 @@
              (tterm--redraw-active-p))
     (tterm--wake-redraw-timer-for-input)
     ;; Coalesce rapid input onto the already-pending pull. Replacing the 25ms
-    ;; follow-up on every key can postpone it indefinitely, so backend echo only
+    ;; follow-up on every key can postpone it indefinitely, so tmux echo only
     ;; becomes visible after typing pauses.
     (unless (timerp tterm--redraw-request-timer)
       (let ((buffer (current-buffer)))
@@ -121,7 +121,7 @@
                                      (- tterm-redraw-update-delay
                                         tterm-input-redraw-delay))
                                 nil))))))))))
-          ;; A live local probe puts backend echo readiness around 1--2ms.
+          ;; A live local probe puts tmux/backend echo readiness around 1--2ms.
           ;; Pull just after that boundary, then preserve the established
           ;; absolute active-cadence fallback instead of accidentally making
           ;; it INITIAL-DELAY + UPDATE-DELAY.

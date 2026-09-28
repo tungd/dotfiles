@@ -308,7 +308,7 @@ disabled.
 (autoload 'tterm-jump-next-notification "tterm"
 "Jump to the next tterm pane with unread terminal notifications." t)
 (autoload 'tterm "tterm"
-"Create a new wezterm-backed tterm terminal.
+"Create a new tmux-backed tterm terminal.
 With prefix REMOTE, prompt for an SSH host.
 
 (fn &optional REMOTE)" t)

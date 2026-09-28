@@ -145,7 +145,7 @@ replayed as an incremental diff."
        nil))))
 
 (defun tterm--capture-refresh-due-p ()
-  "Return non-nil when the current buffer should ask the backend for a pane snapshot."
+  "Return non-nil when the current buffer should ask tmux for a pane snapshot."
   (let ((now (float-time)))
     (and (or (not tterm--last-capture-refresh-time)
              (>= (- now tterm--last-capture-refresh-time)
@@ -153,7 +153,7 @@ replayed as an incremental diff."
          now)))
 
 (defun tterm--request-capture-refresh (&optional force)
-  "Refresh the backend terminal state from wezterm render-change.
+  "Refresh the backend terminal state from tmux capture-pane.
 When FORCE is nil, throttle requests by
 `tterm-capture-refresh-idle-interval'."
   (when-let* ((term tterm--terminal)
@@ -187,7 +187,7 @@ When FORCE is nil, throttle requests by
       nil)))
 
 (defun tterm--redraw-now-full ()
-  "Redraw, using wezterm render-change as an idle resync fallback."
+  "Redraw, using tmux capture-pane as an idle resync fallback."
   (if tterm--copy-mode
       nil
     (let ((changed (tterm--redraw-now)))
@@ -366,7 +366,7 @@ Preserve an already-earlier timer so rapid keys never postpone a useful pull."
 (add-hook 'window-state-change-functions #'tterm--update-redraw-timers)
 
 (defun tterm--kill-buffer ()
-  "Kill the wezterm pane for the current buffer."
+  "Kill the tmux window for the current buffer."
   (tterm--kill-current-terminal-window))
 
 ;;; Mouse and input-mode handling
@@ -437,7 +437,7 @@ Preserve an already-earlier timer so rapid keys never postpone a useful pull."
          (throw 'state (string= value "1")))))))
 
 (defun tterm--sync-pane-alt-screen ()
-  "Sync cached alt-screen state from wezterm pane metadata."
+  "Sync cached alt-screen state from tmux pane metadata."
   (when tterm--terminal
     (let* ((text (ignore-errors
                    (tterm-bridge-command
