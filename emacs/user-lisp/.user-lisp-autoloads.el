@@ -418,6 +418,53 @@ disabled.
 ;;; Generated autoloads from bc.el
 
 (register-definition-prefixes "bc" '("bc-" "org-dblock-write:bc-"))
+
+
+;;; Generated autoloads from aa.el
+
+(autoload 'aa-sessions "aa"
+"Display a list of active AutoAgent sessions." t)
+(autoload 'aa-snapshot "aa"
+"Query and display the snapshot for SESSION-ID or active session.
+
+(fn &optional SESSION-ID)" t)
+(autoload 'aa-submit "aa"
+"Submit PROMPT to SESSION-ID or active AutoAgent session.
+
+(fn PROMPT &optional SESSION-ID)" t)
+(autoload 'aa-cancel "aa"
+"Cancel active execution in SESSION-ID or active AutoAgent session.
+
+(fn &optional SESSION-ID)" t)
+(autoload 'aa-follow "aa"
+"Follow streaming events from SESSION-ID or active AutoAgent session.
+
+(fn &optional SESSION-ID)" t)
+(autoload 'aa-attach "aa"
+"Open an interactive terminal attached to SESSION-ID or active AutoAgent session.
+
+(fn &optional SESSION-ID)" t)
+(defvar aa-mode-map (let ((map (make-sparse-keymap))) (define-key map (kbd "C-c a s") #'aa-submit) (define-key map (kbd "C-c a c") #'aa-cancel) (define-key map (kbd "C-c a f") #'aa-follow) (define-key map (kbd "C-c a a") #'aa-attach) (define-key map (kbd "C-c a l") #'aa-sessions) (define-key map (kbd "C-c a p") #'aa-snapshot) map)
+"Keymap for `aa-mode'.")
+(autoload 'aa-mode "aa"
+"Minor mode for interacting with AutoAgent.
+
+This is a minor mode.  If called interactively, toggle the `AA mode'
+mode.  If the prefix argument is positive, enable the mode, and if it is
+zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate the variable `aa-mode'.
+
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
+
+(fn &optional ARG)" t)
+(register-definition-prefixes "aa" '("aa-"))
 
 ;;; End of scraped data
 

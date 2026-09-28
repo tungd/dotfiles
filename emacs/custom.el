@@ -211,10 +211,10 @@
    '(avy citre color-theme-sanityinc-solarized consult crux d2-mode diff-hl
          doom-themes drepl envrc expreg folio-theme gdshader-mode gptel
          kotlin-ts-mode magit msgpack neocaml nix-mode ob-duckdb ob-kotlin
-         ob-sql-mode pache-dark-theme prescient protobuf-mode rainbow-mode
-         solarized-gruvbox-theme solarized-theme surround svg-lib
-         tango-plus-theme terraform-mode treesit-fold tuareg utop visual-replace
-         vundo))
+         ob-sql-mode ox-typst pache-dark-theme prescient protobuf-mode
+         rainbow-mode solarized-gruvbox-theme solarized-theme surround svg-lib
+         tango-plus-theme terraform-mode treesit-fold tuareg typst-preview
+         typst-ts-mode utop visual-replace vundo))
  '(package-vc-selected-packages
    '((claude-code-ide :url "https://github.com/manzaltu/claude-code-ide.el")))
  '(safe-local-variable-values
@@ -242,5 +242,7 @@
  '(font-lock-constant-face ((t :slant normal)))
  '(font-lock-string-face ((t :slant normal)))
  '(fringe ((t :inherit line-number :background unspecified)))
- '(hl-line ((t :background "#222")))
+ '(hl-line ((t :background "#444")))
+ '(line-number ((t :slant normal :weight normal :foreground "#666" :background unspecified)))
+ '(line-number-current-line ((t :slant normal :weight normal :foreground "#aaa" :background unspecified)))
  '(mode-line-buffer-id ((t :foreground "orange"))))

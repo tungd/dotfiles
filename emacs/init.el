@@ -1279,10 +1279,11 @@ With prefix argument FORCE, rebuild every configured grammar."
 ;;   :config (load-theme 'solarized-dark-high-contrast t))
 
 ;; (load-theme 'adwaita t)
+(load-theme 'deeper-blue t)
 
-(use-package tango-plus-theme
-  :ensure t
-  :config (load-theme 'tango-plus))
+;; (use-package tango-plus-theme
+;;   :ensure t
+;;   :config (load-theme 'tango-plus))
 
 (custom-theme-set-faces
  'user
@@ -1292,16 +1293,17 @@ With prefix argument FORCE, rebuild every configured grammar."
  '(font-lock-constant-face ((t :slant normal)))
  '(completions-highlight ((t :inherit region)))
 
- '(line-number ((t :slant normal :weight normal :foreground "#ccc" :background unspecified)))
- '(line-number-current-line ((t :slant normal :weight normal :foreground "#222" :background unspecified)))
+ '(line-number ((t :slant normal :weight normal :foreground "#666" :background unspecified)))
+ '(line-number-current-line ((t :slant normal :weight normal :foreground "#aaa" :background unspecified)))
  '(fringe ((t :inherit line-number :background unspecified)))
   ;; '(vertical-border ((t :foreground "#222")))
 
- ;; '(hl-line ((t :background "#ddd")))
+ '(hl-line ((t :background "#444")))
  ;; '(show-paren-match ((t :foreground "#f9f5d7" :background "#665C54")))
  ;; '(show-paren-mismatch ((t :foreground "#000000" :background "#FB4934")))
+ '(region ((t :background "#465C6D")))
 
- '(mode-line-buffer-id ((t :foreground "orange")))
+ '(mode-line-buffer-id ((t :foreground "#B45648")))
  '(cursor ((t :background "orange")))
  '(eglot-highlight-symbol-face ((t :weight normal)))
  '(eglot-code-action-indicator-face ((t :weight normal)))
