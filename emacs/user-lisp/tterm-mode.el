@@ -719,12 +719,6 @@ Return non-nil when a resize was sent."
             (tterm--resize (tterm-id term) rows cols)
             t))))))
 
-(defun tterm--resize-and-redraw-now (&optional frame)
-  "Resize and redraw without moving visible terminal window starts."
-  (tterm--preserve-window-starts-or-tail
-    (tterm--resize-window frame)
-    (tterm--redraw-now-full)))
-
 (defun tterm--resize-needed-p (&optional frame)
   "Return non-nil when the displayed window size differs from the PTY size."
   (let ((term tterm--terminal)

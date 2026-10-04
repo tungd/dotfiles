@@ -353,6 +353,17 @@ When called from a non-dashboard buffer, target
 
 ;;; Generated autoloads from tterm-input.el
 
+(autoload 'tterm-send-region "tterm-input"
+"Send the text between START and END to a tterm buffer.
+From a tterm buffer, send straight to the current terminal.
+Otherwise prompt for a target with completion, send there, and select it.
+With prefix STAY non-nil, send without changing the selected buffer.
+
+Bind this globally, not in `tterm-mode': the common case is selecting a
+region in a diff or source buffer, so a tterm-local binding would never
+fire.
+
+(fn START END &optional STAY)" t)
 (register-definition-prefixes "tterm-input" '("tterm-"))
 
 

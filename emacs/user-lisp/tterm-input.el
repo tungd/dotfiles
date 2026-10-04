@@ -37,6 +37,7 @@
 (declare-function tterm--wake-redraw-timer-for-input "tterm-mode" ())
 (declare-function tterm--paste-input "tterm" (id bytes))
 (declare-function tterm--write-input "tterm" (id bytes))
+(declare-function tterm--buffers "tterm" ())
 
 (defconst tterm--special-key-codes
   '((up . "\e[A")
@@ -299,6 +300,50 @@ the remote-visible path."
   (tterm--send-files (list (expand-file-name path))))
 
 (defalias 'tterm-paste-file #'tterm-send-file)
+
+(defun tterm--read-target-buffer ()
+  "Read the name of a live tterm buffer with completion.
+Returns the buffer object named by the answer."
+  (let ((items (mapcar #'buffer-name (tterm--buffers))))
+    (unless items
+      (user-error "No tterm buffers"))
+    (or (get-buffer (completing-read "Send to tterm buffer: " items nil t))
+        (user-error "No such tterm buffer: %s" items))))
+
+(defun tterm--paste-into-buffer (buffer text)
+  "Send TEXT to the terminal attached to BUFFER, without selecting BUFFER.
+Signal an error when BUFFER has no terminal attached."
+  (with-current-buffer buffer
+    (unless (and (boundp 'tterm--terminal) tterm--terminal)
+      (user-error "No terminal attached in %s" (buffer-name)))
+    ;; Paste via the tmux paste buffer, not send-keys: `enqueue_paste'
+    ;; issues `paste-buffer -p', so a multi-line region arrives as one
+    ;; bracketed paste instead of each line being submitted.
+    (tterm--paste-input (tterm-id tterm--terminal) text)
+    ;; The redraw timer is buffer-local, so this must run in the target
+    ;; buffer. Scheduling from the source buffer would attach the pending
+    ;; pull to the wrong buffer and the echoed paste would never show up.
+    (tterm--schedule-input-redraw)))
+
+;;;###autoload
+(defun tterm-send-region (start end &optional stay)
+  "Send the text between START and END to a tterm buffer.
+From a tterm buffer, send straight to the current terminal.
+Otherwise prompt for a target with completion, send there, and select it.
+With prefix STAY non-nil, send without changing the selected buffer.
+
+Bind this globally, not in `tterm-mode': the common case is selecting a
+region in a diff or source buffer, so a tterm-local binding would never
+fire."
+  (interactive "r\nP")
+  (let* ((text (buffer-substring-no-properties start end))
+         (from-tterm (derived-mode-p 'tterm-mode))
+         (target (if from-tterm
+                     (current-buffer)
+                   (tterm--read-target-buffer))))
+    (tterm--paste-into-buffer target text)
+    (when (and (not stay) (not from-tterm))
+      (switch-to-buffer target))))
 
 (defun tterm--media-file-extension (mime-type)
   "Return a filename extension for MIME-TYPE."

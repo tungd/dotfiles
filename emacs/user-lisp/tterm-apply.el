@@ -456,20 +456,6 @@ See `tterm--flat-style-run-field-count' for the per-run field layout."
         (forward-line row)))))
   row)
 
-(defun tterm--read-u32 (payload offset)
-  "Read a big-endian u32 from PAYLOAD at OFFSET."
-  (logior (ash (aref payload offset) 24)
-          (ash (aref payload (+ offset 1)) 16)
-          (ash (aref payload (+ offset 2)) 8)
-          (aref payload (+ offset 3))))
-
-(defun tterm--read-i32 (payload offset)
-  "Read a big-endian signed i32 from PAYLOAD at OFFSET."
-  (let ((value (tterm--read-u32 payload offset)))
-    (if (> value 2147483647)
-        (- value 4294967296)
-      value)))
-
 (defun tterm--simple-span-text-p (text row-len)
   "Return non-nil when TEXT is one Emacs character per ROW-LEN cells."
   (and (= (length text) row-len)
@@ -566,11 +552,6 @@ See `tterm--flat-style-run-field-count' for the per-run field layout."
           (aset tterm--simple-row-map row t)
           (setq row (1+ row))))))
     (tterm--recompute-simple-row-prefix)))
-
-(defun tterm--replace-row-span (row col row-len text)
-  "Replace ROW span at COL covering ROW-LEN cells with TEXT."
-  (tterm--goto-row row nil)
-  (tterm--replace-row-span-at-point row col row-len text))
 
 (defun tterm--any-multibyte-p (lines)
   "Return non-nil when any string in LINES is multibyte."
@@ -718,27 +699,6 @@ Point must be at the beginning of ROW."
           (tterm--apply-profile-time :link-property-ms
             (tterm--apply-active-hyperlink start end)))))))
 
-(defun tterm--apply-cursor (payload)
-  "Apply cursor frame PAYLOAD."
-  (tterm--apply-cursor-range payload 0 (length payload)))
-
-(defun tterm--apply-cursor-range (payload payload-start payload-end)
-  "Apply cursor frame in PAYLOAD between PAYLOAD-START and PAYLOAD-END."
-  (when (>= (- payload-end payload-start) 10)
-    (let* ((row (tterm--read-u32 payload payload-start))
-           (row (tterm--shift-row row))
-           (col (tterm--read-u32 payload (+ payload-start 4)))
-           (visible (aref payload (+ payload-start 8)))
-           (shape (aref payload (+ payload-start 9)))
-           (application-cursor
-            (and (> (- payload-end payload-start) 10)
-                 (/= (aref payload (+ payload-start 10)) 0)))
-           (alt-screen
-            (and (> (- payload-end payload-start) 11)
-                 (/= (aref payload (+ payload-start 11)) 0))))
-      (tterm--apply-cursor-state
-       row col (/= visible 0) shape application-cursor alt-screen))))
-
 (defun tterm--apply-cursor-op (op)
   "Apply cursor OP."
   (tterm--apply-cursor-state (aref op 1)
@@ -800,10 +760,6 @@ Point must be at the beginning of ROW."
       (aset text (+ (* idx stride) line-len) ?\n))
     text))
 
-(defun tterm--apply-scroll (payload)
-  "Apply scroll frame PAYLOAD."
-  (tterm--apply-scroll-range payload 0 (length payload)))
-
 (defun tterm--delete-lines-at (row count)
   "Delete COUNT full lines starting at ROW."
   (goto-char (point-min))
@@ -811,14 +767,6 @@ Point must be at the beginning of ROW."
   (let ((start (point)))
     (forward-line count)
     (delete-region start (point))))
-
-(defun tterm--apply-scroll-range (payload payload-start payload-end)
-  "Apply scroll frame in PAYLOAD between PAYLOAD-START and PAYLOAD-END."
-  (when (>= (- payload-end payload-start) 12)
-    (tterm--apply-scroll-decoded
-     (tterm--read-u32 payload payload-start)
-     (tterm--read-u32 payload (+ payload-start 4))
-     (tterm--read-i32 payload (+ payload-start 8)))))
 
 (defun tterm--apply-scroll-op (op)
   "Apply scroll OP."
@@ -867,37 +815,6 @@ Point must be at the beginning of ROW."
   (dotimes (_ (aref op 2))
     (insert "\n"))
   (tterm--clear-simple-row-map))
-
-(defun tterm--delete-rows (payload)
-  "Delete rows frame PAYLOAD."
-  (when (>= (length payload) 8)
-    (let* ((start-row (logior (ash (aref payload 0) 24) (ash (aref payload 1) 16)
-                              (ash (aref payload 2) 8) (aref payload 3)))
-           (start-row (tterm--shift-row start-row))
-           (count (logior (ash (aref payload 4) 24) (ash (aref payload 5) 16)
-                          (ash (aref payload 6) 8) (aref payload 7))))
-      (save-excursion
-        (goto-char (point-min))
-        (forward-line start-row)
-        (let ((start (point)))
-          (forward-line count)
-          (delete-region start (point))))
-      (tterm--clear-simple-row-map))))
-
-(defun tterm--insert-rows (payload)
-  "Insert rows frame PAYLOAD."
-  (when (>= (length payload) 8)
-    (let* ((start-row (logior (ash (aref payload 0) 24) (ash (aref payload 1) 16)
-                              (ash (aref payload 2) 8) (aref payload 3)))
-           (start-row (tterm--shift-row start-row))
-           (count (logior (ash (aref payload 4) 24) (ash (aref payload 5) 16)
-                          (ash (aref payload 6) 8) (aref payload 7))))
-      (save-excursion
-        (goto-char (point-min))
-        (forward-line start-row)
-        (dotimes (_ count)
-          (insert "\n")))
-      (tterm--clear-simple-row-map))))
 
 (provide 'tterm-apply)
 ;;; tterm-apply.el ends here

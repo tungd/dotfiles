@@ -521,30 +521,6 @@ is a fixed number of `string-search' calls, so it stays cheap."
                            'display display)
         (setq offset (1+ match))))))
 
-(defun tterm--range-contains-char-p (range char)
-  "Return non-nil when RANGE contains CHAR."
-  (cond
-   ((consp range)
-    (and (>= char (car range))
-         (<= char (cdr range))))
-   ((integerp range)
-    (= char range))
-   (t nil)))
-
-(defun tterm--symbol-face-font-for-char (char)
-  "Return the configured symbol face font for CHAR, or nil."
-  (let (font
-        span)
-    (dolist (entry tterm-symbol-face-fallbacks)
-      (let ((range (car entry)))
-        (when (tterm--range-contains-char-p range char)
-          (let ((candidate-span (tterm--fontset-range-span range)))
-            (when (or (null span)
-                      (< candidate-span span))
-              (setq font (cdr entry)
-                    span candidate-span))))))
-    font))
-
 (defun tterm--prepend-symbol-font-face (face font)
   "Return FACE with FONT prepended as a family face."
   (let ((font-face (if (stringp font) `(:family ,font) font)))

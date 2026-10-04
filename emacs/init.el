@@ -1211,7 +1211,7 @@ With prefix argument FORCE, rebuild every configured grammar."
  `((left-fringe . 8) (right-fringe . 4)
    (border-width . 0) (internal-border-width . 0)
    ;;(font . "Iosevka Fixed SS07 16")
-   (font . "JetBrains Mono NL 18")
+   (font . "JetBrains Mono NL 16")
    (tool-bar-lines . 0)
    ;; (fullscreen . maximized)
    (width . 128)
@@ -1279,11 +1279,11 @@ With prefix argument FORCE, rebuild every configured grammar."
 ;;   :config (load-theme 'solarized-dark-high-contrast t))
 
 ;; (load-theme 'adwaita t)
-(load-theme 'deeper-blue t)
+;; (load-theme 'deeper-blue t)
 
-;; (use-package tango-plus-theme
-;;   :ensure t
-;;   :config (load-theme 'tango-plus))
+(use-package tango-plus-theme
+  :ensure t
+  :config (load-theme 'tango-plus))
 
 (custom-theme-set-faces
  'user
@@ -1298,10 +1298,10 @@ With prefix argument FORCE, rebuild every configured grammar."
  '(fringe ((t :inherit line-number :background unspecified)))
   ;; '(vertical-border ((t :foreground "#222")))
 
- '(hl-line ((t :background "#444")))
+ ;; '(hl-line ((t :background "#444")))
  ;; '(show-paren-match ((t :foreground "#f9f5d7" :background "#665C54")))
  ;; '(show-paren-mismatch ((t :foreground "#000000" :background "#FB4934")))
- '(region ((t :background "#465C6D")))
+ ;; '(region ((t :background "#465C6D")))
 
  '(mode-line-buffer-id ((t :foreground "#B45648")))
  '(cursor ((t :background "orange")))
