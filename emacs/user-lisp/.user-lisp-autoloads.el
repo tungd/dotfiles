@@ -476,6 +476,59 @@ disabled.
 
 (fn &optional ARG)" t)
 (register-definition-prefixes "aa" '("aa-"))
+
+
+
+;;; Generated autoloads from markdown-adaptive-ts-mode.el
+
+(autoload 'markdown-adaptive-table-mode "markdown-adaptive-ts-mode"
+"Minor mode providing adaptive, multi-line table rendering in Markdown.
+
+Long cells are word-wrapped into multiple visual lines while strictly
+preserving column alignment and borders. Tables automatically reveal
+for raw editing when point enters, and re-render when point departs.
+
+This is a minor mode.  If called interactively, toggle the
+`Markdown-Adaptive-Table mode' mode.  If the prefix argument is
+positive, enable the mode, and if it is zero or negative, disable the
+mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate the variable `markdown-adaptive-table-mode'.
+
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
+
+(fn &optional ARG)" t)
+(autoload 'markdown-adaptive-preview-html "markdown-adaptive-ts-mode"
+"Render current Markdown buffer to HTML in /tmp and open in default browser.
+With prefix ARG, prompt for output destination.
+
+(fn &optional ARG)" t)
+(autoload 'markdown-adaptive-ts-mode "markdown-adaptive-ts-mode"
+"Major mode extending `markdown-ts-mode' with adaptive tables and HTML preview.
+
+Features:
+1. Adaptive Tables:
+   Tables are dynamically formatted and rendered with multi-line cell wrapping,
+   strict column alignment, and clean box borders. Moving cursor into a table
+   automatically reveals the raw Markdown for seamless editing.
+2. HTML Preview (\\`C-c C-c'):
+   Generates a polished, readable HTML preview written to /tmp and opens it
+   directly in your web browser.
+
+Keybindings:
+\\{markdown-adaptive-ts-mode-map}
+
+In addition to any hooks its parent mode might have run, this mode
+runs the hook `markdown-adaptive-ts-mode-hook', as the final or
+penultimate step during initialization." t)
+(defalias 'custom-markdown-ts-mode #'markdown-adaptive-ts-mode)
+(register-definition-prefixes "markdown-adaptive-ts-mode" '("markdown-adaptive-"))
 
 ;;; End of scraped data
 

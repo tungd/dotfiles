@@ -27,6 +27,11 @@
 (setopt custom-file (expand-file-name "custom.el" user-emacs-directory))
 (load custom-file 'noerror)
 
+(defconst user-lisp-directory
+  (expand-file-name "user-lisp" user-emacs-directory))
+(add-to-list 'load-path user-lisp-directory)
+(load (expand-file-name ".user-lisp-autoloads" user-lisp-directory) 'noerror)
+
 (use-package bind-key
   :functions (override-global-mode bind-key--remove)
   :hook (after-init . override-global-mode))
@@ -783,18 +788,18 @@ With prefix argument FORCE, rebuild every configured grammar."
    (typescript-mode . typescript-ts-mode)
    (json-mode . json-ts-mode)
    (css-mode . css-ts-mode)
-   (markdown-mode . markdown-ts-mode)
-   (gfm-mode . markdown-ts-mode)
+   (markdown-mode . markdown-adaptive-ts-mode)
+   (markdown-ts-mode . markdown-adaptive-ts-mode)
+   (markdown-ts-mode-maybe . markdown-adaptive-ts-mode)
+   (gfm-mode . markdown-adaptive-ts-mode)
      ;; (python-mode . python-ts-mode)
    ))
 
 ;;;; Markdown
 
-(use-package markdown-preview-mode
+(use-package markdown-adaptive-ts-mode
   :ensure nil
-  :hook ((markdown-ts-mode . markdown-preview-mode)
-         (markdown-mode . markdown-preview-mode)
-         (gfm-mode . markdown-preview-mode)))
+  :mode ("\\.md\\'" . markdown-adaptive-ts-mode))
 
 ;;;; Auto completion
 
