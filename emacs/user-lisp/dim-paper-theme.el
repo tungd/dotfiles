@@ -2,7 +2,7 @@
 
 ;;; Commentary:
 ;; A Modus derivative with the chosen dim-paper canvas and distinct syntax hues.
-;; Keep typography separate: this theme does not change font size or spacing.
+;; Keep the body font and spacing unchanged; enlarge document headings.
 
 ;;; Code:
 
@@ -60,6 +60,10 @@
 (defconst td/dim-paper-faces
   '(`(font-lock-keyword-face ((,c :foreground ,keyword :weight semibold)))
     `(font-lock-function-name-face ((,c :foreground ,fnname :weight semibold)))
+    ;; Tango Plus sizes for Org, shared with Markdown's top-level headings.
+    `(org-document-title ((,c :inherit modus-themes-heading-0 :height 1.6 :weight bold)))
+    `(org-level-1 ((,c :inherit modus-themes-heading-1 :height 1.2 :weight bold)))
+    `(markdown-ts-heading-1 ((,c :inherit modus-themes-heading-1 :height 1.2 :weight bold)))
     ;; Match normal ANSI black/white instead of Modus's bright substitutes.
     `(term-color-black ((,c :foreground ,fg-term-black :background ,bg-term-black)))
     `(term-color-white ((,c :foreground ,fg-term-white :background ,bg-term-white))))

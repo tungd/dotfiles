@@ -1064,28 +1064,75 @@ With prefix argument FORCE, rebuild every configured grammar."
    `(lambda (c)
       (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c)))))
 
+(defun td/org-sort-completed-siblings-last (level)
+  "Sort completed Org siblings at LEVEL last within the accessible buffer.
+The accessible region must contain a single set of siblings at LEVEL.
+Keep the relative order within each group and move whole subtrees."
+  (let ((entries (org-map-entries
+                  (lambda () (cons (point) (org-entry-is-done-p)))
+                  (format "LEVEL=%d" level)))
+        completed-seen needs-sort)
+    (dolist (entry entries)
+      (if (cdr entry)
+          (setq completed-seen t)
+        (when completed-seen (setq needs-sort t))))
+    (when needs-sort
+      (let* ((start (caar entries))
+             (end (point-max))
+             (records (cl-loop for tail on entries
+                               collect (list (caar tail)
+                                             (if (cdr tail) (caadr tail) end)
+                                             (if (cdar tail) 1 0))))
+             (ordered (cl-stable-sort (copy-sequence records)
+                                      (lambda (a b) (< (nth 2 a) (nth 2 b)))))
+             (folds (org-fold-core-get-regions))
+             (full-end (save-restriction (widen) (point-max)))
+             (segments (list (list 1 start 1) (list end full-end end)))
+             (destination start)
+             moved-folds sorted)
+        ;; Overlay fold boundaries do not follow Org's bulk sort.  Translate
+        ;; each folded range with the sibling subtree containing its text.
+        (dolist (record ordered)
+          (push (list (nth 0 record) (nth 1 record) destination) segments)
+          (setq destination (+ destination (- (nth 1 record) (nth 0 record)))))
+        (dolist (fold folds)
+          (dolist (segment segments)
+            (let ((beg (max (nth 0 fold) (nth 0 segment)))
+                  (finish (min (nth 1 fold) (nth 1 segment)))
+                  (shift (- (nth 2 segment) (nth 0 segment))))
+              (when (< beg finish)
+                (push (list (+ beg shift) (+ finish shift) (nth 2 fold))
+                      moved-folds)))))
+        (unwind-protect
+            (progn
+              (goto-char start)
+              (let ((transient-mark-mode t)
+                    (mark-active t)
+                    (inhibit-message t))
+                (set-mark end)
+                (org-fold-show-all '(headings))
+                (org-sort-entries
+                 nil ?f (lambda () (if (org-entry-is-done-p) 1 0)) #'<))
+              (setq sorted t))
+          (org-fold-core-regions (if sorted moved-folds folds) :override t))))))
+
 (defun td/org-move-completed-items-last ()
-  "Sort completed top-level Org entries last, moving their subtrees intact.
-Keep the relative order within the active and completed groups."
+  "Sort completed level-1 and level-2 Org entries after their active siblings.
+Level-2 entries stay within their parent.  Move their subtrees intact and
+keep the relative order within the active and completed groups."
   (when (derived-mode-p 'org-mode)
     (save-mark-and-excursion
       (save-restriction
         (widen)
-        (let (completed-seen needs-sort)
-          (org-map-entries
-           (lambda ()
-             (if (org-entry-is-done-p)
-                 (setq completed-seen t)
-               (when completed-seen (setq needs-sort t))))
-           "LEVEL=1")
-          (when needs-sort
-            (goto-char (point-min))
-            (let ((transient-mark-mode t)
-                  (mark-active t)
-                  (inhibit-message t))
-              (set-mark (point-max))
-              (org-sort-entries
-               nil ?f (lambda () (if (org-entry-is-done-p) 1 0)) #'<))))))))
+        ;; Finish the heading scan before sorting.  Work backwards so edits
+        ;; inside later parents cannot shift earlier parents' positions.
+        (dolist (parent (reverse (org-map-entries #'point "LEVEL=1")))
+          (goto-char parent)
+          (save-restriction
+            (let ((end (save-excursion (org-end-of-subtree t t) (point))))
+              (narrow-to-region parent end))
+            (td/org-sort-completed-siblings-last 2)))
+        (td/org-sort-completed-siblings-last 1)))))
 
 (use-package org
   :hook ((org-mode . org-indent-mode)
