@@ -14,14 +14,15 @@
 
 (declare-function tterm-dashboard "tterm-dashboard" ())
 (declare-function tterm-cwd "tterm" (term))
-(declare-function tterm-handle "tterm" (term))
 (declare-function tterm-host "tterm" (term))
 (declare-function tterm-set-cwd "tterm" (term value))
 (declare-function tterm-title "tterm" (term))
 (declare-function tterm--directory-for-host "tterm" (host directory))
-(declare-function tterm--header-attention-indicator "tterm" ())
 (declare-function tterm--shift-row "tterm-apply" (row))
 
+(defvar tterm-header-line-functions)
+(defvar-local tterm--unread-notifications 0
+  "Unread terminal notifications owned by this Lisp buffer.")
 (defvar tterm--terminal)
 (defvar global-mode-string)
 
@@ -273,11 +274,7 @@ UTF-8 decode is performed by `tterm--url-decode'."
 (defun tterm-header-line-format ()
   "Return concise header-line text for the current tterm buffer."
   (when (and (boundp 'tterm--terminal) tterm--terminal)
-    (let* ((handle (tterm-handle tterm--terminal))
-           (host (or (and (listp handle) (plist-get handle :host))
-                     (tterm-host tterm--terminal)
-                     "local"))
-           (session (or (and (listp handle) (plist-get handle :session)) ""))
+    (let* ((host (or (tterm-host tterm--terminal) "local"))
            (cwd (or (tterm-cwd tterm--terminal) default-directory))
            (title (tterm--short-title cwd (or tterm--title
                                               (tterm-title tterm--terminal))))
@@ -286,13 +283,13 @@ UTF-8 decode is performed by `tterm--url-decode'."
       (string-join
        (delq nil
              (list
-              (if (string-empty-p session) host (format "%s:%s" host session))
+              host
               title
               (unless (string-empty-p status) (format "[%s]" status))
               (and cwd (abbreviate-file-name (directory-file-name cwd)))
               (and notification (format "notify: %s" notification))
-              (and (fboundp 'tterm--header-attention-indicator)
-                   (tterm--header-attention-indicator))))
+              (let ((extras (delq nil (mapcar #'funcall tterm-header-line-functions))))
+                (when extras (string-join extras "  ")))))
        "  "))))
 
 (defun tterm--set-cwd (data)
@@ -604,6 +601,7 @@ are deferred outside the apply loop to avoid the `inhibit-redisplay' lock."
                 (if (and title (not (string-empty-p title)))
                     (format "%s: %s" title body)
                   body))
+    (setq-local tterm--unread-notifications (1+ tterm--unread-notifications))
     (force-mode-line-update)
     (run-hook-with-args 'tterm-notification-hook title body)))
 

@@ -12,6 +12,7 @@
 (require 'term)
 (require 'tramp nil t)
 (require 'tterm-bridge (expand-file-name "tterm-bridge" tterm--directory))
+(require 'tterm-process (expand-file-name "tterm-process" tterm--directory))
 
 ;;; Customization
 
@@ -27,9 +28,8 @@
 
 (defcustom tterm-input-redraw-delay 0.004
   "Seconds to wait before the first redraw pull after terminal input.
-The tmux controller normally reports local echo in about 1--2ms.  This small
-head start avoids a predictably stale delay-zero pull without postponing the
-first useful redraw by a full display frame."
+This small head start lets native process output arrive before the first
+pull without postponing the first useful redraw by a full display frame."
   :type 'number
   :group 'tterm)
 
@@ -40,26 +40,6 @@ first useful redraw by a full display frame."
 
 (defcustom tterm-redraw-active-grace-delay 0.25
   "Seconds to keep fast redraw polling after the latest terminal change."
-  :type 'number
-  :group 'tterm)
-
-(defcustom tterm-capture-refresh-idle-interval 2.0
-  "Seconds between tmux capture resyncs for an idle visible terminal.
-This is a recovery path for panes whose tmux control-mode output was missed
-while the buffer was hidden or inactive."
-  :type 'number
-  :group 'tterm)
-
-(defcustom tterm-attention-refresh-interval 2.0
-  "Seconds between backend unread-notification polls while tterm buffers exist."
-  :type 'number
-  :group 'tterm)
-
-(defcustom tterm-alt-screen-sync-interval 0.25
-  "Minimum seconds between wheel-driven alt-screen resyncs (LOOP 6.5).
-A trackpad delivers dozens of wheel events per second; resyncing on
-every event blocks on a bridge round trip. Cache the alt-screen and
-only resync at most this often."
   :type 'number
   :group 'tterm)
 
@@ -140,12 +120,10 @@ attribute plist."
   title
   cwd
   host
-  window-id
-  pane-id
-  handle
-  detached
   application-cursor
-  alt-screen)
+  alt-screen
+  bracketed-paste
+  (status 'running))
 
 (defun tterm-set-application-cursor (term value)
   "Set TERM application-cursor mode to VALUE."
@@ -191,33 +169,11 @@ attribute plist."
 (defvar-local tterm--last-redraw-change-time nil
   "Last time output changed or input required active redraw polling.")
 
-(defvar-local tterm--last-capture-refresh-time nil
-  "Last `float-time' value when this buffer requested tmux capture resync.")
-
-(defvar-local tterm--capture-refresh-handle nil
-  "In-flight asynchronous idle capture-refresh job, or nil.")
-
 (defvar-local tterm--input-mode 'normal
-  "Current terminal input mode.
-Only `normal` is valid while copy mode is inactive.")
+  "Current terminal input mode.")
 
 (defvar tterm-mode-map)
 (defvar tterm-copy-mode-map)
-
-(defvar tterm--attention-refresh-timer nil
-  "Timer that refreshes global tterm attention state.")
-
-(defvar tterm--attention-unread-total 0
-  "Total unread terminal notifications across backend windows.")
-
-(defvar tterm--attention-windows nil
-  "Dashboard window plists with unread terminal notifications.")
-
-(defvar tterm--attention-mode-line-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [mode-line mouse-1] #'tterm-jump-next-notification)
-    map)
-  "Mode-line keymap for tterm attention indicator.")
 
 (defun tterm--buffers ()
   "Return live buffers currently using `tterm-mode'."
@@ -723,7 +679,7 @@ thin-space suffix when needed."
   (completing-read "tterm host: " (tterm--remote-host-candidates) nil nil))
 
 (defun tterm--normalize-start-cwd (cwd)
-  "Return CWD in the form passed to tmux when creating a window."
+  "Return CWD without a trailing directory separator."
   (directory-file-name cwd))
 
 (defun tterm--cwd-for-host (host)
@@ -733,11 +689,19 @@ thin-space suffix when needed."
            (tramp-tramp-file-p default-directory))
       (let ((vec (tramp-dissect-file-name default-directory)))
         (or (tramp-file-name-localname vec) "~"))
-    (expand-file-name default-directory)))
+    (if (equal host "local") (expand-file-name default-directory) "~")))
 
-(defun tterm--connect (rows cols host cwd)
-  "Connect to tmux-backed terminal on HOST at CWD."
-  (tterm-bridge-connect rows cols host cwd))
+(defvar tterm-terminal-started-hook nil
+  "Hook run after a terminal handle is attached to its Lisp buffer.")
+(defvar tterm-mode-line-functions nil
+  "Functions returning extra terminal mode-line strings.")
+(defvar tterm-header-line-functions nil
+  "Functions returning extra terminal header-line strings or nil.")
+
+(defun tterm--start (rows cols host cwd &optional scrollback)
+  "Start a Lisp-selected process with a native PTY and input/output owner."
+  (tterm-bridge-start rows cols (or scrollback tterm-buffer-size)
+                      (tterm-process-launch host cwd)))
 
 (defun tterm--directory-for-host (host directory)
   "Return DIRECTORY wrapped in a TRAMP path for remote HOST, or plain otherwise.
@@ -748,65 +712,57 @@ file operations resolve through Tramp."
       directory
     (concat "/ssh:" host ":" (directory-file-name directory))))
 
-(defun tterm--new (rows cols &optional scrollback cwd)
-  "Create a new local tmux-backed terminal. Returns terminal ID.
-SCROLLBACK is accepted for compatibility with older test and bench helpers."
-  (ignore scrollback)
-  (tterm--connect rows cols "local"
-                  (if (and cwd (not (string-empty-p cwd)))
-                      (tterm--normalize-start-cwd (expand-file-name cwd))
-                    "")))
-
 (defun tterm--pull-apply-plan-ops (id displayed-version)
   "Pull apply-ready ops for terminal ID from DISPLAYED-VERSION.
-Returns [BASE_VERSION TARGET_VERSION RESET OPS]."
-  (let ((bytes (tterm-bridge-pull-apply-plan-bytes id displayed-version)))
-    (car (read-from-string bytes))))
+Returns [BASE_VERSION TARGET_VERSION RESET OPS STATE]."
+  (let ((bytes (tterm-bridge-pull id displayed-version)))
+    (let ((response (car (read-from-string bytes))))
+      (when (and tterm--terminal (= id (tterm-id tterm--terminal))
+                 (> (length response) 4))
+        (let ((state (aref response 4)))
+          (setf (tterm-status tterm--terminal) (plist-get state :status)
+                (tterm-alt-screen tterm--terminal) (plist-get state :alt-screen)
+                (tterm-application-cursor tterm--terminal) (plist-get state :application-cursor)
+                (tterm-bracketed-paste tterm--terminal) (plist-get state :bracketed-paste))
+          (setq-local tterm--alt-screen (tterm-alt-screen tterm--terminal))))
+      response)))
 
 (defun tterm--write-input (id bytes)
   "Write input BYTES to terminal ID."
-  (tterm--command id "write-input" bytes))
+  (tterm-bridge-write id bytes))
 
 (defun tterm--paste-input (id bytes)
   "Paste BYTES to terminal ID."
-  (tterm--command id "paste-input" bytes))
-
-(defun tterm--bracketed-paste-enabled-p (id)
-  "Return non-nil when terminal ID has enabled bracketed paste."
-  (tterm-bridge-bracketed-paste-enabled-p id))
+  (tterm-bridge-paste id bytes))
 
 (defun tterm--resize (id rows cols)
   "Resize terminal ID to ROWS x COLS."
-  (tterm--command id "resize" (format "%dx%d" rows cols)))
+  (tterm-bridge-resize id rows cols))
 
 (defun tterm--destroy (id)
-  "Destroy terminal ID and its tmux window."
-  (tterm--command id "kill-window" ""))
+  "Stop terminal ID and its native-owned child."
+  (tterm-bridge-close id))
 
 (defun tterm--dispose-terminal-buffer ()
-  "Dispose the current Attached Terminal Buffer without tmux commands."
+  "Dispose the current Attached Terminal Buffer and its timers."
   (when (fboundp 'tterm--stop-redraw-timer)
     (tterm--stop-redraw-timer))
   (when (fboundp 'tterm--stop-redraw-request-timer)
     (tterm--stop-redraw-request-timer))
   (when (fboundp 'tterm--stop-resize-timer)
     (tterm--stop-resize-timer))
-  (when tterm--capture-refresh-handle
-    (tterm-bridge-command-cancel tterm--capture-refresh-handle)
-    (setq-local tterm--capture-refresh-handle nil))
   (setq-local tterm--terminal nil)
   (setq-local tterm--title nil)
   (setq-local tterm--last-redraw-change-time nil))
 
 (defun tterm--detach-current-terminal ()
-  "Detach the buffer-local terminal from Emacs, preserving its tmux window."
+  "Stop the buffer-local client process and dispose its buffer attachment."
   (when tterm--terminal
-    (tterm--command (tterm-id tterm--terminal) "detach" "")
-    (setf (tterm-detached tterm--terminal) t))
+    (tterm--destroy (tterm-id tterm--terminal)))
   (tterm--dispose-terminal-buffer))
 
 (defun tterm--kill-current-terminal-window ()
-  "Kill the current terminal's tmux window and dispose its buffer attachment.
+  "Stop the current terminal client and dispose its buffer attachment.
 Errors from the bridge (e.g. missing module) are ignored so that
 `kill-buffer' always succeeds, even when the backend is broken."
   (when tterm--terminal
@@ -814,348 +770,9 @@ Errors from the bridge (e.g. missing module) are ignored so that
       (tterm--destroy (tterm-id tterm--terminal))))
   (tterm--dispose-terminal-buffer))
 
-(defun tterm--command (id command &optional payload)
-  "Send generic COMMAND with PAYLOAD to terminal ID."
-  (tterm-bridge-command id command (or payload "")))
-
-(defun tterm--decode-command-text (text)
-  "Decode bridge command TEXT returned as UTF-8 bytes."
-  (if (and (not (multibyte-string-p text))
-           (string-match-p "[\200-\377]" text))
-      (decode-coding-string text 'utf-8 t)
-    text))
-
-;;; Cross-pane attention
-
-(declare-function tterm-dashboard--decode "tterm-dashboard" (text))
-(declare-function tterm-dashboard-select-window
-                  "tterm-dashboard" (handle &optional terminal-id))
-
-(defun tterm--attention-window-unread-p (window)
-  "Return non-nil when dashboard WINDOW has unread notifications."
-  (> (or (plist-get window :unread-notifications) 0) 0))
-
-(defun tterm--attention-windows-from-snapshot (snapshot)
-  "Return unread dashboard windows from decoded SNAPSHOT."
-  (let (windows)
-    (dolist (group snapshot)
-      (dolist (window (plist-get group :windows))
-        (when (tterm--attention-window-unread-p window)
-          (push window windows))))
-    (nreverse windows)))
-
-(defun tterm--attention-apply-snapshot (snapshot)
-  "Update cached attention state from decoded dashboard SNAPSHOT.
-Only refresh mode lines when the attention state actually changed, and
-restrict the refresh to live tterm buffers (LOOP 6.2). The previous code
-called `(force-mode-line-update t)` unconditionally, invalidating every
-window's mode line in every frame every 2s even when nothing changed."
-  (let* ((windows (tterm--attention-windows-from-snapshot snapshot))
-         (unread (apply #'+
-                        (mapcar (lambda (window)
-                                  (or (plist-get window :unread-notifications) 0))
-                                windows))))
-    (unless (and (equal windows tterm--attention-windows)
-                 (eq unread tterm--attention-unread-total))
-      (setq tterm--attention-windows windows)
-      (setq tterm--attention-unread-total unread)
-      (dolist (buffer (tterm--buffers))
-        (with-current-buffer buffer
-          (force-mode-line-update))))))
-
-(defun tterm--attention-stop-timer ()
-  "Stop the attention refresh timer and clear cached state."
-  (when (timerp tterm--attention-refresh-timer)
-    (cancel-timer tterm--attention-refresh-timer))
-  (setq tterm--attention-refresh-timer nil)
-  (setq tterm--attention-unread-total 0)
-  (setq tterm--attention-windows nil)
-  (force-mode-line-update t))
-
-(defun tterm--attention-refresh ()
-  "Refresh cached attention state from lightweight backend output."
-  (if (null (tterm--buffers))
-      (tterm--attention-stop-timer)
-    (condition-case nil
-        (progn
-          (require 'tterm-dashboard)
-          (tterm--attention-apply-snapshot
-           (tterm-dashboard--decode (tterm-bridge-command 0 "attention" ""))))
-      (error nil))))
-
-(defun tterm--attention-ensure-timer ()
-  "Ensure the attention refresh timer is running."
-  (unless (timerp tterm--attention-refresh-timer)
-    (setq tterm--attention-refresh-timer
-          (run-at-time 0 tterm-attention-refresh-interval
-                       #'tterm--attention-refresh))))
-
-(defun tterm--attention-maybe-stop-later ()
-  "Stop attention polling after the last tterm buffer is gone."
-  (run-at-time 0 nil
-               (lambda ()
-                 (unless (tterm--buffers)
-                   (tterm--attention-stop-timer)))))
-
-(defun tterm--attention-setup-buffer ()
-  "Set up global attention polling for a tterm buffer."
-  (when (and (boundp 'tterm--terminal) tterm--terminal)
-    (tterm--attention-ensure-timer))
-  (add-hook 'kill-buffer-hook #'tterm--attention-maybe-stop-later nil t))
-
-(defun tterm--attention-current-window-p (window)
-  "Return non-nil when dashboard WINDOW is the current tterm buffer."
-  (and (boundp 'tterm--terminal)
-       tterm--terminal
-       (or (and (plist-get window :terminal-id)
-                (= (plist-get window :terminal-id)
-                   (tterm-id tterm--terminal)))
-           (and (tterm-handle tterm--terminal)
-                (equal (plist-get window :handle)
-                       (tterm-handle tterm--terminal))))))
-
-(defun tterm--attention-target-window ()
-  "Return the unread dashboard window to jump to."
-  (or (cl-find-if-not #'tterm--attention-current-window-p
-                      tterm--attention-windows)
-      (car tterm--attention-windows)))
-
-(defun tterm--attention-window-summary (window)
-  "Return a concise display summary for unread dashboard WINDOW."
-  (let ((name (or (plist-get window :name)
-                  (plist-get window :window-id)
-                  "tterm"))
-        (notification (plist-get window :notification)))
-    (if (and notification (not (string-empty-p notification)))
-        (format "%s: %s" name notification)
-      name)))
-
-(defun tterm--mode-line-attention-indicator ()
-  "Return mode-line text for global tterm unread attention."
-  (if (<= tterm--attention-unread-total 0)
-      ""
-    (let ((text (format " [🔔:%d]" tterm--attention-unread-total)))
-      (add-text-properties
-       0 (length text)
-       `(face tterm-notification-mode-line
-         local-map ,tterm--attention-mode-line-map
-         mouse-face mode-line-highlight
-         help-echo "mouse-1 or C-c C-n: jump to tterm notification")
-       text)
-      text)))
-
-(defun tterm--header-attention-indicator ()
-  "Return header-line text for global tterm unread attention."
-  (when (> tterm--attention-unread-total 0)
-    (let ((summary (and tterm--attention-windows
-                        (tterm--attention-window-summary
-                         (car tterm--attention-windows)))))
-      (if summary
-          (format "attention: %s" summary)
-        (format "attention: %d" tterm--attention-unread-total)))))
-
-;;;###autoload
-(defun tterm-jump-next-notification ()
-  "Jump to the next tterm pane with unread terminal notifications."
-  (interactive)
-  (tterm--attention-refresh)
-  (let ((window (tterm--attention-target-window)))
-    (unless window
-      (user-error "No unread tterm notifications"))
-    (require 'tterm-dashboard)
-    (tterm-dashboard-select-window
-     (plist-get window :handle)
-     (plist-get window :terminal-id))
-    (run-at-time 0.5 nil #'tterm--attention-refresh)))
-
-(defun tterm--escape-field (value)
-  "Escape one tab-separated bridge field VALUE."
-  (let ((index 0)
-        (length (length value))
-        (out nil))
-    (while (< index length)
-      (pcase (aref value index)
-        (?\\ (push "\\\\" out))
-        (?\t (push "\\t" out))
-        (?\n (push "\\n" out))
-        (char (push (string char) out)))
-      (setq index (1+ index)))
-    (apply #'concat (nreverse out))))
-
-(defun tterm--unescape-field (value)
-  "Decode one escaped bridge field VALUE."
-  (let ((index 0)
-        (length (length value))
-        (out nil))
-    (while (< index length)
-      (let ((char (aref value index)))
-        (if (and (= char ?\\) (< (1+ index) length))
-            (let ((next (aref value (1+ index))))
-              (push (pcase next
-                      (?n ?\n)
-                      (?t ?\t)
-                      (?\\ ?\\)
-                      (_ next))
-                    out)
-              (setq index (+ index 2)))
-          (push char out)
-          (setq index (1+ index)))))
-    (apply #'string (nreverse out))))
-
-(defun tterm--handle-key (key)
-  "Return plist key for bridge handle KEY."
-  (pcase key
-    ("host" :host)
-    ("namespace" :namespace)
-    ("socket" :socket)
-    ("session" :session)
-    ("window" :window-id)
-    ("pane" :pane-id)
-    ("identity" :identity)
-    (_ nil)))
-
-(defun tterm--decode-handle-payload (text)
-  "Decode bridge handle payload TEXT into a plist."
-  (let (handle)
-    (dolist (line (split-string (tterm--decode-command-text text) "\n" t))
-      (pcase (mapcar #'tterm--unescape-field (split-string line "\t"))
-        (`(,key ,value)
-         (when-let* ((plist-key (tterm--handle-key key)))
-           (setq handle (plist-put handle plist-key value))))))
-    (when (and (plist-get handle :host)
-               (plist-get handle :namespace)
-               (plist-get handle :socket)
-               (plist-get handle :session)
-               (plist-get handle :window-id)
-               (plist-get handle :pane-id))
-      handle)))
-
-(defun tterm--pending-handle-p (handle)
-  "Return non-nil when HANDLE still names a pending tmux window."
-  (or (string-prefix-p "@tterm-" (or (plist-get handle :window-id) ""))
-      (string-prefix-p "%tterm-" (or (plist-get handle :pane-id) ""))))
-
-(defun tterm--terminal-handle ()
-  "Return the current terminal's stable tmux handle, or nil."
-  (when tterm--terminal
-    (let ((handle
-           (condition-case nil
-               (tterm--decode-handle-payload
-                (tterm--command (tterm-id tterm--terminal)
-                                "terminal-handle"
-                                ""))
-             (error nil))))
-      (when (and handle (not (tterm--pending-handle-p handle)))
-        handle))))
-
-(defun tterm--encode-reattach-payload (handle rows cols)
-  "Encode tmux HANDLE and terminal ROWS/COLS for reattach-window."
-  (let ((lines
-         (list (format "host\t%s"
-                       (tterm--escape-field (plist-get handle :host)))
-               (format "namespace\t%s"
-                       (tterm--escape-field (plist-get handle :namespace)))
-               (format "socket\t%s"
-                       (tterm--escape-field (plist-get handle :socket)))
-               (format "session\t%s"
-                       (tterm--escape-field (plist-get handle :session)))
-               (format "window\t%s"
-                       (tterm--escape-field (plist-get handle :window-id)))
-               (format "pane\t%s"
-                       (tterm--escape-field (plist-get handle :pane-id)))
-               (format "rows\t%d" rows)
-               (format "cols\t%d" cols))))
-    (when-let* ((identity (plist-get handle :identity)))
-      (setq lines
-            (append lines
-                    (list (format "identity\t%s"
-                                  (tterm--escape-field identity))))))
-    (mapconcat #'identity lines "\n")))
-
-(defun tterm--decode-reattach-response (text)
-  "Decode reattach-window response TEXT."
-  (let* ((text (tterm--decode-command-text text))
-         (fields (mapcar #'tterm--unescape-field
-                         (split-string text "\t"))))
-    (pcase fields
-      (`("A" ,id ,host ,cwd ,window-id ,pane-id ,name . ,rest)
-       (list :id (string-to-number id)
-             :host host
-             :cwd cwd
-             :window-id window-id
-             :pane-id pane-id
-             :name name
-             :identity (car rest)))
-      (`("E" ,message)
-       (user-error "%s" message))
-      (_
-       (user-error "Invalid reattach-window response: %s" text)))))
-
-(defun tterm--reattach-window (handle rows cols &optional no-select)
-  "Reattach tmux HANDLE at ROWS/COLS and return the tterm buffer.
-When NO-SELECT is non-nil, do not select the restored buffer."
-  (unless (and (listp handle) (plist-member handle :window-id))
-    (user-error "No stable tmux handle"))
-  (let* ((payload (tterm--encode-reattach-payload handle rows cols))
-         (response (tterm--decode-reattach-response
-                    (tterm-bridge-command 0 "reattach-window" payload))))
-    (tterm--attach-terminal-buffer
-     (plist-get response :id)
-     rows
-     cols
-     (plist-get response :host)
-     (plist-get response :cwd)
-     (plist-get response :window-id)
-     (plist-get response :pane-id)
-     (plist-get response :name)
-     no-select
-     (if (plist-get response :identity)
-         (plist-put (copy-sequence handle) :identity
-                    (plist-get response :identity))
-       handle))))
-
-(defun tterm--desktop-save-buffer (_desktop-dirname)
-  "Return desktop metadata for the current tterm buffer."
-  (when-let* ((handle (tterm--terminal-handle)))
-    (list :tterm 1
-          :handle handle
-          :rows (tterm-rows tterm--terminal)
-          :cols (tterm-cols tterm--terminal)
-          :title (tterm-title tterm--terminal)
-          :cwd (tterm-cwd tterm--terminal))))
-
-(defun tterm--setup-desktop-save ()
-  "Install tterm's desktop-save hook for the current buffer."
-  (setq-local desktop-save-buffer #'tterm--desktop-save-buffer))
-
-(defun tterm-restore-desktop-buffer (_file-name _buffer-name misc)
-  "Restore a desktop-saved tterm buffer from MISC."
-  (when (and (listp misc) (equal (plist-get misc :tterm) 1))
-    (let ((handle (plist-get misc :handle))
-          (rows (or (plist-get misc :rows) 24))
-          (cols (or (plist-get misc :cols) 80)))
-      (when handle
-        (tterm--reattach-window handle rows cols t)))))
-
-(defun tterm--register-desktop-handler ()
-  "Register tterm's desktop restore handler."
-  (when (boundp 'desktop-buffer-mode-handlers)
-    (add-to-list 'desktop-buffer-mode-handlers
-                 '(tterm-mode . tterm-restore-desktop-buffer))))
-
-(with-eval-after-load 'desktop
-  (tterm--register-desktop-handler))
-
-(defun tterm--handle-exit (payload)
-  "Handle terminal exit from PAYLOAD."
-  (let ((status (if (>= (length payload) 4)
-                    (logior (ash (aref payload 0) 24) (ash (aref payload 1) 16)
-                            (ash (aref payload 2) 8) (aref payload 3))
-                  0)))
-    (message "Terminal exited with status %d" status)))
-
 (defun tterm-detach ()
-  "Detach the current tterm buffer while preserving its tmux window."
+  "Close the current terminal client and buffer.
+When using `tterm-tmux-mode', tmux preserves the underlying session."
   (interactive)
   (unless (eq major-mode 'tterm-mode)
     (user-error "Not in a tterm buffer"))
@@ -1165,7 +782,7 @@ When NO-SELECT is non-nil, do not select the restored buffer."
   (kill-buffer (current-buffer)))
 
 (defun tterm-kill-window ()
-  "Kill the current tterm tmux window and close its Emacs buffer."
+  "Stop the current terminal client and close its Emacs buffer."
   (interactive)
   (unless (eq major-mode 'tterm-mode)
     (user-error "Not in a tterm buffer"))
@@ -1175,38 +792,32 @@ When NO-SELECT is non-nil, do not select the restored buffer."
   (kill-buffer (current-buffer)))
 
 (defun tterm-cleanup ()
-  "Reset tterm's tmux runtime and close live tterm buffers."
+  "Stop native terminal processes and close live tterm buffers."
   (interactive)
-  (when (fboundp 'tterm-module--command)
-    (condition-case err
-        (tterm--command 0 "cleanup" "")
-      (error
-       (message "tterm cleanup bridge failed: %S" err))))
   (dolist (buffer (tterm--buffers))
     (when (buffer-live-p buffer)
       (with-current-buffer buffer
-        (tterm--dispose-terminal-buffer))
+        (tterm--kill-current-terminal-window))
       (kill-buffer buffer)))
-  (message "Cleaned up tterm tmux runtime"))
+  (message "Cleaned up tterm processes"))
 
-(defun tterm--shutdown-control-clients ()
-  "Close tterm tmux control clients while preserving tmux windows."
-  (when (fboundp 'tterm-module--command)
-    (ignore-errors
-      (tterm--command 0 "shutdown-clients" ""))))
+(defun tterm--shutdown-processes ()
+  "Close buffer-owned native terminal clients on Emacs exit."
+  (dolist (buffer (tterm--buffers))
+    (with-current-buffer buffer
+      (when tterm--terminal
+        (ignore-errors (tterm-bridge-close (tterm-id tterm--terminal)))))))
 
-(add-hook 'kill-emacs-hook #'tterm--shutdown-control-clients)
+(add-hook 'kill-emacs-hook #'tterm--shutdown-processes)
 
 ;;; Entry point
 
 (require 'tterm-osc (expand-file-name "tterm-osc" tterm--directory))
 (require 'tterm-apply (expand-file-name "tterm-apply" tterm--directory))
 (require 'tterm-mode (expand-file-name "tterm-mode" tterm--directory))
-(add-hook 'tterm-mode-hook #'tterm--setup-desktop-save)
-(add-hook 'tterm-mode-hook #'tterm--attention-setup-buffer)
 
 (defun tterm--attach-terminal-buffer
-    (id rows cols host cwd &optional window-id pane-id title no-select handle)
+    (id rows cols host cwd &optional title no-select)
   "Attach a tterm buffer to terminal ID using ROWS, COLS, HOST, and CWD.
 When NO-SELECT is non-nil, do not select the buffer."
   (let* ((buf (or (tterm--buffer-for-terminal-id id)
@@ -1218,10 +829,7 @@ When NO-SELECT is non-nil, do not select the buffer."
                             :displayed-version 0
                             :title title
                             :cwd cwd
-                            :host host
-                            :window-id window-id
-                            :pane-id pane-id
-                            :handle handle)))
+                            :host host)))
     (with-current-buffer buf
       (when (eq major-mode 'tterm-mode)
         (tterm--dispose-terminal-buffer))
@@ -1231,7 +839,7 @@ When NO-SELECT is non-nil, do not select the buffer."
       (setq-local default-directory (tterm--directory-for-host host cwd))
       (tterm--initialize-screen rows cols)
       (tterm--update-buffer-name)
-      (tterm--attention-setup-buffer))
+      (run-hooks 'tterm-terminal-started-hook))
     (unless no-select
       (switch-to-buffer buf))
     (with-current-buffer buf
@@ -1239,15 +847,18 @@ When NO-SELECT is non-nil, do not select the buffer."
       (tterm--update-redraw-timer))
     buf))
 
-(defun tterm--open-terminal-buffer
-    (id rows cols host cwd &optional window-id pane-id title no-select handle)
-  "Compatibility wrapper for `tterm--attach-terminal-buffer'."
-  (tterm--attach-terminal-buffer id rows cols host cwd window-id pane-id title
-                                 no-select handle))
+;;;###autoload
+(defun tterm-start-process (program args &optional cwd)
+  "Start PROGRAM with literal ARGS in a native-owned terminal at CWD."
+  (let* ((grid (tterm--window-grid-size))
+         (directory (expand-file-name (or cwd default-directory)))
+         (launch (tterm-process-launch "local" directory program args))
+         (id (tterm-bridge-start (car grid) (cdr grid) tterm-buffer-size launch)))
+    (tterm--attach-terminal-buffer id (car grid) (cdr grid) "local" directory)))
 
 ;;;###autoload
 (defun tterm (&optional remote)
-  "Create a new tmux-backed tterm terminal.
+  "Create a terminal whose process and bulk I/O are owned by the native module.
 With prefix REMOTE, prompt for an SSH host."
   (interactive "P")
   (let* ((host (if remote (tterm-read-remote-host) "local"))
@@ -1255,7 +866,7 @@ With prefix REMOTE, prompt for an SSH host."
          (rows (car grid))
          (cols (cdr grid))
          (cwd (tterm--cwd-for-host host))
-         (id (tterm--connect rows cols host
+         (id (tterm--start rows cols host
                              (tterm--normalize-start-cwd cwd))))
     (tterm--attach-terminal-buffer id rows cols host cwd)))
 

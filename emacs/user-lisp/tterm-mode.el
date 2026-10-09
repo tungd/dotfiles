@@ -14,8 +14,6 @@
 (require 'tterm-osc (expand-file-name "tterm-osc" tterm-mode--directory))
 
 (defvar tterm-buffer-size)
-(defvar tterm-capture-refresh-idle-interval)
-(defvar tterm-alt-screen-sync-interval)
 (defvar tterm-fontset-fallbacks)
 (defvar tterm-redraw-active-grace-delay)
 (defvar tterm-redraw-idle-delay)
@@ -30,14 +28,13 @@
 (defvar tterm--cursor-visible)
 (defvar tterm--input-mode)
 (defvar tterm--last-redraw-change-time)
-(defvar tterm--last-capture-refresh-time)
-(defvar tterm--capture-refresh-handle)
 (defvar tterm--osc-indicator)
 (defvar tterm--redraw-request-timer)
 (defvar tterm--redraw-timer)
 (defvar tterm--redraw-timer-deadline)
 (defvar tterm--resize-timer)
 (defvar tterm--resize-window-starts)
+(defvar tterm-mode-line-functions)
 (defvar tterm--terminal)
 (defvar tterm--title)
 (defvar tterm-mode-map)
@@ -51,21 +48,16 @@
 (declare-function tterm-set-displayed-version "tterm" (term value))
 (declare-function tterm-set-size "tterm" (term rows cols))
 (declare-function tterm--apply-op-data "tterm-apply" (id ops))
-(declare-function tterm-bridge-command "tterm-bridge" (id command &optional payload))
-(declare-function tterm-bridge-command-async
-                  "tterm-bridge" (id command payload callback))
 (declare-function tterm--detach-current-terminal "tterm" ())
 (declare-function tterm--effective-fontset-fallbacks "tterm" ())
 (declare-function tterm--fontset-fallback-install-order "tterm" (fallbacks))
 (declare-function tterm--initialize-screen "tterm-apply" (rows cols))
 (declare-function tterm--kill-current-terminal-window "tterm" ())
-(declare-function tterm--mode-line-attention-indicator "tterm" ())
 (declare-function tterm-header-line-format "tterm-osc" ())
 (declare-function tterm--mode-line-osc-indicator "tterm-osc" ())
 (declare-function tterm--pull-apply-plan-ops "tterm" (id displayed-version))
 (declare-function tterm--resize "tterm" (id rows cols))
 (declare-function tterm--sync-point-to-cursor "tterm-apply" ())
-(declare-function tterm-jump-next-notification "tterm" ())
 
 (defmacro tterm--preserve-window-starts (&rest body)
   "Run BODY without letting cursor housekeeping move visible window starts."
@@ -144,68 +136,15 @@ replayed as an incremental diff."
        (message "tterm redraw recovery failed: %S" err)
        nil))))
 
-(defun tterm--capture-refresh-due-p ()
-  "Return non-nil when the current buffer should ask tmux for a pane snapshot."
-  (let ((now (float-time)))
-    (and (or (not tterm--last-capture-refresh-time)
-             (>= (- now tterm--last-capture-refresh-time)
-                 tterm-capture-refresh-idle-interval))
-         now)))
-
-(defun tterm--request-capture-refresh (&optional force)
-  "Refresh the backend terminal state from tmux capture-pane.
-When FORCE is nil, throttle requests by
-`tterm-capture-refresh-idle-interval'."
-  (when-let* ((term tterm--terminal)
-              (now (or force (tterm--capture-refresh-due-p))))
-    (if force
-        (let ((result
-               (tterm-bridge-command (tterm-id term) "refresh-capture" "")))
-          (when (and (stringp result) (not (string-empty-p result)))
-            (setq-local tterm--last-capture-refresh-time (float-time))
-            t))
-      (unless tterm--capture-refresh-handle
-        (let ((buffer (current-buffer))
-              (terminal-id (tterm-id term)))
-          (setq-local tterm--last-capture-refresh-time now)
-          (setq-local
-           tterm--capture-refresh-handle
-           (tterm-bridge-command-async
-            terminal-id "refresh-capture" ""
-            (lambda (result error-message)
-              (when (buffer-live-p buffer)
-                (with-current-buffer buffer
-                  (setq-local tterm--capture-refresh-handle nil)
-                  (when (and (not error-message)
-                             (stringp result)
-                             (not (string-empty-p result))
-                             tterm--terminal
-                             (= (tterm-id tterm--terminal) terminal-id)
-                             (tterm--redraw-active-p))
-                    (tterm--redraw-now)
-                    (tterm--update-redraw-timer)))))))))
-      nil)))
-
 (defun tterm--redraw-now-full ()
-  "Redraw, using tmux capture-pane as an idle resync fallback."
-  (if tterm--copy-mode
-      nil
-    (let ((changed (tterm--redraw-now)))
-      (if changed
-          changed
-        (when (tterm--request-capture-refresh)
-          ;; Return the second pull's REAL result. The previous code returned
-          ;; `t' here, faking a change on every idle capture-refresh even when
-          ;; nothing changed, which kept tterm--last-redraw-change-time fresh
-          ;; and forced the 25ms fast-poll to run forever (LOOP 6.1).
-          (tterm--redraw-now))))))
+  "Pull display changes from the continuously updated native terminal."
+  (tterm--redraw-now))
 
 (defun tterm--redraw-latest-snapshot ()
   "Force a full repaint from the latest backend terminal snapshot."
   (let ((term tterm--terminal))
     (when (and term (not tterm--copy-mode))
       (tterm--preserve-window-starts-or-tail
-        (tterm--request-capture-refresh t)
         (let* ((response (tterm--pull-apply-plan-ops (tterm-id term) -1))
                (target-version (aref response 1))
                (ops (aref response 3)))
@@ -366,7 +305,7 @@ Preserve an already-earlier timer so rapid keys never postpone a useful pull."
 (add-hook 'window-state-change-functions #'tterm--update-redraw-timers)
 
 (defun tterm--kill-buffer ()
-  "Kill the tmux window for the current buffer."
+  "Stop the terminal client for the current buffer."
   (tterm--kill-current-terminal-window))
 
 ;;; Mouse and input-mode handling
@@ -428,50 +367,11 @@ Preserve an already-earlier timer so rapid keys never postpone a useful pull."
   (let ((pos (tterm--mouse-event-terminal-position event)))
     (tterm--send-key (format "\e[<%d;%d;%dM" button (car pos) (cdr pos)))))
 
-(defun tterm--parse-pane-alt-screen (text)
-  "Return pane alt-screen state parsed from pane-state TEXT."
-  (catch 'state
-    (dolist (line (split-string (or text "") "\n" t) 'unknown)
-      (pcase (split-string line "\t")
-        (`("alt" ,value)
-         (throw 'state (string= value "1")))))))
-
-(defun tterm--sync-pane-alt-screen ()
-  "Sync cached alt-screen state from tmux pane metadata."
-  (when tterm--terminal
-    (let* ((text (ignore-errors
-                   (tterm-bridge-command
-                    (tterm-id tterm--terminal) "pane-state" "")))
-           (alt-screen (tterm--parse-pane-alt-screen text)))
-      (unless (eq alt-screen 'unknown)
-        (setq-local tterm--alt-screen alt-screen)
-        (tterm-set-alt-screen tterm--terminal alt-screen))
-      (and (not (eq alt-screen 'unknown)) alt-screen))))
-
-(defvar tterm--last-alt-screen-sync 0
-  "Float time of the last wheel-driven alt-screen resync (LOOP 6.5).")
-
-(defun tterm--alt-screen-resync-due-p ()
-  "Return non-nil when a wheel-driven alt-screen resync is due.
-Resyncs at most every `tterm-alt-screen-sync-interval' seconds so a
-trackpad burst does not block on a bridge round trip per event (LOOP 6.5)."
-  (let ((now (float-time)))
-    (when (>= (- now tterm--last-alt-screen-sync)
-              tterm-alt-screen-sync-interval)
-      (setq tterm--last-alt-screen-sync now)
-      t)))
-
 (defun tterm--send-alt-screen-wheel (button event)
-  "Send alternate-screen wheel BUTTON for EVENT when applicable."
-  (let ((term tterm--terminal))
-    (when term
-      ;; Trust the cached alt-screen on the hot path; only resync at most
-      ;; every `tterm-alt-screen-sync-interval' seconds (LOOP 6.5).
-      (when (tterm--alt-screen-resync-due-p)
-        (tterm--sync-pane-alt-screen)))
-    (when (and term (tterm-alt-screen term))
-      (tterm--send-wheel-mouse-event button event)
-      t)))
+  "Send wheel BUTTON for EVENT using modes from the latest display pull."
+  (when (and tterm--terminal (tterm-alt-screen tterm--terminal))
+    (tterm--send-wheel-mouse-event button event)
+    t))
 
 (defun tterm--wheel-up (&optional event)
   "Scroll toward older terminal output for mouse wheel EVENT."
@@ -576,9 +476,7 @@ trackpad burst does not block on a bridge round trip per event (LOOP 6.5)."
 (defun tterm--mode-line-input-state ()
   "Return extra tterm state for `mode-line-format'."
   (concat (tterm--mode-line-osc-indicator)
-          (if (fboundp 'tterm--mode-line-attention-indicator)
-              (tterm--mode-line-attention-indicator)
-            "")))
+          (mapconcat #'funcall tterm-mode-line-functions "")))
 
 (defun tterm--set-local-map-for-mode ()
   "Set the local keymap based on copy/input mode state."
@@ -893,7 +791,6 @@ Return non-nil when a resize was sent."
 (define-key tterm-mode-map [backtab] (lambda () (interactive) (tterm--send-special-key 'backtab)))
 (define-key tterm-mode-map (kbd "C-j") (tterm--control-key-command "J"))
 (define-key tterm-mode-map (kbd "C-c C-f") #'tterm-send-file)
-(define-key tterm-mode-map (kbd "C-c C-n") #'tterm-jump-next-notification)
 (define-key tterm-mode-map (kbd "C-c C-v") #'tterm-paste-clipboard-media)
 (define-key tterm-mode-map (kbd "C-d") #'tterm-send-eof)
 (define-key tterm-mode-map (kbd "C-l") (tterm--control-key-command "L"))
@@ -908,20 +805,6 @@ Return non-nil when a resize was sent."
 (define-key tterm-mode-map [down-mouse-1] #'tterm--mouse-ignore-down)
 (define-key tterm-mode-map [mouse-1] #'tterm--mouse-set-point)
 (define-key tterm-mode-map [drag-mouse-1] #'tterm--mouse-set-region)
-
-(defun tterm--cleanup-obsolete-input-mode-state ()
-  "Remove stale three-mode symbols and bindings after source reload."
-  (dolist (fn '(tterm-char-mode tterm-semi-char-mode tterm-cycle-input-mode))
-    (when (fboundp fn)
-      (fmakunbound fn)))
-  (when (boundp 'tterm--char-mode-map)
-    (makunbound 'tterm--char-mode-map))
-  (define-key tterm-mode-map (kbd "C-]") nil)
-  (define-key tterm--mode-line-input-map
-              [mode-line mouse-1]
-              #'tterm-toggle-copy-mode))
-
-(tterm--cleanup-obsolete-input-mode-state)
 
 (defun tterm--fontset-fallback-install-key (frame fallbacks)
   "Return the FRAME-local cache key for installed FALLBACKS."

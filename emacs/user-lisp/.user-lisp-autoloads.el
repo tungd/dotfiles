@@ -305,10 +305,12 @@ disabled.
 
 ;;; Generated autoloads from tterm.el
 
-(autoload 'tterm-jump-next-notification "tterm"
-"Jump to the next tterm pane with unread terminal notifications." t)
+(autoload 'tterm-start-process "tterm"
+"Start PROGRAM with literal ARGS in a native-owned terminal at CWD.
+
+(fn PROGRAM ARGS &optional CWD)")
 (autoload 'tterm "tterm"
-"Create a new tmux-backed tterm terminal.
+"Create a terminal whose process and bulk I/O are owned by the native module.
 With prefix REMOTE, prompt for an SSH host.
 
 (fn &optional REMOTE)" t)
@@ -343,9 +345,7 @@ With prefix REMOTE, prompt for an SSH host.
 (autoload 'tterm-dashboard-refresh "tterm-dashboard"
 "Refresh the tterm dashboard buffer.
 When called from a non-dashboard buffer, target
-`tterm-dashboard-buffer-name' instead of the current buffer.
-
-(fn &optional FULL)" t)
+`tterm-dashboard-buffer-name' instead of the current buffer." t)
 (autoload 'tterm-dashboard "tterm-dashboard"
 "Open the tterm dashboard." t)
 (register-definition-prefixes "tterm-dashboard" '("tterm-dashboard-"))
@@ -529,7 +529,61 @@ runs the hook `markdown-adaptive-ts-mode-hook', as the final or
 penultimate step during initialization." t)
 (defalias 'custom-markdown-ts-mode #'markdown-adaptive-ts-mode)
 (register-definition-prefixes "markdown-adaptive-ts-mode" '("markdown-adaptive-"))
+
 
+;;; Generated autoloads from tterm-attention.el
+
+(autoload 'tterm-jump-next-notification "tterm-attention"
+"Jump to the next tterm pane with unread terminal notifications." t)
+(defvar tterm-attention-mode nil
+"Non-nil if Tterm-Attention mode is enabled.
+See the `tterm-attention-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `tterm-attention-mode'.")
+(custom-autoload 'tterm-attention-mode "tterm-attention" nil)
+(autoload 'tterm-attention-mode "tterm-attention"
+"Show and refresh notification summaries across terminal buffers.
+
+This is a global minor mode.  If called interactively, toggle the
+`Tterm-Attention mode' mode.  If the prefix argument is positive, enable
+the mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `(default-value \\='tterm-attention-mode)'.
+
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
+
+(fn &optional ARG)" t)
+(register-definition-prefixes "tterm-attention" '("tterm-"))
+
+
+;;; Generated autoloads from tterm-process.el
+
+(register-definition-prefixes "tterm-process" '("tterm-"))
+
+
+;;; Generated autoloads from tterm-ssh.el
+
+(register-definition-prefixes "tterm-ssh" '("tterm-ssh-wrap-launch"))
+
+
+;;; Generated autoloads from tterm-tmux.el
+
+(register-definition-prefixes "tterm-tmux" '("tterm-tmux-"))
+
+
+;;; Generated autoloads from amx.el
+(autoload 'amx "amx" "Open the AMX agent overview powered by tterm." t)
+
+(autoload 'amx-handoff "amx-context" "Hand Emacs context to a new or existing AMX task." t)
+
 ;;; End of scraped data
 
 (provide '.user-lisp-autoloads)

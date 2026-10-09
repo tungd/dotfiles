@@ -98,7 +98,9 @@
  bidi-inhibit-bpa t)
 
 (setq read-process-output-max (* 16 1024 1024)
-      inhibit-compacting-font-caches t)
+      inhibit-compacting-font-caches t
+      redisplay-skip-fontification-on-input t
+      fast-but-imprecise-scrolling t)
 
 (savehist-mode t)
 
@@ -158,7 +160,7 @@
 ;; still some missing features coming from =projectile=, but I can live with that.
 
 (use-package magit-extras
-  :functions (magit-project-status))
+  :commands magit-project-status)
 
 (use-package project
   :commands (project-find-file project-vc-dir project-current)
@@ -166,7 +168,6 @@
   (project-file-history-behavior 'relativize)
   (project-switch-commands 'magit-project-status)
   :config
-  (autoload 'magit-project-status "magit-extras" nil t)
   (keymap-set project-prefix-map "m" #'magit-project-status))
 
 ;;;; Symbols
@@ -423,7 +424,9 @@ Uses project root if in a project, otherwise current directory."
 (use-package editorconfig
   :hook (after-init . editorconfig-mode))
 
-(use-package vundo :ensure t)
+(use-package vundo
+  :ensure t
+  :commands vundo)
 
 (bind-key [remap zap-to-char] #'zap-up-to-char)
 
@@ -1061,10 +1064,34 @@ With prefix argument FORCE, rebuild every configured grammar."
    `(lambda (c)
       (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c)))))
 
+(defun td/org-move-completed-items-last ()
+  "Sort completed top-level Org entries last, moving their subtrees intact.
+Keep the relative order within the active and completed groups."
+  (when (derived-mode-p 'org-mode)
+    (save-mark-and-excursion
+      (save-restriction
+        (widen)
+        (let (completed-seen needs-sort)
+          (org-map-entries
+           (lambda ()
+             (if (org-entry-is-done-p)
+                 (setq completed-seen t)
+               (when completed-seen (setq needs-sort t))))
+           "LEVEL=1")
+          (when needs-sort
+            (goto-char (point-min))
+            (let ((transient-mark-mode t)
+                  (mark-active t)
+                  (inhibit-message t))
+              (set-mark (point-max))
+              (org-sort-entries
+               nil ?f (lambda () (if (org-entry-is-done-p) 1 0)) #'<))))))))
+
 (use-package org
   :hook ((org-mode . org-indent-mode)
          (org-mode . visual-line-mode)
-         (org-mode . td/org-electric-pair))
+         (org-mode . td/org-electric-pair)
+         (before-save . td/org-move-completed-items-last))
   :custom
   (org-directory "~/Documents/Journal")
   (org-default-notes-file td/org-inbox-file)
@@ -1365,14 +1392,55 @@ With prefix argument FORCE, rebuild every configured grammar."
 
 ;;; Misc
 (use-package dired
+  :hook (dired-mode . dired-hide-details-mode)
   :custom
-  (dired-recursive-deletes 'always)
+  (dired-deletion-confirmer #'y-or-n-p)
+  (dired-recursive-deletes 'top)
+  (dired-clean-confirm-killing-deleted-buffers nil)
   (dired-recursive-copies 'always)
-  (insert-directory-program "/bin/ls")
+  (dired-create-destination-dirs 'ask)
+  (insert-directory-program (or (executable-find "gls") "/bin/ls"))
   (dired-use-ls-dired nil)
-  (dired-listing-switches "-lah")
-  (dired-auto-revert-buffer t)
-  (dired-kill-when-opening-new-dired-buffer t))
+  (dired-listing-switches
+   (if (executable-find "gls") "--group-directories-first -ahlv" "-lah"))
+  (dired-auto-revert-buffer #'dired-directory-changed-p)
+  (dired-do-revert-buffer (lambda (dir) (not (file-remote-p dir))))
+  (dired-kill-when-opening-new-dired-buffer t)
+  (dired-vc-rename-file t)
+  (dired-free-space nil)
+  (dired-movement-style 'bounded-files)
+  (dired-mouse-drag-files t))
+
+(use-package ls-lisp
+  :defer t
+  :custom
+  (ls-lisp-verbosity nil)
+  (ls-lisp-dirs-first t))
+
+(use-package dired-x
+  :after dired
+  :hook (dired-mode . dired-omit-mode)
+  :custom
+  (dired-omit-verbose nil)
+  (dired-omit-files
+   (concat "\\`[.]\\'"
+           "\\|\\.\\(?:elc\\|a\\|o\\|pyc\\|pyo\\|swp\\|class\\)\\'"
+           "\\|^\\.DS_Store\\'"
+           "\\|^\\.\\(?:svn\\|git\\)\\'"
+           "\\|^flycheck_.*"
+           "\\|^flymake_.*"))
+  :config
+  (when-let* ((opener (pcase system-type
+                       ('darwin "open")
+                       ((or 'gnu 'gnu/linux 'gnu/kfreebsd 'berkeley-unix)
+                        "xdg-open")
+                       ((or 'cygwin 'windows-nt 'ms-dos) "start"))))
+    (setq dired-guess-shell-alist-user
+          `(("\\.\\(?:docx\\|pdf\\|odt\\|odg\\|ods\\|djvu\\|eps\\)\\'" ,opener)
+            ("\\.\\(?:jpe?g\\|webp\\|png\\|gif\\|xpm\\|xcf\\)\\'" ,opener)
+            ("\\.tex\\'" ,opener)
+            ("\\.\\(?:mp4\\|mkv\\|m4a\\|avi\\|flv\\|rm\\|rmvb\\|ogv\\)\\(?:\\.part\\)?\\'" ,opener)
+            ("\\.\\(?:mp3\\|flac\\)\\'" ,opener)))))
 
 ;;; Ideas
 
