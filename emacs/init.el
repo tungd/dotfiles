@@ -1258,7 +1258,7 @@ Keep the relative order within the active and completed groups."
 (setq-default
  cursor-in-non-selected-windows nil
  line-spacing '(0.1 . 0.1)
- ) ;; line-height 1.2, split above/below
+ ) ;; 20% extra font-line height, split above/below (currently 21 -> 25).
 
 (setq ns-use-thin-smoothing t)
 
@@ -1313,9 +1313,12 @@ Keep the relative order within the active and completed groups."
 ;; (load-theme 'adwaita t)
 ;; (load-theme 'deeper-blue t)
 
-(use-package tango-plus-theme
+(use-package modus-themes
   :ensure t
-  :config (load-theme 'tango-plus))
+  :config
+  (add-to-list 'custom-theme-load-path user-lisp-directory)
+  (mapc #'disable-theme custom-enabled-themes)
+  (load-theme 'dim-paper t))
 
 (custom-theme-set-faces
  'user
@@ -1325,8 +1328,8 @@ Keep the relative order within the active and completed groups."
  '(font-lock-constant-face ((t :slant normal)))
  '(completions-highlight ((t :inherit region)))
 
- '(line-number ((t :slant normal :weight normal :foreground "#666" :background unspecified)))
- '(line-number-current-line ((t :slant normal :weight normal :foreground "#aaa" :background unspecified)))
+ '(line-number ((t :slant normal :weight normal)))
+ '(line-number-current-line ((t :slant normal :weight normal)))
  '(fringe ((t :inherit line-number :background unspecified)))
   ;; '(vertical-border ((t :foreground "#222")))
 
@@ -1335,8 +1338,6 @@ Keep the relative order within the active and completed groups."
  ;; '(show-paren-mismatch ((t :foreground "#000000" :background "#FB4934")))
  ;; '(region ((t :background "#465C6D")))
 
- '(mode-line-buffer-id ((t :foreground "#B45648")))
- '(cursor ((t :background "orange")))
  '(eglot-highlight-symbol-face ((t :weight normal)))
  '(eglot-code-action-indicator-face ((t :weight normal)))
  '(eglot-inlay-hint-face ((t :height 1.0 :inherit font-lock-comment-face)))
@@ -1384,9 +1385,9 @@ Keep the relative order within the active and completed groups."
   :config
   (custom-theme-set-faces
    'user
-   '(diff-hl-insert ((t (:inherit nil :background unspecified :foreground "#81af34"))))
-   '(diff-hl-delete ((t (:inherit nil :background unspecified :foreground "#ff0000"))))
-   '(diff-hl-change ((t (:inherit nil :background unspecified :foreground "#deae3e")))))
+   '(diff-hl-insert ((t (:inherit nil :background unspecified :foreground "#004e00"))))
+   '(diff-hl-delete ((t (:inherit nil :background unspecified :foreground "#850000"))))
+   '(diff-hl-change ((t (:inherit nil :background unspecified :foreground "#573e00")))))
 
   (advice-add 'diff-hl-overlay-modified :override #'td/diff-hl-overlay-modified))
 
